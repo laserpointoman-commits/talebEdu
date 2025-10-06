@@ -3508,6 +3508,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      is_admin: {
+        Args: { user_id: string }
+        Returns: boolean
+      }
       is_test_account: {
         Args: { user_email: string }
         Returns: boolean
