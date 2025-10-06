@@ -27,7 +27,7 @@ interface UserProfile {
   email: string;
   full_name: string;
   full_name_ar?: string;
-  role: 'admin' | 'teacher' | 'student' | 'parent' | 'driver' | 'developer' | 'finance' | 'canteen';
+  role: 'admin' | 'teacher' | 'student' | 'parent' | 'driver' | 'developer' | 'finance' | 'canteen' | 'school_attendance' | 'bus_attendance';
   phone?: string;
   address?: string;
   created_at: string;
@@ -798,6 +798,8 @@ export default function UserManagement() {
       case 'finance': return 'bg-emerald-100 text-emerald-800';
       case 'canteen': return 'bg-orange-100 text-orange-800';
       case 'developer': return 'bg-gray-100 text-gray-800';
+      case 'school_attendance': return 'bg-cyan-100 text-cyan-800';
+      case 'bus_attendance': return 'bg-indigo-100 text-indigo-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -919,6 +921,8 @@ export default function UserManagement() {
                   <SelectItem value="driver">{language === 'en' ? 'Driver' : 'سائق'}</SelectItem>
                   <SelectItem value="finance">{language === 'en' ? 'Finance' : 'مالية'}</SelectItem>
                   <SelectItem value="canteen">{language === 'en' ? 'Canteen' : 'مقصف'}</SelectItem>
+                  <SelectItem value="school_attendance">{language === 'en' ? 'School Attendance' : 'حضور المدرسة'}</SelectItem>
+                  <SelectItem value="bus_attendance">{language === 'en' ? 'Bus Attendance' : 'حضور الحافلة'}</SelectItem>
                   {isDeveloper && <SelectItem value="developer">Developer</SelectItem>}
                 </SelectContent>
               </Select>
@@ -1235,6 +1239,9 @@ export default function UserManagement() {
                       <SelectItem value="driver">{language === 'en' ? 'Driver' : 'سائق'}</SelectItem>
                       <SelectItem value="finance">{language === 'en' ? 'Finance' : 'مالية'}</SelectItem>
                       <SelectItem value="canteen">{language === 'en' ? 'Canteen' : 'مقصف'}</SelectItem>
+                      <SelectItem value="school_attendance">{language === 'en' ? 'School Attendance' : 'حضور المدرسة'}</SelectItem>
+                      <SelectItem value="bus_attendance">{language === 'en' ? 'Bus Attendance' : 'حضور الحافلة'}</SelectItem>
+                      {isDeveloper && <SelectItem value="developer">Developer</SelectItem>}
                     </SelectContent>
                   </Select>
                 </div>
@@ -1343,6 +1350,8 @@ export default function UserManagement() {
                       <SelectItem value="driver">{language === 'en' ? 'Driver' : 'سائق'}</SelectItem>
                       <SelectItem value="finance">{language === 'en' ? 'Finance' : 'مالية'}</SelectItem>
                       <SelectItem value="canteen">{language === 'en' ? 'Canteen' : 'مقصف'}</SelectItem>
+                      <SelectItem value="school_attendance">{language === 'en' ? 'School Attendance' : 'حضور المدرسة'}</SelectItem>
+                      <SelectItem value="bus_attendance">{language === 'en' ? 'Bus Attendance' : 'حضور الحافلة'}</SelectItem>
                       {isDeveloper && <SelectItem value="developer">Developer</SelectItem>}
                     </SelectContent>
                   </Select>
