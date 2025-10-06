@@ -1,0 +1,837 @@
+import { useState } from 'react';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { useStudents } from '@/contexts/StudentsContext';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Textarea } from '@/components/ui/textarea';
+import { Plus, Edit, Trash2, MapPin, Clock, Users, Bus, ChevronRight, Eye, X, Search } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
+
+// Import mock data from BusesManagement
+import { mockDrivers, mockBuses, mockTeachers } from './BusesManagement';
+
+
+export interface Route {
+  id: string;
+  name: string;
+  nameAr: string;
+  busId?: string;
+  driverId?: string;
+  supervisorId?: string;
+  stops: string[];
+  studentIds: string[];
+  departureTime: string;
+  arrivalTime: string;
+  distance: string;
+  status: 'active' | 'inactive';
+  description?: string;
+}
+
+const mockRoutes: Route[] = [
+  {
+    id: 'r1',
+    name: 'Al Khuwair - Ruwi - Al Seeb',
+    nameAr: 'الخوير - روي - السيب',
+    busId: 'BUS-001',
+    driverId: '1',
+    supervisorId: 't1',
+    stops: ['Al Khuwair', 'Ruwi', 'Al Seeb'],
+    studentIds: ['s1', 's2', 's3'],
+    departureTime: '06:30',
+    arrivalTime: '07:30',
+    distance: '25 km',
+    status: 'active',
+    description: 'Morning route covering Al Khuwair, Ruwi, and Al Seeb areas',
+  },
+  {
+    id: 'r2',
+    name: 'Qurum - Al Ghubra - Al Azaiba',
+    nameAr: 'القرم - الغبرة - العذيبة',
+    busId: 'BUS-002',
+    driverId: '2',
+    supervisorId: 't2',
+    stops: ['Qurum', 'Al Ghubra', 'Al Azaiba'],
+    studentIds: ['s4', 's5', 's6', 's7'],
+    departureTime: '06:45',
+    arrivalTime: '07:45',
+    distance: '20 km',
+    status: 'active',
+    description: 'Morning route covering Qurum, Al Ghubra, and Al Azaiba areas',
+  },
+];
+
+export default function RoutesManagement() {
+  const { t, language } = useLanguage();
+  const { students } = useStudents();
+  const [routes, setRoutes] = useState<Route[]>(mockRoutes);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [selectedRoute, setSelectedRoute] = useState<Route | null>(null);
+  const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
+  const [selectedRoutes, setSelectedRoutes] = useState<string[]>([]);
+  
+  // Confirmation dialog states
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [bulkDeleteConfirmOpen, setBulkDeleteConfirmOpen] = useState(false);
+  const [routeToDelete, setRouteToDelete] = useState<string | null>(null);
+  const [stops, setStops] = useState<string[]>([]);
+  const [newStop, setNewStop] = useState('');
+  const [formData, setFormData] = useState<Partial<Route>>({
+    status: 'active',
+    stops: [],
+    studentIds: [],
+  });
+  
+  // Search states
+  const [studentSearch, setStudentSearch] = useState('');
+  const [busSearch, setBusSearch] = useState('');
+  const [driverSearch, setDriverSearch] = useState('');
+  const [supervisorSearch, setSupervisorSearch] = useState('');
+
+  const handleAddRoute = () => {
+    const newRoute: Route = {
+      id: `r-${Date.now()}`,
+      name: formData.name || '',
+      nameAr: formData.nameAr || '',
+      busId: formData.busId,
+      driverId: formData.driverId,
+      supervisorId: formData.supervisorId,
+      stops: stops,
+      studentIds: selectedStudents,
+      departureTime: formData.departureTime || '',
+      arrivalTime: formData.arrivalTime || '',
+      distance: formData.distance || '',
+      status: formData.status as 'active' | 'inactive',
+      description: formData.description,
+    };
+    
+    setRoutes([...routes, newRoute]);
+    setIsAddDialogOpen(false);
+    resetForm();
+    
+    toast({
+      variant: 'success',
+      title: language === 'ar' ? 'تمت الإضافة بنجاح' : 'Added Successfully',
+      description: language === 'ar' ? 'تم إضافة المسار بنجاح' : 'Route has been added successfully',
+    });
+  };
+
+  const handleEditRoute = () => {
+    if (!selectedRoute) return;
+    
+    setRoutes(routes.map(r => 
+      r.id === selectedRoute.id 
+        ? { ...r, ...formData, stops, studentIds: selectedStudents } as Route
+        : r
+    ));
+    
+    setIsEditDialogOpen(false);
+    resetForm();
+    
+    toast({
+      variant: 'success',
+      title: language === 'ar' ? 'تم التحديث بنجاح' : 'Updated Successfully',
+      description: language === 'ar' ? 'تم تحديث المسار بنجاح' : 'Route has been updated successfully',
+    });
+  };
+
+  const handleDeleteRoute = (id: string) => {
+    setRouteToDelete(id);
+    setDeleteConfirmOpen(true);
+  };
+  
+  const confirmDelete = () => {
+    if (routeToDelete) {
+      setRoutes(routes.filter(r => r.id !== routeToDelete));
+      setSelectedRoutes(prev => prev.filter(routeId => routeId !== routeToDelete));
+      
+      toast({
+        variant: 'success',
+        title: language === 'ar' ? 'تم الحذف بنجاح' : 'Deleted Successfully',
+        description: language === 'ar' ? 'تم حذف المسار بنجاح' : 'Route has been deleted successfully',
+      });
+      
+      setRouteToDelete(null);
+    }
+    setDeleteConfirmOpen(false);
+  };
+
+  const handleBulkDelete = () => {
+    setBulkDeleteConfirmOpen(true);
+  };
+  
+  const confirmBulkDelete = () => {
+    setRoutes(routes.filter(r => !selectedRoutes.includes(r.id)));
+    const count = selectedRoutes.length;
+    setSelectedRoutes([]);
+    
+    toast({
+      variant: 'success',
+      title: language === 'ar' ? 'تم الحذف بنجاح' : 'Deleted Successfully',
+      description: language === 'ar' 
+        ? `تم حذف ${count} مسار بنجاح` 
+        : `${count} routes have been deleted successfully`,
+    });
+    
+    setBulkDeleteConfirmOpen(false);
+  };
+
+  const toggleRouteSelection = (routeId: string) => {
+    setSelectedRoutes(prev =>
+      prev.includes(routeId)
+        ? prev.filter(id => id !== routeId)
+        : [...prev, routeId]
+    );
+  };
+
+  const toggleSelectAllRoutes = () => {
+    if (selectedRoutes.length === routes.length) {
+      setSelectedRoutes([]);
+    } else {
+      setSelectedRoutes(routes.map(r => r.id));
+    }
+  };
+
+  const handleViewRoute = (route: Route) => {
+    console.log('Opening view dialog for route:', route.id);
+    setSelectedRoute(route);
+    setIsViewDialogOpen(true);
+  };
+
+  const handleOpenEdit = (route: Route) => {
+    console.log('Opening edit dialog for route:', route.id);
+    setSelectedRoute(route);
+    setFormData(route);
+    setSelectedStudents(route.studentIds || []);
+    setStops(route.stops || []);
+    setIsEditDialogOpen(true);
+    setIsViewDialogOpen(false);
+  };
+
+  const resetForm = () => {
+    setFormData({ status: 'active', stops: [], studentIds: [] });
+    setSelectedStudents([]);
+    setStops([]);
+    setNewStop('');
+    setSelectedRoute(null);
+  };
+
+  const toggleStudentSelection = (studentId: string) => {
+    setSelectedStudents(prev => 
+      prev.includes(studentId) 
+        ? prev.filter(id => id !== studentId)
+        : [...prev, studentId]
+    );
+  };
+
+  const addStop = () => {
+    if (newStop.trim()) {
+      setStops([...stops, newStop.trim()]);
+      setNewStop('');
+    }
+  };
+
+  const removeStop = (index: number) => {
+    setStops(stops.filter((_, i) => i !== index));
+  };
+
+  const getDriverName = (driverId?: string) => {
+    const driver = mockDrivers.find(d => d.id === driverId);
+    return driver ? (language === 'en' ? driver.name : driver.nameAr) : (language === 'en' ? 'Not Assigned' : 'غير مخصص');
+  };
+
+  const getBusNumber = (busId?: string) => {
+    const bus = mockBuses.find(b => b.id === busId);
+    return bus ? bus.busNumber : (language === 'en' ? 'Not Assigned' : 'غير مخصص');
+  };
+
+  const getSupervisorName = (supervisorId?: string) => {
+    const supervisor = mockTeachers.find(t => t.id === supervisorId);
+    return supervisor ? (language === 'en' ? supervisor.name : supervisor.nameAr) : (language === 'en' ? 'Not Assigned' : 'غير مخصص');
+  };
+
+  const getStudentNames = (studentIds: string[]) => {
+    const filteredStudents = students.filter(s => studentIds.includes(s.id));
+    if (filteredStudents.length === 0) return language === 'en' ? 'No students' : 'لا يوجد طلاب';
+    if (filteredStudents.length <= 2) {
+      return filteredStudents.map(s => language === 'en' ? `${s.firstName} ${s.lastName}` : `${s.firstNameAr} ${s.lastNameAr}`).join(', ');
+    }
+    return `${filteredStudents.length} ${language === 'en' ? 'students' : 'طلاب'}`;
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight">
+            {language === 'en' ? 'Routes Management' : 'إدارة المسارات'}
+          </h2>
+          <p className="text-muted-foreground">
+            {language === 'en' ? 'Manage all bus routes' : 'إدارة جميع مسارات الحافلات'}
+          </p>
+        </div>
+        <Button onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          console.log('Opening Add Route dialog');
+          resetForm();
+          setIsAddDialogOpen(true);
+        }}>
+          <Plus className="h-4 w-4 mr-2" />
+          {language === 'en' ? 'Add Route' : 'إضافة مسار'}
+        </Button>
+      </div>
+
+      {/* Routes List */}
+      <div className="grid gap-4">
+        {routes.map((route) => (
+          <Card 
+            key={route.id} 
+            className="hover:shadow-lg transition-all cursor-pointer"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleViewRoute(route);
+            }}
+          >
+            <CardHeader>
+              <div className="flex justify-between items-start">
+                <CardTitle className="text-lg">
+                  {language === 'en' ? route.name : route.nameAr}
+                </CardTitle>
+                <div className="flex items-center gap-2">
+                  <Badge className={route.status === 'active' ? 'bg-success/10 text-success' : 'bg-muted text-muted-foreground'}>
+                    {route.status === 'active' ? (language === 'ar' ? 'نشط' : 'Active') : (language === 'ar' ? 'غير نشط' : 'Inactive')}
+                  </Badge>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="flex items-center gap-2">
+                  <Bus className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">{getBusNumber(route.busId)}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">{route.departureTime} - {route.arrivalTime}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">{route.distance}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Users className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">{getStudentNames(route.studentIds)}</span>
+                </div>
+              </div>
+              {route.stops && route.stops.length > 0 && (
+                <div className="mt-3 pt-3 border-t">
+                  <p className="text-xs text-muted-foreground mb-1">
+                    {language === 'en' ? 'Stops' : 'المحطات'}:
+                  </p>
+                  <p className="text-sm">{route.stops.join(' → ')}</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* View Route Dialog */}
+      <Dialog open={isViewDialogOpen} onOpenChange={(open) => {
+        console.log('View dialog open change:', open);
+        setIsViewDialogOpen(open);
+        if (!open) {
+          setSelectedRoute(null);
+        }
+      }}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center justify-between">
+              <span>{language === 'en' ? 'Route Details' : 'تفاصيل المسار'}</span>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Edit button clicked for route:', selectedRoute?.id);
+                    if (selectedRoute) {
+                      handleOpenEdit(selectedRoute);
+                    }
+                  }}
+                >
+                  <Edit className="h-4 w-4 mr-1" />
+                  {language === 'en' ? 'Edit' : 'تعديل'}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Delete button clicked for route:', selectedRoute?.id);
+                    if (selectedRoute) {
+                      handleDeleteRoute(selectedRoute.id);
+                      setIsViewDialogOpen(false);
+                    }
+                  }}
+                >
+                  <Trash2 className="h-4 w-4 mr-1" />
+                  {language === 'en' ? 'Delete' : 'حذف'}
+                </Button>
+              </div>
+            </DialogTitle>
+          </DialogHeader>
+          {selectedRoute && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-muted-foreground">{language === 'en' ? 'Route Name' : 'اسم المسار'}</Label>
+                  <p className="font-medium">{language === 'en' ? selectedRoute.name : selectedRoute.nameAr}</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">{language === 'en' ? 'Status' : 'الحالة'}</Label>
+                  <Badge className={selectedRoute.status === 'active' ? 'bg-success/10 text-success' : 'bg-muted text-muted-foreground'}>
+                    {selectedRoute.status === 'active' ? (language === 'ar' ? 'نشط' : 'Active') : (language === 'ar' ? 'غير نشط' : 'Inactive')}
+                  </Badge>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-muted-foreground">{language === 'en' ? 'Bus' : 'الحافلة'}</Label>
+                  <p className="font-medium">{getBusNumber(selectedRoute.busId)}</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">{language === 'en' ? 'Driver' : 'السائق'}</Label>
+                  <p className="font-medium">{getDriverName(selectedRoute.driverId)}</p>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-muted-foreground">{language === 'en' ? 'Supervisor' : 'المشرف'}</Label>
+                  <p className="font-medium">{getSupervisorName(selectedRoute.supervisorId)}</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">{language === 'en' ? 'Distance' : 'المسافة'}</Label>
+                  <p className="font-medium">{selectedRoute.distance}</p>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-muted-foreground">{language === 'en' ? 'Departure Time' : 'وقت المغادرة'}</Label>
+                  <p className="font-medium">{selectedRoute.departureTime}</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">{language === 'en' ? 'Arrival Time' : 'وقت الوصول'}</Label>
+                  <p className="font-medium">{selectedRoute.arrivalTime}</p>
+                </div>
+              </div>
+              
+              {selectedRoute.description && (
+                <div>
+                  <Label className="text-muted-foreground">{language === 'en' ? 'Description' : 'الوصف'}</Label>
+                  <p className="font-medium">{selectedRoute.description}</p>
+                </div>
+              )}
+              
+              <div>
+                <Label className="text-muted-foreground mb-2 block">{language === 'en' ? 'Stops' : 'المحطات'}</Label>
+                <div className="flex flex-wrap gap-2">
+                  {selectedRoute.stops.map((stop, index) => (
+                    <Badge key={index} variant="outline">
+                      {stop}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+              
+              <div>
+                <Label className="text-muted-foreground mb-2 block">
+                  {language === 'en' ? 'Students' : 'الطلاب'} ({selectedRoute.studentIds.length})
+                </Label>
+                <ScrollArea className="h-32 border rounded-md p-3">
+                  <div className="space-y-2">
+                    {students
+                      .filter(s => selectedRoute.studentIds.includes(s.id))
+                      .map((student) => (
+                        <div key={student.id} className="flex justify-between items-center text-sm">
+                          <span>{language === 'en' ? `${student.firstName} ${student.lastName}` : `${student.firstNameAr} ${student.lastNameAr}`}</span>
+                          <span className="text-muted-foreground">
+                            {student.grade}-{student.class}
+                          </span>
+                        </div>
+                      ))}
+                  </div>
+                </ScrollArea>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Add/Edit Route Dialog */}
+      <Dialog open={isAddDialogOpen || isEditDialogOpen} onOpenChange={(open) => {
+        console.log('Add/Edit dialog open change:', open, 'isEdit:', isEditDialogOpen, 'isAdd:', isAddDialogOpen);
+        if (!open) {
+          setIsAddDialogOpen(false);
+          setIsEditDialogOpen(false);
+          resetForm();
+        }
+      }}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {isEditDialogOpen 
+                ? (language === 'en' ? 'Edit Route' : 'تعديل المسار')
+                : (language === 'en' ? 'Add New Route' : 'إضافة مسار جديد')}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>{language === 'en' ? 'Route Name (English)' : 'اسم المسار (إنجليزي)'}</Label>
+                <Input
+                  value={formData.name || ''}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label>{language === 'en' ? 'Route Name (Arabic)' : 'اسم المسار (عربي)'}</Label>
+                <Input
+                  value={formData.nameAr || ''}
+                  onChange={(e) => setFormData({ ...formData, nameAr: e.target.value })}
+                />
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>{language === 'en' ? 'Departure Time' : 'وقت المغادرة'}</Label>
+                <Input
+                  type="time"
+                  value={formData.departureTime || ''}
+                  onChange={(e) => setFormData({ ...formData, departureTime: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label>{language === 'en' ? 'Arrival Time' : 'وقت الوصول'}</Label>
+                <Input
+                  type="time"
+                  value={formData.arrivalTime || ''}
+                  onChange={(e) => setFormData({ ...formData, arrivalTime: e.target.value })}
+                />
+              </div>
+            </div>
+            
+            <div>
+              <Label>{language === 'en' ? 'Distance' : 'المسافة'}</Label>
+              <Input
+                value={formData.distance || ''}
+                onChange={(e) => setFormData({ ...formData, distance: e.target.value })}
+                placeholder="e.g., 25 km"
+              />
+            </div>
+            
+            <div>
+              <Label>{language === 'en' ? 'Description' : 'الوصف'}</Label>
+              <Textarea
+                value={formData.description || ''}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                placeholder={language === 'en' ? 'Enter route description...' : 'أدخل وصف المسار...'}
+              />
+            </div>
+            
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <Label>{language === 'en' ? 'Assign Bus' : 'تعيين حافلة'}</Label>
+                <Select
+                  value={formData.busId || 'none'}
+                  onValueChange={(value) => setFormData({ ...formData, busId: value === 'none' ? undefined : value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={language === 'en' ? 'Select a bus' : 'اختر حافلة'} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <div className="p-2">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Search className="h-4 w-4 text-muted-foreground" />
+                        <Input
+                          placeholder={language === 'en' ? 'Search buses...' : 'البحث عن الحافلات...'}
+                          value={busSearch}
+                          onChange={(e) => setBusSearch(e.target.value)}
+                          className="h-8"
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      </div>
+                    </div>
+                    <SelectItem value="none">
+                      {language === 'en' ? 'No Bus' : 'بدون حافلة'}
+                    </SelectItem>
+                    {mockBuses
+                      .filter(bus => 
+                        bus.busNumber.toLowerCase().includes(busSearch.toLowerCase()) ||
+                        bus.plateNumber.toLowerCase().includes(busSearch.toLowerCase())
+                      )
+                      .map((bus) => (
+                        <SelectItem key={bus.id} value={bus.id}>
+                          {bus.busNumber}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <Label>{language === 'en' ? 'Assign Driver' : 'تعيين سائق'}</Label>
+                <Select
+                  value={formData.driverId || 'none'}
+                  onValueChange={(value) => setFormData({ ...formData, driverId: value === 'none' ? undefined : value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={language === 'en' ? 'Select a driver' : 'اختر سائق'} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <div className="p-2">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Search className="h-4 w-4 text-muted-foreground" />
+                        <Input
+                          placeholder={language === 'en' ? 'Search drivers...' : 'البحث عن السائقين...'}
+                          value={driverSearch}
+                          onChange={(e) => setDriverSearch(e.target.value)}
+                          className="h-8"
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      </div>
+                    </div>
+                    <SelectItem value="none">
+                      {language === 'en' ? 'No Driver' : 'بدون سائق'}
+                    </SelectItem>
+                    {mockDrivers
+                      .filter(driver => 
+                        driver.name.toLowerCase().includes(driverSearch.toLowerCase()) ||
+                        driver.nameAr.includes(driverSearch)
+                      )
+                      .map((driver) => (
+                        <SelectItem key={driver.id} value={driver.id}>
+                          {language === 'en' ? driver.name : driver.nameAr}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <Label>{language === 'en' ? 'Assign Supervisor' : 'تعيين مشرف'}</Label>
+                <Select
+                  value={formData.supervisorId || 'none'}
+                  onValueChange={(value) => setFormData({ ...formData, supervisorId: value === 'none' ? undefined : value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={language === 'en' ? 'Select a supervisor' : 'اختر مشرف'} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <div className="p-2">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Search className="h-4 w-4 text-muted-foreground" />
+                        <Input
+                          placeholder={language === 'en' ? 'Search supervisors...' : 'البحث عن المشرفين...'}
+                          value={supervisorSearch}
+                          onChange={(e) => setSupervisorSearch(e.target.value)}
+                          className="h-8"
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      </div>
+                    </div>
+                    <SelectItem value="none">
+                      {language === 'en' ? 'No Supervisor' : 'بدون مشرف'}
+                    </SelectItem>
+                    {mockTeachers
+                      .filter(teacher => 
+                        teacher.name.toLowerCase().includes(supervisorSearch.toLowerCase()) ||
+                        teacher.nameAr.includes(supervisorSearch)
+                      )
+                      .map((teacher) => (
+                        <SelectItem key={teacher.id} value={teacher.id}>
+                          {language === 'en' ? teacher.name : teacher.nameAr}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            
+            {/* Stops Management */}
+            <div className="space-y-2">
+              <Label>{language === 'en' ? 'Route Stops' : 'محطات المسار'}</Label>
+              <div className="flex gap-2">
+                <Input
+                  value={newStop}
+                  onChange={(e) => setNewStop(e.target.value)}
+                  placeholder={language === 'en' ? 'Enter stop name' : 'أدخل اسم المحطة'}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      addStop();
+                    }
+                  }}
+                />
+                <Button type="button" onClick={addStop}>
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {stops.map((stop, index) => (
+                  <Badge key={index} variant="secondary" className="py-1">
+                    {stop}
+                    <button
+                      onClick={() => removeStop(index)}
+                      className="ml-2 hover:text-destructive"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+            </div>
+            
+            {/* Students Selection */}
+            <div className="space-y-2">
+              <Label>{language === 'en' ? 'Select Students' : 'اختر الطلاب'}</Label>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm text-muted-foreground">
+                  {selectedStudents.length} {language === 'en' ? 'students selected' : 'طلاب محددون'}
+                </span>
+              </div>
+              <div className="mb-2">
+                <div className="flex items-center gap-2">
+                  <Search className="h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder={language === 'en' ? 'Search students...' : 'البحث عن الطلاب...'}
+                    value={studentSearch}
+                    onChange={(e) => setStudentSearch(e.target.value)}
+                    className="h-8"
+                  />
+                </div>
+              </div>
+              <ScrollArea className="h-48 border rounded-md p-3">
+                <div className="space-y-2">
+                  {students
+                    .filter(student => {
+                      const fullName = `${student.firstName} ${student.lastName}`.toLowerCase();
+                      const fullNameAr = `${student.firstNameAr} ${student.lastNameAr}`;
+                      const search = studentSearch.toLowerCase();
+                      return (
+                        fullName.includes(search) ||
+                        fullNameAr.includes(studentSearch) ||
+                        student.grade.includes(studentSearch) ||
+                        student.class.includes(studentSearch) ||
+                        student.address.toLowerCase().includes(search)
+                      );
+                    })
+                    .map((student) => (
+                    <div key={student.id} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`route-student-${student.id}`}
+                        checked={selectedStudents.includes(student.id)}
+                        onCheckedChange={() => toggleStudentSelection(student.id)}
+                      />
+                      <label
+                        htmlFor={`route-student-${student.id}`}
+                        className="flex-1 text-sm cursor-pointer"
+                      >
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <span className="font-medium">
+                              {language === 'en' ? `${student.firstName} ${student.lastName}` : `${student.firstNameAr} ${student.lastNameAr}`}
+                            </span>
+                            <span className="text-xs text-muted-foreground ml-2">
+                              {student.grade}-{student.class}
+                            </span>
+                          </div>
+                          <span className="text-xs text-muted-foreground">
+                            {student.address}
+                          </span>
+                        </div>
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => {
+              setIsAddDialogOpen(false);
+              setIsEditDialogOpen(false);
+              resetForm();
+            }}>
+              {t('common.cancel')}
+            </Button>
+            <Button onClick={isEditDialogOpen ? handleEditRoute : handleAddRoute}>
+              {t('common.save')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {language === 'en' ? 'Confirm Deletion' : 'تأكيد الحذف'}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {language === 'en' 
+                ? 'Are you sure you want to delete this route? This action cannot be undone.'
+                : 'هل أنت متأكد من حذف هذا المسار؟ لا يمكن التراجع عن هذا الإجراء.'}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{language === 'en' ? 'Cancel' : 'إلغاء'}</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              {language === 'en' ? 'Delete' : 'حذف'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Bulk Delete Confirmation Dialog */}
+      <AlertDialog open={bulkDeleteConfirmOpen} onOpenChange={setBulkDeleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {language === 'en' ? 'Confirm Bulk Deletion' : 'تأكيد الحذف الجماعي'}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {language === 'en' 
+                ? `Are you sure you want to delete ${selectedRoutes.length} selected routes? This action cannot be undone.`
+                : `هل أنت متأكد من حذف ${selectedRoutes.length} مسار محدد؟ لا يمكن التراجع عن هذا الإجراء.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{language === 'en' ? 'Cancel' : 'إلغاء'}</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmBulkDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              {language === 'en' ? `Delete ${selectedRoutes.length} Routes` : `حذف ${selectedRoutes.length} مسار`}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+}

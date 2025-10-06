@@ -1,0 +1,19 @@
+workflows:
+  ios-build:
+    name: iOS Build
+    environment:
+      vars:
+        XCODE_WORKSPACE: "ios/App/App.xcworkspace"
+        XCODE_SCHEME: "App"
+      xcode: latest
+    scripts:
+      - name: Install dependencies
+        script: |
+          npm install --legacy-peer-deps
+          npm install @capacitor/ios --legacy-peer-deps
+          npx cap sync ios
+      - name: Build iOS app
+        script: |
+          npx cap open ios
+    artifacts:
+      - build/ios/ipa
