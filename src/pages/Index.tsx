@@ -401,3 +401,21 @@ const Index = () => {
 };
 
 export default Index;
+-- 1. Create security definer function
+CREATE OR REPLACE FUNCTION public.get_user_role(user_id uuid)
+RETURNS text
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT role FROM public.profiles WHERE id = user_id LIMIT 1;
+$$;
+
+-- 2. Update your RLS policy to use the function
+DROP POLICY IF EXISTS "your_policy_name" ON profiles;
+
+CREATE POLICY "Users access own profile" ON profiles
+FOR SELECT USING (
+  id = auth.uid() OR public.get_user_role(auth.uid()) = 'admin'
+);
