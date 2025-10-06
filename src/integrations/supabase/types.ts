@@ -3495,6 +3495,18 @@ export type Database = {
         Args: { other_student_id: string }
         Returns: string
       }
+      get_user_role: {
+        Args: { user_id: string }
+        Returns: string
+      }
+      has_any_role: {
+        Args: { required_roles: string[]; user_id: string }
+        Returns: boolean
+      }
+      has_role: {
+        Args: { required_role: string; user_id: string }
+        Returns: boolean
+      }
       insert_profile_with_parent: {
         Args: {
           p_email: string
@@ -3507,10 +3519,6 @@ export type Database = {
           p_role?: Database["public"]["Enums"]["user_role"]
         }
         Returns: undefined
-      }
-      is_admin: {
-        Args: { user_id: string }
-        Returns: boolean
       }
       is_test_account: {
         Args: { user_email: string }
