@@ -95,27 +95,34 @@ serve(async (req) => {
         }
       }
 
-      // Create profile
+      // Create or update profile (handle trigger race condition)
       const { error: profileError } = await supabaseAdmin
         .from('profiles')
-        .insert({
+        .upsert({
           id: userId,
           email,
           full_name,
           full_name_ar,
           phone,
           role: role as any,
-          parent_user_id: parent_user_id || null
+          parent_user_id: parent_user_id || null,
+          is_active: true
+        }, {
+          onConflict: 'id',
+          ignoreDuplicates: false
         });
 
       if (profileError) {
         console.error('Profile creation failed:', profileError);
         throw new Error('Failed to create profile: ' + profileError.message);
       }
+      
+      console.log('Profile created/updated successfully');
     }
 
-    // Create role-specific records
+    // Create role-specific records only for roles that need them
     if (role === 'teacher' && isNewUser) {
+      console.log('Creating teacher record');
       await supabaseAdmin.from('teachers').upsert({
         id: crypto.randomUUID(),
         profile_id: userId,
@@ -126,6 +133,7 @@ serve(async (req) => {
     }
 
     if (role === 'student' && isNewUser) {
+      console.log('Creating student record');
       await supabaseAdmin.from('students').upsert({
         id: crypto.randomUUID(),
         profile_id: userId,
@@ -141,6 +149,7 @@ serve(async (req) => {
     }
 
     if (role === 'driver' && isNewUser) {
+      console.log('Creating driver record');
       await supabaseAdmin.from('drivers').upsert({
         id: crypto.randomUUID(),
         profile_id: userId,
@@ -149,6 +158,9 @@ serve(async (req) => {
         status: 'active'
       }, { onConflict: 'profile_id' });
     }
+    
+    // Note: school_attendance and bus_attendance roles don't need separate entity tables
+    console.log('Role-specific records handled for role:', role);
 
     console.log('User created successfully:', userId);
 
