@@ -120,6 +120,31 @@ export default function NFCScanner({
 
       if (error) throw error;
 
+      // Send notification to parent
+      const { data: studentData } = await supabase
+        .from('students')
+        .select('parent_id')
+        .eq('id', student.id)
+        .single();
+
+      if (studentData?.parent_id) {
+        const actionType = scanType.includes('in') ? 'entered' : 'left';
+        const locationDesc = scanType.includes('bus') ? 'bus' : 'school';
+        
+        await supabase.from('notification_history').insert({
+          user_id: studentData.parent_id,
+          notification_type: locationDesc === 'bus' ? 'child_bus_location' : 'child_attendance',
+          title: `${studentName} ${actionType}`,
+          message: `${studentName} has ${actionType} the ${locationDesc} at ${location}`,
+          data: {
+            student_id: student.id,
+            action: actionType,
+            location: location,
+            timestamp: new Date().toISOString()
+          }
+        });
+      }
+
       // Update UI state
       setLastScanned(studentName);
       setScanCount(prev => prev + 1);

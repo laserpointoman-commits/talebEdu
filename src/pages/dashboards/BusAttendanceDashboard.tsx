@@ -2,7 +2,8 @@ import { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import NFCScanner from "@/components/nfc/NFCScanner";
-import { Bus, UserCheck, UserX, Clock, ArrowRight, ArrowLeft } from "lucide-react";
+import ManualAttendance from "@/components/features/ManualAttendance";
+import { Bus, UserCheck, UserX, Clock, ArrowRight, ArrowLeft, UserPlus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
@@ -12,6 +13,7 @@ export default function BusAttendanceDashboard() {
   const [scannedStudents, setScannedStudents] = useState<any[]>([]);
   const [boardedCount, setBoardedCount] = useState(0);
   const [alightedCount, setAlightedCount] = useState(0);
+  const [isManualOpen, setIsManualOpen] = useState(false);
 
   const handleScanSuccess = (student: any) => {
     const scanData = {
@@ -33,13 +35,19 @@ export default function BusAttendanceDashboard() {
 
   return (
     <div className="space-y-6 p-6">
-      <div>
-        <h1 className="text-3xl font-bold">
-          {language === 'ar' ? 'لوحة حضور الحافلة' : 'Bus Attendance Dashboard'}
-        </h1>
-        <p className="text-muted-foreground">
-          {language === 'ar' ? 'مسح مستمر لركوب ونزول الطلاب' : 'Continuous scanning for boarding and alighting'}
-        </p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold">
+            {language === 'ar' ? 'لوحة حضور الحافلة' : 'Bus Attendance Dashboard'}
+          </h1>
+          <p className="text-muted-foreground">
+            {language === 'ar' ? 'مسح مستمر لركوب ونزول الطلاب' : 'Continuous scanning for boarding and alighting'}
+          </p>
+        </div>
+        <Button onClick={() => setIsManualOpen(true)} size="lg">
+          <UserPlus className="h-5 w-5 mr-2" />
+          {language === 'ar' ? 'تسجيل يدوي' : 'Manual Entry'}
+        </Button>
       </div>
 
       {/* Mode Selector */}
@@ -186,6 +194,15 @@ export default function BusAttendanceDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Manual Attendance Dialog */}
+      <ManualAttendance
+        open={isManualOpen}
+        onOpenChange={setIsManualOpen}
+        scanType={scanMode === 'board' ? 'bus_in' : 'bus_out'}
+        location={scanMode === 'board' ? 'Bus Stop - Boarding' : 'Bus Stop - Alighting'}
+        onSuccess={handleScanSuccess}
+      />
     </div>
   );
 }
