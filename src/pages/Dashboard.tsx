@@ -9,6 +9,8 @@ import DriverDashboard from '@/pages/dashboards/DriverDashboard';
 import StudentDashboard from '@/components/dashboards/StudentDashboard';
 import DeveloperDashboard from '@/components/dashboards/DeveloperDashboard';
 import CanteenDashboard from '@/pages/dashboards/CanteenDashboard';
+import SchoolAttendanceDashboard from '@/pages/dashboards/SchoolAttendanceDashboard';
+import BusAttendanceDashboard from '@/pages/dashboards/BusAttendanceDashboard';
 import Messages from './Messages';
 import Grades from './Grades';
 import Exams from './Exams';
@@ -77,6 +79,10 @@ export default function Dashboard() {
         return <DriverDashboard />;
       case 'canteen':
         return <CanteenDashboard />;
+      case 'school_attendance':
+        return <SchoolAttendanceDashboard />;
+      case 'bus_attendance':
+        return <BusAttendanceDashboard />;
       default:
         return <ParentDashboard />; // Default to parent view
     }

@@ -10,7 +10,7 @@ interface Profile {
   email: string;
   full_name: string;
   full_name_ar?: string;
-  role: 'admin' | 'teacher' | 'parent' | 'student' | 'driver' | 'developer' | 'finance' | 'canteen';
+  role: 'admin' | 'teacher' | 'parent' | 'student' | 'driver' | 'developer' | 'finance' | 'canteen' | 'school_attendance' | 'bus_attendance';
   phone?: string;
   address?: string;
 }

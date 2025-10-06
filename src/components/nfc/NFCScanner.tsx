@@ -25,6 +25,7 @@ export default function NFCScanner({
   const [lastScanned, setLastScanned] = useState<string | null>(null);
   const [scanCount, setScanCount] = useState(0);
   const [isNFCSupported, setIsNFCSupported] = useState(false);
+  const [recentScans, setRecentScans] = useState<Array<{name: string, time: string}>>([]);
 
   useEffect(() => {
     setIsNFCSupported(nfcService.isSupported());
@@ -35,10 +36,11 @@ export default function NFCScanner({
     
     try {
       await nfcService.startScanning(async (nfcData: NFCData) => {
+        // Handle scan but DON'T stop scanning - keep it continuous
         await handleNFCScan(nfcData);
       });
       
-      toast.success(language === 'ar' ? 'بدأ المسح' : 'Scanning started');
+      toast.success(language === 'ar' ? 'بدأ المسح المستمر' : 'Continuous scanning started');
     } catch (error) {
       console.error('Error starting NFC scan:', error);
       setIsScanning(false);
@@ -102,10 +104,13 @@ export default function NFCScanner({
 
   const handleScan = async (student: any) => {
     try {
+      const studentName = student.name || `${student.first_name} ${student.last_name}`;
+      const currentTime = new Date().toLocaleTimeString();
+      
       // Record the scan in checkpoint_logs
       const { error } = await supabase.from('checkpoint_logs').insert({
         student_id: student.id,
-        student_name: student.name || `${student.first_name} ${student.last_name}`,
+        student_name: studentName,
         nfc_id: student.nfc_id,
         type: scanType,
         location: location,
@@ -115,22 +120,36 @@ export default function NFCScanner({
 
       if (error) throw error;
 
-      setLastScanned(student.name || `${student.first_name} ${student.last_name}`);
+      // Update UI state
+      setLastScanned(studentName);
       setScanCount(prev => prev + 1);
       
+      // Add to recent scans list (keep last 5)
+      setRecentScans(prev => [
+        { name: studentName, time: currentTime },
+        ...prev.slice(0, 4)
+      ]);
+      
+      // Show success toast
       toast.success(
         language === 'ar' 
-          ? `تم تسجيل ${student.name || student.first_name}` 
-          : `${student.name || student.first_name} scanned`
+          ? `✓ ${studentName}` 
+          : `✓ ${studentName}`,
+        {
+          duration: 1500,
+          position: 'top-center'
+        }
       );
 
       // Call the parent callback
       onScanSuccess?.(student);
 
-      // Reset after 2 seconds
+      // Keep last scanned visible for 1.5 seconds, then clear
       setTimeout(() => {
         setLastScanned(null);
-      }, 2000);
+      }, 1500);
+
+      // Continue scanning automatically - no need to stop!
 
     } catch (error) {
       console.error('Error recording scan:', error);
@@ -268,6 +287,23 @@ export default function NFCScanner({
             </Button>
           )}
         </div>
+
+        {/* Recent Scans */}
+        {recentScans.length > 0 && (
+          <div className="space-y-2">
+            <p className="text-sm font-medium">
+              {language === 'ar' ? 'آخر المسحات' : 'Recent Scans'}
+            </p>
+            <div className="space-y-1 max-h-[120px] overflow-y-auto">
+              {recentScans.map((scan, idx) => (
+                <div key={idx} className="flex items-center justify-between p-2 bg-green-500/5 rounded border border-green-500/10">
+                  <span className="text-sm truncate flex-1">{scan.name}</span>
+                  <span className="text-xs text-muted-foreground ml-2">{scan.time}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Statistics */}
         <div className="grid grid-cols-2 gap-3">
