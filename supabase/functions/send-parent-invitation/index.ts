@@ -26,8 +26,22 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Sending parent invitation to:", parentEmail);
 
-    // Get the app URL from environment variable or use the request origin
-    const appUrl = Deno.env.get("APP_URL") || req.headers.get("origin") || "https://acnmqugtqjhxagfwtxcg.supabase.co";
+    // Get the app URL - prioritize custom domain, then deployed URL, then origin
+    const origin = req.headers.get("origin") || "";
+    let appUrl = Deno.env.get("APP_URL");
+    
+    // If no APP_URL set, use the deployed domain if available
+    if (!appUrl) {
+      if (origin.includes("talebedu.lovable.app") || origin.includes("talebedu.com")) {
+        appUrl = origin;
+      } else if (origin.includes("lovableproject.com")) {
+        // If called from preview, use the deployed URL instead
+        appUrl = "https://talebedu.lovable.app";
+      } else {
+        appUrl = origin || "https://talebedu.lovable.app";
+      }
+    }
+    
     const registrationUrl = `${appUrl}/parent-registration?token=${token}`;
 
     const emailResponse = await resend.emails.send({
