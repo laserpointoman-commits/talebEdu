@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -21,6 +22,7 @@ interface BulkInviteDialogProps {
 }
 
 export function BulkInviteDialog({ open, onOpenChange, onSuccess }: BulkInviteDialogProps) {
+  const { language } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [results, setResults] = useState<InviteResult[]>([]);
@@ -33,7 +35,7 @@ export function BulkInviteDialog({ open, onOpenChange, onSuccess }: BulkInviteDi
       setResults([]);
       setShowResults(false);
     } else {
-      toast.error("Please select a valid CSV file");
+      toast.error(language === 'ar' ? "يرجى تحديد ملف CSV صالح" : "Please select a valid CSV file");
     }
   };
 
@@ -46,7 +48,7 @@ export function BulkInviteDialog({ open, onOpenChange, onSuccess }: BulkInviteDi
     a.download = 'parent_invitations_template.csv';
     a.click();
     window.URL.revokeObjectURL(url);
-    toast.success("Template downloaded");
+    toast.success(language === 'ar' ? "تم تنزيل النموذج" : "Template downloaded");
   };
 
   const parseCSV = (text: string): any[] => {
@@ -65,7 +67,7 @@ export function BulkInviteDialog({ open, onOpenChange, onSuccess }: BulkInviteDi
 
   const handleSubmit = async () => {
     if (!file) {
-      toast.error("Please select a CSV file");
+      toast.error(language === 'ar' ? "يرجى تحديد ملف CSV" : "Please select a CSV file");
       return;
     }
 
@@ -76,7 +78,7 @@ export function BulkInviteDialog({ open, onOpenChange, onSuccess }: BulkInviteDi
       const parents = parseCSV(text);
 
       if (parents.length === 0) {
-        toast.error("No valid data found in CSV");
+        toast.error(language === 'ar' ? "لم يتم العثور على بيانات صالحة في ملف CSV" : "No valid data found in CSV");
         setLoading(false);
         return;
       }
@@ -92,12 +94,15 @@ export function BulkInviteDialog({ open, onOpenChange, onSuccess }: BulkInviteDi
       setShowResults(true);
 
       const successCount = data.results.filter((r: InviteResult) => r.status === 'success').length;
-      toast.success(`${successCount} invitations sent successfully`);
+      toast.success(language === 'ar' 
+        ? `تم إرسال ${successCount} دعوة بنجاح`
+        : `${successCount} invitations sent successfully`
+      );
       
       if (onSuccess) onSuccess();
     } catch (error: any) {
       console.error('Error processing bulk invitations:', error);
-      toast.error(error.message || "Failed to process invitations");
+      toast.error(error.message || (language === 'ar' ? "فشلت معالجة الدعوات" : "Failed to process invitations"));
     } finally {
       setLoading(false);
     }
@@ -129,7 +134,13 @@ export function BulkInviteDialog({ open, onOpenChange, onSuccess }: BulkInviteDi
       error: 'destructive',
       skipped: 'secondary'
     };
-    return <Badge variant={variants[status]}>{status}</Badge>;
+    const statusLabels: Record<string, { en: string; ar: string }> = {
+      success: { en: 'Success', ar: 'نجح' },
+      error: { en: 'Error', ar: 'خطأ' },
+      skipped: { en: 'Skipped', ar: 'تم التخطي' }
+    };
+    const label = language === 'ar' ? statusLabels[status]?.ar : statusLabels[status]?.en;
+    return <Badge variant={variants[status]}>{label}</Badge>;
   };
 
   if (showResults) {
@@ -139,11 +150,16 @@ export function BulkInviteDialog({ open, onOpenChange, onSuccess }: BulkInviteDi
 
     return (
       <Dialog open={open} onOpenChange={handleClose}>
-        <DialogContent className="max-w-3xl max-h-[80vh]">
+        <DialogContent className="max-w-3xl max-h-[80vh]" dir={language === 'ar' ? 'rtl' : 'ltr'}>
           <DialogHeader>
-            <DialogTitle>Bulk Invitation Results</DialogTitle>
+            <DialogTitle>
+              {language === 'ar' ? 'نتائج الدعوات الجماعية' : 'Bulk Invitation Results'}
+            </DialogTitle>
             <DialogDescription>
-              {successCount} successful, {errorCount} failed, {skippedCount} skipped
+              {language === 'ar' 
+                ? `${successCount} نجح، ${errorCount} فشل، ${skippedCount} تم التخطي`
+                : `${successCount} successful, ${errorCount} failed, ${skippedCount} skipped`
+              }
             </DialogDescription>
           </DialogHeader>
 
@@ -151,10 +167,10 @@ export function BulkInviteDialog({ open, onOpenChange, onSuccess }: BulkInviteDi
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Message</TableHead>
+                  <TableHead>{language === 'ar' ? 'البريد الإلكتروني' : 'Email'}</TableHead>
+                  <TableHead>{language === 'ar' ? 'الاسم' : 'Name'}</TableHead>
+                  <TableHead>{language === 'ar' ? 'الحالة' : 'Status'}</TableHead>
+                  <TableHead>{language === 'ar' ? 'الرسالة' : 'Message'}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -178,7 +194,7 @@ export function BulkInviteDialog({ open, onOpenChange, onSuccess }: BulkInviteDi
           </div>
 
           <Button onClick={handleClose} className="w-full">
-            Done
+            {language === 'ar' ? 'تم' : 'Done'}
           </Button>
         </DialogContent>
       </Dialog>
@@ -187,11 +203,16 @@ export function BulkInviteDialog({ open, onOpenChange, onSuccess }: BulkInviteDi
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent dir={language === 'ar' ? 'rtl' : 'ltr'}>
         <DialogHeader>
-          <DialogTitle>Bulk Invite Parents</DialogTitle>
+          <DialogTitle>
+            {language === 'ar' ? 'دعوة جماعية لأولياء الأمور' : 'Bulk Invite Parents'}
+          </DialogTitle>
           <DialogDescription>
-            Upload a CSV file with parent information to send multiple invitations at once.
+            {language === 'ar'
+              ? 'قم بتحميل ملف CSV يحتوي على معلومات أولياء الأمور لإرسال عدة دعوات دفعة واحدة.'
+              : 'Upload a CSV file with parent information to send multiple invitations at once.'
+            }
           </DialogDescription>
         </DialogHeader>
 
@@ -201,8 +222,8 @@ export function BulkInviteDialog({ open, onOpenChange, onSuccess }: BulkInviteDi
             variant="outline"
             className="w-full"
           >
-            <Download className="mr-2 h-4 w-4" />
-            Download CSV Template
+            <Download className={language === 'ar' ? "ml-2 h-4 w-4" : "mr-2 h-4 w-4"} />
+            {language === 'ar' ? 'تنزيل نموذج CSV' : 'Download CSV Template'}
           </Button>
 
           <div className="border-2 border-dashed rounded-lg p-8 text-center">
@@ -216,10 +237,13 @@ export function BulkInviteDialog({ open, onOpenChange, onSuccess }: BulkInviteDi
             <label htmlFor="csv-upload" className="cursor-pointer">
               <Upload className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
               <p className="text-sm font-medium mb-1">
-                {file ? file.name : "Click to upload CSV file"}
+                {file 
+                  ? file.name 
+                  : (language === 'ar' ? 'انقر لتحميل ملف CSV' : 'Click to upload CSV file')
+                }
               </p>
               <p className="text-xs text-muted-foreground">
-                CSV file with parent information
+                {language === 'ar' ? 'ملف CSV يحتوي على معلومات أولياء الأمور' : 'CSV file with parent information'}
               </p>
             </label>
           </div>
@@ -230,7 +254,7 @@ export function BulkInviteDialog({ open, onOpenChange, onSuccess }: BulkInviteDi
               onClick={() => onOpenChange(false)}
               className="flex-1"
             >
-              Cancel
+              {language === 'ar' ? 'إلغاء' : 'Cancel'}
             </Button>
             <Button
               onClick={handleSubmit}
@@ -239,11 +263,11 @@ export function BulkInviteDialog({ open, onOpenChange, onSuccess }: BulkInviteDi
             >
               {loading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Processing...
+                  <Loader2 className={language === 'ar' ? "ml-2 h-4 w-4 animate-spin" : "mr-2 h-4 w-4 animate-spin"} />
+                  {language === 'ar' ? 'جاري المعالجة...' : 'Processing...'}
                 </>
               ) : (
-                "Send Invitations"
+                language === 'ar' ? 'إرسال الدعوات' : 'Send Invitations'
               )}
             </Button>
           </div>

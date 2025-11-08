@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +16,7 @@ interface InviteParentDialogProps {
 }
 
 export function InviteParentDialog({ open, onOpenChange, onSuccess }: InviteParentDialogProps) {
+  const { language } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
@@ -31,7 +33,7 @@ export function InviteParentDialog({ open, onOpenChange, onSuccess }: InvitePare
     e.preventDefault();
     
     if (!formData.email || !formData.fullName) {
-      toast.error("Please fill in required fields");
+      toast.error(language === 'ar' ? "يرجى ملء الحقول المطلوبة" : "Please fill in required fields");
       return;
     }
 
@@ -54,12 +56,12 @@ export function InviteParentDialog({ open, onOpenChange, onSuccess }: InvitePare
 
       setRegistrationLink(data.registrationUrl);
       setShowSuccess(true);
-      toast.success("Invitation sent successfully!");
+      toast.success(language === 'ar' ? "تم إرسال الدعوة بنجاح!" : "Invitation sent successfully!");
       
       if (onSuccess) onSuccess();
     } catch (error: any) {
       console.error('Error sending invitation:', error);
-      toast.error(error.message || "Failed to send invitation");
+      toast.error(error.message || (language === 'ar' ? "فشل إرسال الدعوة" : "Failed to send invitation"));
     } finally {
       setLoading(false);
     }
@@ -67,7 +69,7 @@ export function InviteParentDialog({ open, onOpenChange, onSuccess }: InvitePare
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(registrationLink);
-    toast.success("Registration link copied!");
+    toast.success(language === 'ar' ? "تم نسخ رابط التسجيل!" : "Registration link copied!");
   };
 
   const handleClose = () => {
@@ -87,14 +89,17 @@ export function InviteParentDialog({ open, onOpenChange, onSuccess }: InvitePare
   if (showSuccess) {
     return (
       <Dialog open={open} onOpenChange={handleClose}>
-        <DialogContent>
+        <DialogContent dir={language === 'ar' ? 'rtl' : 'ltr'}>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Mail className="h-5 w-5 text-primary" />
-              Invitation Sent Successfully!
+              {language === 'ar' ? 'تم إرسال الدعوة بنجاح!' : 'Invitation Sent Successfully!'}
             </DialogTitle>
             <DialogDescription>
-              The parent will receive an email with instructions. You can also share this registration link directly:
+              {language === 'ar' 
+                ? 'سيتلقى ولي الأمر بريدًا إلكترونيًا يحتوي على التعليمات. يمكنك أيضًا مشاركة رابط التسجيل هذا مباشرة:'
+                : 'The parent will receive an email with instructions. You can also share this registration link directly:'
+              }
             </DialogDescription>
           </DialogHeader>
           
@@ -111,7 +116,7 @@ export function InviteParentDialog({ open, onOpenChange, onSuccess }: InvitePare
             </div>
 
             <Button onClick={handleClose} className="w-full">
-              Done
+              {language === 'ar' ? 'تم' : 'Done'}
             </Button>
           </div>
         </DialogContent>
@@ -121,18 +126,22 @@ export function InviteParentDialog({ open, onOpenChange, onSuccess }: InvitePare
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md" dir={language === 'ar' ? 'rtl' : 'ltr'}>
         <DialogHeader>
-          <DialogTitle>Invite Parent</DialogTitle>
+          <DialogTitle>{language === 'ar' ? 'دعوة ولي أمر' : 'Invite Parent'}</DialogTitle>
           <DialogDescription>
-            Send a registration invitation to a parent. They will register their students themselves.
+            {language === 'ar' 
+              ? 'إرسال دعوة تسجيل إلى ولي أمر. سيقوم بتسجيل طلابه بنفسه.'
+              : 'Send a registration invitation to a parent. They will register their students themselves.'
+            }
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="email">
-              Parent Email <span className="text-destructive">*</span>
+              {language === 'ar' ? 'البريد الإلكتروني لولي الأمر' : 'Parent Email'}{' '}
+              <span className="text-destructive">*</span>
             </Label>
             <Input
               id="email"
@@ -146,30 +155,33 @@ export function InviteParentDialog({ open, onOpenChange, onSuccess }: InvitePare
 
           <div className="space-y-2">
             <Label htmlFor="fullName">
-              Full Name <span className="text-destructive">*</span>
+              {language === 'ar' ? 'الاسم الكامل' : 'Full Name'}{' '}
+              <span className="text-destructive">*</span>
             </Label>
             <Input
               id="fullName"
               value={formData.fullName}
               onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-              placeholder="John Smith"
+              placeholder={language === 'ar' ? 'أحمد محمد' : 'John Smith'}
               required
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="fullNameAr">Full Name (Arabic)</Label>
+            <Label htmlFor="fullNameAr">
+              {language === 'ar' ? 'الاسم الكامل (بالإنجليزية)' : 'Full Name (Arabic)'}
+            </Label>
             <Input
               id="fullNameAr"
               value={formData.fullNameAr}
               onChange={(e) => setFormData({ ...formData, fullNameAr: e.target.value })}
-              placeholder="جون سميث"
-              dir="rtl"
+              placeholder={language === 'ar' ? 'Ahmed Mohammed' : 'جون سميث'}
+              dir={language === 'ar' ? 'ltr' : 'rtl'}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="phone">Phone Number</Label>
+            <Label htmlFor="phone">{language === 'ar' ? 'رقم الهاتف' : 'Phone Number'}</Label>
             <Input
               id="phone"
               type="tel"
@@ -180,24 +192,28 @@ export function InviteParentDialog({ open, onOpenChange, onSuccess }: InvitePare
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="maxStudents">Maximum Students (Optional)</Label>
+            <Label htmlFor="maxStudents">
+              {language === 'ar' ? 'الحد الأقصى للطلاب (اختياري)' : 'Maximum Students (Optional)'}
+            </Label>
             <Input
               id="maxStudents"
               type="number"
               min="1"
               value={formData.maxStudents}
               onChange={(e) => setFormData({ ...formData, maxStudents: e.target.value })}
-              placeholder="Leave empty for unlimited"
+              placeholder={language === 'ar' ? 'اتركه فارغًا لعدد غير محدود' : 'Leave empty for unlimited'}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="notes">Notes (Internal)</Label>
+            <Label htmlFor="notes">
+              {language === 'ar' ? 'ملاحظات (داخلية)' : 'Notes (Internal)'}
+            </Label>
             <Textarea
               id="notes"
               value={formData.notes}
               onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-              placeholder="Any additional notes..."
+              placeholder={language === 'ar' ? 'أي ملاحظات إضافية...' : 'Any additional notes...'}
               rows={2}
             />
           </div>
@@ -209,16 +225,16 @@ export function InviteParentDialog({ open, onOpenChange, onSuccess }: InvitePare
               onClick={() => onOpenChange(false)}
               className="flex-1"
             >
-              Cancel
+              {language === 'ar' ? 'إلغاء' : 'Cancel'}
             </Button>
             <Button type="submit" disabled={loading} className="flex-1">
               {loading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Sending...
+                  <Loader2 className={language === 'ar' ? "ml-2 h-4 w-4 animate-spin" : "mr-2 h-4 w-4 animate-spin"} />
+                  {language === 'ar' ? 'جاري الإرسال...' : 'Sending...'}
                 </>
               ) : (
-                "Send Invitation"
+                language === 'ar' ? 'إرسال الدعوة' : 'Send Invitation'
               )}
             </Button>
           </div>

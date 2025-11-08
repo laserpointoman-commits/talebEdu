@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { DashboardLayout } from "@/components/layouts/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export default function ParentInvitationsDashboard() {
+  const { language } = useLanguage();
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
   const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
   const [qrDialogOpen, setQrDialogOpen] = useState(false);
@@ -68,7 +70,14 @@ export default function ParentInvitationsDashboard() {
       expired: 'destructive',
       used: 'outline'
     };
-    return <Badge variant={variants[status]}>{status}</Badge>;
+    const statusLabels: Record<string, { en: string; ar: string }> = {
+      completed: { en: 'Completed', ar: 'مكتمل' },
+      pending: { en: 'Pending', ar: 'قيد الانتظار' },
+      expired: { en: 'Expired', ar: 'منتهي الصلاحية' },
+      used: { en: 'Used', ar: 'مستخدم' }
+    };
+    const label = language === 'ar' ? statusLabels[status]?.ar : statusLabels[status]?.en;
+    return <Badge variant={variants[status]}>{label}</Badge>;
   };
 
   const filteredInvitations = invitations?.filter(inv => {
@@ -92,7 +101,7 @@ export default function ParentInvitationsDashboard() {
   const handleCopyLink = (token: string) => {
     const link = `${window.location.origin}/parent-registration?token=${token}`;
     navigator.clipboard.writeText(link);
-    toast.success("Registration link copied!");
+    toast.success(language === 'ar' ? "تم نسخ رابط التسجيل!" : "Registration link copied!");
   };
 
   const handleResend = async (invitation: any) => {
@@ -102,15 +111,15 @@ export default function ParentInvitationsDashboard() {
       });
 
       if (error) throw error;
-      toast.success("Invitation resent successfully!");
+      toast.success(language === 'ar' ? "تم إعادة إرسال الدعوة بنجاح!" : "Invitation resent successfully!");
       refetch();
     } catch (error: any) {
-      toast.error(error.message || "Failed to resend invitation");
+      toast.error(error.message || (language === 'ar' ? "فشل إعادة إرسال الدعوة" : "Failed to resend invitation"));
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this invitation?")) return;
+    if (!confirm(language === 'ar' ? "هل أنت متأكد من حذف هذه الدعوة؟" : "Are you sure you want to delete this invitation?")) return;
 
     try {
       const { error } = await supabase
@@ -119,10 +128,10 @@ export default function ParentInvitationsDashboard() {
         .eq('id', id);
 
       if (error) throw error;
-      toast.success("Invitation deleted");
+      toast.success(language === 'ar' ? "تم حذف الدعوة" : "Invitation deleted");
       refetch();
     } catch (error: any) {
-      toast.error(error.message || "Failed to delete invitation");
+      toast.error(error.message || (language === 'ar' ? "فشل حذف الدعوة" : "Failed to delete invitation"));
     }
   };
 
@@ -150,7 +159,7 @@ export default function ParentInvitationsDashboard() {
       downloadLink.download = `qr-${selectedToken?.profiles?.email || 'invitation'}.png`;
       downloadLink.href = pngFile;
       downloadLink.click();
-      toast.success("QR code downloaded");
+      toast.success(language === 'ar' ? "تم تنزيل رمز الاستجابة السريعة" : "QR code downloaded");
     };
 
     img.src = 'data:image/svg+xml;base64,' + btoa(svgData);
@@ -158,20 +167,24 @@ export default function ParentInvitationsDashboard() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
+      <div className="space-y-6" dir={language === 'ar' ? 'rtl' : 'ltr'}>
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Parent Invitations</h1>
-            <p className="text-muted-foreground">Manage parent registration invitations</p>
+            <h1 className="text-3xl font-bold">
+              {language === 'ar' ? 'دعوات أولياء الأمور' : 'Parent Invitations'}
+            </h1>
+            <p className="text-muted-foreground">
+              {language === 'ar' ? 'إدارة دعوات تسجيل أولياء الأمور' : 'Manage parent registration invitations'}
+            </p>
           </div>
           <div className="flex gap-2">
             <Button onClick={() => setBulkDialogOpen(true)} variant="outline">
-              <Users className="mr-2 h-4 w-4" />
-              Bulk Invite
+              <Users className={language === 'ar' ? "ml-2 h-4 w-4" : "mr-2 h-4 w-4"} />
+              {language === 'ar' ? 'دعوة جماعية' : 'Bulk Invite'}
             </Button>
             <Button onClick={() => setInviteDialogOpen(true)}>
-              <Mail className="mr-2 h-4 w-4" />
-              Invite Parent
+              <Mail className={language === 'ar' ? "ml-2 h-4 w-4" : "mr-2 h-4 w-4"} />
+              {language === 'ar' ? 'دعوة ولي أمر' : 'Invite Parent'}
             </Button>
           </div>
         </div>
@@ -179,7 +192,9 @@ export default function ParentInvitationsDashboard() {
         <div className="grid gap-4 md:grid-cols-4">
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Total Invitations</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                {language === 'ar' ? 'إجمالي الدعوات' : 'Total Invitations'}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.total}</div>
@@ -187,7 +202,9 @@ export default function ParentInvitationsDashboard() {
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Pending</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                {language === 'ar' ? 'قيد الانتظار' : 'Pending'}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-yellow-600">{stats.pending}</div>
@@ -195,7 +212,9 @@ export default function ParentInvitationsDashboard() {
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Completed</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                {language === 'ar' ? 'مكتمل' : 'Completed'}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-green-600">{stats.completed}</div>
@@ -203,7 +222,9 @@ export default function ParentInvitationsDashboard() {
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Expired</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                {language === 'ar' ? 'منتهي الصلاحية' : 'Expired'}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-red-600">{stats.expired}</div>
@@ -213,27 +234,29 @@ export default function ParentInvitationsDashboard() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Invitations</CardTitle>
-            <CardDescription>View and manage all parent invitations</CardDescription>
+            <CardTitle>{language === 'ar' ? 'الدعوات' : 'Invitations'}</CardTitle>
+            <CardDescription>
+              {language === 'ar' ? 'عرض وإدارة جميع دعوات أولياء الأمور' : 'View and manage all parent invitations'}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               <div className="flex gap-4">
                 <div className="relative flex-1">
-                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Search className={language === 'ar' ? "absolute right-2 top-2.5 h-4 w-4 text-muted-foreground" : "absolute left-2 top-2.5 h-4 w-4 text-muted-foreground"} />
                   <Input
-                    placeholder="Search by name or email..."
+                    placeholder={language === 'ar' ? "البحث بالاسم أو البريد الإلكتروني..." : "Search by name or email..."}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-8"
+                    className={language === 'ar' ? "pr-8" : "pl-8"}
                   />
                 </div>
                 <Tabs value={statusFilter} onValueChange={setStatusFilter} className="w-auto">
                   <TabsList>
-                    <TabsTrigger value="all">All</TabsTrigger>
-                    <TabsTrigger value="pending">Pending</TabsTrigger>
-                    <TabsTrigger value="completed">Completed</TabsTrigger>
-                    <TabsTrigger value="expired">Expired</TabsTrigger>
+                    <TabsTrigger value="all">{language === 'ar' ? 'الكل' : 'All'}</TabsTrigger>
+                    <TabsTrigger value="pending">{language === 'ar' ? 'قيد الانتظار' : 'Pending'}</TabsTrigger>
+                    <TabsTrigger value="completed">{language === 'ar' ? 'مكتمل' : 'Completed'}</TabsTrigger>
+                    <TabsTrigger value="expired">{language === 'ar' ? 'منتهي' : 'Expired'}</TabsTrigger>
                   </TabsList>
                 </Tabs>
               </div>
@@ -242,31 +265,42 @@ export default function ParentInvitationsDashboard() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Parent</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Students</TableHead>
-                      <TableHead>Sent</TableHead>
-                      <TableHead>Expires</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
+                      <TableHead>{language === 'ar' ? 'ولي الأمر' : 'Parent'}</TableHead>
+                      <TableHead>{language === 'ar' ? 'البريد الإلكتروني' : 'Email'}</TableHead>
+                      <TableHead>{language === 'ar' ? 'الحالة' : 'Status'}</TableHead>
+                      <TableHead>{language === 'ar' ? 'الطلاب' : 'Students'}</TableHead>
+                      <TableHead>{language === 'ar' ? 'تاريخ الإرسال' : 'Sent'}</TableHead>
+                      <TableHead>{language === 'ar' ? 'تاريخ الانتهاء' : 'Expires'}</TableHead>
+                      <TableHead className={language === 'ar' ? "text-left" : "text-right"}>
+                        {language === 'ar' ? 'الإجراءات' : 'Actions'}
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {isLoading ? (
                       <TableRow>
-                        <TableCell colSpan={7} className="text-center">Loading...</TableCell>
+                        <TableCell colSpan={7} className="text-center">
+                          {language === 'ar' ? 'جاري التحميل...' : 'Loading...'}
+                        </TableCell>
                       </TableRow>
                     ) : filteredInvitations?.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={7} className="text-center">No invitations found</TableCell>
+                        <TableCell colSpan={7} className="text-center">
+                          {language === 'ar' ? 'لم يتم العثور على دعوات' : 'No invitations found'}
+                        </TableCell>
                       </TableRow>
                     ) : (
                       filteredInvitations?.map((invitation) => (
                         <TableRow key={invitation.id}>
                           <TableCell className="font-medium">
                             <div>
-                              <div>{invitation.profiles?.full_name}</div>
-                              {invitation.profiles?.full_name_ar && (
+                              <div>
+                                {language === 'ar' 
+                                  ? (invitation.profiles?.full_name_ar || invitation.profiles?.full_name)
+                                  : invitation.profiles?.full_name
+                                }
+                              </div>
+                              {language !== 'ar' && invitation.profiles?.full_name_ar && (
                                 <div className="text-xs text-muted-foreground" dir="rtl">
                                   {invitation.profiles.full_name_ar}
                                 </div>
@@ -287,8 +321,8 @@ export default function ParentInvitationsDashboard() {
                           <TableCell className="text-sm text-muted-foreground">
                             {format(new Date(invitation.expires_at), 'MMM dd, yyyy')}
                           </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex justify-end gap-1">
+                          <TableCell className={language === 'ar' ? "text-left" : "text-right"}>
+                            <div className={language === 'ar' ? "flex justify-start gap-1" : "flex justify-end gap-1"}>
                               <Button
                                 size="sm"
                                 variant="ghost"
@@ -344,7 +378,9 @@ export default function ParentInvitationsDashboard() {
         <Dialog open={qrDialogOpen} onOpenChange={setQrDialogOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>QR Code - Registration Link</DialogTitle>
+              <DialogTitle>
+                {language === 'ar' ? 'رمز الاستجابة السريعة - رابط التسجيل' : 'QR Code - Registration Link'}
+              </DialogTitle>
             </DialogHeader>
             {selectedToken && (
               <div className="space-y-4">
@@ -362,8 +398,8 @@ export default function ParentInvitationsDashboard() {
                   </div>
                 </div>
                 <Button onClick={downloadQR} className="w-full">
-                  <Download className="mr-2 h-4 w-4" />
-                  Download QR Code
+                  <Download className={language === 'ar' ? "ml-2 h-4 w-4" : "mr-2 h-4 w-4"} />
+                  {language === 'ar' ? 'تنزيل رمز الاستجابة السريعة' : 'Download QR Code'}
                 </Button>
               </div>
             )}
