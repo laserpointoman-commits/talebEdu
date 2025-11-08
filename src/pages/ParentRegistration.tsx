@@ -40,6 +40,8 @@ export default function ParentRegistration() {
     bloodType: "",
     address: "",
     phone: "",
+    fatherPhone: "",
+    motherPhone: "",
     parentName: "",
     parentPhone: "",
     parentEmail: "",
@@ -303,6 +305,8 @@ export default function ParentRegistration() {
       nfcId: selectedLanguage === "ar" ? "رقم NFC (إن وجد)" : "NFC ID (if available)",
       address: selectedLanguage === "ar" ? "العنوان" : "Address",
       phone: selectedLanguage === "ar" ? "هاتف الطالب" : "Student Phone",
+      fatherPhone: selectedLanguage === "ar" ? "هاتف الأب" : "Father's Phone",
+      motherPhone: selectedLanguage === "ar" ? "هاتف الأم" : "Mother's Phone",
       emergencyContact: selectedLanguage === "ar" ? "اسم جهة الاتصال الطارئة" : "Emergency Contact Name",
       emergencyPhone: selectedLanguage === "ar" ? "هاتف الطوارئ" : "Emergency Phone",
       medicalConditions: selectedLanguage === "ar" ? "الحالات الطبية" : "Medical Conditions",
@@ -530,6 +534,29 @@ export default function ParentRegistration() {
                       onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
                       className={selectedLanguage === "ar" ? "text-right" : ""}
                     />
+                  </div>
+
+                  <div className={`grid grid-cols-2 gap-4 ${selectedLanguage === "ar" ? "direction-rtl" : ""}`}>
+                    <div className={selectedLanguage === "ar" ? "text-right" : ""}>
+                      <Label htmlFor="fatherPhone" className={selectedLanguage === "ar" ? "text-right block" : ""}>{t.labels.fatherPhone}</Label>
+                      <Input
+                        id="fatherPhone"
+                        type="tel"
+                        value={formData.fatherPhone}
+                        onChange={(e) => setFormData(prev => ({ ...prev, fatherPhone: e.target.value }))}
+                        className={selectedLanguage === "ar" ? "text-right" : ""}
+                      />
+                    </div>
+                    <div className={selectedLanguage === "ar" ? "text-right" : ""}>
+                      <Label htmlFor="motherPhone" className={selectedLanguage === "ar" ? "text-right block" : ""}>{t.labels.motherPhone}</Label>
+                      <Input
+                        id="motherPhone"
+                        type="tel"
+                        value={formData.motherPhone}
+                        onChange={(e) => setFormData(prev => ({ ...prev, motherPhone: e.target.value }))}
+                        className={selectedLanguage === "ar" ? "text-right" : ""}
+                      />
+                    </div>
                   </div>
 
                   <div className={`grid grid-cols-2 gap-4 ${selectedLanguage === "ar" ? "direction-rtl" : ""}`}>
