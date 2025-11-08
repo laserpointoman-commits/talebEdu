@@ -507,16 +507,6 @@ export default function ParentRegistration() {
                       </Select>
                     </div>
                   </div>
-
-                  <div className={selectedLanguage === "ar" ? "text-right" : ""}>
-                    <Label htmlFor="nfcId" className={selectedLanguage === "ar" ? "text-right block" : ""}>{t.labels.nfcId}</Label>
-                    <Input
-                      id="nfcId"
-                      value={formData.nfcId}
-                      onChange={(e) => setFormData(prev => ({ ...prev, nfcId: e.target.value }))}
-                      className={selectedLanguage === "ar" ? "text-right" : ""}
-                    />
-                  </div>
                 </TabsContent>
 
                 <TabsContent value="contact" className="space-y-4 mt-4">
