@@ -290,6 +290,8 @@ export default function ParentRegistration() {
       lastName: selectedLanguage === "ar" ? "اسم العائلة *" : "Last Name *",
       firstNameAr: selectedLanguage === "ar" ? "الاسم الأول (عربي)" : "First Name (Arabic)",
       lastNameAr: selectedLanguage === "ar" ? "اسم العائلة (عربي)" : "Last Name (Arabic)",
+      enterInEnglish: selectedLanguage === "ar" ? "الرجاء الإدخال بالإنجليزية" : "Please enter in English",
+      enterInArabic: selectedLanguage === "ar" ? "الرجاء الإدخال بالعربية" : "Please enter in Arabic",
       dateOfBirth: selectedLanguage === "ar" ? "تاريخ الميلاد *" : "Date of Birth *",
       gender: selectedLanguage === "ar" ? "الجنس *" : "Gender *",
       male: selectedLanguage === "ar" ? "ذكر" : "Male",
@@ -370,6 +372,7 @@ export default function ParentRegistration() {
                         required
                         className={selectedLanguage === "ar" ? "text-right" : ""}
                       />
+                      <p className="text-xs text-muted-foreground mt-1">{t.labels.enterInEnglish}</p>
                     </div>
                     <div className={selectedLanguage === "ar" ? "text-right" : ""}>
                       <Label htmlFor="lastName" className={selectedLanguage === "ar" ? "text-right block" : ""}>{t.labels.lastName}</Label>
@@ -380,6 +383,7 @@ export default function ParentRegistration() {
                         required
                         className={selectedLanguage === "ar" ? "text-right" : ""}
                       />
+                      <p className="text-xs text-muted-foreground mt-1">{t.labels.enterInEnglish}</p>
                     </div>
                     <div className={selectedLanguage === "ar" ? "text-right" : ""}>
                       <Label htmlFor="firstNameAr" className={selectedLanguage === "ar" ? "text-right block" : ""}>{t.labels.firstNameAr}</Label>
@@ -390,6 +394,7 @@ export default function ParentRegistration() {
                         dir="rtl"
                         className="text-right"
                       />
+                      <p className="text-xs text-muted-foreground mt-1">{t.labels.enterInArabic}</p>
                     </div>
                     <div className={selectedLanguage === "ar" ? "text-right" : ""}>
                       <Label htmlFor="lastNameAr" className={selectedLanguage === "ar" ? "text-right block" : ""}>{t.labels.lastNameAr}</Label>
@@ -400,6 +405,7 @@ export default function ParentRegistration() {
                         dir="rtl"
                         className="text-right"
                       />
+                      <p className="text-xs text-muted-foreground mt-1">{t.labels.enterInArabic}</p>
                     </div>
                   </div>
 
