@@ -135,9 +135,9 @@ serve(async (req) => {
         console.warn('Could not update password');
       }
 
-      // Update user role in user_roles table
+      // Update user role in user_role_assignments table
       await supabaseAdmin
-        .from('user_roles')
+        .from('user_role_assignments')
         .upsert({
           user_id: userId,
           role: role as any
@@ -199,7 +199,7 @@ serve(async (req) => {
 
       // Create user role
       const { error: roleInsertError } = await supabaseAdmin
-        .from('user_roles')
+        .from('user_role_assignments')
         .insert({
           user_id: userId,
           role: role as any
