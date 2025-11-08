@@ -11,7 +11,8 @@ import {
   Settings,
   Shield,
   BarChart3,
-  Clock
+  Clock,
+  MailPlus
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -27,6 +28,7 @@ export default function AdminDashboard() {
     totalTeachers: 0,
     activeBuses: 0,
     totalWalletBalance: 0,
+    pendingInvitations: 0,
     studentsChange: 0,
     teachersChange: 0
   });
@@ -72,11 +74,19 @@ export default function AdminDashboard() {
         .order('created_at', { ascending: false })
         .limit(5);
 
+      // Load pending invitations count
+      const { count: pendingInvitationsCount } = await supabase
+        .from('parent_registration_tokens')
+        .select('*', { count: 'exact', head: true })
+        .eq('used', false)
+        .gt('expires_at', new Date().toISOString());
+
       setStats({
         totalStudents: studentsCount || 0,
         totalTeachers: teachersCount || 0,
         activeBuses: busesCount || 0,
         totalWalletBalance: totalBalance,
+        pendingInvitations: pendingInvitationsCount || 0,
         studentsChange: 0,
         teachersChange: 0
       });
@@ -122,9 +132,26 @@ export default function AdminDashboard() {
       )
       .subscribe();
 
+    // Subscribe to parent invitations changes
+    const invitationsChannel = supabase
+      .channel('invitations-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'parent_registration_tokens'
+        },
+        () => {
+          loadDashboardData();
+        }
+      )
+      .subscribe();
+
     return () => {
       supabase.removeChannel(walletChannel);
       supabase.removeChannel(studentsChannel);
+      supabase.removeChannel(invitationsChannel);
     };
   };
 
@@ -134,6 +161,13 @@ export default function AdminDashboard() {
       desc: language === 'ar' ? 'إضافة وتعديل المستخدمين' : 'Add and manage users',
       icon: Users,
       onClick: () => navigate('/dashboard/admin/users')
+    },
+    {
+      title: language === 'ar' ? 'دعوات أولياء الأمور' : 'Parent Invitations',
+      desc: language === 'ar' ? 'إرسال وإدارة دعوات التسجيل' : 'Send and manage registration invites',
+      icon: MailPlus,
+      onClick: () => navigate('/dashboard/admin/parent-invitations'),
+      badge: stats.pendingInvitations > 0 ? stats.pendingInvitations : undefined
     },
     {
       title: language === 'ar' ? 'الحافلات والسائقين' : 'Buses & Drivers',
@@ -275,8 +309,16 @@ export default function AdminDashboard() {
               onClick={action.onClick}
             >
               <CardHeader>
-                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-3">
+                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-3 relative">
                   <action.icon className="h-6 w-6 text-primary" />
+                  {action.badge && (
+                    <Badge 
+                      className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
+                      variant="destructive"
+                    >
+                      {action.badge}
+                    </Badge>
+                  )}
                 </div>
                 <CardTitle className="text-lg">{action.title}</CardTitle>
                 <p className="text-sm text-muted-foreground">{action.desc}</p>
