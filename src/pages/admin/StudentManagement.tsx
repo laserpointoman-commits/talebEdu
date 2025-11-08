@@ -6,9 +6,15 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Search, User, Scan, Smartphone } from "lucide-react";
+import { Plus, Search, User, Scan, Smartphone, Eye } from "lucide-react";
 import LogoLoader from "@/components/LogoLoader";
 import AddStudentDialog from "@/components/admin/AddStudentDialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export default function StudentManagement() {
   const { language } = useLanguage();
@@ -18,6 +24,8 @@ export default function StudentManagement() {
   const [searchTerm, setSearchTerm] = useState("");
   const [nfcSupported, setNfcSupported] = useState(false);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState<any>(null);
+  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
 
   useEffect(() => {
     loadStudents();
@@ -117,21 +125,35 @@ export default function StudentManagement() {
             <CardContent className="space-y-3">
               <div className="flex items-center gap-2 text-sm">
                 <Scan className="h-4 w-4 text-primary" />
-                <span className="font-mono text-xs">{student.nfc_id}</span>
+                <span className="font-mono text-xs">{student.nfc_id || language === 'ar' ? 'لم يتم تعيين' : 'Not assigned'}</span>
               </div>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <span>{language === 'ar' ? 'الصف:' : 'Grade:'}</span>
                 <span>{student.grade}</span>
               </div>
-              {student.status === 'active' ? (
-                <Badge className="bg-green-500">
-                  {language === 'ar' ? 'نشط' : 'Active'}
-                </Badge>
-              ) : (
-                <Badge variant="destructive">
-                  {language === 'ar' ? 'غير نشط' : 'Inactive'}
-                </Badge>
-              )}
+              <div className="flex items-center gap-2">
+                {student.status === 'active' ? (
+                  <Badge className="bg-green-500">
+                    {language === 'ar' ? 'نشط' : 'Active'}
+                  </Badge>
+                ) : (
+                  <Badge variant="destructive">
+                    {language === 'ar' ? 'غير نشط' : 'Inactive'}
+                  </Badge>
+                )}
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="w-full"
+                onClick={() => {
+                  setSelectedStudent(student);
+                  setDetailsDialogOpen(true);
+                }}
+              >
+                <Eye className="h-4 w-4 mr-2" />
+                {language === 'ar' ? 'عرض التفاصيل' : 'View Details'}
+              </Button>
             </CardContent>
           </Card>
         ))}
@@ -147,6 +169,125 @@ export default function StudentManagement() {
           </CardContent>
         </Card>
       )}
+
+      {/* Student Details Dialog */}
+      <Dialog open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {language === 'ar' ? 'تفاصيل الطالب' : 'Student Details'}
+            </DialogTitle>
+          </DialogHeader>
+          {selectedStudent && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    {language === 'ar' ? 'الاسم الأول' : 'First Name'}
+                  </p>
+                  <p className="text-base">{selectedStudent.first_name}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    {language === 'ar' ? 'اسم العائلة' : 'Last Name'}
+                  </p>
+                  <p className="text-base">{selectedStudent.last_name}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    {language === 'ar' ? 'رقم الطالب' : 'Student ID'}
+                  </p>
+                  <p className="text-base font-mono">{selectedStudent.student_id}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    {language === 'ar' ? 'الصف' : 'Grade'}
+                  </p>
+                  <p className="text-base">{selectedStudent.grade}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    {language === 'ar' ? 'الفصل' : 'Class'}
+                  </p>
+                  <p className="text-base">{selectedStudent.class}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    {language === 'ar' ? 'الجنس' : 'Gender'}
+                  </p>
+                  <p className="text-base">{selectedStudent.gender}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    {language === 'ar' ? 'تاريخ الميلاد' : 'Date of Birth'}
+                  </p>
+                  <p className="text-base">{selectedStudent.date_of_birth || '-'}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    {language === 'ar' ? 'فصيلة الدم' : 'Blood Group'}
+                  </p>
+                  <p className="text-base">{selectedStudent.blood_group || '-'}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    {language === 'ar' ? 'الجنسية' : 'Nationality'}
+                  </p>
+                  <p className="text-base">{selectedStudent.nationality || '-'}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    {language === 'ar' ? 'رقم NFC' : 'NFC ID'}
+                  </p>
+                  <p className="text-base font-mono">{selectedStudent.nfc_id || language === 'ar' ? 'لم يتم تعيين' : 'Not assigned'}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    {language === 'ar' ? 'الهاتف' : 'Phone'}
+                  </p>
+                  <p className="text-base">{selectedStudent.phone || '-'}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    {language === 'ar' ? 'هاتف ولي الأمر' : 'Parent Phone'}
+                  </p>
+                  <p className="text-base">{selectedStudent.parent_phone || '-'}</p>
+                </div>
+                <div className="col-span-2">
+                  <p className="text-sm font-medium text-muted-foreground">
+                    {language === 'ar' ? 'العنوان' : 'Address'}
+                  </p>
+                  <p className="text-base">{selectedStudent.address || '-'}</p>
+                </div>
+                <div className="col-span-2">
+                  <p className="text-sm font-medium text-muted-foreground">
+                    {language === 'ar' ? 'الحساسية' : 'Allergies'}
+                  </p>
+                  <p className="text-base">{selectedStudent.allergies || '-'}</p>
+                </div>
+                <div className="col-span-2">
+                  <p className="text-sm font-medium text-muted-foreground">
+                    {language === 'ar' ? 'الحالة الطبية' : 'Medical Conditions'}
+                  </p>
+                  <p className="text-base">{selectedStudent.medical_conditions || '-'}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    {language === 'ar' ? 'اسم جهة الاتصال الطارئة' : 'Emergency Contact Name'}
+                  </p>
+                  <p className="text-base">{selectedStudent.emergency_contact_name || '-'}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    {language === 'ar' ? 'رقم الاتصال الطارئ' : 'Emergency Contact'}
+                  </p>
+                  <p className="text-base">{selectedStudent.emergency_contact || '-'}</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* NFC Instructions */}
       {nfcSupported && (
