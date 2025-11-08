@@ -76,7 +76,7 @@ serve(async (req: Request) => {
         grade: studentData.grade,
         class: studentData.class,
         nationality: studentData.nationality,
-        blood_type: studentData.bloodType,
+        blood_group: studentData.bloodType,
         address: studentData.address,
         phone: studentData.phone,
         parent_id: tokenData.parent_id,
