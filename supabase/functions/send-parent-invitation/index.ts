@@ -26,7 +26,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Sending parent invitation to:", parentEmail);
 
-    const registrationUrl = `${Deno.env.get("VITE_SUPABASE_URL")?.replace(/\/+$/, "").replace("acnmqugtqjhxagfwtxcg.supabase.co", "talebedu.lovable.app")}/parent-registration?token=${token}`;
+    const registrationUrl = `https://talebedu.com/parent-registration?token=${token}`;
 
     const emailResponse = await resend.emails.send({
       from: "TalebEdu <onboarding@resend.dev>",
@@ -77,7 +77,7 @@ const handler = async (req: Request): Promise<Response> => {
                 <strong>Your Login Credentials:</strong><br><br>
                 <strong>Email:</strong> ${loginEmail}<br>
                 <strong>Password:</strong> ${loginPassword}<br>
-                <strong>Portal:</strong> <a href="https://talebedu.lovable.app">https://talebedu.lovable.app</a>
+                <strong>Portal:</strong> <a href="https://talebedu.com">https://talebedu.com</a>
               </div>
 
               <div class="divider"></div>
@@ -97,7 +97,7 @@ const handler = async (req: Request): Promise<Response> => {
                 <strong>بيانات تسجيل الدخول:</strong><br><br>
                 <strong>البريد الإلكتروني:</strong> ${loginEmail}<br>
                 <strong>كلمة المرور:</strong> ${loginPassword}<br>
-                <strong>البوابة:</strong> <a href="https://talebedu.lovable.app">https://talebedu.lovable.app</a>
+                <strong>البوابة:</strong> <a href="https://talebedu.com">https://talebedu.com</a>
               </div>
             </div>
 
