@@ -316,8 +316,8 @@ export default function ParentRegistration() {
     placeholders: {
       selectGender: selectedLanguage === "ar" ? "اختر الجنس" : "Select gender",
       selectBlood: selectedLanguage === "ar" ? "اختر فصيلة الدم" : "Select blood type",
-      grade: selectedLanguage === "ar" ? "مثال: الصف الخامس" : "e.g., Grade 5",
-      class: selectedLanguage === "ar" ? "مثال: 5أ" : "e.g., 5A",
+      selectGrade: selectedLanguage === "ar" ? "اختر الصف" : "Select grade",
+      selectClass: selectedLanguage === "ar" ? "اختر الفصل" : "Select class",
       medical: selectedLanguage === "ar" ? "أي حالات طبية يجب أن نكون على علم بها" : "Any medical conditions we should be aware of",
       allergies: selectedLanguage === "ar" ? "أي حساسية معروفة" : "Any known allergies",
     },
@@ -470,24 +470,41 @@ export default function ParentRegistration() {
                   <div className={`grid grid-cols-2 gap-4 ${selectedLanguage === "ar" ? "direction-rtl" : ""}`}>
                     <div className={selectedLanguage === "ar" ? "text-right" : ""}>
                       <Label htmlFor="grade" className={selectedLanguage === "ar" ? "text-right block" : ""}>{t.labels.grade}</Label>
-                      <Input
-                        id="grade"
-                        value={formData.grade}
-                        onChange={(e) => setFormData(prev => ({ ...prev, grade: e.target.value }))}
-                        placeholder={t.placeholders.grade}
-                        required
-                        className={selectedLanguage === "ar" ? "text-right" : ""}
-                      />
+                      <Select value={formData.grade} onValueChange={(value) => setFormData(prev => ({ ...prev, grade: value }))} required>
+                        <SelectTrigger className={selectedLanguage === "ar" ? "text-right" : ""}>
+                          <SelectValue placeholder={t.placeholders.selectGrade} />
+                        </SelectTrigger>
+                        <SelectContent className={selectedLanguage === "ar" ? "text-right" : ""}>
+                          <SelectItem value="Grade 1">{selectedLanguage === "ar" ? "الصف الأول" : "Grade 1"}</SelectItem>
+                          <SelectItem value="Grade 2">{selectedLanguage === "ar" ? "الصف الثاني" : "Grade 2"}</SelectItem>
+                          <SelectItem value="Grade 3">{selectedLanguage === "ar" ? "الصف الثالث" : "Grade 3"}</SelectItem>
+                          <SelectItem value="Grade 4">{selectedLanguage === "ar" ? "الصف الرابع" : "Grade 4"}</SelectItem>
+                          <SelectItem value="Grade 5">{selectedLanguage === "ar" ? "الصف الخامس" : "Grade 5"}</SelectItem>
+                          <SelectItem value="Grade 6">{selectedLanguage === "ar" ? "الصف السادس" : "Grade 6"}</SelectItem>
+                          <SelectItem value="Grade 7">{selectedLanguage === "ar" ? "الصف السابع" : "Grade 7"}</SelectItem>
+                          <SelectItem value="Grade 8">{selectedLanguage === "ar" ? "الصف الثامن" : "Grade 8"}</SelectItem>
+                          <SelectItem value="Grade 9">{selectedLanguage === "ar" ? "الصف التاسع" : "Grade 9"}</SelectItem>
+                          <SelectItem value="Grade 10">{selectedLanguage === "ar" ? "الصف العاشر" : "Grade 10"}</SelectItem>
+                          <SelectItem value="Grade 11">{selectedLanguage === "ar" ? "الصف الحادي عشر" : "Grade 11"}</SelectItem>
+                          <SelectItem value="Grade 12">{selectedLanguage === "ar" ? "الصف الثاني عشر" : "Grade 12"}</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div className={selectedLanguage === "ar" ? "text-right" : ""}>
                       <Label htmlFor="class" className={selectedLanguage === "ar" ? "text-right block" : ""}>{t.labels.class}</Label>
-                      <Input
-                        id="class"
-                        value={formData.class}
-                        onChange={(e) => setFormData(prev => ({ ...prev, class: e.target.value }))}
-                        placeholder={t.placeholders.class}
-                        className={selectedLanguage === "ar" ? "text-right" : ""}
-                      />
+                      <Select value={formData.class} onValueChange={(value) => setFormData(prev => ({ ...prev, class: value }))}>
+                        <SelectTrigger className={selectedLanguage === "ar" ? "text-right" : ""}>
+                          <SelectValue placeholder={t.placeholders.selectClass} />
+                        </SelectTrigger>
+                        <SelectContent className={selectedLanguage === "ar" ? "text-right" : ""}>
+                          <SelectItem value="A">{selectedLanguage === "ar" ? "أ" : "A"}</SelectItem>
+                          <SelectItem value="B">{selectedLanguage === "ar" ? "ب" : "B"}</SelectItem>
+                          <SelectItem value="C">{selectedLanguage === "ar" ? "ج" : "C"}</SelectItem>
+                          <SelectItem value="D">{selectedLanguage === "ar" ? "د" : "D"}</SelectItem>
+                          <SelectItem value="E">{selectedLanguage === "ar" ? "ه" : "E"}</SelectItem>
+                          <SelectItem value="F">{selectedLanguage === "ar" ? "و" : "F"}</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
 
