@@ -332,7 +332,10 @@ export default function ParentRegistration() {
           <CardContent>
             <form onSubmit={handleSubmit} className={selectedLanguage === "ar" ? "text-right" : "text-left"}>
               <Tabs defaultValue="basic" className="w-full">
-                <TabsList className="grid w-full grid-cols-4">
+              <TabsList 
+                className={`grid w-full grid-cols-4 ${selectedLanguage === "ar" ? "flex-row-reverse" : ""}`}
+                dir={selectedLanguage === "ar" ? "rtl" : "ltr"}
+              >
                   <TabsTrigger value="basic">{t.tabs.basic}</TabsTrigger>
                   <TabsTrigger value="academic">{t.tabs.academic}</TabsTrigger>
                   <TabsTrigger value="contact">{t.tabs.contact}</TabsTrigger>
