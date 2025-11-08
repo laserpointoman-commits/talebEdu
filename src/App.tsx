@@ -19,6 +19,7 @@ import EntranceCheckpoint from "./pages/checkpoint/EntranceCheckpoint";
 import UserManagement from "./pages/admin/UserManagement";
 import CreateAdmin from "./pages/CreateAdmin";
 import GeneratePhotos from "./pages/admin/GeneratePhotos";
+import ParentRegistration from "./pages/ParentRegistration";
 // Removed test page
 
 // Create a stable QueryClient instance
@@ -51,6 +52,7 @@ function App() {
                       <Routes>
                         <Route path="/" element={<Index />} />
                         <Route path="/auth" element={<Auth />} />
+                        <Route path="/parent-registration" element={<ParentRegistration />} />
                         <Route path="/dashboard/*" element={<Dashboard />} />
                         <Route path="/create-admin" element={<CreateAdmin />} />
                         {/* Test page removed */}

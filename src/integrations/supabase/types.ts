@@ -1980,6 +1980,58 @@ export type Database = {
         }
         Relationships: []
       }
+      parent_registration_tokens: {
+        Row: {
+          created_at: string | null
+          expires_at: string
+          id: string
+          parent_id: string
+          student_registered_id: string | null
+          token: string
+          used: boolean | null
+        }
+        Insert: {
+          created_at?: string | null
+          expires_at?: string
+          id?: string
+          parent_id: string
+          student_registered_id?: string | null
+          token?: string
+          used?: boolean | null
+        }
+        Update: {
+          created_at?: string | null
+          expires_at?: string
+          id?: string
+          parent_id?: string
+          student_registered_id?: string | null
+          token?: string
+          used?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "parent_registration_tokens_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "available_contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "parent_registration_tokens_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "parent_registration_tokens_student_registered_id_fkey"
+            columns: ["student_registered_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       parental_controls: {
         Row: {
           allowed_items: Json | null

@@ -254,6 +254,44 @@ serve(async (req) => {
     
     console.log('User created successfully:', userId);
 
+    // If creating a parent account, generate registration token and send invitation email
+    if (role === 'parent' && isNewUser) {
+      console.log('Creating parent registration token');
+      try {
+        const { data: tokenData, error: tokenError } = await supabaseAdmin
+          .from('parent_registration_tokens')
+          .insert({
+            parent_id: userId,
+          })
+          .select()
+          .single();
+
+        if (tokenError) {
+          console.error('Failed to create token:', tokenError);
+        } else if (tokenData) {
+          console.log('Token created, sending invitation email');
+          // Send invitation email
+          const { error: emailError } = await supabaseAdmin.functions.invoke('send-parent-invitation', {
+            body: {
+              parentEmail: email,
+              parentName: full_name,
+              token: tokenData.token,
+              loginEmail: email,
+              loginPassword: password,
+            }
+          });
+
+          if (emailError) {
+            console.error('Failed to send invitation email:', emailError);
+          } else {
+            console.log('Invitation email sent successfully');
+          }
+        }
+      } catch (tokenErr) {
+        console.error('Error in parent registration flow:', tokenErr);
+      }
+    }
+
     return new Response(
       JSON.stringify({ 
         success: true, 
