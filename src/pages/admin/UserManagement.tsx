@@ -292,13 +292,22 @@ export default function UserManagement() {
       const registrationLink = await getRegistrationLink(selectedParent.email);
       if (!registrationLink) return;
 
+      // Extract token from the registration link
+      const urlParams = new URLSearchParams(registrationLink.split('?')[1]);
+      const token = urlParams.get('token');
+
+      if (!token) {
+        toast.error(language === 'en' ? 'Invalid token' : 'رمز غير صالح');
+        return;
+      }
+
       const { error } = await supabase.functions.invoke('send-parent-invitation', {
         body: {
           parentEmail: selectedParent.email,
           parentName: selectedParent.full_name,
+          token: token,
           loginEmail: selectedParent.email,
           loginPassword: userPasswords[selectedParent.id] || 'Not available',
-          registrationLink,
         },
       });
 
