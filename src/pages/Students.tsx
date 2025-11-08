@@ -118,14 +118,18 @@ export default function Students() {
     grade: student.grade,
     nfcId: student.nfcId || '',
     barcode: student.barcode || '',
-    phone: student.phone,
-    parentPhone: student.parentPhone,
-    address: student.address,
+    phone: student.phone || '',
+    parentPhone: student.parentPhone || '',
+    address: student.address || '',
     profileImage: student.profileImage || '',
-    dateOfBirth: student.dateOfBirth,
-    bloodGroup: student.bloodGroup,
+    dateOfBirth: student.dateOfBirth || '',
+    bloodGroup: student.bloodGroup || '',
     allergies: student.allergies || '',
-    emergencyContact: student.emergencyContact,
+    emergencyContact: student.emergencyContact || '',
+    emergencyContactName: student.emergencyContactName || '',
+    nationality: student.nationality || '',
+    gender: student.gender || '',
+    medicalConditions: student.medicalConditions || '',
   }));
 
   const handleEdit = (student: any) => {
@@ -443,39 +447,55 @@ export default function Students() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label className="text-muted-foreground">{t('common.nfcId')}</Label>
-                  <p className="font-medium number-display">{selectedStudent.nfcId}</p>
+                  <p className="font-medium number-display">{selectedStudent.nfcId || (language === 'ar' ? 'لم يتم تعيين' : 'Not assigned')}</p>
                 </div>
                 <div>
                   <Label className="text-muted-foreground">{t('common.barcode')}</Label>
-                  <p className="font-medium number-display">{selectedStudent.barcode}</p>
+                  <p className="font-medium number-display">{selectedStudent.barcode || (language === 'ar' ? 'لم يتم تعيين' : 'Not assigned')}</p>
                 </div>
                 <div>
                   <Label className="text-muted-foreground">{t('common.phone')}</Label>
-                  <p className="font-medium number-display">{selectedStudent.phone}</p>
+                  <p className="font-medium number-display">{selectedStudent.phone || '-'}</p>
                 </div>
                 <div>
                   <Label className="text-muted-foreground">{t('common.parentPhone')}</Label>
-                  <p className="font-medium number-display">{selectedStudent.parentPhone}</p>
+                  <p className="font-medium number-display">{selectedStudent.parentPhone || '-'}</p>
                 </div>
                 <div>
                   <Label className="text-muted-foreground">{t('common.dateOfBirth')}</Label>
-                  <p className="font-medium number-display">{selectedStudent.dateOfBirth}</p>
+                  <p className="font-medium number-display">{selectedStudent.dateOfBirth || '-'}</p>
                 </div>
                 <div>
                   <Label className="text-muted-foreground">{t('common.bloodGroup')}</Label>
-                  <p className="font-medium">{selectedStudent.bloodGroup}</p>
+                  <p className="font-medium">{selectedStudent.bloodGroup || '-'}</p>
                 </div>
                 <div>
+                  <Label className="text-muted-foreground">{language === 'ar' ? 'الجنسية' : 'Nationality'}</Label>
+                  <p className="font-medium">{selectedStudent.nationality || '-'}</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">{language === 'ar' ? 'الجنس' : 'Gender'}</Label>
+                  <p className="font-medium">{selectedStudent.gender || '-'}</p>
+                </div>
+                <div className="col-span-2">
                   <Label className="text-muted-foreground">{t('common.address')}</Label>
-                  <p className="font-medium">{selectedStudent.address}</p>
+                  <p className="font-medium">{selectedStudent.address || '-'}</p>
                 </div>
                 <div>
-                  <Label className="text-muted-foreground">{t('common.emergencyContact')}</Label>
-                  <p className="font-medium number-display">{selectedStudent.emergencyContact}</p>
+                  <Label className="text-muted-foreground">{language === 'ar' ? 'جهة الاتصال الطارئة' : 'Emergency Contact'}</Label>
+                  <p className="font-medium">{selectedStudent.emergencyContactName || '-'}</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">{language === 'ar' ? 'هاتف الطوارئ' : 'Emergency Phone'}</Label>
+                  <p className="font-medium number-display">{selectedStudent.emergencyContact || '-'}</p>
+                </div>
+                <div className="col-span-2">
+                  <Label className="text-muted-foreground">{language === 'ar' ? 'الحالة الطبية' : 'Medical Conditions'}</Label>
+                  <p className="font-medium">{selectedStudent.medicalConditions || '-'}</p>
                 </div>
                 <div className="col-span-2">
                   <Label className="text-muted-foreground">{t('common.allergies')}</Label>
-                  <p className="font-medium">{selectedStudent.allergies}</p>
+                  <p className="font-medium">{selectedStudent.allergies || '-'}</p>
                 </div>
               </div>
             </div>
