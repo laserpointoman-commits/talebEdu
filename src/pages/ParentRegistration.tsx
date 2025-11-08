@@ -357,63 +357,68 @@ export default function ParentRegistration() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="firstName">{t.labels.firstName}</Label>
+                  <div className={`grid grid-cols-2 gap-4 ${selectedLanguage === "ar" ? "direction-rtl" : ""}`}>
+                    <div className={selectedLanguage === "ar" ? "text-right" : ""}>
+                      <Label htmlFor="firstName" className={selectedLanguage === "ar" ? "text-right block" : ""}>{t.labels.firstName}</Label>
                       <Input
                         id="firstName"
                         value={formData.firstName}
                         onChange={(e) => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
                         required
+                        className={selectedLanguage === "ar" ? "text-right" : ""}
                       />
                     </div>
-                    <div>
-                      <Label htmlFor="lastName">{t.labels.lastName}</Label>
+                    <div className={selectedLanguage === "ar" ? "text-right" : ""}>
+                      <Label htmlFor="lastName" className={selectedLanguage === "ar" ? "text-right block" : ""}>{t.labels.lastName}</Label>
                       <Input
                         id="lastName"
                         value={formData.lastName}
                         onChange={(e) => setFormData(prev => ({ ...prev, lastName: e.target.value }))}
                         required
+                        className={selectedLanguage === "ar" ? "text-right" : ""}
                       />
                     </div>
-                    <div>
-                      <Label htmlFor="firstNameAr">{t.labels.firstNameAr}</Label>
+                    <div className={selectedLanguage === "ar" ? "text-right" : ""}>
+                      <Label htmlFor="firstNameAr" className={selectedLanguage === "ar" ? "text-right block" : ""}>{t.labels.firstNameAr}</Label>
                       <Input
                         id="firstNameAr"
                         value={formData.firstNameAr}
                         onChange={(e) => setFormData(prev => ({ ...prev, firstNameAr: e.target.value }))}
                         dir="rtl"
+                        className="text-right"
                       />
                     </div>
-                    <div>
-                      <Label htmlFor="lastNameAr">{t.labels.lastNameAr}</Label>
+                    <div className={selectedLanguage === "ar" ? "text-right" : ""}>
+                      <Label htmlFor="lastNameAr" className={selectedLanguage === "ar" ? "text-right block" : ""}>{t.labels.lastNameAr}</Label>
                       <Input
                         id="lastNameAr"
                         value={formData.lastNameAr}
                         onChange={(e) => setFormData(prev => ({ ...prev, lastNameAr: e.target.value }))}
                         dir="rtl"
+                        className="text-right"
                       />
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="dateOfBirth">{t.labels.dateOfBirth}</Label>
+                  <div className={`grid grid-cols-2 gap-4 ${selectedLanguage === "ar" ? "direction-rtl" : ""}`}>
+                    <div className={selectedLanguage === "ar" ? "text-right" : ""}>
+                      <Label htmlFor="dateOfBirth" className={selectedLanguage === "ar" ? "text-right block" : ""}>{t.labels.dateOfBirth}</Label>
                       <Input
                         id="dateOfBirth"
                         type="date"
                         value={formData.dateOfBirth}
                         onChange={(e) => setFormData(prev => ({ ...prev, dateOfBirth: e.target.value }))}
                         required
+                        className={selectedLanguage === "ar" ? "text-right" : ""}
                       />
                     </div>
-                    <div>
-                      <Label htmlFor="gender">{t.labels.gender}</Label>
+                    <div className={selectedLanguage === "ar" ? "text-right" : ""}>
+                      <Label htmlFor="gender" className={selectedLanguage === "ar" ? "text-right block" : ""}>{t.labels.gender}</Label>
                       <Select value={formData.gender} onValueChange={(value) => setFormData(prev => ({ ...prev, gender: value }))}>
-                        <SelectTrigger>
+                        <SelectTrigger className={selectedLanguage === "ar" ? "text-right" : ""}>
                           <SelectValue placeholder={t.placeholders.selectGender} />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className={selectedLanguage === "ar" ? "text-right" : ""}>
                           <SelectItem value="male">{t.labels.male}</SelectItem>
                           <SelectItem value="female">{t.labels.female}</SelectItem>
                         </SelectContent>
@@ -421,22 +426,23 @@ export default function ParentRegistration() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="nationality">{t.labels.nationality}</Label>
+                  <div className={`grid grid-cols-2 gap-4 ${selectedLanguage === "ar" ? "direction-rtl" : ""}`}>
+                    <div className={selectedLanguage === "ar" ? "text-right" : ""}>
+                      <Label htmlFor="nationality" className={selectedLanguage === "ar" ? "text-right block" : ""}>{t.labels.nationality}</Label>
                       <Input
                         id="nationality"
                         value={formData.nationality}
                         onChange={(e) => setFormData(prev => ({ ...prev, nationality: e.target.value }))}
+                        className={selectedLanguage === "ar" ? "text-right" : ""}
                       />
                     </div>
-                    <div>
-                      <Label htmlFor="bloodType">{t.labels.bloodType}</Label>
+                    <div className={selectedLanguage === "ar" ? "text-right" : ""}>
+                      <Label htmlFor="bloodType" className={selectedLanguage === "ar" ? "text-right block" : ""}>{t.labels.bloodType}</Label>
                       <Select value={formData.bloodType} onValueChange={(value) => setFormData(prev => ({ ...prev, bloodType: value }))}>
-                        <SelectTrigger>
+                        <SelectTrigger className={selectedLanguage === "ar" ? "text-right" : ""}>
                           <SelectValue placeholder={t.placeholders.selectBlood} />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className={selectedLanguage === "ar" ? "text-right" : ""}>
                           <SelectItem value="A+">A+</SelectItem>
                           <SelectItem value="A-">A-</SelectItem>
                           <SelectItem value="B+">B+</SelectItem>
@@ -452,100 +458,109 @@ export default function ParentRegistration() {
                 </TabsContent>
 
                 <TabsContent value="academic" className="space-y-4 mt-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="grade">{t.labels.grade}</Label>
+                  <div className={`grid grid-cols-2 gap-4 ${selectedLanguage === "ar" ? "direction-rtl" : ""}`}>
+                    <div className={selectedLanguage === "ar" ? "text-right" : ""}>
+                      <Label htmlFor="grade" className={selectedLanguage === "ar" ? "text-right block" : ""}>{t.labels.grade}</Label>
                       <Input
                         id="grade"
                         value={formData.grade}
                         onChange={(e) => setFormData(prev => ({ ...prev, grade: e.target.value }))}
                         placeholder={t.placeholders.grade}
                         required
+                        className={selectedLanguage === "ar" ? "text-right" : ""}
                       />
                     </div>
-                    <div>
-                      <Label htmlFor="class">{t.labels.class}</Label>
+                    <div className={selectedLanguage === "ar" ? "text-right" : ""}>
+                      <Label htmlFor="class" className={selectedLanguage === "ar" ? "text-right block" : ""}>{t.labels.class}</Label>
                       <Input
                         id="class"
                         value={formData.class}
                         onChange={(e) => setFormData(prev => ({ ...prev, class: e.target.value }))}
                         placeholder={t.placeholders.class}
+                        className={selectedLanguage === "ar" ? "text-right" : ""}
                       />
                     </div>
                   </div>
 
-                  <div>
-                    <Label htmlFor="nfcId">{t.labels.nfcId}</Label>
+                  <div className={selectedLanguage === "ar" ? "text-right" : ""}>
+                    <Label htmlFor="nfcId" className={selectedLanguage === "ar" ? "text-right block" : ""}>{t.labels.nfcId}</Label>
                     <Input
                       id="nfcId"
                       value={formData.nfcId}
                       onChange={(e) => setFormData(prev => ({ ...prev, nfcId: e.target.value }))}
+                      className={selectedLanguage === "ar" ? "text-right" : ""}
                     />
                   </div>
                 </TabsContent>
 
                 <TabsContent value="contact" className="space-y-4 mt-4">
-                  <div>
-                    <Label htmlFor="address">{t.labels.address}</Label>
+                  <div className={selectedLanguage === "ar" ? "text-right" : ""}>
+                    <Label htmlFor="address" className={selectedLanguage === "ar" ? "text-right block" : ""}>{t.labels.address}</Label>
                     <Textarea
                       id="address"
                       value={formData.address}
                       onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
                       rows={3}
+                      className={selectedLanguage === "ar" ? "text-right" : ""}
                     />
                   </div>
 
-                  <div>
-                    <Label htmlFor="phone">{t.labels.phone}</Label>
+                  <div className={selectedLanguage === "ar" ? "text-right" : ""}>
+                    <Label htmlFor="phone" className={selectedLanguage === "ar" ? "text-right block" : ""}>{t.labels.phone}</Label>
                     <Input
                       id="phone"
                       type="tel"
                       value={formData.phone}
                       onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                      className={selectedLanguage === "ar" ? "text-right" : ""}
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="emergencyContact">{t.labels.emergencyContact}</Label>
+                  <div className={`grid grid-cols-2 gap-4 ${selectedLanguage === "ar" ? "direction-rtl" : ""}`}>
+                    <div className={selectedLanguage === "ar" ? "text-right" : ""}>
+                      <Label htmlFor="emergencyContact" className={selectedLanguage === "ar" ? "text-right block" : ""}>{t.labels.emergencyContact}</Label>
                       <Input
                         id="emergencyContact"
                         value={formData.emergencyContact}
                         onChange={(e) => setFormData(prev => ({ ...prev, emergencyContact: e.target.value }))}
+                        className={selectedLanguage === "ar" ? "text-right" : ""}
                       />
                     </div>
-                    <div>
-                      <Label htmlFor="emergencyPhone">{t.labels.emergencyPhone}</Label>
+                    <div className={selectedLanguage === "ar" ? "text-right" : ""}>
+                      <Label htmlFor="emergencyPhone" className={selectedLanguage === "ar" ? "text-right block" : ""}>{t.labels.emergencyPhone}</Label>
                       <Input
                         id="emergencyPhone"
                         type="tel"
                         value={formData.emergencyPhone}
                         onChange={(e) => setFormData(prev => ({ ...prev, emergencyPhone: e.target.value }))}
+                        className={selectedLanguage === "ar" ? "text-right" : ""}
                       />
                     </div>
                   </div>
                 </TabsContent>
 
                 <TabsContent value="medical" className="space-y-4 mt-4">
-                  <div>
-                    <Label htmlFor="medicalConditions">{t.labels.medicalConditions}</Label>
+                  <div className={selectedLanguage === "ar" ? "text-right" : ""}>
+                    <Label htmlFor="medicalConditions" className={selectedLanguage === "ar" ? "text-right block" : ""}>{t.labels.medicalConditions}</Label>
                     <Textarea
                       id="medicalConditions"
                       value={formData.medicalConditions}
                       onChange={(e) => setFormData(prev => ({ ...prev, medicalConditions: e.target.value }))}
                       placeholder={t.placeholders.medical}
                       rows={3}
+                      className={selectedLanguage === "ar" ? "text-right" : ""}
                     />
                   </div>
 
-                  <div>
-                    <Label htmlFor="allergies">{t.labels.allergies}</Label>
+                  <div className={selectedLanguage === "ar" ? "text-right" : ""}>
+                    <Label htmlFor="allergies" className={selectedLanguage === "ar" ? "text-right block" : ""}>{t.labels.allergies}</Label>
                     <Textarea
                       id="allergies"
                       value={formData.allergies}
                       onChange={(e) => setFormData(prev => ({ ...prev, allergies: e.target.value }))}
                       placeholder={t.placeholders.allergies}
                       rows={3}
+                      className={selectedLanguage === "ar" ? "text-right" : ""}
                     />
                   </div>
                 </TabsContent>
