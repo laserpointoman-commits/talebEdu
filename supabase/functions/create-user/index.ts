@@ -57,12 +57,12 @@ serve(async (req) => {
       throw new Error('Unauthorized: Invalid token');
     }
 
-    // Check if user has admin or developer role
+    // Check if user has admin role
     const { data: userRoles, error: roleError } = await supabaseAdmin
       .from('user_roles')
       .select('role')
       .eq('user_id', user.id)
-      .in('role', ['admin', 'developer']);
+      .eq('role', 'admin');
 
     if (roleError || !userRoles || userRoles.length === 0) {
       throw new Error('Forbidden: Admin access required');
