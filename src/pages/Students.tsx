@@ -104,7 +104,7 @@ export default function Students() {
     baseStudents.filter(student => 
       student.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       student.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      student.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (student.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
       student.class.toLowerCase().includes(searchTerm.toLowerCase())
     ) : baseStudents;
   
