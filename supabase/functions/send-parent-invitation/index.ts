@@ -31,7 +31,7 @@ const handler = async (req: Request): Promise<Response> => {
     const registrationUrl = `${appUrl}/parent-registration?token=${token}`;
 
     const emailResponse = await resend.emails.send({
-      from: "TalebEdu <onboarding@resend.dev>",
+      from: "TalebEdu <noreply@talebedu.com>",
       to: [parentEmail],
       subject: "Welcome to TalebEdu - Register Your Child | مرحباً بك في TalebEdu",
       html: `
