@@ -755,6 +755,23 @@ export default function UserManagement() {
     setLoading(true);
 
     try {
+      // Check if email already exists
+      const { data: existingUser } = await supabase
+        .from('profiles')
+        .select('id, email, role')
+        .eq('email', formData.email)
+        .maybeSingle();
+
+      if (existingUser) {
+        toast.error(
+          language === 'en' 
+            ? `A user with email ${formData.email} already exists (Role: ${existingUser.role}). Please use a different email.`
+            : `المستخدم بالبريد الإلكتروني ${formData.email} موجود بالفعل (الدور: ${existingUser.role}). يرجى استخدام بريد إلكتروني آخر.`
+        );
+        setLoading(false);
+        return;
+      }
+
       // Use the edge function to create user - this handles teachers properly
       const { data, error } = await supabase.functions.invoke('create-user', {
         body: {
@@ -840,7 +857,17 @@ export default function UserManagement() {
       setSelectedClasses([]);
     } catch (error: any) {
       console.error('Full error details:', error);
-      toast.error(error.message || 'Failed to create user');
+      
+      // Handle specific error messages
+      let errorMessage = error.message || 'Failed to create user';
+      
+      if (errorMessage.includes('already been registered')) {
+        errorMessage = language === 'en'
+          ? `This email is already registered. Please use a different email or contact the administrator.`
+          : `هذا البريد الإلكتروني مسجل بالفعل. يرجى استخدام بريد إلكتروني آخر أو الاتصال بالمسؤول.`;
+      }
+      
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
