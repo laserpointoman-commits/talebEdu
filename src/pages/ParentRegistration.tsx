@@ -8,9 +8,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, CheckCircle2, XCircle, Globe } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import HomeLocationMap from "@/components/features/HomeLocationMap";
 
 type Language = "en" | "ar" | null;
 
@@ -52,6 +54,11 @@ export default function ParentRegistration() {
     nfcId: "",
     transportationAgreement: false,
     profileImage: "",
+    homeLatitude: 23.5880,
+    homeLongitude: 58.3829,
+    homeAddress: "",
+    homeAddressDetails: "",
+    needsTransportation: false,
   });
 
   useEffect(() => {
@@ -285,6 +292,7 @@ export default function ParentRegistration() {
       basic: selectedLanguage === "ar" ? "المعلومات الأساسية" : "Basic Info",
       academic: selectedLanguage === "ar" ? "الأكاديمية" : "Academic",
       contact: selectedLanguage === "ar" ? "الاتصال" : "Contact",
+      bus: selectedLanguage === "ar" ? "الحافلة" : "Bus",
       medical: selectedLanguage === "ar" ? "الطبية" : "Medical",
     },
     labels: {
@@ -311,6 +319,10 @@ export default function ParentRegistration() {
       emergencyPhone: selectedLanguage === "ar" ? "هاتف الطوارئ" : "Emergency Phone",
       medicalConditions: selectedLanguage === "ar" ? "الحالات الطبية" : "Medical Conditions",
       allergies: selectedLanguage === "ar" ? "الحساسية" : "Allergies",
+      homeLocation: selectedLanguage === "ar" ? "موقع المنزل" : "Home Location",
+      homeAddress: selectedLanguage === "ar" ? "عنوان المنزل" : "Home Address",
+      homeAddressDetails: selectedLanguage === "ar" ? "تفاصيل العنوان (رقم المبنى، الشارع، إلخ)" : "Address Details (Building no., Street, etc.)",
+      needsTransportation: selectedLanguage === "ar" ? "يحتاج إلى خدمة النقل" : "Needs Transportation",
     },
     buttons: {
       cancel: selectedLanguage === "ar" ? "إلغاء" : "Cancel",
@@ -339,12 +351,13 @@ export default function ParentRegistration() {
             <form onSubmit={handleSubmit} className={selectedLanguage === "ar" ? "text-right" : "text-left"}>
               <Tabs defaultValue="basic" className="w-full">
               <TabsList 
-                className={`grid w-full grid-cols-4 ${selectedLanguage === "ar" ? "flex-row-reverse" : ""}`}
+                className={`grid w-full grid-cols-5 ${selectedLanguage === "ar" ? "flex-row-reverse" : ""}`}
                 dir={selectedLanguage === "ar" ? "rtl" : "ltr"}
               >
                   <TabsTrigger value="basic">{t.tabs.basic}</TabsTrigger>
                   <TabsTrigger value="academic">{t.tabs.academic}</TabsTrigger>
                   <TabsTrigger value="contact">{t.tabs.contact}</TabsTrigger>
+                  <TabsTrigger value="bus">{t.tabs.bus}</TabsTrigger>
                   <TabsTrigger value="medical">{t.tabs.medical}</TabsTrigger>
                 </TabsList>
 
@@ -580,6 +593,58 @@ export default function ParentRegistration() {
                       />
                     </div>
                   </div>
+                </TabsContent>
+
+                <TabsContent value="bus" className="space-y-4 mt-4">
+                  <div className={`flex items-center justify-between ${selectedLanguage === "ar" ? "flex-row-reverse" : ""}`}>
+                    <Label htmlFor="needsTransportation" className={selectedLanguage === "ar" ? "text-right" : ""}>{t.labels.needsTransportation}</Label>
+                    <Switch
+                      id="needsTransportation"
+                      checked={formData.needsTransportation}
+                      onCheckedChange={(checked) => setFormData(prev => ({ ...prev, needsTransportation: checked }))}
+                    />
+                  </div>
+
+                  {formData.needsTransportation && (
+                    <>
+                      <div className={selectedLanguage === "ar" ? "text-right" : ""}>
+                        <Label className={selectedLanguage === "ar" ? "text-right block mb-2" : "mb-2 block"}>{t.labels.homeLocation}</Label>
+                        <HomeLocationMap
+                          onLocationSelect={(lat, lng) => {
+                            setFormData(prev => ({
+                              ...prev,
+                              homeLatitude: lat,
+                              homeLongitude: lng
+                            }));
+                          }}
+                          initialLat={formData.homeLatitude}
+                          initialLng={formData.homeLongitude}
+                          language={selectedLanguage}
+                        />
+                      </div>
+
+                      <div className={selectedLanguage === "ar" ? "text-right" : ""}>
+                        <Label htmlFor="homeAddress" className={selectedLanguage === "ar" ? "text-right block" : ""}>{t.labels.homeAddress}</Label>
+                        <Input
+                          id="homeAddress"
+                          value={formData.homeAddress}
+                          onChange={(e) => setFormData(prev => ({ ...prev, homeAddress: e.target.value }))}
+                          className={selectedLanguage === "ar" ? "text-right" : ""}
+                        />
+                      </div>
+
+                      <div className={selectedLanguage === "ar" ? "text-right" : ""}>
+                        <Label htmlFor="homeAddressDetails" className={selectedLanguage === "ar" ? "text-right block" : ""}>{t.labels.homeAddressDetails}</Label>
+                        <Textarea
+                          id="homeAddressDetails"
+                          value={formData.homeAddressDetails}
+                          onChange={(e) => setFormData(prev => ({ ...prev, homeAddressDetails: e.target.value }))}
+                          rows={3}
+                          className={selectedLanguage === "ar" ? "text-right" : ""}
+                        />
+                      </div>
+                    </>
+                  )}
                 </TabsContent>
 
                 <TabsContent value="medical" className="space-y-4 mt-4">
