@@ -44,16 +44,16 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Check if user has admin or developer role
-    const { data: callerProfile } = await supabaseAdmin
-      .from('profiles')
+    // Check if user has admin role
+    const { data: callerRoles } = await supabaseAdmin
+      .from('user_role_assignments')
       .select('role')
-      .eq('id', user.id)
-      .single()
+      .eq('user_id', user.id)
+      .eq('role', 'admin')
 
-    if (!callerProfile || (callerProfile.role !== 'admin' && callerProfile.role !== 'developer')) {
+    if (!callerRoles || callerRoles.length === 0) {
       return new Response(
-        JSON.stringify({ error: 'Unauthorized. Admin or developer role required.' }),
+        JSON.stringify({ error: 'Unauthorized. Admin role required.' }),
         { 
           status: 403, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -73,10 +73,16 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Get user profile to check role
+    // Get user role from user_role_assignments
+    const { data: targetRoles } = await supabaseAdmin
+      .from('user_role_assignments')
+      .select('role')
+      .eq('user_id', userId)
+
+    // Check if user exists in profiles
     const { data: targetProfile } = await supabaseAdmin
       .from('profiles')
-      .select('role')
+      .select('id')
       .eq('id', userId)
       .single()
 
@@ -90,10 +96,17 @@ Deno.serve(async (req) => {
       )
     }
 
-    console.log('Deleting user with role:', targetProfile.role)
+    const targetRole = targetRoles && targetRoles.length > 0 ? targetRoles[0].role : null
+    console.log('Deleting user with role:', targetRole)
+
+    // Delete role assignment
+    await supabaseAdmin
+      .from('user_role_assignments')
+      .delete()
+      .eq('user_id', userId)
 
     // First, manually delete related records based on role
-    if (targetProfile.role === 'student') {
+    if (targetRole === 'student') {
       // Delete student record (will cascade to related tables)
       const { error: studentError } = await supabaseAdmin
         .from('students')
@@ -103,7 +116,7 @@ Deno.serve(async (req) => {
       if (studentError) {
         console.error('Error deleting student record:', studentError)
       }
-    } else if (targetProfile.role === 'teacher') {
+    } else if (targetRole === 'teacher') {
       // Delete teacher record
       const { error: teacherError } = await supabaseAdmin
         .from('teachers')
@@ -113,7 +126,7 @@ Deno.serve(async (req) => {
       if (teacherError) {
         console.error('Error deleting teacher record:', teacherError)
       }
-    } else if (targetProfile.role === 'driver') {
+    } else if (targetRole === 'driver') {
       // Delete driver record
       const { error: driverError } = await supabaseAdmin
         .from('drivers')
