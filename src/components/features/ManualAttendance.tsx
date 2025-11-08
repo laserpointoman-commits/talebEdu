@@ -112,11 +112,15 @@ export default function ManualAttendance({ open, onOpenChange, scanType, locatio
         ? `${studentName} ${actionType === 'entered' ? 'دخل' : 'غادر'} ${locationDesc === 'bus' ? 'الحافلة' : 'المدرسة'} في ${location}`
         : `${studentName} has ${actionType} the ${locationDesc} at ${location}`;
 
+      // Validate input lengths
+      const validatedTitle = notificationTitle.slice(0, 200);
+      const validatedMessage = notificationMessage.slice(0, 1000);
+
       await supabase.from('notification_history').insert({
         user_id: parentId,
         notification_type: locationDesc === 'bus' ? 'child_bus_location' : 'child_attendance',
-        title: notificationTitle,
-        message: notificationMessage,
+        title: validatedTitle,
+        message: validatedMessage,
         data: {
           student_id: studentId,
           action: actionType,
@@ -146,13 +150,13 @@ export default function ManualAttendance({ open, onOpenChange, scanType, locatio
         ? student.profiles?.full_name_ar || student.profiles?.full_name || ''
         : student.profiles?.full_name || '';
 
-      // Record attendance in checkpoint_logs
+      // Record attendance in checkpoint_logs with validation
       const { error: logError } = await supabase.from('checkpoint_logs').insert({
         student_id: student.id,
-        student_name: studentName,
-        nfc_id: student.student_id,
+        student_name: studentName.slice(0, 200),
+        nfc_id: student.student_id.slice(0, 100),
         type: scanType,
-        location: location,
+        location: location.slice(0, 500),
         timestamp: new Date().toISOString(),
         synced: true
       });

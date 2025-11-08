@@ -107,13 +107,13 @@ export default function NFCScanner({
       const studentName = student.name || `${student.first_name} ${student.last_name}`;
       const currentTime = new Date().toLocaleTimeString();
       
-      // Record the scan in checkpoint_logs
+      // Record the scan in checkpoint_logs with validation
       const { error } = await supabase.from('checkpoint_logs').insert({
         student_id: student.id,
-        student_name: studentName,
-        nfc_id: student.nfc_id,
+        student_name: studentName.slice(0, 200),
+        nfc_id: student.nfc_id?.slice(0, 100),
         type: scanType,
-        location: location,
+        location: location.slice(0, 500),
         timestamp: new Date().toISOString(),
         synced: true
       });
@@ -131,11 +131,15 @@ export default function NFCScanner({
         const actionType = scanType.includes('in') ? 'entered' : 'left';
         const locationDesc = scanType.includes('bus') ? 'bus' : 'school';
         
+        // Validate notification data
+        const title = `${studentName} ${actionType}`;
+        const message = `${studentName} has ${actionType} the ${locationDesc} at ${location}`;
+        
         await supabase.from('notification_history').insert({
           user_id: studentData.parent_id,
           notification_type: locationDesc === 'bus' ? 'child_bus_location' : 'child_attendance',
-          title: `${studentName} ${actionType}`,
-          message: `${studentName} has ${actionType} the ${locationDesc} at ${location}`,
+          title: title.slice(0, 200),
+          message: message.slice(0, 1000),
           data: {
             student_id: student.id,
             action: actionType,

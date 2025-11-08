@@ -254,12 +254,15 @@ export default function Messages() {
     
     try {
       // Send the message first
+      // Validate message content
+      const validatedContent = (messageContent.trim() || (selectedFiles.length > 0 ? '📎 Files attached' : '')).slice(0, 5000);
+      
       const { data: messageData, error: messageError } = await supabase
         .from('direct_messages')
         .insert({
           sender_id: user!.id,
           recipient_id: selectedContact.id,
-          content: messageContent.trim() || (selectedFiles.length > 0 ? '📎 Files attached' : '')
+          content: validatedContent
         })
         .select()
         .single();

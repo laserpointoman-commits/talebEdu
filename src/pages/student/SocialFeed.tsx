@@ -103,11 +103,14 @@ export default function SocialFeed() {
   const createPost = async () => {
     if (!newPostContent.trim() || !currentStudentId) return;
 
+    // Validate post content
+    const validatedContent = newPostContent.trim().slice(0, 2000);
+
     const { error } = await supabase
       .from('posts')
       .insert({
         student_id: currentStudentId,
-        content: newPostContent,
+        content: validatedContent,
         visibility: newPostVisibility
       });
 
@@ -154,12 +157,15 @@ export default function SocialFeed() {
     const comment = commentInputs[postId];
     if (!comment?.trim() || !currentStudentId) return;
 
+    // Validate comment content
+    const validatedComment = comment.trim().slice(0, 1000);
+
     const { error } = await supabase
       .from('post_comments')
       .insert({
         post_id: postId,
         student_id: currentStudentId,
-        content: comment
+        content: validatedComment
       });
 
     if (!error) {
