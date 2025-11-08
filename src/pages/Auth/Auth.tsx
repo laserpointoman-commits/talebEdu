@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { GraduationCap, Mail, Lock, Globe, Eye, EyeOff, User, Phone, Users, BookOpen, CreditCard, Bus, ChevronRight, Check } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import heroImage from '@/assets/hero-education.jpg';
 import featureNFC from '@/assets/feature-nfc.jpg';
 import featureTracking from '@/assets/feature-tracking.jpg';
@@ -32,6 +33,10 @@ export default function Auth() {
   const [signUpFullName, setSignUpFullName] = useState('');
   const [signUpPhone, setSignUpPhone] = useState('');
   const [showSignUpPassword, setShowSignUpPassword] = useState(false);
+  
+  // Forgot Password State
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -105,6 +110,36 @@ export default function Auth() {
       setSignInEmail(signUpEmail);
     } catch (error: any) {
       toast.error(error.message || (language === 'en' ? 'Sign up failed' : 'فشل التسجيل'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!resetEmail) {
+      toast.error(language === 'en' ? 'Please enter your email' : 'الرجاء إدخال البريد الإلكتروني');
+      return;
+    }
+    
+    setLoading(true);
+    
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+        redirectTo: `${window.location.origin}/`,
+      });
+
+      if (error) throw error;
+
+      toast.success(language === 'en' 
+        ? 'Password reset link has been sent to your email' 
+        : 'تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني');
+      
+      setShowForgotPassword(false);
+      setResetEmail('');
+    } catch (error: any) {
+      toast.error(error.message || (language === 'en' ? 'Failed to send reset email' : 'فشل إرسال بريد إعادة التعيين'));
     } finally {
       setLoading(false);
     }
@@ -335,6 +370,16 @@ export default function Auth() {
                           ? (language === 'en' ? 'Signing in...' : 'جارٍ تسجيل الدخول...')
                           : (language === 'en' ? 'Sign In' : 'تسجيل الدخول')}
                       </Button>
+
+                      <div className="text-center mt-4">
+                        <button
+                          type="button"
+                          onClick={() => setShowForgotPassword(true)}
+                          className="text-sm text-primary hover:underline"
+                        >
+                          {language === 'en' ? 'Forgot Password?' : 'نسيت كلمة المرور؟'}
+                        </button>
+                      </div>
                     </form>
                   </TabsContent>
 
@@ -454,6 +499,47 @@ export default function Auth() {
           </div>
         </div>
       </div>
+
+      {/* Forgot Password Dialog */}
+      <Dialog open={showForgotPassword} onOpenChange={setShowForgotPassword}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {language === 'en' ? 'Reset Password' : 'إعادة تعيين كلمة المرور'}
+            </DialogTitle>
+            <DialogDescription>
+              {language === 'en' 
+                ? 'Enter your email and we\'ll send you a link to reset your password' 
+                : 'أدخل بريدك الإلكتروني وسنرسل لك رابط لإعادة تعيين كلمة المرور'}
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleForgotPassword} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="reset-email">
+                {language === 'en' ? 'Email' : 'البريد الإلكتروني'}
+              </Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="reset-email"
+                  type="email"
+                  value={resetEmail}
+                  onChange={(e) => setResetEmail(e.target.value)}
+                  required
+                  className="pl-10"
+                  dir="ltr"
+                  placeholder={language === 'en' ? 'your@email.com' : 'بريدك@الإلكتروني'}
+                />
+              </div>
+            </div>
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading 
+                ? (language === 'en' ? 'Sending...' : 'جاري الإرسال...') 
+                : (language === 'en' ? 'Send Reset Link' : 'إرسال رابط إعادة التعيين')}
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -296,6 +296,8 @@ export default function ParentRegistration() {
       lastName: selectedLanguage === "ar" ? "اسم العائلة (انجليزي) *" : "Last Name (English) *",
       firstNameAr: selectedLanguage === "ar" ? "الاسم الأول (عربي)" : "First Name (Arabic)",
       lastNameAr: selectedLanguage === "ar" ? "اسم العائلة (عربي)" : "Last Name (Arabic)",
+      enterInEnglish: selectedLanguage === "ar" ? "الرجاء الإدخال بالإنجليزية" : "Please enter in English",
+      enterInArabic: selectedLanguage === "ar" ? "الرجاء الإدخال بالعربية" : "Please enter in Arabic",
       dateOfBirth: selectedLanguage === "ar" ? "تاريخ الميلاد *" : "Date of Birth *",
       gender: selectedLanguage === "ar" ? "الجنس *" : "Gender *",
       male: selectedLanguage === "ar" ? "ذكر" : "Male",
@@ -344,11 +346,10 @@ export default function ParentRegistration() {
             <form onSubmit={handleSubmit} className={selectedLanguage === "ar" ? "text-right" : "text-left"}>
               <Tabs defaultValue="basic" className="w-full">
               <TabsList 
-                className={`grid w-full grid-cols-5 ${selectedLanguage === "ar" ? "flex-row-reverse" : ""}`}
+                className={`grid w-full grid-cols-4 ${selectedLanguage === "ar" ? "flex-row-reverse" : ""}`}
                 dir={selectedLanguage === "ar" ? "rtl" : "ltr"}
               >
                   <TabsTrigger value="basic">{t.tabs.basic}</TabsTrigger>
-                  <TabsTrigger value="academic">{t.tabs.academic}</TabsTrigger>
                   <TabsTrigger value="contact">{t.tabs.contact}</TabsTrigger>
                   <TabsTrigger value="bus">{t.tabs.bus}</TabsTrigger>
                   <TabsTrigger value="medical">{t.tabs.medical}</TabsTrigger>
@@ -542,27 +543,15 @@ export default function ParentRegistration() {
                     />
                   </div>
 
-                  <div className={`grid grid-cols-2 gap-4 ${selectedLanguage === "ar" ? "direction-rtl" : ""}`}>
-                    <div className={selectedLanguage === "ar" ? "text-right" : ""}>
-                      <Label htmlFor="fatherPhone" className={selectedLanguage === "ar" ? "text-right block" : ""}>{t.labels.fatherPhone}</Label>
-                      <Input
-                        id="fatherPhone"
-                        type="tel"
-                        value={formData.fatherPhone}
-                        onChange={(e) => setFormData(prev => ({ ...prev, fatherPhone: e.target.value }))}
-                        className={selectedLanguage === "ar" ? "text-right" : ""}
-                      />
-                    </div>
-                    <div className={selectedLanguage === "ar" ? "text-right" : ""}>
-                      <Label htmlFor="motherPhone" className={selectedLanguage === "ar" ? "text-right block" : ""}>{t.labels.motherPhone}</Label>
-                      <Input
-                        id="motherPhone"
-                        type="tel"
-                        value={formData.motherPhone}
-                        onChange={(e) => setFormData(prev => ({ ...prev, motherPhone: e.target.value }))}
-                        className={selectedLanguage === "ar" ? "text-right" : ""}
-                      />
-                    </div>
+                  <div className={selectedLanguage === "ar" ? "text-right" : ""}>
+                    <Label htmlFor="parentPhone" className={selectedLanguage === "ar" ? "text-right block" : ""}>{t.labels.parentPhone}</Label>
+                    <Input
+                      id="parentPhone"
+                      type="tel"
+                      value={formData.parentPhone}
+                      onChange={(e) => setFormData(prev => ({ ...prev, parentPhone: e.target.value }))}
+                      className={selectedLanguage === "ar" ? "text-right" : ""}
+                    />
                   </div>
 
                   <div className={`grid grid-cols-2 gap-4 ${selectedLanguage === "ar" ? "direction-rtl" : ""}`}>
