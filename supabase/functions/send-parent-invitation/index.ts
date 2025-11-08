@@ -26,7 +26,9 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Sending parent invitation to:", parentEmail);
 
-    const registrationUrl = `https://talebedu.com/parent-registration?token=${token}`;
+    // Get the app URL from environment variable or use the request origin
+    const appUrl = Deno.env.get("APP_URL") || req.headers.get("origin") || "https://acnmqugtqjhxagfwtxcg.supabase.co";
+    const registrationUrl = `${appUrl}/parent-registration?token=${token}`;
 
     const emailResponse = await resend.emails.send({
       from: "TalebEdu <onboarding@resend.dev>",
@@ -77,7 +79,7 @@ const handler = async (req: Request): Promise<Response> => {
                 <strong>Your Login Credentials:</strong><br><br>
                 <strong>Email:</strong> ${loginEmail}<br>
                 <strong>Password:</strong> ${loginPassword}<br>
-                <strong>Portal:</strong> <a href="https://talebedu.com">https://talebedu.com</a>
+                <strong>Portal:</strong> <a href="${appUrl}">${appUrl}</a>
               </div>
 
               <div class="divider"></div>
@@ -97,7 +99,7 @@ const handler = async (req: Request): Promise<Response> => {
                 <strong>بيانات تسجيل الدخول:</strong><br><br>
                 <strong>البريد الإلكتروني:</strong> ${loginEmail}<br>
                 <strong>كلمة المرور:</strong> ${loginPassword}<br>
-                <strong>البوابة:</strong> <a href="https://talebedu.com">https://talebedu.com</a>
+                <strong>البوابة:</strong> <a href="${appUrl}">${appUrl}</a>
               </div>
             </div>
 
