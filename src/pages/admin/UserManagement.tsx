@@ -921,10 +921,19 @@ export default function UserManagement() {
             {language === 'en' ? 'Manage system users and permissions' : 'إدارة مستخدمي النظام والصلاحيات'}
           </p>
         </div>
-        <Button onClick={() => setIsCreateDialogOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          {language === 'en' ? 'Create User' : 'إنشاء مستخدم'}
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            onClick={() => window.location.href = '/admin/parent-invitations'}
+          >
+            <Mail className="mr-2 h-4 w-4" />
+            {language === 'en' ? 'Parent Invitations' : 'دعوات أولياء الأمور'}
+          </Button>
+          <Button onClick={() => setIsCreateDialogOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            {language === 'en' ? 'Create User' : 'إنشاء مستخدم'}
+          </Button>
+        </div>
       </div>
 
       {/* Stats Cards */}

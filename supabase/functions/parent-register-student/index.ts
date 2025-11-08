@@ -30,7 +30,7 @@ serve(async (req: Request) => {
     // Validate token
     const { data: tokenData, error: tokenError } = await supabase
       .from("parent_registration_tokens")
-      .select("id, parent_id, used, expires_at")
+      .select("id, parent_id, used, expires_at, remaining_uses, students_registered")
       .eq("token", token)
       .single();
 
@@ -42,9 +42,10 @@ serve(async (req: Request) => {
       );
     }
 
-    if (tokenData.used) {
+    // Check if token has remaining uses
+    if (tokenData.remaining_uses && tokenData.students_registered >= tokenData.remaining_uses) {
       return new Response(
-        JSON.stringify({ error: "Token has already been used" }),
+        JSON.stringify({ error: "Token has reached maximum number of student registrations" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -103,11 +104,16 @@ serve(async (req: Request) => {
 
     console.log("Student created successfully:", student.id);
 
-    // Mark token as used
+    // Update token: increment students_registered, check remaining_uses
+    const studentsRegistered = (tokenData.students_registered || 0) + 1;
+    const shouldMarkUsed = tokenData.remaining_uses && studentsRegistered >= tokenData.remaining_uses;
+
     const { error: updateError } = await supabase
       .from("parent_registration_tokens")
       .update({
-        used: true,
+        used: shouldMarkUsed || false,
+        students_registered: studentsRegistered,
+        last_used_at: new Date().toISOString(),
         student_registered_id: student.id,
       })
       .eq("id", tokenData.id);
@@ -115,6 +121,16 @@ serve(async (req: Request) => {
     if (updateError) {
       console.error("Error updating token:", updateError);
     }
+
+    // Log the registration
+    await supabase
+      .from("parent_invitation_logs")
+      .insert({
+        token_id: tokenData.id,
+        action: "completed",
+        method: "web",
+        metadata: { student_id: student.id, student_name: `${studentData.firstName} ${studentData.lastName}` }
+      });
 
     // Upload profile photo if provided
     if (studentData.profileImage && studentData.profileImage.startsWith("data:image")) {

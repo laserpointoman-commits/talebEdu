@@ -72,3 +72,9 @@ verify_jwt = true
 
 [functions.delete-user]
 verify_jwt = true
+
+[functions.bulk-invite-parents]
+verify_jwt = true
+
+[functions.resend-invitation]
+verify_jwt = true

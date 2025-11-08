@@ -1980,13 +1980,53 @@ export type Database = {
         }
         Relationships: []
       }
+      parent_invitation_logs: {
+        Row: {
+          action: string
+          created_at: string | null
+          id: string
+          metadata: Json | null
+          method: string | null
+          token_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          method?: string | null
+          token_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          method?: string | null
+          token_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "parent_invitation_logs_token_id_fkey"
+            columns: ["token_id"]
+            isOneToOne: false
+            referencedRelation: "parent_registration_tokens"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       parent_registration_tokens: {
         Row: {
           created_at: string | null
           expires_at: string
           id: string
+          invitation_method: string | null
+          last_used_at: string | null
+          notes: string | null
           parent_id: string
+          remaining_uses: number | null
           student_registered_id: string | null
+          students_registered: number | null
           token: string
           used: boolean | null
         }
@@ -1994,8 +2034,13 @@ export type Database = {
           created_at?: string | null
           expires_at?: string
           id?: string
+          invitation_method?: string | null
+          last_used_at?: string | null
+          notes?: string | null
           parent_id: string
+          remaining_uses?: number | null
           student_registered_id?: string | null
+          students_registered?: number | null
           token?: string
           used?: boolean | null
         }
@@ -2003,8 +2048,13 @@ export type Database = {
           created_at?: string | null
           expires_at?: string
           id?: string
+          invitation_method?: string | null
+          last_used_at?: string | null
+          notes?: string | null
           parent_id?: string
+          remaining_uses?: number | null
           student_registered_id?: string | null
+          students_registered?: number | null
           token?: string
           used?: boolean | null
         }
