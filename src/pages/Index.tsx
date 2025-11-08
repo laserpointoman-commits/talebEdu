@@ -46,7 +46,9 @@ const Index = () => {
   }, []);
 
   useEffect(() => {
-    if (isAuthenticated) {
+    // Only redirect to dashboard if user is on the index page and authenticated
+    // Don't redirect if they're trying to access other pages like parent-registration
+    if (isAuthenticated && window.location.pathname === '/') {
       navigate('/dashboard');
     }
   }, [isAuthenticated, navigate]);
