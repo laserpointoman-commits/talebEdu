@@ -58,11 +58,6 @@ const studentSchema = z.object({
   
   // Agreements
   transportationAgreement: z.boolean(),
-  canteenAgreement: z.boolean(),
-  uniformAgreement: z.boolean(),
-  photoAgreement: z.boolean(),
-  medicalAgreement: z.boolean(),
-  termsAgreement: z.boolean(),
 });
 
 interface StudentRegistrationProps {
@@ -141,11 +136,6 @@ export default function StudentRegistration({ isOpen, onClose, editingStudent }:
         emergencyContact: editingStudent.emergencyContact || '+968 ',
         emergencyContactName: editingStudent.emergencyContactName || '',
         transportationAgreement: editingStudent.transportationAgreement || false,
-        canteenAgreement: editingStudent.canteenAgreement || false,
-        uniformAgreement: editingStudent.uniformAgreement || false,
-        photoAgreement: editingStudent.photoAgreement || false,
-        medicalAgreement: editingStudent.medicalAgreement || false,
-        termsAgreement: editingStudent.termsAgreement || false,
       });
       setProfileImage(editingStudent.profileImage || '');
       setIsEditMode(true);
@@ -181,11 +171,6 @@ export default function StudentRegistration({ isOpen, onClose, editingStudent }:
         emergencyContact: '+968 ',
         emergencyContactName: '',
         transportationAgreement: false,
-        canteenAgreement: false,
-        uniformAgreement: false,
-        photoAgreement: false,
-        medicalAgreement: false,
-        termsAgreement: false,
       });
       setProfileImage('');
       setIsEditMode(false);
@@ -233,11 +218,6 @@ export default function StudentRegistration({ isOpen, onClose, editingStudent }:
     
     // Agreements
     transportationAgreement: false,
-    canteenAgreement: false,
-    uniformAgreement: false,
-    photoAgreement: false,
-    medicalAgreement: false,
-    termsAgreement: false,
   });
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -324,11 +304,6 @@ export default function StudentRegistration({ isOpen, onClose, editingStudent }:
         emergencyContact: '+968 ',
         emergencyContactName: '',
         transportationAgreement: false,
-        canteenAgreement: false,
-        uniformAgreement: false,
-        photoAgreement: false,
-        medicalAgreement: false,
-        termsAgreement: false,
       });
       setProfileImage('');
       setActiveTab('basic');
@@ -806,100 +781,6 @@ export default function StudentRegistration({ isOpen, onClose, editingStudent }:
                     </div>
                   </div>
                   
-                  <div className={`flex items-start ${language === 'ar' ? 'space-x-reverse space-x-3' : 'space-x-3'}`}>
-                    <Checkbox
-                      id="canteen"
-                      checked={formData.canteenAgreement}
-                      onCheckedChange={(checked) => setFormData({ ...formData, canteenAgreement: checked as boolean })}
-                    />
-                    <div className="grid gap-1.5 leading-none">
-                      <Label htmlFor="canteen" className="flex items-center gap-2 cursor-pointer">
-                        <Utensils className="h-4 w-4" />
-                        {language === 'en' ? 'Canteen Agreement' : 'اتفاقية المقصف'}
-                      </Label>
-                      <p className="text-sm text-muted-foreground">
-                        {language === 'en' 
-                          ? 'I agree to allow my child to use the school canteen services'
-                          : 'أوافق على السماح لطفلي باستخدام خدمات المقصف المدرسي'}
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className={`flex items-start ${language === 'ar' ? 'space-x-reverse space-x-3' : 'space-x-3'}`}>
-                    <Checkbox
-                      id="uniform"
-                      checked={formData.uniformAgreement}
-                      onCheckedChange={(checked) => setFormData({ ...formData, uniformAgreement: checked as boolean })}
-                    />
-                    <div className="grid gap-1.5 leading-none">
-                      <Label htmlFor="uniform" className="flex items-center gap-2 cursor-pointer">
-                        <ShoppingBag className="h-4 w-4" />
-                        {language === 'en' ? 'Uniform Agreement' : 'اتفاقية الزي المدرسي'}
-                      </Label>
-                      <p className="text-sm text-muted-foreground">
-                        {language === 'en' 
-                          ? 'I agree to the school uniform policy and requirements'
-                          : 'أوافق على سياسة ومتطلبات الزي المدرسي'}
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className={`flex items-start ${language === 'ar' ? 'space-x-reverse space-x-3' : 'space-x-3'}`}>
-                    <Checkbox
-                      id="photo"
-                      checked={formData.photoAgreement}
-                      onCheckedChange={(checked) => setFormData({ ...formData, photoAgreement: checked as boolean })}
-                    />
-                    <div className="grid gap-1.5 leading-none">
-                      <Label htmlFor="photo" className="flex items-center gap-2 cursor-pointer">
-                        <Camera className="h-4 w-4" />
-                        {language === 'en' ? 'Photo/Video Agreement' : 'اتفاقية الصور/الفيديو'}
-                      </Label>
-                      <p className="text-sm text-muted-foreground">
-                        {language === 'en' 
-                          ? 'I consent to my child being photographed/videoed for school purposes'
-                          : 'أوافق على تصوير طفلي للأغراض المدرسية'}
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className={`flex items-start ${language === 'ar' ? 'space-x-reverse space-x-3' : 'space-x-3'}`}>
-                    <Checkbox
-                      id="medical"
-                      checked={formData.medicalAgreement}
-                      onCheckedChange={(checked) => setFormData({ ...formData, medicalAgreement: checked as boolean })}
-                    />
-                    <div className="grid gap-1.5 leading-none">
-                      <Label htmlFor="medical" className="flex items-center gap-2 cursor-pointer">
-                        <AlertCircle className="h-4 w-4" />
-                        {language === 'en' ? 'Medical Agreement' : 'اتفاقية طبية'}
-                      </Label>
-                      <p className="text-sm text-muted-foreground">
-                        {language === 'en' 
-                          ? 'I authorize the school to seek medical treatment in case of emergency'
-                          : 'أفوض المدرسة بطلب العلاج الطبي في حالة الطوارئ'}
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className={`flex items-start ${language === 'ar' ? 'space-x-reverse space-x-3' : 'space-x-3'}`}>
-                    <Checkbox
-                      id="terms"
-                      checked={formData.termsAgreement}
-                      onCheckedChange={(checked) => setFormData({ ...formData, termsAgreement: checked as boolean })}
-                    />
-                    <div className="grid gap-1.5 leading-none">
-                      <Label htmlFor="terms" className="flex items-center gap-2 cursor-pointer">
-                        <FileText className="h-4 w-4" />
-                        {language === 'en' ? 'Terms & Conditions' : 'الشروط والأحكام'}
-                      </Label>
-                      <p className="text-sm text-muted-foreground">
-                        {language === 'en' 
-                          ? 'I agree to all school terms, conditions, and policies'
-                          : 'أوافق على جميع شروط وأحكام وسياسات المدرسة'}
-                      </p>
-                    </div>
-                  </div>
                 </div>
               </TabsContent>
               
@@ -928,12 +809,6 @@ export default function StudentRegistration({ isOpen, onClose, editingStudent }:
                                 <span className="text-xs flex items-center gap-1 text-success">
                                   <Bus className="h-3 w-3" />
                                   {language === 'en' ? 'Transportation' : 'النقل'}
-                                </span>
-                              )}
-                              {student.canteenAgreement && (
-                                <span className="text-xs flex items-center gap-1 text-success">
-                                  <Utensils className="h-3 w-3" />
-                                  {language === 'en' ? 'Canteen' : 'المقصف'}
                                 </span>
                               )}
                             </div>

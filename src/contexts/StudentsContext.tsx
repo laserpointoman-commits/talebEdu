@@ -33,11 +33,6 @@ export interface Student {
   emergencyContact: string;
   emergencyContactName: string;
   transportationAgreement: boolean;
-  canteenAgreement: boolean;
-  uniformAgreement: boolean;
-  photoAgreement: boolean;
-  medicalAgreement: boolean;
-  termsAgreement: boolean;
   profileImage?: string;
   nfcId?: string;
   barcode?: string;
@@ -108,11 +103,6 @@ export function StudentsProvider({ children }: { children: React.ReactNode }) {
           emergencyContact: student.emergency_contact || '',
           emergencyContactName: student.emergency_contact_name || '',
           transportationAgreement: student.transportation_agreement || false,
-          canteenAgreement: student.canteen_agreement || false,
-          uniformAgreement: student.uniform_agreement || false,
-          photoAgreement: student.photo_agreement || false,
-          medicalAgreement: student.medical_agreement || false,
-          termsAgreement: student.terms_agreement || false,
           profileImage: student.profile_image,
           nfcId: student.nfc_id,
           barcode: student.barcode,
@@ -168,11 +158,6 @@ export function StudentsProvider({ children }: { children: React.ReactNode }) {
           emergency_contact: studentData.emergencyContact,
           emergency_contact_name: studentData.emergencyContactName,
           transportation_agreement: studentData.transportationAgreement,
-          canteen_agreement: studentData.canteenAgreement,
-          uniform_agreement: studentData.uniformAgreement,
-          photo_agreement: studentData.photoAgreement,
-          medical_agreement: studentData.medicalAgreement,
-          terms_agreement: studentData.termsAgreement,
           nfc_id: studentData.nfcId || `NFC${Date.now().toString().slice(-6)}`,
           barcode: studentData.barcode || `BAR${Date.now().toString().slice(-6)}`,
           status: 'active',
@@ -234,11 +219,6 @@ export function StudentsProvider({ children }: { children: React.ReactNode }) {
       if (updatedData.emergencyContact !== undefined) updatePayload.emergency_contact = updatedData.emergencyContact;
       if (updatedData.emergencyContactName !== undefined) updatePayload.emergency_contact_name = updatedData.emergencyContactName;
       if (updatedData.transportationAgreement !== undefined) updatePayload.transportation_agreement = updatedData.transportationAgreement;
-      if (updatedData.canteenAgreement !== undefined) updatePayload.canteen_agreement = updatedData.canteenAgreement;
-      if (updatedData.uniformAgreement !== undefined) updatePayload.uniform_agreement = updatedData.uniformAgreement;
-      if (updatedData.photoAgreement !== undefined) updatePayload.photo_agreement = updatedData.photoAgreement;
-      if (updatedData.medicalAgreement !== undefined) updatePayload.medical_agreement = updatedData.medicalAgreement;
-      if (updatedData.termsAgreement !== undefined) updatePayload.terms_agreement = updatedData.termsAgreement;
       if (updatedData.nfcId !== undefined) updatePayload.nfc_id = updatedData.nfcId;
       if (updatedData.barcode !== undefined) updatePayload.barcode = updatedData.barcode;
       if (updatedData.status !== undefined) updatePayload.status = updatedData.status;
