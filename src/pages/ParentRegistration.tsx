@@ -286,8 +286,8 @@ export default function ParentRegistration() {
       medical: selectedLanguage === "ar" ? "الطبية" : "Medical",
     },
     labels: {
-      firstName: selectedLanguage === "ar" ? "الاسم الأول *" : "First Name *",
-      lastName: selectedLanguage === "ar" ? "اسم العائلة *" : "Last Name *",
+      firstName: selectedLanguage === "ar" ? "الاسم الأول (انجليزي) *" : "First Name (English) *",
+      lastName: selectedLanguage === "ar" ? "اسم العائلة (انجليزي) *" : "Last Name (English) *",
       firstNameAr: selectedLanguage === "ar" ? "الاسم الأول (عربي)" : "First Name (Arabic)",
       lastNameAr: selectedLanguage === "ar" ? "اسم العائلة (عربي)" : "Last Name (Arabic)",
       enterInEnglish: selectedLanguage === "ar" ? "الرجاء الإدخال بالإنجليزية" : "Please enter in English",
