@@ -42,6 +42,7 @@ import FeatureVisibilityControl from './admin/FeatureVisibilityControl';
 import GeneratePhotos from './admin/GeneratePhotos';
 import NFCManagement from './admin/NFCManagement';
 import ParentalCanteenControl from '@/components/features/ParentalCanteenControl';
+import ParentInvitationsDashboard from './admin/ParentInvitationsDashboard';
 
 export default function Dashboard() {
   const { user, profile, isAuthenticated } = useAuth();
@@ -120,6 +121,7 @@ export default function Dashboard() {
         <Route path="admin/features" element={<FeatureVisibilityControl />} />
         <Route path="admin/photos" element={<GeneratePhotos />} />
         <Route path="admin/nfc" element={<NFCManagement />} />
+        <Route path="admin/parent-invitations" element={<ParentInvitationsDashboard />} />
         <Route path="canteen-controls" element={<ParentalCanteenControl />} />
         <Route path="profile" element={<Profile />} />
         <Route path="settings" element={<Settings />} />
