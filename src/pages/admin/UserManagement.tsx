@@ -616,10 +616,9 @@ export default function UserManagement() {
         });
 
         if (!passwordError) {
-          // Store password locally for developer reference
+          // Store password in memory for current session only (not persisted to localStorage)
           const updatedPasswords = { ...userPasswords, [editingUser.id]: formData.password };
           setUserPasswords(updatedPasswords);
-          localStorage.setItem('dev_user_passwords', JSON.stringify(updatedPasswords));
         } else {
           console.error('Password update error:', passwordError);
         }
@@ -667,11 +666,10 @@ export default function UserManagement() {
         throw new Error('User creation failed - no user ID returned');
       }
 
-      // Store password for developer mode
+      // Store password in memory for current session only (not persisted to localStorage)
       if (isDeveloper) {
         const updatedPasswords = { ...userPasswords, [data.userId]: formData.password };
         setUserPasswords(updatedPasswords);
-        localStorage.setItem('dev_user_passwords', JSON.stringify(updatedPasswords));
       }
 
       // Handle teacher class assignments

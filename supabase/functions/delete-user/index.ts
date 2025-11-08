@@ -7,6 +7,60 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // Create admin client for authentication check
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    )
+
+    // Authenticate the request
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: 'Missing authorization header' }),
+        { 
+          status: 401, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
+    }
+
+    const token = authHeader.replace('Bearer ', '')
+    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token)
+
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid authentication token' }),
+        { 
+          status: 401, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
+    }
+
+    // Check if user has admin or developer role
+    const { data: callerProfile } = await supabaseAdmin
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    if (!callerProfile || (callerProfile.role !== 'admin' && callerProfile.role !== 'developer')) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized. Admin or developer role required.' }),
+        { 
+          status: 403, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
+    }
+
     const { userId } = await req.json()
 
     if (!userId) {
@@ -19,26 +73,14 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Create admin client with service role
-    const supabaseAdmin = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      }
-    )
-
     // Get user profile to check role
-    const { data: profile } = await supabaseAdmin
+    const { data: targetProfile } = await supabaseAdmin
       .from('profiles')
       .select('role')
       .eq('id', userId)
       .single()
 
-    if (!profile) {
+    if (!targetProfile) {
       return new Response(
         JSON.stringify({ error: 'User not found in profiles' }),
         { 
@@ -48,10 +90,10 @@ Deno.serve(async (req) => {
       )
     }
 
-    console.log('Deleting user with role:', profile.role)
+    console.log('Deleting user with role:', targetProfile.role)
 
     // First, manually delete related records based on role
-    if (profile.role === 'student') {
+    if (targetProfile.role === 'student') {
       // Delete student record (will cascade to related tables)
       const { error: studentError } = await supabaseAdmin
         .from('students')
@@ -61,7 +103,7 @@ Deno.serve(async (req) => {
       if (studentError) {
         console.error('Error deleting student record:', studentError)
       }
-    } else if (profile.role === 'teacher') {
+    } else if (targetProfile.role === 'teacher') {
       // Delete teacher record
       const { error: teacherError } = await supabaseAdmin
         .from('teachers')
@@ -71,7 +113,7 @@ Deno.serve(async (req) => {
       if (teacherError) {
         console.error('Error deleting teacher record:', teacherError)
       }
-    } else if (profile.role === 'driver') {
+    } else if (targetProfile.role === 'driver') {
       // Delete driver record
       const { error: driverError } = await supabaseAdmin
         .from('drivers')

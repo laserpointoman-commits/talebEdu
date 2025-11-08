@@ -69,3 +69,6 @@ verify_jwt = true
 
 [functions.generate-all-photos]
 verify_jwt = true
+
+[functions.delete-user]
+verify_jwt = true
