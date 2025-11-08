@@ -3494,10 +3494,7 @@ export type Database = {
         Args: { required_roles: string[]; user_id: string }
         Returns: boolean
       }
-      has_role: {
-        Args: { required_role: string; user_id: string }
-        Returns: boolean
-      }
+      has_role: { Args: { _role: string; _user_id: string }; Returns: boolean }
       insert_profile_with_parent: {
         Args: {
           p_email: string
