@@ -324,13 +324,13 @@ export default function ParentRegistration() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10 p-4" dir={selectedLanguage === "ar" ? "rtl" : "ltr"}>
       <div className="max-w-4xl mx-auto py-8">
-        <Card>
-          <CardHeader>
+        <Card className={selectedLanguage === "ar" ? "rtl" : ""}>
+          <CardHeader className={selectedLanguage === "ar" ? "text-right" : "text-left"}>
             <CardTitle className="text-2xl">{t.title}</CardTitle>
             <CardDescription>{t.welcome}</CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit} className={selectedLanguage === "ar" ? "text-right" : "text-left"}>
               <Tabs defaultValue="basic" className="w-full">
                 <TabsList className="grid w-full grid-cols-4">
                   <TabsTrigger value="basic">{t.tabs.basic}</TabsTrigger>
@@ -551,7 +551,7 @@ export default function ParentRegistration() {
                 </TabsContent>
               </Tabs>
 
-              <div className="flex gap-4 mt-6">
+              <div className={`flex gap-4 mt-6 ${selectedLanguage === "ar" ? "flex-row-reverse" : ""}`}>
                 <Button
                   type="button"
                   variant="outline"
