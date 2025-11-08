@@ -929,7 +929,10 @@ export default function UserManagement() {
             <Mail className="mr-2 h-4 w-4" />
             {language === 'en' ? 'Parent Invitations' : 'دعوات أولياء الأمور'}
           </Button>
-          <Button onClick={() => setIsCreateDialogOpen(true)}>
+          <Button onClick={() => {
+            resetForm();
+            setIsCreateDialogOpen(true);
+          }}>
             <Plus className="mr-2 h-4 w-4" />
             {language === 'en' ? 'Create User' : 'إنشاء مستخدم'}
           </Button>
