@@ -3417,10 +3417,7 @@ export type Database = {
       }
     }
     Functions: {
-      accept_friend_request: {
-        Args: { request_id: string }
-        Returns: boolean
-      }
+      accept_friend_request: { Args: { request_id: string }; Returns: boolean }
       calculate_employee_salary: {
         Args: {
           p_employee_id: string
@@ -3460,7 +3457,7 @@ export type Database = {
         }[]
       }
       calculate_total_billing: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           next_billing_date: string
           total_active_users: number
@@ -3483,10 +3480,7 @@ export type Database = {
         Args: { p_position: Database["public"]["Enums"]["employee_position"] }
         Returns: string
       }
-      generate_transaction_number: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      generate_transaction_number: { Args: never; Returns: string }
       get_default_notifications_by_role: {
         Args: { p_role: Database["public"]["Enums"]["user_role"] }
         Returns: Database["public"]["Enums"]["notification_type"][]
@@ -3495,10 +3489,7 @@ export type Database = {
         Args: { other_student_id: string }
         Returns: string
       }
-      get_user_role: {
-        Args: { user_id: string }
-        Returns: string
-      }
+      get_user_role: { Args: { user_id: string }; Returns: string }
       has_any_role: {
         Args: { required_roles: string[]; user_id: string }
         Returns: boolean
@@ -3520,10 +3511,7 @@ export type Database = {
         }
         Returns: undefined
       }
-      is_test_account: {
-        Args: { user_email: string }
-        Returns: boolean
-      }
+      is_test_account: { Args: { user_email: string }; Returns: boolean }
       process_fee_payment: {
         Args: {
           p_amount: number
@@ -3543,6 +3531,12 @@ export type Database = {
           payment_method: string
           receipt_number: string | null
           transaction_reference: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "payment_transactions"
+          isOneToOne: true
+          isSetofReturn: false
         }
       }
       process_fee_payment_from_wallet: {
@@ -3566,6 +3560,12 @@ export type Database = {
           reference_number: string | null
           status: string
           to_user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "wallet_transfers"
+          isOneToOne: true
+          isSetofReturn: false
         }
       }
       reset_test_account_data: {
