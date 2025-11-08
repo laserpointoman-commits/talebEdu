@@ -1557,13 +1557,15 @@ export default function UserManagement() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>{language === 'en' ? 'Password' : 'كلمة المرور'}</Label>
+                  <Label>{language === 'en' ? 'Password (min 8 characters)' : 'كلمة المرور (8 أحرف على الأقل)'}</Label>
                   <div className="flex gap-2">
                     <Input
                       type={showPassword ? "text" : "password"}
                       value={formData.password}
                       onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                       required
+                      minLength={8}
+                      maxLength={100}
                       dir="ltr"
                     />
                     <Button
