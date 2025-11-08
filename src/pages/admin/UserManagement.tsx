@@ -14,7 +14,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '@/components/ui/command';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
-import { Plus, Search, Users, CreditCard, Calendar, RefreshCw, CheckCircle, XCircle, Edit, Trash2, Mail, Share2, MessageSquare, Printer, Eye, EyeOff, Ban, UserCheck, Lock, Key, Wifi, ExternalLink } from 'lucide-react';
+import { Plus, Search, Users, CreditCard, Calendar, RefreshCw, CheckCircle, XCircle, Edit, Trash2, Mail, Share2, MessageSquare, Printer, Eye, EyeOff, Ban, UserCheck, Lock, Key, Wifi, ExternalLink, Link2, Copy } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
@@ -59,6 +59,8 @@ export default function UserManagement() {
   const [viewPasswordUserId, setViewPasswordUserId] = useState<string | null>(null);
   const [shareData, setShareData] = useState<{email: string, password: string, fullName: string, role: string} | null>(null);
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
+  const [isResendDialogOpen, setIsResendDialogOpen] = useState(false);
+  const [selectedParent, setSelectedParent] = useState<UserProfile | null>(null);
   const [recipientEmail, setRecipientEmail] = useState('');
   const [selectedEntityId, setSelectedEntityId] = useState<string>('none');
   const [entityDropdownOpen, setEntityDropdownOpen] = useState(false);
@@ -226,6 +228,115 @@ export default function UserManagement() {
   const handleShareCredentials = (email: string, password: string, fullName: string, role: string) => {
     setShareData({ email, password, fullName, role });
     setIsShareDialogOpen(true);
+  };
+
+  const handleResendRegistration = (user: UserProfile) => {
+    setSelectedParent(user);
+    setIsResendDialogOpen(true);
+  };
+
+  const getRegistrationLink = async (parentEmail: string): Promise<string | null> => {
+    try {
+      // First get the parent's profile ID
+      const { data: parentProfile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', parentEmail)
+        .single();
+
+      if (!parentProfile) {
+        toast.error(language === 'en' ? 'Parent not found' : 'لم يتم العثور على ولي الأمر');
+        return null;
+      }
+
+      const { data: tokenData, error: tokenError } = await supabase
+        .from('parent_registration_tokens')
+        .select('token, expires_at')
+        .eq('parent_id', parentProfile.id)
+        .gt('expires_at', new Date().toISOString())
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      let registrationToken = tokenData?.token;
+
+      if (!registrationToken || tokenError) {
+        const newToken = crypto.randomUUID().replace(/-/g, '');
+        const expiresAt = new Date();
+        expiresAt.setDate(expiresAt.getDate() + 7);
+
+        const { error: insertError } = await supabase
+          .from('parent_registration_tokens')
+          .insert({
+            parent_id: parentProfile.id,
+            token: newToken,
+            expires_at: expiresAt.toISOString(),
+          });
+
+        if (insertError) throw insertError;
+        registrationToken = newToken;
+      }
+
+      return `${window.location.origin}/parent-registration?token=${registrationToken}`;
+    } catch (error) {
+      console.error('Error getting registration link:', error);
+      toast.error(language === 'en' ? 'Failed to generate registration link' : 'فشل في إنشاء رابط التسجيل');
+      return null;
+    }
+  };
+
+  const sendRegistrationEmail = async () => {
+    if (!selectedParent) return;
+
+    try {
+      const registrationLink = await getRegistrationLink(selectedParent.email);
+      if (!registrationLink) return;
+
+      const { error } = await supabase.functions.invoke('send-parent-invitation', {
+        body: {
+          parentEmail: selectedParent.email,
+          parentName: selectedParent.full_name,
+          loginEmail: selectedParent.email,
+          loginPassword: userPasswords[selectedParent.id] || 'Not available',
+          registrationLink,
+        },
+      });
+
+      if (error) throw error;
+
+      toast.success(language === 'en' ? 'Registration email sent successfully' : 'تم إرسال بريد التسجيل بنجاح');
+      setIsResendDialogOpen(false);
+    } catch (error) {
+      console.error('Error sending email:', error);
+      toast.error(language === 'en' ? 'Failed to send registration email' : 'فشل في إرسال بريد التسجيل');
+    }
+  };
+
+  const sendViaWhatsApp = async () => {
+    if (!selectedParent) return;
+
+    const registrationLink = await getRegistrationLink(selectedParent.email);
+    if (!registrationLink) return;
+
+    const message = `Hello ${selectedParent.full_name},\n\nYou have been invited to register your student.\n\nRegistration Link: ${registrationLink}\n\nThank you!`;
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+    setIsResendDialogOpen(false);
+  };
+
+  const copyRegistrationLink = async () => {
+    if (!selectedParent) return;
+
+    const registrationLink = await getRegistrationLink(selectedParent.email);
+    if (!registrationLink) return;
+
+    try {
+      await navigator.clipboard.writeText(registrationLink);
+      toast.success(language === 'en' ? 'Registration link copied to clipboard' : 'تم نسخ رابط التسجيل');
+      setIsResendDialogOpen(false);
+    } catch (error) {
+      toast.error(language === 'en' ? 'Failed to copy link' : 'فشل في نسخ الرابط');
+    }
   };
 
   const handleNfcProgramming = async (user: UserProfile) => {
@@ -1090,8 +1201,19 @@ export default function UserManagement() {
                             size="sm"
                             variant="ghost"
                             onClick={() => handleShareCredentials(user.email, userPasswords[user.id], user.full_name, user.role)}
+                            title={language === 'en' ? 'Share Credentials' : 'مشاركة بيانات الدخول'}
                           >
                             <Share2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {user.role === 'parent' && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleResendRegistration(user)}
+                            title={language === 'en' ? 'Resend Registration Link' : 'إعادة إرسال رابط التسجيل'}
+                          >
+                            <Link2 className="h-4 w-4" />
                           </Button>
                         )}
                         <Button
@@ -1684,6 +1806,51 @@ export default function UserManagement() {
                 : (language === 'en' ? 'Delete User' : 'حذف المستخدم')}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Resend Registration Link Dialog */}
+      <Dialog open={isResendDialogOpen} onOpenChange={setIsResendDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {language === 'en' ? 'Resend Registration Link' : 'إعادة إرسال رابط التسجيل'}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              {language === 'en' 
+                ? `Send registration link to ${selectedParent?.full_name} (${selectedParent?.email})`
+                : `إرسال رابط التسجيل إلى ${selectedParent?.full_name} (${selectedParent?.email})`
+              }
+            </p>
+            <div className="flex flex-col gap-2">
+              <Button
+                onClick={sendRegistrationEmail}
+                className="w-full justify-start"
+                variant="outline"
+              >
+                <Mail className="h-4 w-4 mr-2" />
+                {language === 'en' ? 'Send via Email' : 'إرسال عبر البريد الإلكتروني'}
+              </Button>
+              <Button
+                onClick={sendViaWhatsApp}
+                className="w-full justify-start"
+                variant="outline"
+              >
+                <MessageSquare className="h-4 w-4 mr-2" />
+                {language === 'en' ? 'Send via WhatsApp' : 'إرسال عبر واتساب'}
+              </Button>
+              <Button
+                onClick={copyRegistrationLink}
+                className="w-full justify-start"
+                variant="outline"
+              >
+                <Copy className="h-4 w-4 mr-2" />
+                {language === 'en' ? 'Copy Link' : 'نسخ الرابط'}
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
