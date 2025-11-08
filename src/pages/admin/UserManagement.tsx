@@ -120,22 +120,7 @@ export default function UserManagement() {
       
       setUsers(typedData);
 
-      // If developer, fetch stored passwords from localStorage (for demo purposes)
-      if (isDeveloper) {
-        const storedPasswords = localStorage.getItem('dev_user_passwords');
-        if (storedPasswords) {
-          setUserPasswords(JSON.parse(storedPasswords));
-        } else {
-          // Initialize with default passwords for existing users
-          const defaultPasswords: {[key: string]: string} = {};
-          (data || []).forEach(user => {
-            // Set default password hint for existing users
-            defaultPasswords[user.id] = 'Admin123'; // Default password for demo
-          });
-          setUserPasswords(defaultPasswords);
-          localStorage.setItem('dev_user_passwords', JSON.stringify(defaultPasswords));
-        }
-      }
+      // Password storage removed for security - passwords should never be stored client-side
     } catch (error: any) {
       toast.error(error.message);
     } finally {

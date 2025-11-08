@@ -1,7 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-
-// Resend is commented out until the API key is configured
-// const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.47.10';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -23,7 +21,48 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Verify authentication and admin role
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      throw new Error('Unauthorized: No authorization header');
+    }
+
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
+    
+    if (authError || !user) {
+      throw new Error('Unauthorized: Invalid token');
+    }
+
+    // Check if user has admin or developer role
+    const { data: userRoles, error: roleError } = await supabaseAdmin
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .in('role', ['admin', 'developer']);
+
+    if (roleError || !userRoles || userRoles.length === 0) {
+      throw new Error('Forbidden: Admin access required');
+    }
+
+    console.log('Authorized admin sending credentials:', user.id);
+
     const { email, password, fullName, role, recipientEmail, language }: SendCredentialsRequest = await req.json();
+
+    // Input validation
+    if (!email || !password || !fullName || !role || !recipientEmail) {
+      throw new Error('All fields are required');
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(recipientEmail)) {
+      throw new Error('Invalid recipient email format');
+    }
 
     console.log("Sending credentials email to:", recipientEmail);
 
@@ -129,7 +168,8 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(
       JSON.stringify({ error: error.message }),
       {
-        status: 500,
+        status: error.message.includes('Unauthorized') ? 401 :
+                error.message.includes('Forbidden') ? 403 : 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },
       }
     );

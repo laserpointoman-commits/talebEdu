@@ -6,6 +6,27 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Simple validation helpers (Zod not available in Deno by default)
+const validateEmail = (email: string): boolean => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email) && email.length <= 255;
+};
+
+const validatePassword = (password: string): boolean => {
+  return password.length >= 8 && password.length <= 100;
+};
+
+const validateRole = (role: string): boolean => {
+  const validRoles = ['admin', 'teacher', 'student', 'parent', 'driver', 'finance', 'developer', 'canteen', 'school_attendance', 'bus_attendance'];
+  return validRoles.includes(role);
+};
+
+const validatePhone = (phone: string | undefined): boolean => {
+  if (!phone) return true;
+  const phoneRegex = /^\+?[1-9]\d{1,14}$/;
+  return phoneRegex.test(phone);
+};
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -23,10 +44,61 @@ serve(async (req) => {
       }
     });
 
+    // Verify authentication and admin role
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      throw new Error('Unauthorized: No authorization header');
+    }
+
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
+    
+    if (authError || !user) {
+      throw new Error('Unauthorized: Invalid token');
+    }
+
+    // Check if user has admin or developer role
+    const { data: userRoles, error: roleError } = await supabaseAdmin
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .in('role', ['admin', 'developer']);
+
+    if (roleError || !userRoles || userRoles.length === 0) {
+      throw new Error('Forbidden: Admin access required');
+    }
+
+    console.log('Authorized user:', user.id, 'with roles:', userRoles.map(r => r.role));
+
     const { email, password, role, full_name, phone, full_name_ar, parent_user_id } = await req.json();
 
+    // Input validation
     if (!email || !password || !role || !full_name) {
       throw new Error('Email, password, role, and full name are required');
+    }
+
+    if (!validateEmail(email)) {
+      throw new Error('Invalid email format or email too long (max 255 characters)');
+    }
+
+    if (!validatePassword(password)) {
+      throw new Error('Password must be between 8 and 100 characters');
+    }
+
+    if (!validateRole(role)) {
+      throw new Error('Invalid role specified');
+    }
+
+    if (full_name.length > 100) {
+      throw new Error('Full name must be less than 100 characters');
+    }
+
+    if (full_name_ar && full_name_ar.length > 100) {
+      throw new Error('Arabic name must be less than 100 characters');
+    }
+
+    if (!validatePhone(phone)) {
+      throw new Error('Invalid phone number format');
     }
 
     console.log('Creating user:', email, 'with role:', role);
@@ -62,6 +134,14 @@ serve(async (req) => {
       } catch (e) {
         console.warn('Could not update password');
       }
+
+      // Update user role in user_roles table
+      await supabaseAdmin
+        .from('user_roles')
+        .upsert({
+          user_id: userId,
+          role: role as any
+        }, { onConflict: 'user_id,role' });
     } else {
       // Try creating via admin API first
       try {
@@ -116,8 +196,21 @@ serve(async (req) => {
         console.error('Profile creation failed:', profileError);
         throw new Error('Failed to create profile: ' + profileError.message);
       }
+
+      // Create user role
+      const { error: roleInsertError } = await supabaseAdmin
+        .from('user_roles')
+        .insert({
+          user_id: userId,
+          role: role as any
+        });
+
+      if (roleInsertError) {
+        console.error('Role creation failed:', roleInsertError);
+        throw new Error('Failed to create user role: ' + roleInsertError.message);
+      }
       
-      console.log('Profile created/updated successfully');
+      console.log('Profile and role created successfully');
     }
 
     // Create role-specific records only for roles that need them
@@ -159,9 +252,6 @@ serve(async (req) => {
       }, { onConflict: 'profile_id' });
     }
     
-    // Note: school_attendance and bus_attendance roles don't need separate entity tables
-    console.log('Role-specific records handled for role:', role);
-
     console.log('User created successfully:', userId);
 
     return new Response(
@@ -183,7 +273,8 @@ serve(async (req) => {
       JSON.stringify({ error: errorMessage }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400,
+        status: error instanceof Error && error.message.includes('Unauthorized') ? 401 :
+                error instanceof Error && error.message.includes('Forbidden') ? 403 : 400,
       }
     );
   }

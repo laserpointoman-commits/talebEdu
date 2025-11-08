@@ -18,10 +18,41 @@ serve(async (req) => {
     
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
+    // Verify authentication and admin role
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      throw new Error('Unauthorized: No authorization header');
+    }
+
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
+    
+    if (authError || !user) {
+      throw new Error('Unauthorized: Invalid token');
+    }
+
+    // Check if user has admin or developer role
+    const { data: userRoles, error: roleError } = await supabaseAdmin
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .in('role', ['admin', 'developer']);
+
+    if (roleError || !userRoles || userRoles.length === 0) {
+      throw new Error('Forbidden: Admin access required');
+    }
+
+    console.log('Authorized admin:', user.id);
+
     const { userId, newPassword } = await req.json();
 
     if (!userId || !newPassword) {
       throw new Error('User ID and new password are required');
+    }
+
+    // Validate password strength
+    if (newPassword.length < 8 || newPassword.length > 100) {
+      throw new Error('Password must be between 8 and 100 characters');
     }
 
     // Update the user's password using admin client
@@ -34,6 +65,8 @@ serve(async (req) => {
       console.error('Error updating password:', error);
       throw error;
     }
+
+    console.log('Password updated successfully for user:', userId);
 
     return new Response(
       JSON.stringify({ success: true, message: 'Password updated successfully' }),
@@ -49,7 +82,8 @@ serve(async (req) => {
       JSON.stringify({ error: errorMessage }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400,
+        status: error instanceof Error && error.message.includes('Unauthorized') ? 401 :
+                error instanceof Error && error.message.includes('Forbidden') ? 403 : 400,
       }
     );
   }
