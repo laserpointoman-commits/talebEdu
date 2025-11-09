@@ -21,6 +21,7 @@ import CreateAdmin from "./pages/CreateAdmin";
 import GeneratePhotos from "./pages/admin/GeneratePhotos";
 import ParentRegistration from "./pages/ParentRegistration";
 import ParentInvitationsDashboard from "./pages/admin/ParentInvitationsDashboard";
+import RegisterStudent from "./pages/RegisterStudent";
 // Removed test page
 
 // Create a stable QueryClient instance
@@ -54,6 +55,7 @@ function App() {
                         <Route path="/" element={<Index />} />
                         <Route path="/auth" element={<Auth />} />
                         <Route path="/parent-registration" element={<ParentRegistration />} />
+                        <Route path="/register-student" element={<RegisterStudent />} />
                         <Route path="/admin/parent-invitations" element={<ParentInvitationsDashboard />} />
                         <Route path="/dashboard/*" element={<Dashboard />} />
                         <Route path="/create-admin" element={<CreateAdmin />} />

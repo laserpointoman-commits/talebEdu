@@ -857,8 +857,41 @@ export default function UserManagement() {
           : 'تم إنشاء المستخدم بنجاح! الفوترة: 10 ريال عماني لكل فصل دراسي'
       );
 
-      // Show share options for the newly created user
-      handleShareCredentials(formData.email, formData.password, formData.full_name, formData.role);
+      // For parent role, automatically send credentials via email
+      if (formData.role === 'parent' && formData.email) {
+        try {
+          const { error: emailError } = await supabase.functions.invoke('send-credentials', {
+            body: {
+              email: formData.email,
+              password: formData.password,
+              fullName: formData.full_name,
+              role: formData.role,
+              recipientEmail: formData.email,
+              language: language
+            }
+          });
+
+          if (emailError) {
+            console.error('Email sending error:', emailError);
+            toast.error(
+              language === 'en'
+                ? 'User created but failed to send credentials email'
+                : 'تم إنشاء المستخدم ولكن فشل إرسال بيانات الاعتماد'
+            );
+          } else {
+            toast.success(
+              language === 'en'
+                ? 'Credentials sent to parent\'s email!'
+                : 'تم إرسال بيانات الاعتماد إلى بريد ولي الأمر!'
+            );
+          }
+        } catch (emailError) {
+          console.error('Failed to send credentials email:', emailError);
+        }
+      } else {
+        // Show share options for non-parent roles
+        handleShareCredentials(formData.email, formData.password, formData.full_name, formData.role);
+      }
 
       setIsCreateDialogOpen(false);
       fetchUsers();

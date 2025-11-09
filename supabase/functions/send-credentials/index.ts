@@ -133,7 +133,7 @@ const handler = async (req: Request): Promise<Response> => {
         </div>
         
         <div style="text-align: center; padding: 20px;">
-          <a href="https://b9b768f5-1a7c-4563-ab9c-d1b25b963f4b.lovableproject.com/auth" 
+          <a href="https://talebedu.lovable.app/auth" 
              style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
             ${isArabic ? 'تسجيل الدخول الآن' : 'Login Now'}
           </a>
@@ -150,13 +150,27 @@ const handler = async (req: Request): Promise<Response> => {
       </div>
     `;
 
-    // Temporarily disabled until Resend API key is configured
-    console.log("Email would be sent to:", recipientEmail, "with subject:", subject);
-    const emailResponse = { id: 'mock-id', message: 'Email service not configured' };
+    // Import and use Resend
+    const { Resend } = await import('npm:resend@4.0.0');
+    const resend = new Resend(Deno.env.get('RESEND_API_KEY'));
+    
+    const { data: emailData, error: emailError } = await resend.emails.send({
+      from: 'TalebEdu <noreply@talebedu.com>',
+      to: [recipientEmail],
+      subject: subject,
+      html: html,
+    });
 
-    console.log("Credentials email sent successfully:", emailResponse);
+    if (emailError) {
+      console.error('Error sending email:', emailError);
+      throw emailError;
+    }
 
-    return new Response(JSON.stringify({ success: true, emailResponse }), {
+    console.log('Email sent successfully to:', recipientEmail);
+
+    console.log("Credentials email sent successfully:", emailData);
+
+    return new Response(JSON.stringify({ success: true, emailResponse: emailData }), {
       status: 200,
       headers: {
         "Content-Type": "application/json",

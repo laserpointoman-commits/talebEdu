@@ -60,8 +60,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (error) throw error;
       setProfile(data);
+      return data;
     } catch (error) {
       console.error('Error fetching profile:', error);
+      return null;
     }
   };
 
@@ -99,12 +101,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
 
     // Check for existing session
-    supabase.auth.getSession().then(({ data: { session: existingSession } }) => {
+    supabase.auth.getSession().then(async ({ data: { session: existingSession } }) => {
       setSession(existingSession);
       setUser(existingSession?.user ?? null);
       
       if (existingSession?.user) {
-        fetchProfile(existingSession.user.id);
+        const userProfile = await fetchProfile(existingSession.user.id);
+        
+        // Check if parent needs to register students
+        if (userProfile?.role === 'parent') {
+          const { data: students } = await supabase
+            .from('students')
+            .select('id')
+            .eq('parent_id', existingSession.user.id)
+            .limit(1);
+          
+          if (!students || students.length === 0) {
+            // Parent has no students, redirect to registration
+            if (window.location.pathname !== '/register-student') {
+              setTimeout(() => {
+                window.location.href = '/register-student';
+              }, 100);
+            }
+          }
+        }
       }
       
       setLoading(false);
