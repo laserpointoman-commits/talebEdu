@@ -14,7 +14,9 @@ import {
   ArrowUpRight,
   Calendar,
   ShoppingBag,
-  MapPin
+  MapPin,
+  UserPlus,
+  ArrowLeft
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -175,13 +177,38 @@ export default function ParentDashboard() {
           </Card>
         ))}
 
-        {children.length === 0 && (
-          <Card className="col-span-full">
+        {/* Add Another Student Card */}
+        {children.length > 0 && (
+          <Card className="border-dashed border-2 hover:border-primary hover:bg-accent/50 transition-all cursor-pointer" onClick={() => navigate('/register-student')}>
             <CardContent className="flex flex-col items-center justify-center py-12">
-              <GraduationCap className="h-16 w-16 text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">
-                {language === 'ar' ? 'لا توجد بيانات طلاب' : 'No students linked'}
+              <UserPlus className="h-12 w-12 text-primary mb-4" />
+              <p className="font-semibold text-lg mb-2">
+                {language === 'ar' ? 'تسجيل طالب آخر' : 'Register Another Student'}
               </p>
+              <p className="text-sm text-muted-foreground">
+                {language === 'ar' ? 'أضف طفلاً آخر إلى النظام' : 'Add another child to the system'}
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Empty State */}
+        {children.length === 0 && (
+          <Card className="col-span-full bg-accent/30">
+            <CardContent className="flex flex-col items-center justify-center py-16">
+              <GraduationCap className="h-20 w-20 text-primary mb-6" />
+              <h3 className="text-xl font-semibold mb-2">
+                {language === 'ar' ? 'سجل طالبك الأول' : 'Register Your First Student'}
+              </h3>
+              <p className="text-muted-foreground mb-6 text-center max-w-md">
+                {language === 'ar' 
+                  ? 'ابدأ بإضافة معلومات طفلك للوصول إلى جميع خدمات المدرسة'
+                  : 'Start by adding your child\'s information to access all school services'}
+              </p>
+              <Button size="lg" onClick={() => navigate('/register-student')}>
+                <UserPlus className="mr-2 h-5 w-5" />
+                {language === 'ar' ? 'تسجيل طالب' : 'Register Student'}
+              </Button>
             </CardContent>
           </Card>
         )}

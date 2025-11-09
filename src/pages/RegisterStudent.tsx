@@ -11,8 +11,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { Globe, UserPlus, Loader2 } from 'lucide-react';
+import { Globe, UserPlus, Loader2, ArrowLeft, CheckCircle } from 'lucide-react';
 import HomeLocationMap from '@/components/features/HomeLocationMap';
 
 export default function RegisterStudent() {
@@ -23,6 +24,7 @@ export default function RegisterStudent() {
   const [activeTab, setActiveTab] = useState('basic');
   const [needsTransportation, setNeedsTransportation] = useState(false);
   const [homeLocation, setHomeLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
 
   const [formData, setFormData] = useState({
     first_name: '',
@@ -107,8 +109,8 @@ export default function RegisterStudent() {
           : 'تم تسجيل الطالب بنجاح!'
       );
 
-      // Redirect to parent dashboard
-      navigate('/dashboard');
+      // Show success dialog
+      setShowSuccessDialog(true);
     } catch (error: any) {
       console.error('Error registering student:', error);
       toast.error(error.message || (language === 'en' ? 'Failed to register student' : 'فشل تسجيل الطالب'));
@@ -117,12 +119,51 @@ export default function RegisterStudent() {
     }
   };
 
+  const handleRegisterAnother = () => {
+    setShowSuccessDialog(false);
+    setFormData({
+      first_name: '',
+      first_name_ar: '',
+      last_name: '',
+      last_name_ar: '',
+      date_of_birth: '',
+      gender: '',
+      grade: '',
+      class: '',
+      nationality: '',
+      blood_type: '',
+      address: '',
+      phone: '',
+      parent_phone: profile?.phone || '',
+      parent_email: profile?.email || '',
+      parent_name: profile?.full_name || '',
+      medical_conditions: '',
+      allergies: '',
+      home_address: '',
+      building_number: '',
+      street_name: '',
+      area: '',
+      special_instructions: ''
+    });
+    setNeedsTransportation(false);
+    setHomeLocation(null);
+    setActiveTab('basic');
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 py-12">
       <div className="container max-w-4xl mx-auto px-4">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate('/dashboard')}
+              className="mr-2"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
             <img 
               src="/src/assets/talebedu-logo-hq.png" 
               alt="TalebEdu Logo" 
@@ -436,6 +477,41 @@ export default function RegisterStudent() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Success Dialog */}
+      <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <div className="flex justify-center mb-4">
+              <CheckCircle className="h-16 w-16 text-green-500" />
+            </div>
+            <DialogTitle className="text-center text-2xl">
+              {language === 'en' ? 'Student Registered!' : 'تم التسجيل بنجاح!'}
+            </DialogTitle>
+            <DialogDescription className="text-center">
+              {language === 'en' 
+                ? 'The student has been successfully added to your account. What would you like to do next?'
+                : 'تم إضافة الطالب بنجاح إلى حسابك. ماذا تريد أن تفعل بعد ذلك؟'}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex flex-col sm:flex-row gap-2">
+            <Button
+              variant="outline"
+              onClick={handleRegisterAnother}
+              className="flex-1"
+            >
+              <UserPlus className="mr-2 h-4 w-4" />
+              {language === 'en' ? 'Register Another Student' : 'تسجيل طالب آخر'}
+            </Button>
+            <Button
+              onClick={() => navigate('/dashboard')}
+              className="flex-1"
+            >
+              {language === 'en' ? 'Go to Dashboard' : 'الذهاب إلى لوحة التحكم'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
