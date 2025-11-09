@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardGlass, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -182,9 +182,15 @@ export default function Auth() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
+    <div className="min-h-screen relative overflow-hidden" style={{ background: 'var(--gradient-mesh)' }}>
+      {/* Animated background elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 left-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl animate-float" />
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-secondary/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }} />
+      </div>
+
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-lg border-b">
+      <header className="fixed top-0 left-0 right-0 z-50 glass border-b border-border/50">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <a href="/" className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity">
@@ -202,7 +208,7 @@ export default function Auth() {
             </a>
             
             <Button
-              variant="outline"
+              variant="glass"
               size="sm"
               onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}
               className="gap-2"
@@ -215,10 +221,10 @@ export default function Auth() {
       </header>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 pt-32 pb-12">
+      <div className="container mx-auto px-4 pt-32 pb-12 relative z-10">
         <div className="grid lg:grid-cols-2 gap-12 items-start max-w-7xl mx-auto">
           {/* Left Side - Marketing Content */}
-          <div className="space-y-8 animate-fade-in">
+          <div className="space-y-8 animate-fade-in" style={{ animationDelay: '0.1s' }}>
             <div className="space-y-4">
               <Badge className="px-4 py-2" variant="secondary">
                 {language === 'en' ? '🚀 The Future of Education' : '🚀 مستقبل التعليم'}
@@ -241,8 +247,12 @@ export default function Auth() {
             </div>
 
             {/* Hero Image */}
-            <div className="rounded-2xl overflow-hidden shadow-2xl">
-              <img src={heroImage} alt="Education" className="w-full h-auto" />
+            <div className="rounded-2xl overflow-hidden shadow-elegant hover-lift group">
+              <img 
+                src={heroImage} 
+                alt="Education" 
+                className="w-full h-auto transition-transform duration-700 group-hover:scale-105" 
+              />
             </div>
 
             {/* Benefits */}
@@ -265,13 +275,22 @@ export default function Auth() {
             {/* Feature Cards */}
             <div className="grid grid-cols-3 gap-4">
               {features.map((feature, idx) => (
-                <Card key={idx} className="overflow-hidden hover:shadow-lg transition-all">
-                  <div className="aspect-square relative bg-gradient-to-br from-primary/10 to-primary/5">
-                    <img src={feature.image} alt="" className="w-full h-full object-cover" />
+                <Card 
+                  key={idx} 
+                  className="overflow-hidden hover-lift group cursor-pointer animate-scale-in border-border/50"
+                  style={{ animationDelay: `${0.2 + idx * 0.1}s` }}
+                >
+                  <div className="aspect-square relative bg-gradient-to-br from-primary/10 to-primary/5 overflow-hidden">
+                    <img 
+                      src={feature.image} 
+                      alt="" 
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   </div>
                   <CardContent className="p-3">
                     <div className="flex items-center gap-2 mb-1">
-                      <feature.icon className="h-4 w-4 text-primary" />
+                      <feature.icon className="h-4 w-4 text-primary transition-transform duration-300 group-hover:scale-110" />
                       <h4 className="font-semibold text-sm">
                         {language === 'en' ? feature.titleEn : feature.titleAr}
                       </h4>
@@ -288,8 +307,8 @@ export default function Auth() {
           </div>
 
           {/* Right Side - Auth Forms */}
-          <div className="sticky top-32">
-            <Card className="w-full shadow-2xl">
+          <div className="sticky top-32 animate-scale-in" style={{ animationDelay: '0.3s' }}>
+            <CardGlass className="w-full shadow-glow border-border/50">
               <CardHeader className="text-center">
                 <CardTitle className="text-3xl">
                   {language === 'en' ? 'Welcome' : 'مرحباً'}
@@ -365,7 +384,7 @@ export default function Auth() {
                         </div>
                       </div>
                       
-                      <Button type="submit" className="w-full" size="lg" disabled={loading}>
+                      <Button type="submit" className="w-full shadow-glow-soft" size="lg" disabled={loading}>
                         {loading
                           ? (language === 'en' ? 'Signing in...' : 'جارٍ تسجيل الدخول...')
                           : (language === 'en' ? 'Sign In' : 'تسجيل الدخول')}
@@ -478,7 +497,7 @@ export default function Auth() {
                         </p>
                       </div>
                       
-                      <Button type="submit" className="w-full" size="lg" disabled={loading}>
+                      <Button type="submit" className="w-full shadow-glow-soft" size="lg" disabled={loading}>
                         {loading
                           ? (language === 'en' ? 'Creating Account...' : 'جارٍ إنشاء الحساب...')
                           : (language === 'en' ? 'Create Account' : 'إنشاء حساب')}
@@ -495,7 +514,7 @@ export default function Auth() {
                   </p>
                 </div>
               </CardContent>
-            </Card>
+            </CardGlass>
           </div>
         </div>
       </div>
