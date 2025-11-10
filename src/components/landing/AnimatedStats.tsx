@@ -35,8 +35,8 @@ function AnimatedNumber({ value, suffix }: { value: number; suffix: string }) {
 function StatItem({ value, suffix, label }: StatItemProps) {
   return (
     <motion.div
-      className="text-center"
-      whileHover={{ scale: 1.05 }}
+      className="text-center glass p-8 rounded-2xl border border-border/30 hover:border-primary/30 hover:shadow-glow-soft transition-all duration-300"
+      whileHover={{ scale: 1.05, y: -5 }}
       transition={{ type: "spring", stiffness: 300 }}
     >
       <div className="text-6xl md:text-7xl font-bold mb-4 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">

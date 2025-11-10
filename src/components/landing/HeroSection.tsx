@@ -58,7 +58,7 @@ export default function HeroSection() {
 
       {/* Floating 3D Cards */}
       <motion.div
-        className="absolute top-32 left-[10%] w-64 h-40 rounded-2xl overflow-hidden shadow-2xl"
+        className="absolute top-32 left-[10%] w-64 h-40 rounded-2xl overflow-hidden glass border border-border/30 shadow-glow-soft"
         animate={{
           y: [0, -20, 0],
           rotateY: [0, 5, 0],
@@ -75,7 +75,7 @@ export default function HeroSection() {
       </motion.div>
 
       <motion.div
-        className="absolute bottom-32 right-[10%] w-64 h-40 rounded-2xl overflow-hidden shadow-2xl"
+        className="absolute bottom-32 right-[10%] w-64 h-40 rounded-2xl overflow-hidden glass border border-border/30 shadow-glow-soft"
         animate={{
           y: [0, 20, 0],
           rotateY: [0, -5, 0],
@@ -92,7 +92,7 @@ export default function HeroSection() {
       </motion.div>
 
       <motion.div
-        className="absolute top-1/2 right-[5%] w-48 h-32 rounded-2xl overflow-hidden shadow-2xl hidden lg:block"
+        className="absolute top-1/2 right-[5%] w-48 h-32 rounded-2xl overflow-hidden glass border border-border/30 shadow-glow-soft hidden lg:block"
         animate={{
           y: [0, -15, 0],
           rotateZ: [0, 3, 0],
@@ -113,7 +113,7 @@ export default function HeroSection() {
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.8, delay: 0.2 }}
-          className="max-w-5xl mx-auto"
+          className="max-w-5xl mx-auto glass-light p-12 rounded-3xl"
         >
           {/* Main Headline */}
           <TextSplitAnimation 

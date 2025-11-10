@@ -146,7 +146,7 @@ export default function BentoGrid() {
               className={getSizeClasses(feature.size)}
             >
               <motion.div
-                className={`relative h-full rounded-3xl overflow-hidden border border-border/50 group cursor-pointer`}
+                className={`relative h-full rounded-3xl overflow-hidden glass border border-border/30 hover:border-primary/30 hover:shadow-glow-soft group cursor-pointer transition-all duration-500`}
                 whileHover={{ scale: 1.02, y: -4 }}
                 transition={{ type: "spring", stiffness: 300, damping: 20 }}
               >
@@ -167,7 +167,7 @@ export default function BentoGrid() {
                 {/* Content */}
                 <div className="relative z-10 h-full flex flex-col p-8">
                   <motion.div
-                    className="w-14 h-14 rounded-2xl bg-background/80 backdrop-blur-md flex items-center justify-center mb-6 shadow-lg"
+                    className="w-14 h-14 rounded-2xl glass border border-border/20 flex items-center justify-center mb-6"
                     whileHover={{ rotate: 360, scale: 1.1 }}
                     transition={{ duration: 0.6 }}
                   >
