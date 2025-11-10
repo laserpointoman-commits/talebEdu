@@ -238,7 +238,7 @@ export default function Sidebar({ onItemClick }: SidebarProps = {}) {
   };
 
   return (
-    <aside className="w-full glass flex flex-col h-full overflow-hidden">
+    <aside className="w-full bg-card border-r border-border/40 flex flex-col h-full overflow-hidden">
       {/* Developer Controls - Show only when developer is viewing as another role */}
       {profile?.role === 'developer' && sessionStorage.getItem('developerViewRole') && (
         <div className="p-3 md:p-4 border-b bg-primary/5">
@@ -267,10 +267,10 @@ export default function Sidebar({ onItemClick }: SidebarProps = {}) {
             onClick={onItemClick}
             className={({ isActive }) =>
               cn(
-                "flex items-center gap-2 md:gap-3 px-2 md:px-3 py-2 rounded-lg text-xs md:text-sm font-medium transition-all duration-300",
+                "flex items-center gap-2 md:gap-3 px-2 md:px-3 py-2 rounded-lg text-xs md:text-sm font-medium transition-all duration-200",
                 isActive
-                  ? "bg-gradient-primary text-white shadow-glow-soft hover:scale-105"
-                  : "text-muted-foreground hover:bg-muted/50 hover:text-foreground hover:shadow-glow-soft hover:scale-105"
+                  ? "bg-gradient-primary text-white shadow-md"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
               )
             }
           >

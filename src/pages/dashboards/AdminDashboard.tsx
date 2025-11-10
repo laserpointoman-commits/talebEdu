@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Card, CardContent, CardHeader, CardTitle, CardGlass } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { 
   Users, 
@@ -235,7 +235,7 @@ export default function AdminDashboard() {
 
       {/* Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <CardGlass className="hover-lift shadow-glow-soft animate-scale-in" style={{ animationDelay: '0ms' }}>
+        <Card className="hover:shadow-lg transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
               {language === 'ar' ? 'إجمالي الطلاب' : 'Total Students'}
@@ -248,9 +248,9 @@ export default function AdminDashboard() {
               {language === 'ar' ? 'طلاب مسجلين' : 'Registered students'}
             </p>
           </CardContent>
-        </CardGlass>
+        </Card>
 
-        <CardGlass className="hover-lift shadow-glow-soft animate-scale-in" style={{ animationDelay: '50ms' }}>
+        <Card className="hover:shadow-lg transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
               {language === 'ar' ? 'المعلمين' : 'Teachers'}
@@ -263,9 +263,9 @@ export default function AdminDashboard() {
               {language === 'ar' ? 'معلمين نشطين' : 'Active teachers'}
             </p>
           </CardContent>
-        </CardGlass>
+        </Card>
 
-        <CardGlass className="hover-lift shadow-glow-soft animate-scale-in" style={{ animationDelay: '100ms' }}>
+        <Card className="hover:shadow-lg transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
               {language === 'ar' ? 'الحافلات النشطة' : 'Active Buses'}
@@ -278,9 +278,9 @@ export default function AdminDashboard() {
               {language === 'ar' ? 'حافلات في الخدمة' : 'Buses in service'}
             </p>
           </CardContent>
-        </CardGlass>
+        </Card>
 
-        <CardGlass className="hover-lift shadow-glow-soft animate-scale-in" style={{ animationDelay: '150ms' }}>
+        <Card className="hover:shadow-lg transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
               {language === 'ar' ? 'رصيد المحافظ' : 'Total Wallet Balance'}
@@ -293,7 +293,7 @@ export default function AdminDashboard() {
               {language === 'ar' ? 'إجمالي الأرصدة' : 'Total balances'}
             </p>
           </CardContent>
-        </CardGlass>
+        </Card>
       </div>
 
       {/* Quick Actions */}
@@ -303,14 +303,13 @@ export default function AdminDashboard() {
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {quickActions.map((action, idx) => (
-            <CardGlass 
+            <Card 
               key={idx}
-              className="cursor-pointer hover-lift shadow-glow-soft transition-all duration-300 hover:scale-105 animate-scale-in"
-              style={{ animationDelay: `${idx * 50}ms` }}
+              className="cursor-pointer hover:shadow-lg transition-all hover:-translate-y-1"
               onClick={action.onClick}
             >
               <CardHeader>
-                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-3 relative transition-transform hover:scale-110">
+                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-3 relative">
                   <action.icon className="h-6 w-6 text-primary" />
                   {action.badge && (
                     <Badge 
@@ -324,13 +323,13 @@ export default function AdminDashboard() {
                 <CardTitle className="text-lg">{action.title}</CardTitle>
                 <p className="text-sm text-muted-foreground">{action.desc}</p>
               </CardHeader>
-            </CardGlass>
+            </Card>
           ))}
         </div>
       </div>
 
       {/* Recent Activity */}
-      <CardGlass className="animate-fade-in">
+      <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Clock className="h-5 w-5" />
@@ -345,7 +344,7 @@ export default function AdminDashboard() {
           ) : (
             <div className="space-y-4">
               {recentActivities.map((activity) => (
-                <div key={activity.id} className="flex items-center gap-4 p-3 rounded-lg bg-muted/50 hover:bg-muted/70 hover-lift transition-all">
+                <div key={activity.id} className="flex items-center gap-4 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
                   <div className="flex-1">
                     <div className="font-medium">{getActivityType(activity.type)}</div>
                     <div className="text-sm text-muted-foreground">
@@ -367,7 +366,7 @@ export default function AdminDashboard() {
             </div>
           )}
         </CardContent>
-      </CardGlass>
+      </Card>
     </div>
   );
 }

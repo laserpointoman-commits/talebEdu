@@ -93,10 +93,10 @@ function DashboardLayout({ children }: DashboardLayoutProps) {
 
 
   return (
-    <div className="min-h-screen bg-gradient-mesh" dir={dir}>
+    <div className="min-h-screen bg-background" dir={dir}>
       {/* Top Bar - Mobile optimized with centered logo */}
       <header 
-        className="fixed left-0 right-0 top-0 h-12 md:h-16 border-b border-border/40 glass animate-fade-in flex items-center justify-between px-1 md:px-6 z-50"
+        className="fixed left-0 right-0 top-0 h-12 md:h-16 border-b border-border/40 bg-background/95 backdrop-blur-sm flex items-center justify-between px-1 md:px-6 z-50"
       >
         {/* Left Section - Menu, Home, Language */}
         <div className="flex items-center gap-0.5 md:gap-2 w-[120px] md:w-[180px]">
@@ -123,7 +123,7 @@ function DashboardLayout({ children }: DashboardLayoutProps) {
                 <Menu className="h-6 w-6" />
               </Button>
             </SheetTrigger>
-            <SheetContent side={dir === 'rtl' ? 'right' : 'left'} className="p-0 w-[280px] max-w-[85vw] glass">
+            <SheetContent side={dir === 'rtl' ? 'right' : 'left'} className="p-0 w-[280px] max-w-[85vw]">
               <Sidebar onItemClick={() => setIsMobileSidebarOpen(false)} />
             </SheetContent>
           </Sheet>
@@ -259,7 +259,7 @@ function DashboardLayout({ children }: DashboardLayoutProps) {
           "hidden lg:block transition-all duration-300 overflow-hidden",
           isSidebarOpen ? "w-64" : "w-0"
         )}>
-          <div className="h-full overflow-y-auto glass-light border-r border-border/20">
+          <div className="h-full overflow-y-auto">
             <Sidebar />
           </div>
         </div>

@@ -97,12 +97,9 @@ export default {
         'glow': 'var(--shadow-glow)',
         'glow-sm': 'var(--shadow-glow-sm)',
         'glow-lg': 'var(--shadow-glow-lg)',
-        'glow-soft': 'var(--shadow-glow-soft)',
         'glow-accent': 'var(--shadow-glow-accent)',
         'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
         'neumorphic': '12px 12px 24px hsl(var(--muted)), -12px -12px 24px hsl(var(--background))',
-        'soft': 'var(--shadow-soft)',
-        'layered': 'var(--shadow-layered)',
       },
       fontFamily: {
         sans: ['Inter', 'Segoe UI', 'Tahoma', 'sans-serif'],
