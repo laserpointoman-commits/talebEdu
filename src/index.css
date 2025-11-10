@@ -268,13 +268,6 @@ All colors MUST be HSL.
     background-attachment: fixed;
   }
   
-  /* Hide default cursor on desktop */
-  @media (pointer: fine) {
-    * {
-      cursor: none !important;
-    }
-  }
-  
   /* Enhanced Typography */
   h1, h2, h3, h4, h5, h6 {
     @apply font-semibold tracking-tight;
