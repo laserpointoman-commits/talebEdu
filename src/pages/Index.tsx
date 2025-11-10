@@ -5,6 +5,10 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { ScrollReveal } from '@/components/animations/ScrollReveal';
+import { ParallaxSection } from '@/components/animations/ParallaxSection';
+import { StaggeredReveal, StaggerItem } from '@/components/animations/StaggeredReveal';
+import { motion } from 'framer-motion';
 import { 
   CreditCard, 
   Bus, 
@@ -215,120 +219,155 @@ const Index = () => {
 
       {/* Hero Section */}
       <section className="relative pt-32 pb-20 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-secondary/5" />
+        <ParallaxSection speed={-0.3}>
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-secondary/5" />
+        </ParallaxSection>
         <div className="container mx-auto px-4 relative z-10">
-          <div className="max-w-4xl mx-auto text-center space-y-8 animate-fade-in">
-            <Badge className="px-4 py-2 text-sm" variant="secondary">
-              <Zap className="h-4 w-4 mr-2" />
-              {language === 'en' ? 'The Future of School Management' : 'مستقبل الإدارة المدرسية'}
-            </Badge>
+          <div className="max-w-4xl mx-auto text-center space-y-8">
+            <ScrollReveal direction="down" delay={0.1}>
+              <Badge className="px-4 py-2 text-sm" variant="secondary">
+                <Zap className="h-4 w-4 mr-2" />
+                {language === 'en' ? 'The Future of School Management' : 'مستقبل الإدارة المدرسية'}
+              </Badge>
+            </ScrollReveal>
             
-            <h2 className="text-5xl md:text-6xl font-bold leading-tight">
-              {language === 'en' ? (
-                <>Complete School Management<br />in Your Pocket</>
-              ) : (
-                <>إدارة مدرسية متكاملة<br />في جيبك</>
-              )}
-            </h2>
+            <ScrollReveal direction="up" delay={0.2}>
+              <h2 className="text-5xl md:text-6xl font-bold leading-tight">
+                {language === 'en' ? (
+                  <>Complete School Management<br />in Your Pocket</>
+                ) : (
+                  <>إدارة مدرسية متكاملة<br />في جيبك</>
+                )}
+              </h2>
+            </ScrollReveal>
             
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              {language === 'en' 
-                ? 'Revolutionize your school with NFC attendance, real-time tracking, digital payments, and seamless communication - all in one platform.'
-                : 'أحدث ثورة في مدرستك مع حضور NFC، تتبع فوري، مدفوعات رقمية، وتواصل سلس - كل ذلك في منصة واحدة.'
-              }
-            </p>
+            <ScrollReveal direction="up" delay={0.3}>
+              <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+                {language === 'en' 
+                  ? 'Revolutionize your school with NFC attendance, real-time tracking, digital payments, and seamless communication - all in one platform.'
+                  : 'أحدث ثورة في مدرستك مع حضور NFC، تتبع فوري، مدفوعات رقمية، وتواصل سلس - كل ذلك في منصة واحدة.'
+                }
+              </p>
+            </ScrollReveal>
 
-            <div className="flex flex-wrap gap-4 justify-center">
-              <Button size="lg" onClick={() => navigate('/auth')} className="gap-2 text-lg px-8">
-                {language === 'en' ? 'Get Started' : 'ابدأ الآن'}
-                <ChevronRight className={`h-5 w-5 ${dir === 'rtl' ? 'rotate-180' : ''}`} />
-              </Button>
-              <Button size="lg" variant="outline" className="gap-2 text-lg px-8">
-                {language === 'en' ? 'Learn More' : 'اعرف المزيد'}
-              </Button>
-            </div>
+            <ScrollReveal direction="up" delay={0.4}>
+              <div className="flex flex-wrap gap-4 justify-center">
+                <Button size="lg" onClick={() => navigate('/auth')} className="gap-2 text-lg px-8">
+                  {language === 'en' ? 'Get Started' : 'ابدأ الآن'}
+                  <ChevronRight className={`h-5 w-5 ${dir === 'rtl' ? 'rotate-180' : ''}`} />
+                </Button>
+                <Button size="lg" variant="outline" className="gap-2 text-lg px-8">
+                  {language === 'en' ? 'Learn More' : 'اعرف المزيد'}
+                </Button>
+              </div>
+            </ScrollReveal>
           </div>
         </div>
       </section>
 
       {/* Features Grid */}
-      <section className="py-20 bg-muted/30">
-        <div className="container mx-auto px-4">
-          <div className="text-center space-y-4 mb-16">
-            <Badge variant="secondary" className="px-4 py-2">
-              {language === 'en' ? 'Powerful Features' : 'مميزات قوية'}
-            </Badge>
-            <h3 className="text-4xl font-bold">
-              {language === 'en' ? 'Everything You Need, One Platform' : 'كل ما تحتاجه، منصة واحدة'}
-            </h3>
-            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              {language === 'en'
-                ? 'Built for modern schools with cutting-edge technology'
-                : 'مصمم للمدارس الحديثة بأحدث التقنيات'
-              }
-            </p>
-          </div>
+      <section className="py-20 bg-muted/30 relative overflow-hidden">
+        <ParallaxSection speed={0.2}>
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent" />
+        </ParallaxSection>
+        <div className="container mx-auto px-4 relative z-10">
+          <ScrollReveal direction="up">
+            <div className="text-center space-y-4 mb-16">
+              <Badge variant="secondary" className="px-4 py-2">
+                {language === 'en' ? 'Powerful Features' : 'مميزات قوية'}
+              </Badge>
+              <h3 className="text-4xl font-bold">
+                {language === 'en' ? 'Everything You Need, One Platform' : 'كل ما تحتاجه، منصة واحدة'}
+              </h3>
+              <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+                {language === 'en'
+                  ? 'Built for modern schools with cutting-edge technology'
+                  : 'مصمم للمدارس الحديثة بأحدث التقنيات'
+                }
+              </p>
+            </div>
+          </ScrollReveal>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {features.map((feature, idx) => (
-              <Card key={idx} className="glass hover:shadow-glow-sm transition-all duration-300 hover:-translate-y-1 border-border/30 hover:border-primary/30">
-                <CardHeader>
-                  <div className="h-12 w-12 rounded-full bg-primary/10 backdrop-blur-sm flex items-center justify-center mb-4 border border-primary/20">
-                    <feature.icon className="h-6 w-6 text-primary" />
-                  </div>
-                  <CardTitle className="text-xl">
-                    {language === 'en' ? feature.titleEn : feature.titleAr}
-                  </CardTitle>
-                  <CardDescription className="text-base">
-                    {language === 'en' ? feature.descEn : feature.descAr}
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-            ))}
-          </div>
+          <StaggeredReveal staggerDelay={0.1}>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {features.map((feature, idx) => (
+                <StaggerItem key={idx}>
+                  <Card className="glass hover:shadow-glow-sm transition-all duration-300 hover:-translate-y-1 border-border/30 hover:border-primary/30 h-full">
+                    <CardHeader>
+                      <div className="h-12 w-12 rounded-full bg-primary/10 backdrop-blur-sm flex items-center justify-center mb-4 border border-primary/20">
+                        <feature.icon className="h-6 w-6 text-primary" />
+                      </div>
+                      <CardTitle className="text-xl">
+                        {language === 'en' ? feature.titleEn : feature.titleAr}
+                      </CardTitle>
+                      <CardDescription className="text-base">
+                        {language === 'en' ? feature.descEn : feature.descAr}
+                      </CardDescription>
+                    </CardHeader>
+                  </Card>
+                </StaggerItem>
+              ))}
+            </div>
+          </StaggeredReveal>
         </div>
       </section>
 
       {/* User Roles Section */}
-      <section className="py-20">
-        <div className="container mx-auto px-4">
-          <div className="text-center space-y-4 mb-16">
-            <Badge variant="secondary" className="px-4 py-2">
-              {language === 'en' ? 'For Everyone' : 'للجميع'}
-            </Badge>
-            <h3 className="text-4xl font-bold">
-              {language === 'en' ? 'Tailored for Every User' : 'مصمم لكل مستخدم'}
-            </h3>
-          </div>
+      <section className="py-20 relative overflow-hidden">
+        <ParallaxSection speed={-0.2}>
+          <div className="absolute inset-0 bg-gradient-to-tl from-accent/5 to-transparent" />
+        </ParallaxSection>
+        <div className="container mx-auto px-4 relative z-10">
+          <ScrollReveal direction="up">
+            <div className="text-center space-y-4 mb-16">
+              <Badge variant="secondary" className="px-4 py-2">
+                {language === 'en' ? 'For Everyone' : 'للجميع'}
+              </Badge>
+              <h3 className="text-4xl font-bold">
+                {language === 'en' ? 'Tailored for Every User' : 'مصمم لكل مستخدم'}
+              </h3>
+            </div>
+          </ScrollReveal>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-6xl mx-auto">
-            {userRoles.map((role, idx) => (
-              <Card key={idx} className="glass border-border/30 hover:border-primary/30 hover:shadow-glow-sm transition-all duration-300 hover-lift">
-                <CardHeader>
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shadow-glow-sm">
-                      <role.icon className="h-7 w-7 text-primary-foreground" />
-                    </div>
-                    <CardTitle className="text-2xl">
-                      {language === 'en' ? role.titleEn : role.titleAr}
-                    </CardTitle>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-3">
-                    {role.features.map((feature, fIdx) => (
-                      <li key={fIdx} className="flex items-start gap-3">
-                        <Check className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                        <span className="text-muted-foreground">
-                          {language === 'en' ? feature.en : feature.ar}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          <StaggeredReveal staggerDelay={0.15}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-6xl mx-auto">
+              {userRoles.map((role, idx) => (
+                <StaggerItem key={idx}>
+                  <Card className="glass border-border/30 hover:border-primary/30 hover:shadow-glow-sm transition-all duration-300 hover-lift h-full">
+                    <CardHeader>
+                      <div className="flex items-center gap-4 mb-4">
+                        <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shadow-glow-sm">
+                          <role.icon className="h-7 w-7 text-primary-foreground" />
+                        </div>
+                        <CardTitle className="text-2xl">
+                          {language === 'en' ? role.titleEn : role.titleAr}
+                        </CardTitle>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <ul className="space-y-3">
+                        {role.features.map((feature, fIdx) => (
+                          <motion.li 
+                            key={fIdx} 
+                            className="flex items-start gap-3"
+                            initial={{ opacity: 0, x: -10 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            transition={{ delay: fIdx * 0.1 }}
+                            viewport={{ once: true }}
+                          >
+                            <Check className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                            <span className="text-muted-foreground">
+                              {language === 'en' ? feature.en : feature.ar}
+                            </span>
+                          </motion.li>
+                        ))}
+                      </ul>
+                    </CardContent>
+                  </Card>
+                </StaggerItem>
+              ))}
+            </div>
+          </StaggeredReveal>
         </div>
       </section>
 
@@ -337,35 +376,55 @@ const Index = () => {
         <div className="absolute inset-0 bg-gradient-to-br from-primary via-accent to-secondary animate-gradient" />
         <div className="absolute inset-0 backdrop-blur-3xl" />
         <div className="container mx-auto px-4 text-center space-y-8 relative z-10">
-          <div className="max-w-3xl mx-auto space-y-6 glass-heavy p-12 rounded-3xl border-border/30">
-            <h3 className="text-4xl md:text-5xl font-bold text-foreground">
-              {language === 'en' ? 'Ready to Transform Your School?' : 'جاهز لتحويل مدرستك؟'}
-            </h3>
-            <p className="text-xl text-muted-foreground">
-              {language === 'en'
-                ? 'Join thousands of schools already using TalebEdu to create a better learning environment'
-                : 'انضم لآلاف المدارس التي تستخدم طالب إدو لخلق بيئة تعليمية أفضل'
-              }
-            </p>
-            <div className="flex flex-wrap gap-4 justify-center pt-4">
-              <Button 
-                size="lg" 
-                onClick={() => navigate('/auth')} 
-                className="gap-2 text-lg px-8 shadow-glow-sm hover:shadow-glow"
+          <ScrollReveal direction="scale" delay={0.2}>
+            <div className="max-w-3xl mx-auto space-y-6 glass-heavy p-12 rounded-3xl border-border/30">
+              <motion.h3 
+                className="text-4xl md:text-5xl font-bold text-foreground"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3, duration: 0.6 }}
+                viewport={{ once: true }}
               >
-                {language === 'en' ? 'Get Started' : 'ابدأ الآن'}
-                <ChevronRight className={`h-5 w-5 ${dir === 'rtl' ? 'rotate-180' : ''}`} />
-              </Button>
-              <Button 
-                size="lg" 
-                variant="outline" 
-                className="gap-2 text-lg px-8 glass border-border/50 hover:border-primary/50 hover:shadow-glow-sm"
+                {language === 'en' ? 'Ready to Transform Your School?' : 'جاهز لتحويل مدرستك؟'}
+              </motion.h3>
+              <motion.p 
+                className="text-xl text-muted-foreground"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4, duration: 0.6 }}
+                viewport={{ once: true }}
               >
-                <MessageSquare className="h-5 w-5" />
-                {language === 'en' ? 'Contact Sales' : 'اتصل بالمبيعات'}
-              </Button>
+                {language === 'en'
+                  ? 'Join thousands of schools already using TalebEdu to create a better learning environment'
+                  : 'انضم لآلاف المدارس التي تستخدم طالب إدو لخلق بيئة تعليمية أفضل'
+                }
+              </motion.p>
+              <motion.div 
+                className="flex flex-wrap gap-4 justify-center pt-4"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5, duration: 0.6 }}
+                viewport={{ once: true }}
+              >
+                <Button 
+                  size="lg" 
+                  onClick={() => navigate('/auth')} 
+                  className="gap-2 text-lg px-8 shadow-glow-sm hover:shadow-glow"
+                >
+                  {language === 'en' ? 'Get Started' : 'ابدأ الآن'}
+                  <ChevronRight className={`h-5 w-5 ${dir === 'rtl' ? 'rotate-180' : ''}`} />
+                </Button>
+                <Button 
+                  size="lg" 
+                  variant="outline" 
+                  className="gap-2 text-lg px-8 glass border-border/50 hover:border-primary/50 hover:shadow-glow-sm"
+                >
+                  <MessageSquare className="h-5 w-5" />
+                  {language === 'en' ? 'Contact Sales' : 'اتصل بالمبيعات'}
+                </Button>
+              </motion.div>
             </div>
-          </div>
+          </ScrollReveal>
         </div>
       </section>
 
