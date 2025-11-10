@@ -23,7 +23,7 @@ const Index = () => {
   return (
     <div className={`min-h-screen bg-background ${dir === 'rtl' ? 'font-cairo' : ''}`} dir={dir}>
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 glass-light border-b border-border/30">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -66,22 +66,12 @@ const Index = () => {
 
       {/* CTA Section - Immersive */}
       <section className="relative py-32 px-6 overflow-hidden">
-        {/* Background Image */}
+        {/* Animated Gradient Background */}
         <div className="absolute inset-0">
-          <img 
-            src="https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?w=1920&q=80"
-            alt="Modern classroom"
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/90 via-primary/85 to-accent/90" />
-        </div>
-
-        {/* Animated Overlay */}
-        <div className="absolute inset-0 opacity-30">
           <div 
-            className="absolute inset-0"
+            className="absolute inset-0 opacity-50"
             style={{
-              background: 'linear-gradient(135deg, transparent 0%, hsl(var(--primary) / 0.3) 50%, transparent 100%)',
+              background: 'linear-gradient(135deg, hsl(211 100% 50%), hsl(186 76% 52%), hsl(199 89% 48%))',
               backgroundSize: '200% 200%',
               animation: 'gradient-shift 8s ease infinite'
             }}

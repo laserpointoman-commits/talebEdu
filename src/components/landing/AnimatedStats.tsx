@@ -35,8 +35,8 @@ function AnimatedNumber({ value, suffix }: { value: number; suffix: string }) {
 function StatItem({ value, suffix, label }: StatItemProps) {
   return (
     <motion.div
-      className="text-center glass p-8 rounded-2xl border border-border/30 hover:border-primary/30 hover:shadow-glow-soft transition-all duration-300"
-      whileHover={{ scale: 1.05, y: -5 }}
+      className="text-center"
+      whileHover={{ scale: 1.05 }}
       transition={{ type: "spring", stiffness: 300 }}
     >
       <div className="text-6xl md:text-7xl font-bold mb-4 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
@@ -72,15 +72,8 @@ export default function AnimatedStats() {
 
   return (
     <section className="py-32 px-6 relative overflow-hidden" dir={isRtl ? 'rtl' : 'ltr'}>
-      {/* Background Image */}
-      <div className="absolute inset-0">
-        <img 
-          src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=1920&q=80"
-          alt="School background"
-          className="w-full h-full object-cover opacity-20"
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-background via-primary/5 to-background" />
-      </div>
+      {/* Background */}
+      <div className="absolute inset-0 bg-gradient-to-b from-background via-primary/5 to-background" />
       
       <div className="container mx-auto max-w-7xl relative z-10">
         <FadeInView>
