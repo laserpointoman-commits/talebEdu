@@ -1,17 +1,95 @@
 import { useLocation } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useEffect, useState } from 'react';
+import { useLoading } from '@/contexts/LoadingContext';
+import LogoLoader from './LogoLoader';
+
+type TransitionType = 'fade' | 'slide' | 'scale' | 'slideUp';
+
+const getTransitionType = (pathname: string): TransitionType => {
+  if (pathname === '/' || pathname === '/auth') return 'fade';
+  if (pathname.startsWith('/dashboard')) return 'slideUp';
+  if (pathname.startsWith('/admin')) return 'slide';
+  return 'scale';
+};
+
+const transitionVariants = {
+  fade: {
+    initial: { opacity: 0 },
+    animate: { opacity: 1 },
+    exit: { opacity: 0 },
+    transition: { duration: 0.3 }
+  },
+  slide: {
+    initial: { opacity: 0, x: 20 },
+    animate: { opacity: 1, x: 0 },
+    exit: { opacity: 0, x: -20 },
+    transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] as any }
+  },
+  slideUp: {
+    initial: { opacity: 0, y: 20 },
+    animate: { opacity: 1, y: 0 },
+    exit: { opacity: 0, y: -20 },
+    transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] as any }
+  },
+  scale: {
+    initial: { opacity: 0, scale: 0.95 },
+    animate: { opacity: 1, scale: 1 },
+    exit: { opacity: 0, scale: 1.05 },
+    transition: { duration: 0.3, ease: [0.22, 1, 0.36, 1] as any }
+  }
+};
 
 export default function PageTransition({ children }: { children: React.ReactNode }) {
   const location = useLocation();
+  const { isPageLoading, setPageLoading } = useLoading();
+  const [showLoader, setShowLoader] = useState(false);
+  const transitionType = getTransitionType(location.pathname);
+  const variant = transitionVariants[transitionType];
+
+  useEffect(() => {
+    setPageLoading(true);
+    setShowLoader(true);
+
+    const timer = setTimeout(() => {
+      setPageLoading(false);
+      setShowLoader(false);
+    }, 400);
+
+    return () => {
+      clearTimeout(timer);
+      setPageLoading(false);
+    };
+  }, [location.pathname, setPageLoading]);
 
   return (
-    <motion.div
-      key={location.pathname}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.2 }}
-    >
-      {children}
-    </motion.div>
+    <>
+      <AnimatePresence mode="wait">
+        {showLoader && (
+          <motion.div
+            key="loader"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm"
+          >
+            <LogoLoader size="medium" text={false} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={location.pathname}
+          initial={variant.initial}
+          animate={variant.animate}
+          exit={variant.exit}
+          transition={variant.transition}
+        >
+          {children}
+        </motion.div>
+      </AnimatePresence>
+    </>
   );
 }
