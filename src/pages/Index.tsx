@@ -177,7 +177,7 @@ const Index = () => {
     <div className={`min-h-screen bg-background ${dir === 'rtl' ? 'font-cairo' : ''}`} dir={dir}>
       {/* Header */}
       <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled ? 'bg-background/95 backdrop-blur-lg border-b shadow-sm' : 'bg-transparent'
+        isScrolled ? 'glass-light border-b border-border/30 shadow-glow-sm' : 'bg-transparent'
       }`}>
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
@@ -271,9 +271,9 @@ const Index = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {features.map((feature, idx) => (
-              <Card key={idx} className="hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-2">
+              <Card key={idx} className="glass hover:shadow-glow-sm transition-all duration-300 hover:-translate-y-1 border-border/30 hover:border-primary/30">
                 <CardHeader>
-                  <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                  <div className="h-12 w-12 rounded-full bg-primary/10 backdrop-blur-sm flex items-center justify-center mb-4 border border-primary/20">
                     <feature.icon className="h-6 w-6 text-primary" />
                   </div>
                   <CardTitle className="text-xl">
@@ -303,10 +303,10 @@ const Index = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-6xl mx-auto">
             {userRoles.map((role, idx) => (
-              <Card key={idx} className="border-2 hover:shadow-xl transition-all duration-300">
+              <Card key={idx} className="glass border-border/30 hover:border-primary/30 hover:shadow-glow-sm transition-all duration-300 hover-lift">
                 <CardHeader>
                   <div className="flex items-center gap-4 mb-4">
-                    <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center">
+                    <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shadow-glow-sm">
                       <role.icon className="h-7 w-7 text-primary-foreground" />
                     </div>
                     <CardTitle className="text-2xl">
@@ -333,13 +333,15 @@ const Index = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-br from-primary to-primary/80 text-primary-foreground">
-        <div className="container mx-auto px-4 text-center space-y-8">
-          <div className="max-w-3xl mx-auto space-y-6">
-            <h3 className="text-4xl md:text-5xl font-bold">
+      <section className="relative py-20 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary via-accent to-secondary animate-gradient" />
+        <div className="absolute inset-0 backdrop-blur-3xl" />
+        <div className="container mx-auto px-4 text-center space-y-8 relative z-10">
+          <div className="max-w-3xl mx-auto space-y-6 glass-heavy p-12 rounded-3xl border-border/30">
+            <h3 className="text-4xl md:text-5xl font-bold text-foreground">
               {language === 'en' ? 'Ready to Transform Your School?' : 'جاهز لتحويل مدرستك؟'}
             </h3>
-            <p className="text-xl text-primary-foreground/90">
+            <p className="text-xl text-muted-foreground">
               {language === 'en'
                 ? 'Join thousands of schools already using TalebEdu to create a better learning environment'
                 : 'انضم لآلاف المدارس التي تستخدم طالب إدو لخلق بيئة تعليمية أفضل'
@@ -348,9 +350,8 @@ const Index = () => {
             <div className="flex flex-wrap gap-4 justify-center pt-4">
               <Button 
                 size="lg" 
-                variant="secondary" 
                 onClick={() => navigate('/auth')} 
-                className="gap-2 text-lg px-8"
+                className="gap-2 text-lg px-8 shadow-glow-sm hover:shadow-glow"
               >
                 {language === 'en' ? 'Get Started' : 'ابدأ الآن'}
                 <ChevronRight className={`h-5 w-5 ${dir === 'rtl' ? 'rotate-180' : ''}`} />
@@ -358,7 +359,7 @@ const Index = () => {
               <Button 
                 size="lg" 
                 variant="outline" 
-                className="gap-2 text-lg px-8 bg-transparent border-2 border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary"
+                className="gap-2 text-lg px-8 glass border-border/50 hover:border-primary/50 hover:shadow-glow-sm"
               >
                 <MessageSquare className="h-5 w-5" />
                 {language === 'en' ? 'Contact Sales' : 'اتصل بالمبيعات'}
@@ -369,7 +370,7 @@ const Index = () => {
       </section>
 
       {/* Footer */}
-      <footer className="py-12 border-t bg-muted/30">
+      <footer className="py-12 border-t border-border/30 glass-light">
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-3">
