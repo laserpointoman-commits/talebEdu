@@ -3,11 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
+import { MagneticButton } from '@/components/ui/magnetic-button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollReveal } from '@/components/animations/ScrollReveal';
 import { ParallaxSection } from '@/components/animations/ParallaxSection';
 import { StaggeredReveal, StaggerItem } from '@/components/animations/StaggeredReveal';
+import { CustomCursor } from '@/components/cursor/CustomCursor';
 import { motion } from 'framer-motion';
 import { 
   CreditCard, 
@@ -178,7 +180,9 @@ const Index = () => {
   ];
 
   return (
-    <div className={`min-h-screen bg-background ${dir === 'rtl' ? 'font-cairo' : ''}`} dir={dir}>
+    <div className={`min-h-screen bg-background ${dir === 'rtl' ? 'font-cairo' : ''} cursor-none`} dir={dir}>
+      <CustomCursor />
+      
       {/* Header */}
       <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         isScrolled ? 'glass-light border-b border-border/30 shadow-glow-sm' : 'bg-transparent'
@@ -198,20 +202,22 @@ const Index = () => {
             </div>
             
             <div className="flex items-center gap-3">
-              <Button
+              <MagneticButton
                 variant="ghost"
                 size="sm"
                 onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}
                 className="gap-2"
+                magneticStrength={0.2}
+                magneticRadius={80}
               >
                 <Globe className="h-4 w-4" />
                 {language === 'en' ? 'العربية' : 'English'}
-              </Button>
+              </MagneticButton>
               
-              <Button onClick={() => navigate('/auth')} className="gap-2">
+              <MagneticButton onClick={() => navigate('/auth')} className="gap-2">
                 {t('login')}
                 <ChevronRight className={`h-4 w-4 ${dir === 'rtl' ? 'rotate-180' : ''}`} />
-              </Button>
+              </MagneticButton>
             </div>
           </div>
         </div>
@@ -252,13 +258,25 @@ const Index = () => {
 
             <ScrollReveal direction="up" delay={0.4}>
               <div className="flex flex-wrap gap-4 justify-center">
-                <Button size="lg" onClick={() => navigate('/auth')} className="gap-2 text-lg px-8">
+                <MagneticButton 
+                  size="lg" 
+                  onClick={() => navigate('/auth')} 
+                  className="gap-2 text-lg px-8"
+                  magneticStrength={0.4}
+                  magneticRadius={150}
+                >
                   {language === 'en' ? 'Get Started' : 'ابدأ الآن'}
                   <ChevronRight className={`h-5 w-5 ${dir === 'rtl' ? 'rotate-180' : ''}`} />
-                </Button>
-                <Button size="lg" variant="outline" className="gap-2 text-lg px-8">
+                </MagneticButton>
+                <MagneticButton 
+                  size="lg" 
+                  variant="outline" 
+                  className="gap-2 text-lg px-8"
+                  magneticStrength={0.4}
+                  magneticRadius={150}
+                >
                   {language === 'en' ? 'Learn More' : 'اعرف المزيد'}
-                </Button>
+                </MagneticButton>
               </div>
             </ScrollReveal>
           </div>
@@ -406,22 +424,26 @@ const Index = () => {
                 transition={{ delay: 0.5, duration: 0.6 }}
                 viewport={{ once: true }}
               >
-                <Button 
+                <MagneticButton 
                   size="lg" 
                   onClick={() => navigate('/auth')} 
                   className="gap-2 text-lg px-8 shadow-glow-sm hover:shadow-glow"
+                  magneticStrength={0.5}
+                  magneticRadius={150}
                 >
                   {language === 'en' ? 'Get Started' : 'ابدأ الآن'}
                   <ChevronRight className={`h-5 w-5 ${dir === 'rtl' ? 'rotate-180' : ''}`} />
-                </Button>
-                <Button 
+                </MagneticButton>
+                <MagneticButton 
                   size="lg" 
                   variant="outline" 
                   className="gap-2 text-lg px-8 glass border-border/50 hover:border-primary/50 hover:shadow-glow-sm"
+                  magneticStrength={0.5}
+                  magneticRadius={150}
                 >
                   <MessageSquare className="h-5 w-5" />
                   {language === 'en' ? 'Contact Sales' : 'اتصل بالمبيعات'}
-                </Button>
+                </MagneticButton>
               </motion.div>
             </div>
           </ScrollReveal>
