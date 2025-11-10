@@ -66,12 +66,22 @@ const Index = () => {
 
       {/* CTA Section - Immersive */}
       <section className="relative py-32 px-6 overflow-hidden">
-        {/* Animated Gradient Background */}
+        {/* Background Image */}
         <div className="absolute inset-0">
+          <img 
+            src="https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?w=1920&q=80"
+            alt="Modern classroom"
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/90 via-primary/85 to-accent/90" />
+        </div>
+
+        {/* Animated Overlay */}
+        <div className="absolute inset-0 opacity-30">
           <div 
-            className="absolute inset-0 opacity-50"
+            className="absolute inset-0"
             style={{
-              background: 'linear-gradient(135deg, hsl(211 100% 50%), hsl(186 76% 52%), hsl(199 89% 48%))',
+              background: 'linear-gradient(135deg, transparent 0%, hsl(var(--primary) / 0.3) 50%, transparent 100%)',
               backgroundSize: '200% 200%',
               animation: 'gradient-shift 8s ease infinite'
             }}
