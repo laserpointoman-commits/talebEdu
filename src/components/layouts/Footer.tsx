@@ -4,7 +4,7 @@ export default function Footer() {
   const { t, dir } = useLanguage();
   
   return (
-    <footer className="border-t border-border bg-background mt-auto">
+    <footer className="border-t border-border/20 glass-light mt-auto animate-fade-in">
       <div className="container mx-auto px-1.5 md:px-2 py-1 md:py-1.5">
         <div className="flex flex-col items-center justify-center space-y-0.5 md:space-y-1 text-center">
           <div className="flex flex-wrap items-center justify-center gap-x-2 text-[10px] md:text-xs text-muted-foreground">

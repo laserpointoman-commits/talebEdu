@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardGlass } from '@/components/ui/card';
 import {
   LayoutDashboard,
   Calendar,
@@ -103,8 +103,8 @@ export default function StudentDashboard() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-xl md:text-3xl font-bold tracking-tight">
+      <div className="animate-fade-in">
+        <h2 className="text-xl md:text-3xl font-bold tracking-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
           {language === 'en' 
             ? `Welcome back, ${user?.email?.split('@')[0] || 'Student'}!` 
             : `مرحباً بعودتك، ${user?.email?.split('@')[0] || 'الطالب'}!`}
@@ -123,20 +123,21 @@ export default function StudentDashboard() {
         </h3>
         <div className="grid gap-2 md:gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
           {allActions.map((action, index) => (
-            <Card 
+            <CardGlass 
               key={index}
-              className="hover:shadow-lg transition-all duration-300 cursor-pointer group min-h-[100px] md:min-h-[120px]"
+              className="hover-lift shadow-glow-soft transition-all duration-300 cursor-pointer group min-h-[100px] md:min-h-[120px] hover:scale-105 animate-scale-in"
+              style={{ animationDelay: `${index * 50}ms` }}
               onClick={() => handleActionClick(action)}
             >
               <CardContent className="flex flex-col items-center justify-center gap-2 p-3 md:p-4 h-full">
-                <div className={`p-3 md:p-4 rounded-lg ${action.bgColor} group-hover:scale-110 transition-transform`}>
+                <div className={`p-3 md:p-4 rounded-lg ${action.bgColor} group-hover:scale-110 group-hover:shadow-glow-soft transition-all`}>
                   <action.icon className={`h-5 w-5 md:h-6 md:w-6 ${action.color}`} />
                 </div>
                 <p className="text-xs md:text-sm font-medium text-center line-clamp-2">
                   {language === 'en' ? action.title : action.titleAr}
                 </p>
               </CardContent>
-            </Card>
+            </CardGlass>
           ))}
         </div>
       </div>

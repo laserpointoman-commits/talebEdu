@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardGlass } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { 
   Scan, 
@@ -199,7 +199,7 @@ export default function TeacherDashboard() {
 
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="hover:shadow-lg transition-shadow">
+        <CardGlass className="hover-lift shadow-glow-soft animate-scale-in" style={{ animationDelay: '0ms' }}>
           <CardHeader>
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
               <GraduationCap className="h-4 w-4" />
@@ -212,9 +212,9 @@ export default function TeacherDashboard() {
               {stats.totalClasses} {language === 'ar' ? 'فصول' : 'classes'}
             </p>
           </CardContent>
-        </Card>
+        </CardGlass>
 
-        <Card className="hover:shadow-lg transition-shadow">
+        <CardGlass className="hover-lift shadow-glow-soft animate-scale-in" style={{ animationDelay: '50ms' }}>
           <CardHeader>
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
               <Clock className="h-4 w-4" />
@@ -227,9 +227,9 @@ export default function TeacherDashboard() {
               {stats.attendanceRate}% {language === 'ar' ? 'معدل الحضور' : 'attendance rate'}
             </p>
           </CardContent>
-        </Card>
+        </CardGlass>
 
-        <Card className="hover:shadow-lg transition-shadow">
+        <CardGlass className="hover-lift shadow-glow-soft animate-scale-in" style={{ animationDelay: '100ms' }}>
           <CardHeader>
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
               <FileText className="h-4 w-4" />
@@ -242,7 +242,7 @@ export default function TeacherDashboard() {
               {language === 'ar' ? 'قادمة' : 'scheduled'}
             </p>
           </CardContent>
-        </Card>
+        </CardGlass>
       </div>
 
       {/* Quick Actions */}
@@ -252,13 +252,14 @@ export default function TeacherDashboard() {
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {quickActions.map((action, idx) => (
-            <Card 
+            <CardGlass 
               key={idx}
-              className="cursor-pointer hover:shadow-lg transition-all hover:-translate-y-1"
+              className="cursor-pointer hover-lift shadow-glow-soft transition-all duration-300 hover:scale-105 animate-scale-in"
+              style={{ animationDelay: `${idx * 50}ms` }}
               onClick={action.onClick}
             >
               <CardHeader>
-                <div className={`h-12 w-12 rounded-full bg-muted flex items-center justify-center mb-3 ${action.color}`}>
+                <div className={`h-12 w-12 rounded-full bg-muted flex items-center justify-center mb-3 ${action.color} transition-transform hover:scale-110`}>
                   <action.icon className="h-6 w-6" />
                 </div>
                 <CardTitle className="text-lg">
@@ -268,13 +269,13 @@ export default function TeacherDashboard() {
                   {language === 'ar' ? action.descAr : action.descEn}
                 </CardDescription>
               </CardHeader>
-            </Card>
+            </CardGlass>
           ))}
         </div>
       </div>
 
       {/* Today's Schedule */}
-      <Card>
+      <CardGlass className="animate-fade-in">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Calendar className="h-5 w-5" />
@@ -289,7 +290,7 @@ export default function TeacherDashboard() {
           ) : (
             <div className="space-y-4">
               {todaySchedule.map((item) => (
-                <div key={item.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
+                <div key={item.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted/70 hover-lift transition-all">
                   <div className="flex items-center gap-4">
                     <div className="text-sm font-medium text-primary min-w-[120px]">{item.time}</div>
                     <div>
@@ -314,7 +315,7 @@ export default function TeacherDashboard() {
             </div>
           )}
         </CardContent>
-      </Card>
+      </CardGlass>
     </div>
   );
 }

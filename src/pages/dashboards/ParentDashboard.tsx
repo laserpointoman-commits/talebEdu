@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardGlass } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { 
@@ -139,8 +139,8 @@ export default function ParentDashboard() {
 
       {/* Children Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {children.map((child) => (
-          <Card key={child.id} className="hover:shadow-lg transition-shadow">
+        {children.map((child, idx) => (
+          <CardGlass key={child.id} className="hover-lift shadow-glow-soft transition-all animate-scale-in" style={{ animationDelay: `${idx * 50}ms` }}>
             <CardHeader>
               <div className="flex items-start justify-between">
                 <div>
@@ -174,12 +174,12 @@ export default function ParentDashboard() {
                 <ArrowUpRight className="ml-2 h-4 w-4" />
               </Button>
             </CardContent>
-          </Card>
+          </CardGlass>
         ))}
 
         {/* Add Another Student Card */}
         {children.length > 0 && (
-          <Card className="border-dashed border-2 hover:border-primary hover:bg-accent/50 transition-all cursor-pointer" onClick={() => navigate('/register-student')}>
+          <CardGlass className="border-dashed border-2 hover:border-primary hover:bg-accent/50 transition-all cursor-pointer hover-lift animate-scale-in" style={{ animationDelay: `${children.length * 50}ms` }} onClick={() => navigate('/register-student')}>
             <CardContent className="flex flex-col items-center justify-center py-12">
               <UserPlus className="h-12 w-12 text-primary mb-4" />
               <p className="font-semibold text-lg mb-2">
@@ -189,12 +189,12 @@ export default function ParentDashboard() {
                 {language === 'ar' ? 'أضف طفلاً آخر إلى النظام' : 'Add another child to the system'}
               </p>
             </CardContent>
-          </Card>
+          </CardGlass>
         )}
 
         {/* Empty State */}
         {children.length === 0 && (
-          <Card className="col-span-full bg-accent/30">
+          <CardGlass className="col-span-full bg-accent/30 animate-fade-in">
             <CardContent className="flex flex-col items-center justify-center py-16">
               <GraduationCap className="h-20 w-20 text-primary mb-6" />
               <h3 className="text-xl font-semibold mb-2">
@@ -210,7 +210,7 @@ export default function ParentDashboard() {
                 {language === 'ar' ? 'تسجيل طالب' : 'Register Student'}
               </Button>
             </CardContent>
-          </Card>
+          </CardGlass>
         )}
       </div>
 
@@ -241,13 +241,14 @@ export default function ParentDashboard() {
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {quickActions.map((action, idx) => (
-            <Card 
+            <CardGlass 
               key={idx} 
-              className="cursor-pointer hover:shadow-lg transition-all hover:-translate-y-1"
+              className="cursor-pointer hover-lift shadow-glow-soft transition-all duration-300 hover:scale-105 animate-scale-in"
+              style={{ animationDelay: `${idx * 50}ms` }}
               onClick={action.onClick}
             >
               <CardHeader>
-                <div className={`h-12 w-12 rounded-full bg-muted flex items-center justify-center mb-3 ${action.color}`}>
+                <div className={`h-12 w-12 rounded-full bg-muted flex items-center justify-center mb-3 ${action.color} transition-transform hover:scale-110`}>
                   <action.icon className="h-6 w-6" />
                 </div>
                 <CardTitle className="text-lg">
@@ -257,13 +258,13 @@ export default function ParentDashboard() {
                   {language === 'ar' ? action.descAr : action.descEn}
                 </CardDescription>
               </CardHeader>
-            </Card>
+            </CardGlass>
           ))}
         </div>
       </div>
 
       {/* Recent Activity */}
-      <Card>
+      <CardGlass className="animate-fade-in">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Bell className="h-5 w-5" />
@@ -275,7 +276,7 @@ export default function ParentDashboard() {
             {language === 'ar' ? 'لا توجد أنشطة حديثة' : 'No recent activity'}
           </div>
         </CardContent>
-      </Card>
+      </CardGlass>
     </div>
   );
 }
