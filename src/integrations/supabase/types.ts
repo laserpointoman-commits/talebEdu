@@ -2515,6 +2515,129 @@ export type Database = {
           },
         ]
       }
+      pending_parent_registrations: {
+        Row: {
+          created_at: string | null
+          email: string
+          expires_at: string
+          id: string
+          invited_by: string | null
+          max_students: number
+          token: string
+          used: boolean | null
+          used_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          expires_at?: string
+          id?: string
+          invited_by?: string | null
+          max_students?: number
+          token?: string
+          used?: boolean | null
+          used_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          expires_at?: string
+          id?: string
+          invited_by?: string | null
+          max_students?: number
+          token?: string
+          used?: boolean | null
+          used_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pending_parent_registrations_invited_by_fkey"
+            columns: ["invited_by"]
+            isOneToOne: false
+            referencedRelation: "available_contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pending_parent_registrations_invited_by_fkey"
+            columns: ["invited_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pending_student_approvals: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string | null
+          id: string
+          parent_id: string
+          rejection_reason: string | null
+          status: string
+          student_id: string
+          submitted_at: string | null
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string | null
+          id?: string
+          parent_id: string
+          rejection_reason?: string | null
+          status?: string
+          student_id: string
+          submitted_at?: string | null
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string | null
+          id?: string
+          parent_id?: string
+          rejection_reason?: string | null
+          status?: string
+          student_id?: string
+          submitted_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pending_student_approvals_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "available_contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pending_student_approvals_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pending_student_approvals_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "available_contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pending_student_approvals_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pending_student_approvals_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       post_comments: {
         Row: {
           content: string
@@ -2685,6 +2808,8 @@ export type Database = {
           avatar_url: string | null
           created_at: string | null
           email: string
+          email_confirmed: boolean | null
+          expected_students_count: number | null
           full_name: string
           full_name_ar: string | null
           id: string
@@ -2694,6 +2819,7 @@ export type Database = {
           parent_user_id: string | null
           phone: string | null
           profile_image: string | null
+          registered_students_count: number | null
           role: Database["public"]["Enums"]["user_role"]
           updated_at: string | null
         }
@@ -2702,6 +2828,8 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string | null
           email: string
+          email_confirmed?: boolean | null
+          expected_students_count?: number | null
           full_name: string
           full_name_ar?: string | null
           id: string
@@ -2711,6 +2839,7 @@ export type Database = {
           parent_user_id?: string | null
           phone?: string | null
           profile_image?: string | null
+          registered_students_count?: number | null
           role: Database["public"]["Enums"]["user_role"]
           updated_at?: string | null
         }
@@ -2719,6 +2848,8 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string | null
           email?: string
+          email_confirmed?: boolean | null
+          expected_students_count?: number | null
           full_name?: string
           full_name_ar?: string | null
           id?: string
@@ -2728,6 +2859,7 @@ export type Database = {
           parent_user_id?: string | null
           phone?: string | null
           profile_image?: string | null
+          registered_students_count?: number | null
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string | null
         }
@@ -2943,6 +3075,7 @@ export type Database = {
           academic_year: string | null
           address: string | null
           allergies: string | null
+          approval_status: string | null
           barcode: string | null
           blood_group: string | null
           bus_id: string | null
@@ -2982,14 +3115,17 @@ export type Database = {
           relationship: string | null
           status: string | null
           student_id: string
+          submitted_at: string | null
           terms_agreement: boolean | null
           transportation_agreement: boolean | null
           uniform_agreement: boolean | null
+          visible_to_parent: boolean | null
         }
         Insert: {
           academic_year?: string | null
           address?: string | null
           allergies?: string | null
+          approval_status?: string | null
           barcode?: string | null
           blood_group?: string | null
           bus_id?: string | null
@@ -3029,14 +3165,17 @@ export type Database = {
           relationship?: string | null
           status?: string | null
           student_id: string
+          submitted_at?: string | null
           terms_agreement?: boolean | null
           transportation_agreement?: boolean | null
           uniform_agreement?: boolean | null
+          visible_to_parent?: boolean | null
         }
         Update: {
           academic_year?: string | null
           address?: string | null
           allergies?: string | null
+          approval_status?: string | null
           barcode?: string | null
           blood_group?: string | null
           bus_id?: string | null
@@ -3076,9 +3215,11 @@ export type Database = {
           relationship?: string | null
           status?: string | null
           student_id?: string
+          submitted_at?: string | null
           terms_agreement?: boolean | null
           transportation_agreement?: boolean | null
           uniform_agreement?: boolean | null
+          visible_to_parent?: boolean | null
         }
         Relationships: [
           {

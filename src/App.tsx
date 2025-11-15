@@ -22,6 +22,10 @@ import GeneratePhotos from "./pages/admin/GeneratePhotos";
 import ParentRegistration from "./pages/ParentRegistration";
 import ParentInvitationsDashboard from "./pages/admin/ParentInvitationsDashboard";
 import RegisterStudent from "./pages/RegisterStudent";
+import ParentSelfSignup from "./pages/ParentSelfSignup";
+import EmailConfirmationPending from "./pages/EmailConfirmationPending";
+import StudentRegistrationWizard from "./components/parent/StudentRegistrationWizard";
+import StudentApprovalDashboard from "./pages/admin/StudentApprovalDashboard";
 // Removed test page
 
 // Create a stable QueryClient instance
@@ -54,9 +58,13 @@ function App() {
                       <Routes>
                         <Route path="/" element={<Index />} />
                         <Route path="/auth" element={<Auth />} />
+                        <Route path="/register" element={<ParentSelfSignup />} />
+                        <Route path="/email-confirmation-pending" element={<EmailConfirmationPending />} />
                         <Route path="/parent-registration" element={<ParentRegistration />} />
                         <Route path="/register-student" element={<RegisterStudent />} />
+                        <Route path="/dashboard/register-student" element={<StudentRegistrationWizard />} />
                         <Route path="/admin/parent-invitations" element={<ParentInvitationsDashboard />} />
+                        <Route path="/admin/student-approvals" element={<StudentApprovalDashboard />} />
                         <Route path="/dashboard/*" element={<Dashboard />} />
                         <Route path="/create-admin" element={<CreateAdmin />} />
                         {/* Test page removed */}

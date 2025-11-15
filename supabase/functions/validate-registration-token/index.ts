@@ -27,22 +27,10 @@ serve(async (req: Request) => {
 
     console.log("Validating token:", token.substring(0, 10) + "...");
 
-    // Check token validity
+    // Check token validity in new table
     const { data: tokenData, error: tokenError } = await supabase
-      .from("parent_registration_tokens")
-      .select(`
-        id,
-        parent_id,
-        used,
-        expires_at,
-        profiles:parent_id (
-          id,
-          email,
-          full_name,
-          full_name_ar,
-          phone
-        )
-      `)
+      .from("pending_parent_registrations")
+      .select("*")
       .eq("token", token)
       .single();
 
@@ -73,12 +61,14 @@ serve(async (req: Request) => {
       );
     }
 
-    console.log("Token is valid for parent:", tokenData.profiles.email);
+    console.log("Token is valid for email:", tokenData.email);
 
     return new Response(
       JSON.stringify({
         valid: true,
-        parentInfo: tokenData.profiles,
+        email: tokenData.email,
+        maxStudents: tokenData.max_students,
+        expiresAt: tokenData.expires_at,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
