@@ -1,28 +1,57 @@
 workflows:
   ios-build:
-    name: iOS Build
+    name: iOS Build - TalebEdu
+    max_build_duration: 60
+    instance_type: mac_mini_m1
+    integrations:
+      app_store_connect: CodemagicAPI
     environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: app.lovable.talebedu
       vars:
         XCODE_WORKSPACE: "ios/App/App.xcworkspace"
         XCODE_SCHEME: "App"
-      xcode: latest
+        APP_STORE_APPLE_ID: 1234567890 # You'll need to update this
+      xcode: 15.0
+      node: 18.17.0
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: 'main'
+          include: true
+          source: true
     scripts:
       - name: Install dependencies
         script: |
           npm install --legacy-peer-deps
-          npm install @capacitor/ios --legacy-peer-deps
+          npm run build
+      - name: Setup iOS project
+        script: |
           npx cap sync ios
+      - name: Set build number
+        script: |
+          cd ios/App
+          agvtool new-version -all $(($BUILD_NUMBER + 1))
       - name: Build iOS app
         script: |
-          xcodebuild -workspace ios/App/App.xcworkspace \
-                     -scheme App \
-                     -configuration Release \
-                     -sdk iphoneos \
-                     -archivePath $CM_BUILD_DIR/build/App.xcarchive archive
-
-          xcodebuild -exportArchive \
-                     -archivePath $CM_BUILD_DIR/build/App.xcarchive \
-                     -exportOptionsPlist ios/exportOptions.plist \
-                     -exportPath $CM_BUILD_DIR/build/ios/ipa
+          xcode-project build-ipa \
+            --workspace "ios/App/App.xcworkspace" \
+            --scheme "App"
     artifacts:
-      - build/ios/ipa
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+    publishing:
+      email:
+        recipients:
+          - your-email@example.com # Update this
+        notify:
+          success: true
+          failure: true
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
+        beta_groups:
+          - Internal Testers
+        submit_to_app_store: false
