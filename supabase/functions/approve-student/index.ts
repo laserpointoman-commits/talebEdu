@@ -69,12 +69,35 @@ const handler = async (req: Request): Promise<Response> => {
 
     const newStatus = approved ? "approved" : "rejected";
 
+    // Generate unique NFC ID if approving
+    let nfcId = null;
+    if (approved) {
+      // Generate NFC ID format: NFC-YYYYMMDD-XXXX (where XXXX is random)
+      const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+      const randomStr = Math.random().toString(36).substring(2, 6).toUpperCase();
+      nfcId = `NFC-${dateStr}-${randomStr}`;
+
+      // Ensure uniqueness
+      const { data: existingNfc } = await supabase
+        .from("students")
+        .select("id")
+        .eq("nfc_id", nfcId)
+        .single();
+
+      // If collision (very rare), generate new one
+      if (existingNfc) {
+        const newRandomStr = Math.random().toString(36).substring(2, 6).toUpperCase();
+        nfcId = `NFC-${dateStr}-${newRandomStr}`;
+      }
+    }
+
     // Update student record
     const { error: updateError } = await supabase
       .from("students")
       .update({
         approval_status: newStatus,
         visible_to_parent: approved,
+        nfc_id: nfcId,
       })
       .eq("id", studentId);
 

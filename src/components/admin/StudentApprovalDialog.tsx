@@ -15,6 +15,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, CheckCircle2, XCircle, User, Mail, Phone, MapPin, Calendar } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import StudentNFCDialog from './StudentNFCDialog';
 
 interface StudentApprovalDialogProps {
   student: any;
@@ -33,6 +34,8 @@ export default function StudentApprovalDialog({
   const [processing, setProcessing] = useState(false);
   const [rejecting, setRejecting] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
+  const [nfcDialogOpen, setNfcDialogOpen] = useState(false);
+  const [showNFCAfterApproval, setShowNFCAfterApproval] = useState(false);
 
   const handleApprove = async () => {
     setProcessing(true);
@@ -52,6 +55,12 @@ export default function StudentApprovalDialog({
         title: language === 'en' ? 'Success!' : 'نجح!',
         description: language === 'en' ? 'Student approved successfully' : 'تمت الموافقة على الطالب بنجاح',
       });
+
+      // Show NFC dialog after approval
+      setShowNFCAfterApproval(true);
+      setTimeout(() => {
+        setNfcDialogOpen(true);
+      }, 500);
 
       onOpenChange(false);
       onSuccess();
@@ -114,6 +123,7 @@ export default function StudentApprovalDialog({
   if (!student) return null;
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
@@ -300,5 +310,15 @@ export default function StudentApprovalDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
+
+    {/* NFC Dialog after approval */}
+    {showNFCAfterApproval && (
+      <StudentNFCDialog
+        student={student}
+        open={nfcDialogOpen}
+        onOpenChange={setNfcDialogOpen}
+      />
+    )}
+    </>
   );
 }

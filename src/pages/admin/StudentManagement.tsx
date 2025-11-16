@@ -6,9 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Search, User, Scan, Smartphone, Eye } from "lucide-react";
+import { Plus, Search, User, Scan, Smartphone, Eye, Wifi } from "lucide-react";
 import LogoLoader from "@/components/LogoLoader";
 import AddStudentDialog from "@/components/admin/AddStudentDialog";
+import StudentNFCDialog from "@/components/admin/StudentNFCDialog";
 import {
   Dialog,
   DialogContent,
@@ -26,6 +27,8 @@ export default function StudentManagement() {
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
+  const [nfcDialogOpen, setNfcDialogOpen] = useState(false);
+  const [nfcStudent, setNfcStudent] = useState<any>(null);
 
   useEffect(() => {
     loadStudents();
@@ -142,18 +145,32 @@ export default function StudentManagement() {
                   </Badge>
                 )}
               </div>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="w-full"
-                onClick={() => {
-                  setSelectedStudent(student);
-                  setDetailsDialogOpen(true);
-                }}
-              >
-                <Eye className="h-4 w-4 mr-2" />
-                {language === 'ar' ? 'عرض التفاصيل' : 'View Details'}
-              </Button>
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="flex-1"
+                  onClick={() => {
+                    setSelectedStudent(student);
+                    setDetailsDialogOpen(true);
+                  }}
+                >
+                  <Eye className="h-4 w-4 mr-2" />
+                  {language === 'ar' ? 'تفاصيل' : 'Details'}
+                </Button>
+                <Button
+                  variant={student.nfc_id ? "default" : "secondary"}
+                  size="sm"
+                  className="flex-1"
+                  onClick={() => {
+                    setNfcStudent(student);
+                    setNfcDialogOpen(true);
+                  }}
+                >
+                  <Wifi className="h-4 w-4 mr-2" />
+                  {language === 'ar' ? 'NFC' : 'NFC'}
+                </Button>
+              </div>
             </CardContent>
           </Card>
         ))}
@@ -288,6 +305,13 @@ export default function StudentManagement() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* NFC Dialog */}
+      <StudentNFCDialog
+        student={nfcStudent}
+        open={nfcDialogOpen}
+        onOpenChange={setNfcDialogOpen}
+      />
 
       {/* NFC Instructions */}
       {nfcSupported && (
