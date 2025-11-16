@@ -232,6 +232,7 @@ export type Database = {
           eta_minutes: number | null
           heading: number | null
           id: string
+          last_updated: string | null
           latitude: number
           longitude: number
           next_stop: string | null
@@ -244,6 +245,7 @@ export type Database = {
           eta_minutes?: number | null
           heading?: number | null
           id?: string
+          last_updated?: string | null
           latitude: number
           longitude: number
           next_stop?: string | null
@@ -256,6 +258,7 @@ export type Database = {
           eta_minutes?: number | null
           heading?: number | null
           id?: string
+          last_updated?: string | null
           latitude?: number
           longitude?: number
           next_stop?: string | null

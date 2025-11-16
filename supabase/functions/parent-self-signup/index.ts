@@ -89,7 +89,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Auth user created:", authData.user.id);
 
-    // Create profile
+    // Create profile with email auto-confirmed
     const { error: profileError } = await supabase
       .from("profiles")
       .insert({
@@ -99,7 +99,7 @@ const handler = async (req: Request): Promise<Response> => {
         full_name_ar: fullNameAr,
         phone,
         role: "parent",
-        email_confirmed: false,
+        email_confirmed: true, // Auto-confirm since email confirmation is disabled
         expected_students_count: expectedStudentsCount,
         registered_students_count: 0,
       });

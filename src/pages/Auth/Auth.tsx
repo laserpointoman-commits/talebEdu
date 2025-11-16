@@ -61,18 +61,12 @@ export default function Auth() {
       if (error) throw error;
 
       if (data.user) {
-        // Check email confirmation status
+        // Check user profile
         const { data: profile } = await supabase
           .from('profiles')
-          .select('email_confirmed, expected_students_count, registered_students_count, role')
+          .select('expected_students_count, registered_students_count, role')
           .eq('id', data.user.id)
           .single();
-
-        if (profile && !profile.email_confirmed) {
-          toast.info(language === 'en' ? 'Please confirm your email' : 'يرجى تأكيد بريدك الإلكتروني');
-          navigate('/email-confirmation-pending');
-          return;
-        }
 
         // Check if parent needs to register students
         if (profile?.role === 'parent' && 
