@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { 
-  DollarSign, 
+  Wallet, 
   TrendingUp, 
   Receipt, 
   CreditCard,
@@ -71,7 +71,7 @@ const FinanceDashboard = () => {
 
       const formattedActivity = recentData?.map(trans => ({
         title: language === 'ar' ? (trans.description_ar || trans.description) : trans.description,
-        amount: `${Number(trans.amount).toFixed(2)} OMR`,
+        amount: `${Number(trans.amount).toFixed(3)} OMR`,
         time: new Date(trans.transaction_date).toLocaleString(language === 'ar' ? 'ar-OM' : 'en-US'),
         type: trans.type === 'income' ? 'income' : 'expense'
       })) || [];
@@ -140,25 +140,25 @@ const FinanceDashboard = () => {
   const quickStats = [
     {
       label: language === 'ar' ? 'إجمالي الإيرادات' : 'Total Revenue',
-      value: `${stats.totalRevenue.toFixed(2)} OMR`,
-      change: '+0%',
+      value: `${stats.totalRevenue.toFixed(3)} OMR`,
+      change: '',
       positive: true
     },
     {
       label: language === 'ar' ? 'إجمالي المصروفات' : 'Total Expenses',
-      value: `${stats.totalExpenses.toFixed(2)} OMR`,
-      change: '-0%',
+      value: `${stats.totalExpenses.toFixed(3)} OMR`,
+      change: '',
       positive: false
     },
     {
       label: language === 'ar' ? 'صافي الدخل' : 'Net Income',
-      value: `${stats.netIncome.toFixed(2)} OMR`,
-      change: '+0%',
+      value: `${stats.netIncome.toFixed(3)} OMR`,
+      change: '',
       positive: true
     },
     {
       label: language === 'ar' ? 'الرسوم المستحقة' : 'Outstanding Fees',
-      value: `${stats.outstandingFees.toFixed(2)} OMR`,
+      value: `${stats.outstandingFees.toFixed(3)} OMR`,
       change: `${stats.studentsWithFees} ${language === 'ar' ? 'طالب' : 'students'}`,
       positive: null
     }
@@ -265,7 +265,7 @@ const FinanceDashboard = () => {
                     <div className={`h-8 w-8 sm:h-10 sm:w-10 rounded-full flex items-center justify-center ${
                       activity.type === 'income' ? 'bg-green-100 dark:bg-green-900' : 'bg-red-100 dark:bg-red-900'
                     }`}>
-                      <DollarSign className={`h-4 w-4 sm:h-5 sm:w-5 ${
+                      <Wallet className={`h-4 w-4 sm:h-5 sm:w-5 ${
                         activity.type === 'income' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
                       }`} />
                     </div>
