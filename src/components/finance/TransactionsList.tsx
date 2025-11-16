@@ -45,6 +45,8 @@ export function TransactionsList() {
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [dateFrom, setDateFrom] = useState<Date | undefined>(undefined);
   const [dateTo, setDateTo] = useState<Date | undefined>(undefined);
+  const [dateFromOpen, setDateFromOpen] = useState(false);
+  const [dateToOpen, setDateToOpen] = useState(false);
   const { language } = useLanguage();
   const { toast } = useToast();
 
@@ -253,7 +255,7 @@ export function TransactionsList() {
                 <label className="text-sm text-muted-foreground mb-1 block">
                   {language === 'ar' ? 'من تاريخ' : 'From Date'}
                 </label>
-                <Popover>
+                <Popover open={dateFromOpen} onOpenChange={setDateFromOpen}>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
@@ -274,7 +276,10 @@ export function TransactionsList() {
                     <CalendarComponent
                       mode="single"
                       selected={dateFrom}
-                      onSelect={setDateFrom}
+                      onSelect={(date) => {
+                        setDateFrom(date);
+                        setDateFromOpen(false);
+                      }}
                       initialFocus
                       className="p-3 pointer-events-auto"
                     />
@@ -286,7 +291,7 @@ export function TransactionsList() {
                 <label className="text-sm text-muted-foreground mb-1 block">
                   {language === 'ar' ? 'إلى تاريخ' : 'To Date'}
                 </label>
-                <Popover>
+                <Popover open={dateToOpen} onOpenChange={setDateToOpen}>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
@@ -307,7 +312,10 @@ export function TransactionsList() {
                     <CalendarComponent
                       mode="single"
                       selected={dateTo}
-                      onSelect={setDateTo}
+                      onSelect={(date) => {
+                        setDateTo(date);
+                        setDateToOpen(false);
+                      }}
                       initialFocus
                       className="p-3 pointer-events-auto"
                     />
