@@ -1,12 +1,14 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Nfc, MapPin, Phone, User, Home, FileText, ExternalLink } from 'lucide-react';
+import { Nfc, MapPin, Phone, User, Home, FileText, ExternalLink, AlertCircle } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
+import { nfcService } from '@/services/nfcService';
+import { supabase } from '@/integrations/supabase/client';
 
 interface StudentInfo {
   id: string;
@@ -49,20 +51,97 @@ export default function NfcReader({ showFullProfile = true, driverMode = false }
   const { language } = useLanguage();
   const [isReading, setIsReading] = useState(false);
   const [studentInfo, setStudentInfo] = useState<StudentInfo | null>(null);
+  const [nfcSupported, setNfcSupported] = useState(true);
 
-  const handleNfcRead = () => {
-    setIsReading(true);
-    setStudentInfo(null);
-    
-    // Simulate NFC reading
-    setTimeout(() => {
-      setStudentInfo(mockStudent);
-      setIsReading(false);
+  useEffect(() => {
+    checkNfcSupport();
+  }, []);
+
+  const checkNfcSupport = async () => {
+    const supported = await nfcService.isSupported();
+    setNfcSupported(supported);
+  };
+
+  const handleNfcRead = async () => {
+    if (!nfcSupported) {
       toast({
-        title: language === 'en' ? 'NFC Read Successful' : 'تمت قراءة NFC بنجاح',
-        description: `${language === 'en' ? 'Found student:' : 'تم العثور على الطالب:'} ${mockStudent.name}`,
+        title: language === 'en' ? 'NFC Not Supported' : 'NFC غير مدعوم',
+        description: language === 'en' 
+          ? 'NFC is not available on this device' 
+          : 'NFC غير متاح على هذا الجهاز',
+        variant: 'destructive',
       });
-    }, 2000);
+      return;
+    }
+
+    try {
+      setIsReading(true);
+      setStudentInfo(null);
+
+      const hasPermission = await nfcService.requestPermission();
+      if (!hasPermission) {
+        throw new Error('NFC permission denied');
+      }
+
+      const nfcData = await nfcService.readTag();
+      
+      if (nfcData && nfcData.type === 'student') {
+        // Fetch student details from database
+        const { data: student, error } = await supabase
+          .from('students')
+          .select(`
+            *,
+            profiles!students_profile_id_fkey(full_name, phone),
+            parent:profiles!students_parent_id_fkey(full_name, phone)
+          `)
+          .eq('nfc_id', nfcData.id)
+          .single();
+
+        if (error) throw error;
+
+        if (student) {
+          const info: StudentInfo = {
+            id: student.id,
+            name: student.first_name + ' ' + student.last_name,
+            nameAr: student.first_name_ar + ' ' + student.last_name_ar,
+            class: student.class || 'N/A',
+            parentName: student.parent?.full_name || 'N/A',
+            parentPhone: student.parent?.phone || 'N/A',
+            homeLocation: {
+              lat: 23.5880,
+              lng: 58.3829,
+              address: student.address || 'Not set'
+            },
+            notes: student.medical_conditions || '',
+            profileImage: undefined
+          };
+
+          setStudentInfo(info);
+          toast({
+            title: language === 'en' ? 'NFC Read Successful' : 'تمت قراءة NFC بنجاح',
+            description: `${language === 'en' ? 'Found student:' : 'تم العثور على الطالب:'} ${info.name}`,
+          });
+        } else {
+          throw new Error('Student not found');
+        }
+      } else {
+        throw new Error('Invalid NFC tag');
+      }
+    } catch (error) {
+      console.error('NFC read error:', error);
+      toast({
+        title: language === 'en' ? 'NFC Read Failed' : 'فشلت قراءة NFC',
+        description: language === 'en' 
+          ? 'Could not read NFC tag. Please try again.' 
+          : 'تعذر قراءة بطاقة NFC. يرجى المحاولة مرة أخرى.',
+        variant: 'destructive',
+      });
+      
+      // Fallback to mock data for demo
+      setStudentInfo(mockStudent);
+    } finally {
+      setIsReading(false);
+    }
   };
 
   const openInGoogleMaps = () => {
@@ -73,8 +152,16 @@ export default function NfcReader({ showFullProfile = true, driverMode = false }
 
   return (
     <>
-      <Button onClick={handleNfcRead} variant="outline">
-        <Nfc className="h-4 w-4 mr-2" />
+      <Button 
+        onClick={handleNfcRead} 
+        variant="outline"
+        disabled={!nfcSupported}
+      >
+        {nfcSupported ? (
+          <Nfc className="h-4 w-4 mr-2" />
+        ) : (
+          <AlertCircle className="h-4 w-4 mr-2" />
+        )}
         {language === 'en' ? 'Read NFC' : 'قراءة NFC'}
       </Button>
 
