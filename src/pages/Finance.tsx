@@ -233,7 +233,7 @@ const Finance = () => {
                     {formatCurrency(totalRevenue)}
                   </p>
                   <div className="flex items-center mt-2 text-green-600 dark:text-green-400">
-                    <span className="text-sm">{language === 'ar' ? 'هذا الشهر' : 'This month'}</span>
+                    <span className="text-sm">{language === 'ar' ? 'الإجمالي' : 'Total'}</span>
                   </div>
                 </div>
                 <div className="h-12 w-12 rounded-full bg-green-200 dark:bg-green-800 flex items-center justify-center">
@@ -257,7 +257,7 @@ const Finance = () => {
                     {formatCurrency(totalExpenses)}
                   </p>
                   <div className="flex items-center mt-2 text-red-600 dark:text-red-400">
-                    <span className="text-sm">{language === 'ar' ? 'هذا الشهر' : 'This month'}</span>
+                    <span className="text-sm">{language === 'ar' ? 'الإجمالي' : 'Total'}</span>
                   </div>
                 </div>
                 <div className="h-12 w-12 rounded-full bg-red-200 dark:bg-red-800 flex items-center justify-center">
@@ -281,7 +281,7 @@ const Finance = () => {
                     {formatCurrency(netIncome)}
                   </p>
                   <div className="flex items-center mt-2 text-blue-600 dark:text-blue-400">
-                    <span className="text-sm">{language === 'ar' ? 'هذا الشهر' : 'This month'}</span>
+                    <span className="text-sm">{language === 'ar' ? 'الإجمالي' : 'Total'}</span>
                   </div>
                 </div>
                 <div className="h-12 w-12 rounded-full bg-blue-200 dark:bg-blue-800 flex items-center justify-center">
