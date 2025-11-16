@@ -54,7 +54,7 @@ export default function FeatureVisibilityControl() {
   const [hasChanges, setHasChanges] = useState(false);
 
   useEffect(() => {
-    if (profile?.role !== 'developer') {
+    if (profile?.role !== 'developer' && profile?.role !== 'admin') {
       navigate('/dashboard');
       return;
     }
