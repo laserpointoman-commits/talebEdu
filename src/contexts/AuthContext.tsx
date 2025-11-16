@@ -108,21 +108,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (existingSession?.user) {
         const userProfile = await fetchProfile(existingSession.user.id);
         
+        // Check email confirmation for parents
+        if (userProfile?.role === 'parent' && !userProfile.email_confirmed) {
+          const currentPath = window.location.pathname;
+          if (currentPath !== '/email-confirmation-pending' && currentPath !== '/auth') {
+            navigate('/email-confirmation-pending');
+            setLoading(false);
+            return;
+          }
+        }
+        
         // Check if parent needs to register students
-        if (userProfile?.role === 'parent') {
-          const { data: students } = await supabase
-            .from('students')
-            .select('id')
-            .eq('parent_id', existingSession.user.id)
-            .limit(1);
-          
-          if (!students || students.length === 0) {
-            // Parent has no students, redirect to registration
-            if (window.location.pathname !== '/register-student') {
-              setTimeout(() => {
-                window.location.href = '/register-student';
-              }, 100);
-            }
+        if (userProfile?.role === 'parent' && 
+            userProfile.email_confirmed &&
+            userProfile.expected_students_count && 
+            userProfile.registered_students_count < userProfile.expected_students_count) {
+          const currentPath = window.location.pathname;
+          if (currentPath !== '/dashboard/register-student' && currentPath !== '/auth') {
+            navigate('/dashboard/register-student');
+            setLoading(false);
+            return;
           }
         }
       }

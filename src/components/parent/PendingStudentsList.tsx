@@ -20,20 +20,30 @@ interface PendingStudent {
   }>;
 }
 
-export default function PendingStudentsList() {
+interface PendingStudentsListProps {
+  students?: PendingStudent[];
+  onRefresh?: () => void;
+}
+
+export default function PendingStudentsList({ students: propStudents, onRefresh: propOnRefresh }: PendingStudentsListProps = {}) {
   const { language } = useLanguage();
   const { profile } = useAuth();
   const navigate = useNavigate();
-  const [students, setStudents] = useState<PendingStudent[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [students, setStudents] = useState<PendingStudent[]>(propStudents || []);
+  const [loading, setLoading] = useState(!propStudents);
   const [canRegisterMore, setCanRegisterMore] = useState(false);
 
   useEffect(() => {
-    loadPendingStudents();
-  }, [profile]);
+    if (propStudents) {
+      setStudents(propStudents);
+      setLoading(false);
+    } else {
+      loadPendingStudents();
+    }
+  }, [profile, propStudents]);
 
   const loadPendingStudents = async () => {
-    if (!profile?.id) return;
+    if (!profile?.id || propStudents) return;
 
     try {
       // Load all students (approved and pending)
@@ -44,6 +54,7 @@ export default function PendingStudentsList() {
           pending_student_approvals(rejection_reason)
         `)
         .eq('parent_id', profile.id)
+        .eq('visible_to_parent', false)
         .order('submitted_at', { ascending: false });
 
       if (studentsError) throw studentsError;
@@ -62,6 +73,8 @@ export default function PendingStudentsList() {
           (profileData.registered_students_count || 0) < (profileData.expected_students_count || 0)
         );
       }
+
+      if (propOnRefresh) propOnRefresh();
     } catch (error) {
       console.error('Error loading students:', error);
     } finally {
