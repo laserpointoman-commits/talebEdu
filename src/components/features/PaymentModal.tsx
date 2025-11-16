@@ -16,7 +16,7 @@ interface PaymentModalProps {
   onSuccess?: () => void;
 }
 
-export default function PaymentModal({ feeId, totalAmount = 5000, paidAmount = 3500, onSuccess }: PaymentModalProps) {
+export default function PaymentModal({ feeId, totalAmount = 0, paidAmount = 0, onSuccess }: PaymentModalProps) {
   const { t, language } = useLanguage();
   const { user } = useAuth();
   const [amount, setAmount] = useState('');

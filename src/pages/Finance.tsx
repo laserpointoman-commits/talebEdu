@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { TrendingUp, TrendingDown, DollarSign, CreditCard, Users, Calendar, Download, ArrowUpRight, ArrowDownRight, FileText } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, CreditCard, Users, Calendar, Download, ArrowUpRight, ArrowDownRight, FileText, Clock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import LogoLoader from '@/components/LogoLoader';
@@ -88,17 +88,39 @@ const Finance = () => {
       if (transError) throw transError;
       setTransactions(transData || []);
 
-      // Generate monthly data for charts
-      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
-      const monthlyRevenue = [120000, 135000, 128000, 145000, 155000, 175000];
-      const monthlyExpenses = [85000, 92000, 88000, 95000, 98000, 102000];
+      // Fetch real monthly data from database
+      const sixMonthsAgo = new Date();
+      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
       
-      setMonthlyData(months.map((month, i) => ({
-        month,
-        revenue: monthlyRevenue[i],
-        expenses: monthlyExpenses[i],
-        profit: monthlyRevenue[i] - monthlyExpenses[i]
-      })));
+      const { data: monthlyTransactions, error: monthlyError } = await supabase
+        .from('financial_transactions')
+        .select('*')
+        .gte('transaction_date', sixMonthsAgo.toISOString());
+      
+      if (!monthlyError && monthlyTransactions) {
+        // Group by month
+        const monthlyMap = new Map();
+        monthlyTransactions.forEach(trans => {
+          const date = new Date(trans.transaction_date);
+          const monthKey = date.toLocaleDateString('en-US', { month: 'short' });
+          
+          if (!monthlyMap.has(monthKey)) {
+            monthlyMap.set(monthKey, { month: monthKey, revenue: 0, expenses: 0, profit: 0 });
+          }
+          
+          const entry = monthlyMap.get(monthKey);
+          if (trans.type === 'income') {
+            entry.revenue += Number(trans.amount);
+          } else {
+            entry.expenses += Number(trans.amount);
+          }
+          entry.profit = entry.revenue - entry.expenses;
+        });
+        
+        setMonthlyData(Array.from(monthlyMap.values()));
+      } else {
+        setMonthlyData([]);
+      }
 
     } catch (error) {
       console.error('Error fetching financial data:', error);
@@ -113,12 +135,7 @@ const Finance = () => {
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-OM', {
-      style: 'currency',
-      currency: 'OMR',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(amount);
+    return `${amount.toFixed(3)} OMR`;
   };
 
 
@@ -182,8 +199,7 @@ const Finance = () => {
                     {formatCurrency(totalRevenue)}
                   </p>
                   <div className="flex items-center mt-2 text-green-600 dark:text-green-400">
-                    <TrendingUp className="h-4 w-4 mr-1" />
-                    <span className="text-sm">+12.5%</span>
+                    <span className="text-sm">{language === 'ar' ? 'هذا الشهر' : 'This month'}</span>
                   </div>
                 </div>
                 <div className="h-12 w-12 rounded-full bg-green-200 dark:bg-green-800 flex items-center justify-center">
@@ -207,8 +223,7 @@ const Finance = () => {
                     {formatCurrency(totalExpenses)}
                   </p>
                   <div className="flex items-center mt-2 text-red-600 dark:text-red-400">
-                    <TrendingDown className="h-4 w-4 mr-1" />
-                    <span className="text-sm">-5.2%</span>
+                    <span className="text-sm">{language === 'ar' ? 'هذا الشهر' : 'This month'}</span>
                   </div>
                 </div>
                 <div className="h-12 w-12 rounded-full bg-red-200 dark:bg-red-800 flex items-center justify-center">
@@ -263,8 +278,8 @@ const Finance = () => {
                     {formatCurrency(outstandingFees)}
                   </p>
                   <div className="flex items-center mt-2 text-purple-600 dark:text-purple-400">
-                    <Users className="h-4 w-4 mr-1" />
-                    <span className="text-sm">42 students</span>
+                    <Clock className="h-4 w-4 mr-1" />
+                    <span className="text-sm">{language === 'ar' ? 'مستحق' : 'Outstanding'}</span>
                   </div>
                 </div>
                 <div className="h-12 w-12 rounded-full bg-purple-200 dark:bg-purple-800 flex items-center justify-center">
@@ -421,9 +436,14 @@ const Finance = () => {
                     </div>
                     <div className="mt-4 pt-4 border-t">
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">Last month</span>
+                        <span className="text-muted-foreground">
+                          {language === 'ar' ? 'نوع الحساب' : 'Account Type'}
+                        </span>
                         <span className={account.account_type === 'revenue' ? 'text-green-600' : 'text-red-600'}>
-                          {account.account_type === 'revenue' ? '+8.5%' : '-3.2%'}
+                          {language === 'ar' 
+                            ? (account.account_type === 'revenue' ? 'إيرادات' : 'مصروفات')
+                            : (account.account_type === 'revenue' ? 'Revenue' : 'Expense')
+                          }
                         </span>
                       </div>
                     </div>
