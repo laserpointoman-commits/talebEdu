@@ -24,7 +24,7 @@ export default function BiometricGuard({ children }: { children: React.ReactNode
 
   const checkBiometric = async () => {
     // Don't check biometric on auth pages
-    const authPaths = ['/auth', '/register', '/parent-registration', '/register-student'];
+    const authPaths = ['/auth', '/parent-registration', '/register-student'];
     if (authPaths.includes(location.pathname)) {
       setIsVerified(true);
       setIsChecking(false);
