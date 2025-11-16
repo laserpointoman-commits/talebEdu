@@ -51,7 +51,7 @@ export function QuickActions() {
     {
       icon: Shield,
       label: language === 'ar' ? 'رؤية الميزات' : 'Feature Visibility',
-      onClick: () => navigate('/admin/feature-visibility'),
+      onClick: () => navigate('/dashboard/admin/features'),
       color: 'text-red-600 bg-red-100 dark:bg-red-900/20'
     },
     {
