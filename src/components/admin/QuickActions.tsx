@@ -21,31 +21,31 @@ export function QuickActions() {
     {
       icon: UserPlus,
       label: language === 'ar' ? 'إضافة طالب' : 'Add Student',
-      onClick: () => navigate('/admin/student-management'),
+      onClick: () => navigate('/dashboard/admin/students'),
       color: 'text-blue-600 bg-blue-100 dark:bg-blue-900/20'
     },
     {
       icon: MailPlus,
       label: language === 'ar' ? 'دعوة ولي أمر' : 'Invite Parent',
-      onClick: () => navigate('/admin/parent-invitations'),
+      onClick: () => navigate('/dashboard/admin/parent-invitations'),
       color: 'text-green-600 bg-green-100 dark:bg-green-900/20'
     },
     {
       icon: Users,
       label: language === 'ar' ? 'إدارة المستخدمين' : 'User Management',
-      onClick: () => navigate('/admin/user-management'),
+      onClick: () => navigate('/dashboard/admin/users'),
       color: 'text-purple-600 bg-purple-100 dark:bg-purple-900/20'
     },
     {
       icon: Bus,
       label: language === 'ar' ? 'إدارة الحافلات' : 'Manage Buses',
-      onClick: () => navigate('/admin/buses'),
+      onClick: () => navigate('/dashboard/admin/buses'),
       color: 'text-yellow-600 bg-yellow-100 dark:bg-yellow-900/20'
     },
     {
       icon: Wallet,
       label: language === 'ar' ? 'المالية' : 'Finance',
-      onClick: () => navigate('/finance'),
+      onClick: () => navigate('/dashboard/finance'),
       color: 'text-emerald-600 bg-emerald-100 dark:bg-emerald-900/20'
     },
     {
@@ -57,13 +57,13 @@ export function QuickActions() {
     {
       icon: GraduationCap,
       label: language === 'ar' ? 'إدارة الفصول' : 'Class Management',
-      onClick: () => navigate('/classes'),
+      onClick: () => navigate('/dashboard/classes'),
       color: 'text-indigo-600 bg-indigo-100 dark:bg-indigo-900/20'
     },
     {
       icon: Settings,
       label: language === 'ar' ? 'الإعدادات' : 'Settings',
-      onClick: () => navigate('/settings'),
+      onClick: () => navigate('/dashboard/settings'),
       color: 'text-gray-600 bg-gray-100 dark:bg-gray-900/20'
     }
   ];
