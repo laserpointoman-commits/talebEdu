@@ -12,7 +12,8 @@ Your TalebEdu application is fully configured and ready to be deployed as a nati
 - **Digital Wallet** - Secure payment system with transaction history
 - **Real-time Updates** - Supabase real-time subscriptions
 - **Multi-language Support** - English and Arabic (RTL)
-- **Biometric Authentication** - Face ID and Touch ID support
+- **Biometric Authentication** - Face ID and Touch ID on app startup
+- **Push Notifications** - Background notifications even when app is closed
 - **Complete Dashboards** - Admin, Teacher, Parent, Student, Driver roles
 
 ### ✅ Mobile Optimizations
@@ -31,6 +32,48 @@ Your TalebEdu application is fully configured and ready to be deployed as a nati
 - App icons and splash screens
 - Info.plist with NFC usage description
 - PWA manifest for web app
+
+## Security Features
+
+### Biometric Authentication
+The app now requires biometric authentication (Face ID or Touch ID) on startup when:
+- User is logged in
+- User has saved credentials from previous login
+
+**How it works:**
+1. App checks if biometric is available on device
+2. If user is authenticated or has saved credentials, shows biometric prompt
+3. User can authenticate with biometric or choose to use password instead
+4. After successful authentication, app loads normally
+
+**Implementation:**
+- `BiometricGuard` component wraps the entire app
+- Uses `capacitor-native-biometric` plugin
+- Stored credentials are encrypted by iOS keychain
+- No biometric required on auth pages (login/register)
+
+### Push Notifications
+The app is configured to receive push notifications even when:
+- App is in background
+- App is completely closed
+- User is logged out
+
+**How it works:**
+1. App requests notification permissions on startup
+2. Device token is registered with backend
+3. Notifications appear as native iOS notifications
+4. Tapping notification opens the app
+
+**Implementation:**
+- `@capacitor/push-notifications` plugin configured
+- Automatic token registration on app launch
+- Foreground and background notification handling
+- Push notification action handlers
+
+**Important:** Push notifications require:
+- APNs (Apple Push Notification service) configuration
+- Push certificate in Apple Developer account
+- Backend implementation to send notifications
 
 ## Deployment Steps
 
@@ -206,6 +249,17 @@ npx cap sync ios
 - Verify all environment variables are set
 - Test on iOS 14+ device
 
+### Biometric Authentication Not Working
+- Verify device has Face ID or Touch ID enabled
+- Check device settings allow biometric for apps
+- Test on physical device (simulator may have limitations)
+
+### Push Notifications Not Working
+- Verify push notification capability is enabled in Xcode
+- Check that notification permissions are granted
+- Configure APNs (Apple Push Notification service) in Apple Developer account
+- Test on physical device (notifications don't work in simulator)
+
 ### Updates Not Showing
 ```bash
 # Full sync
@@ -218,12 +272,15 @@ npx cap sync ios
 
 - [ ] Update Bundle Identifier
 - [ ] Configure proper signing certificates
+- [ ] Configure push notifications in Apple Developer account
+- [ ] Set up APNs certificates for push notifications
 - [ ] Replace default app icons
 - [ ] Update splash screens
 - [ ] Remove development server URL
 - [ ] Test all features on physical device
 - [ ] Test NFC functionality
 - [ ] Test biometric authentication
+- [ ] Test push notifications
 - [ ] Verify all permissions work
 - [ ] Test in airplane mode (offline capabilities)
 - [ ] Create App Store screenshots (required sizes)

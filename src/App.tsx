@@ -1,4 +1,4 @@
-import React, { Suspense } from "react";
+import React, { Suspense, useEffect } from "react";
 import LogoLoader from "./components/LogoLoader";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -12,6 +12,8 @@ import { StudentsProvider } from "@/contexts/StudentsContext";
 import PageTransition from "@/components/PageTransition";
 import InstallPrompt from "@/components/mobile/InstallPrompt";
 import NetworkStatus from "@/components/mobile/NetworkStatus";
+import BiometricGuard from "@/components/BiometricGuard";
+import { PushNotificationService } from "@/services/pushNotifications";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth/Auth";
 import Dashboard from "./pages/Dashboard";
@@ -45,6 +47,15 @@ function App() {
   // Create query client inside component but memoized
   const [queryClient] = React.useState(createQueryClient);
 
+  // Initialize push notifications on app startup
+  useEffect(() => {
+    PushNotificationService.initialize();
+    
+    return () => {
+      PushNotificationService.removeAllListeners();
+    };
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
@@ -58,8 +69,9 @@ function App() {
                   <InstallPrompt />
                   <NetworkStatus />
                   <StudentsProvider>
-                    <PageTransition>
-                      <Routes>
+                    <BiometricGuard>
+                      <PageTransition>
+                        <Routes>
                         <Route path="/" element={<Index />} />
                         <Route path="/auth" element={<Auth />} />
                         <Route path="/register" element={<ParentSelfSignup />} />
@@ -77,6 +89,7 @@ function App() {
                         <Route path="*" element={<NotFound />} />
                       </Routes>
                     </PageTransition>
+                  </BiometricGuard>
                   </StudentsProvider>
                 </Suspense>
               </TooltipProvider>

@@ -11,6 +11,9 @@ const config: CapacitorConfig = {
   plugins: {
     CapacitorNFC: {
       enabled: true
+    },
+    PushNotifications: {
+      presentationOptions: ["badge", "sound", "alert"]
     }
   }
 };
