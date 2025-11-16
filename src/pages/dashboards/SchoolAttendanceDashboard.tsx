@@ -1,11 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import NFCScanner from "@/components/nfc/NFCScanner";
 import ManualAttendance from "@/components/features/ManualAttendance";
-import { Users, CheckCircle, Clock, ArrowRight, ArrowLeft, UserPlus } from "lucide-react";
+import { Users, CheckCircle, Clock, ArrowRight, ArrowLeft, UserPlus, Wifi, Settings2 } from "lucide-react";
+import { KeepAwake } from '@capacitor-community/keep-awake';
+import { Haptics, ImpactStyle } from '@capacitor/haptics';
 
 export default function SchoolAttendanceDashboard() {
   const { language } = useLanguage();
@@ -14,8 +16,36 @@ export default function SchoolAttendanceDashboard() {
   const [enteredCount, setEnteredCount] = useState(0);
   const [exitedCount, setExitedCount] = useState(0);
   const [isManualOpen, setIsManualOpen] = useState(false);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [currentTime, setCurrentTime] = useState(new Date());
 
-  const handleScanSuccess = (student: any) => {
+  // Keep screen awake for kiosk mode
+  useEffect(() => {
+    KeepAwake.keepAwake().catch(console.error);
+    return () => {
+      KeepAwake.allowSleep().catch(console.error);
+    };
+  }, []);
+
+  // Update time every second
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Monitor online status
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  const handleScanSuccess = async (student: any) => {
     const scanData = {
       ...student,
       action: scanMode,
@@ -29,46 +59,66 @@ export default function SchoolAttendanceDashboard() {
     } else {
       setExitedCount(prev => prev + 1);
     }
+
+    // Haptic feedback
+    try {
+      await Haptics.impact({ style: ImpactStyle.Medium });
+    } catch (error) {
+      console.log('Haptics not available');
+    }
   };
 
   const currentInSchool = enteredCount - exitedCount;
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex justify-between items-center">
+    <div className="min-h-screen bg-background p-4 md:p-6">
+      {/* Device Info Header */}
+      <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-3xl font-bold">
-            {language === 'ar' ? 'لوحة تسجيل الحضور المدرسي' : 'School Attendance Dashboard'}
+          <h1 className="text-4xl md:text-5xl font-bold">
+            {language === 'ar' ? 'بوابة المدرسة' : 'School Entrance'}
           </h1>
-          <p className="text-muted-foreground">
-            {language === 'ar' ? 'مسح مستمر لتسجيل حضور الطلاب' : 'Continuous scanning for student attendance'}
+          <p className="text-xl text-muted-foreground mt-2">
+            {currentTime.toLocaleString(language === 'ar' ? 'ar-SA' : 'en-US', {
+              weekday: 'long',
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
+            })}
           </p>
         </div>
-        <Button onClick={() => setIsManualOpen(true)} size="lg">
-          <UserPlus className="h-5 w-5 mr-2" />
-          {language === 'ar' ? 'تسجيل يدوي' : 'Manual Entry'}
-        </Button>
+        <div className="flex items-center gap-4">
+          <Badge variant={isOnline ? "default" : "destructive"} className="text-lg px-4 py-2">
+            <Wifi className="h-5 w-5 mr-2" />
+            {isOnline ? (language === 'ar' ? 'متصل' : 'Online') : (language === 'ar' ? 'غير متصل' : 'Offline')}
+          </Badge>
+          <Button variant="ghost" size="icon" className="h-12 w-12">
+            <Settings2 className="h-6 w-6" />
+          </Button>
+        </div>
       </div>
 
-      {/* Mode Selector */}
-      <div className="flex gap-3">
+      {/* Mode Selector - Large buttons for touch */}
+      <div className="grid grid-cols-2 gap-4 mb-6">
         <Button
           onClick={() => setScanMode('in')}
           variant={scanMode === 'in' ? 'default' : 'outline'}
           size="lg"
-          className="flex-1"
+          className="h-20 text-2xl"
         >
-          <ArrowRight className="h-5 w-5 mr-2" />
-          {language === 'ar' ? 'دخول' : 'Entry'}
+          <ArrowRight className="h-8 w-8 mr-3" />
+          {language === 'ar' ? 'دخول' : 'Check In'}
         </Button>
         <Button
           onClick={() => setScanMode('out')}
           variant={scanMode === 'out' ? 'default' : 'outline'}
           size="lg"
-          className="flex-1"
+          className="h-20 text-2xl"
         >
-          <ArrowLeft className="h-5 w-5 mr-2" />
-          {language === 'ar' ? 'خروج' : 'Exit'}
+          <ArrowLeft className="h-8 w-8 mr-3" />
+          {language === 'ar' ? 'خروج' : 'Check Out'}
         </Button>
       </div>
 
