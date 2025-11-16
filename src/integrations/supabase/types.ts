@@ -1199,6 +1199,33 @@ export type Database = {
         }
         Relationships: []
       }
+      financial_reports_cache: {
+        Row: {
+          created_at: string | null
+          data: Json
+          id: string
+          report_date: string
+          report_type: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          data: Json
+          id?: string
+          report_date: string
+          report_type: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          data?: Json
+          id?: string
+          report_date?: string
+          report_type?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       financial_transactions: {
         Row: {
           account_id: string | null
@@ -1584,6 +1611,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      late_fee_config: {
+        Row: {
+          created_at: string | null
+          fee_type: string
+          grace_days: number
+          id: string
+          is_active: boolean | null
+          late_fee_amount: number | null
+          late_fee_percentage: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          fee_type: string
+          grace_days?: number
+          id?: string
+          is_active?: boolean | null
+          late_fee_amount?: number | null
+          late_fee_percentage?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          fee_type?: string
+          grace_days?: number
+          id?: string
+          is_active?: boolean | null
+          late_fee_amount?: number | null
+          late_fee_percentage?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       leave_requests: {
         Row: {
@@ -2194,11 +2254,51 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_reminders: {
+        Row: {
+          created_at: string | null
+          fee_id: string
+          id: string
+          notification_method: string | null
+          parent_notified: boolean | null
+          reminder_type: string
+          sent_at: string
+        }
+        Insert: {
+          created_at?: string | null
+          fee_id: string
+          id?: string
+          notification_method?: string | null
+          parent_notified?: boolean | null
+          reminder_type: string
+          sent_at?: string
+        }
+        Update: {
+          created_at?: string | null
+          fee_id?: string
+          id?: string
+          notification_method?: string | null
+          parent_notified?: boolean | null
+          reminder_type?: string
+          sent_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_reminders_fee_id_fkey"
+            columns: ["fee_id"]
+            isOneToOne: false
+            referencedRelation: "student_fees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payment_transactions: {
         Row: {
           amount: number
           created_at: string | null
           created_by: string | null
+          email_sent: boolean | null
+          email_sent_at: string | null
           fee_id: string | null
           id: string
           notes: string | null
@@ -2206,12 +2306,15 @@ export type Database = {
           payment_date: string | null
           payment_method: string
           receipt_number: string | null
+          receipt_url: string | null
           transaction_reference: string | null
         }
         Insert: {
           amount: number
           created_at?: string | null
           created_by?: string | null
+          email_sent?: boolean | null
+          email_sent_at?: string | null
           fee_id?: string | null
           id?: string
           notes?: string | null
@@ -2219,12 +2322,15 @@ export type Database = {
           payment_date?: string | null
           payment_method: string
           receipt_number?: string | null
+          receipt_url?: string | null
           transaction_reference?: string | null
         }
         Update: {
           amount?: number
           created_at?: string | null
           created_by?: string | null
+          email_sent?: boolean | null
+          email_sent_at?: string | null
           fee_id?: string | null
           id?: string
           notes?: string | null
@@ -2232,6 +2338,7 @@ export type Database = {
           payment_date?: string | null
           payment_method?: string
           receipt_number?: string | null
+          receipt_url?: string | null
           transaction_reference?: string | null
         }
         Relationships: [
@@ -3026,10 +3133,15 @@ export type Database = {
           amount: number
           created_at: string | null
           discount_amount: number | null
+          discount_reason: string | null
           due_date: string
           fee_type: string
           id: string
+          installment_plan_id: string | null
+          last_reminder_date: string | null
+          late_fee_amount: number | null
           paid_amount: number | null
+          reminder_sent_at: string | null
           status: string | null
           student_id: string | null
           term: string
@@ -3040,10 +3152,15 @@ export type Database = {
           amount: number
           created_at?: string | null
           discount_amount?: number | null
+          discount_reason?: string | null
           due_date: string
           fee_type: string
           id?: string
+          installment_plan_id?: string | null
+          last_reminder_date?: string | null
+          late_fee_amount?: number | null
           paid_amount?: number | null
+          reminder_sent_at?: string | null
           status?: string | null
           student_id?: string | null
           term: string
@@ -3054,16 +3171,28 @@ export type Database = {
           amount?: number
           created_at?: string | null
           discount_amount?: number | null
+          discount_reason?: string | null
           due_date?: string
           fee_type?: string
           id?: string
+          installment_plan_id?: string | null
+          last_reminder_date?: string | null
+          late_fee_amount?: number | null
           paid_amount?: number | null
+          reminder_sent_at?: string | null
           status?: string | null
           student_id?: string | null
           term?: string
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "student_fees_installment_plan_id_fkey"
+            columns: ["installment_plan_id"]
+            isOneToOne: false
+            referencedRelation: "installment_plans"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "student_fees_student_id_fkey"
             columns: ["student_id"]
@@ -3766,6 +3895,8 @@ export type Database = {
           amount: number
           created_at: string | null
           created_by: string | null
+          email_sent: boolean | null
+          email_sent_at: string | null
           fee_id: string | null
           id: string
           notes: string | null
@@ -3773,6 +3904,7 @@ export type Database = {
           payment_date: string | null
           payment_method: string
           receipt_number: string | null
+          receipt_url: string | null
           transaction_reference: string | null
         }
         SetofOptions: {
