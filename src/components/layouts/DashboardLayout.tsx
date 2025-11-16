@@ -43,6 +43,14 @@ function DashboardLayout({ children }: DashboardLayoutProps) {
   const isDeveloper = profile?.role === 'developer';
   const currentTestRole = isDeveloper ? sessionStorage.getItem('developerViewRole') : null;
   
+  // Check if kiosk mode (attendance devices)
+  const isKioskMode = profile?.role === 'school_attendance' || profile?.role === 'bus_attendance';
+  
+  // If kiosk mode, render without layout wrapper
+  if (isKioskMode) {
+    return <div className="min-h-screen bg-background">{children}</div>;
+  }
+  
   const roles = [
     { 
       value: 'admin', 

@@ -56,34 +56,19 @@ export default function NFCScanner({
 
   const handleNFCScan = async (nfcData: NFCData) => {
     try {
-      // Get full user data from database based on NFC data
-      let userData;
-      
-      if (nfcData.type === 'student') {
-        const { data, error } = await supabase
-          .from('students')
-          .select('*')
-          .eq('nfc_id', nfcData.id)
-          .single();
-          
-        if (error) throw error;
-        userData = data;
-      } else if (nfcData.type === 'teacher') {
-        const { data, error } = await supabase
-          .from('teachers')
-          .select('*')
-          .eq('nfc_id', nfcData.id)
-          .single();
-          
-        if (error) throw error;
-        userData = data;
+      // Get full user data from database based on NFC ID
+      const { data: student, error } = await supabase
+        .from('students')
+        .select('*, profiles(*)')
+        .eq('nfc_id', nfcData.id)
+        .single();
+        
+      if (error || !student) {
+        toast.error(language === 'ar' ? 'الطالب غير موجود' : 'Student not found');
+        return;
       }
       
-      if (userData) {
-        await handleScan(userData);
-      } else {
-        toast.error(language === 'ar' ? 'المستخدم غير موجود' : 'User not found');
-      }
+      await handleScan(student);
     } catch (error) {
       console.error('Error processing NFC scan:', error);
       toast.error(language === 'ar' ? 'فشل معالجة المسح' : 'Failed to process scan');
@@ -107,7 +92,57 @@ export default function NFCScanner({
       const studentName = student.name || `${student.first_name} ${student.last_name}`;
       const currentTime = new Date().toLocaleTimeString();
       
-      // Record the scan in checkpoint_logs with validation
+      // Determine action based on scanType
+      const action = scanType === 'entrance' ? 'check_in' : 'board';
+      
+      // Call appropriate edge function based on scanType
+      if (scanType === 'entrance') {
+        // Record attendance
+        await supabase.functions.invoke('record-attendance', {
+          body: {
+            studentNfcId: student.nfc_id,
+            deviceId: 'SCHOOL-ENTRANCE',
+            location: location,
+            action: 'check_in'
+          }
+        });
+        
+        // Process daily allowance on check-in
+        await supabase.functions.invoke('process-daily-allowance', {
+          body: { studentId: student.id }
+        });
+      } else if (scanType === 'bus') {
+        // Record bus activity
+        await supabase.functions.invoke('record-bus-activity', {
+          body: {
+            studentNfcId: student.nfc_id,
+            busId: location, // Bus number passed as location
+            action: 'board',
+            location: location
+          }
+        });
+      }
+      
+      // Send parent notification
+      const { data: studentData } = await supabase
+        .from('students')
+        .select('parent_id')
+        .eq('id', student.id)
+        .single();
+
+      if (studentData?.parent_id) {
+        await supabase.functions.invoke('send-parent-notification', {
+          body: {
+            parentId: studentData.parent_id,
+            studentId: student.id,
+            type: scanType === 'entrance' ? 'student_checkin' : 'bus_boarding',
+            title: scanType === 'entrance' ? 'Student Check-in' : 'Bus Boarding',
+            message: `${studentName} has ${scanType === 'entrance' ? 'checked in' : 'boarded the bus'} at ${currentTime}`
+          }
+        });
+      }
+      
+      // Record the scan in checkpoint_logs for local tracking
       const { error } = await supabase.from('checkpoint_logs').insert({
         student_id: student.id,
         student_name: studentName.slice(0, 200),
@@ -119,35 +154,6 @@ export default function NFCScanner({
       });
 
       if (error) throw error;
-
-      // Send notification to parent
-      const { data: studentData } = await supabase
-        .from('students')
-        .select('parent_id')
-        .eq('id', student.id)
-        .single();
-
-      if (studentData?.parent_id) {
-        const actionType = scanType.includes('in') ? 'entered' : 'left';
-        const locationDesc = scanType.includes('bus') ? 'bus' : 'school';
-        
-        // Validate notification data
-        const title = `${studentName} ${actionType}`;
-        const message = `${studentName} has ${actionType} the ${locationDesc} at ${location}`;
-        
-        await supabase.from('notification_history').insert({
-          user_id: studentData.parent_id,
-          notification_type: locationDesc === 'bus' ? 'child_bus_location' : 'child_attendance',
-          title: title.slice(0, 200),
-          message: message.slice(0, 1000),
-          data: {
-            student_id: student.id,
-            action: actionType,
-            location: location,
-            timestamp: new Date().toISOString()
-          }
-        });
-      }
 
       // Update UI state
       setLastScanned(studentName);
@@ -172,17 +178,36 @@ export default function NFCScanner({
 
       // Call the parent callback
       onScanSuccess?.(student);
-
+      
       // Keep last scanned visible for 1.5 seconds, then clear
       setTimeout(() => {
         setLastScanned(null);
       }, 1500);
 
-      // Continue scanning automatically - no need to stop!
-
-    } catch (error) {
-      console.error('Error recording scan:', error);
-      toast.error(language === 'ar' ? 'فشل تسجيل المسح' : 'Failed to record scan');
+    } catch (error: any) {
+      console.error('Error handling scan:', error);
+      
+      // Try to store offline if network error
+      if (!navigator.onLine || error.message?.includes('fetch')) {
+        try {
+          await supabase.from('offline_scans').insert({
+            scan_data: {
+              student_id: student.id,
+              nfc_id: student.nfc_id,
+              scan_type: scanType,
+              location: location
+            },
+            timestamp: new Date().toISOString(),
+            synced: false
+          });
+          toast.warning(language === 'ar' ? 'تم الحفظ للمزامنة لاحقاً' : 'Saved for later sync');
+        } catch (offlineError) {
+          console.error('Failed to save offline:', offlineError);
+          toast.error(language === 'ar' ? 'فشل حفظ المسح' : 'Failed to save scan');
+        }
+      } else {
+        toast.error(language === 'ar' ? 'فشل معالجة المسح' : 'Failed to process scan');
+      }
     }
   };
 
