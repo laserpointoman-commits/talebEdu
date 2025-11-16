@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { TrendingUp, TrendingDown, DollarSign, CreditCard, Users, Calendar, Download, ArrowUpRight, ArrowDownRight, FileText, Clock } from 'lucide-react';
+import { TrendingUp, TrendingDown, Wallet, CreditCard, Users, Calendar, Download, ArrowUpRight, ArrowDownRight, FileText, Clock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import LogoLoader from '@/components/LogoLoader';
@@ -78,6 +78,21 @@ const Finance = () => {
       setTotalExpenses(expenses);
       setNetIncome(revenue - expenses);
 
+      // Fetch outstanding fees from student_fees table
+      const { data: feesData, error: feesError } = await supabase
+        .from('student_fees')
+        .select('amount, paid_amount');
+      
+      if (!feesError && feesData) {
+        const outstanding = feesData.reduce((sum, fee) => {
+          const remaining = Number(fee.amount || 0) - Number(fee.paid_amount || 0);
+          return sum + (remaining > 0 ? remaining : 0);
+        }, 0);
+        setOutstandingFees(outstanding);
+      } else {
+        setOutstandingFees(0);
+      }
+
       // Fetch recent transactions
       const { data: transData, error: transError } = await supabase
         .from('financial_transactions')
@@ -100,6 +115,8 @@ const Finance = () => {
       if (!monthlyError && monthlyTransactions) {
         // Group by month
         const monthlyMap = new Map();
+        const categoryMap = new Map();
+        
         monthlyTransactions.forEach(trans => {
           const date = new Date(trans.transaction_date);
           const monthKey = date.toLocaleDateString('en-US', { month: 'short' });
@@ -111,6 +128,13 @@ const Finance = () => {
           const entry = monthlyMap.get(monthKey);
           if (trans.type === 'income') {
             entry.revenue += Number(trans.amount);
+            
+            // Track revenue by category for pie chart
+            const category = trans.category || 'Other';
+            if (!categoryMap.has(category)) {
+              categoryMap.set(category, 0);
+            }
+            categoryMap.set(category, categoryMap.get(category) + Number(trans.amount));
           } else {
             entry.expenses += Number(trans.amount);
           }
@@ -118,8 +142,18 @@ const Finance = () => {
         });
         
         setMonthlyData(Array.from(monthlyMap.values()));
+        
+        // Set pie chart data from categories
+        const colors = ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
+        const pieChartData = Array.from(categoryMap.entries()).map(([name, value], index) => ({
+          name,
+          value,
+          color: colors[index % colors.length]
+        }));
+        setPieData(pieChartData);
       } else {
         setMonthlyData([]);
+        setPieData([]);
       }
 
     } catch (error) {
@@ -203,7 +237,7 @@ const Finance = () => {
                   </div>
                 </div>
                 <div className="h-12 w-12 rounded-full bg-green-200 dark:bg-green-800 flex items-center justify-center">
-                  <DollarSign className="h-6 w-6 text-green-600 dark:text-green-400" />
+                  <Wallet className="h-6 w-6 text-green-600 dark:text-green-400" />
                 </div>
               </div>
             </CardContent>
@@ -247,14 +281,7 @@ const Finance = () => {
                     {formatCurrency(netIncome)}
                   </p>
                   <div className="flex items-center mt-2 text-blue-600 dark:text-blue-400">
-                    {incomeChange >= 0 ? (
-                      <ArrowUpRight className="h-4 w-4 mr-1" />
-                    ) : (
-                      <ArrowDownRight className="h-4 w-4 mr-1" />
-                    )}
-                    <span className="text-sm">
-                      {incomeChange >= 0 ? '+' : ''}{incomeChange.toFixed(1)}%
-                    </span>
+                    <span className="text-sm">{language === 'ar' ? 'هذا الشهر' : 'This month'}</span>
                   </div>
                 </div>
                 <div className="h-12 w-12 rounded-full bg-blue-200 dark:bg-blue-800 flex items-center justify-center">
@@ -306,7 +333,7 @@ const Finance = () => {
               </span>
             </TabsTrigger>
             <TabsTrigger value="revenue" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-3 flex items-center">
-              <DollarSign className={`w-6 h-6 mr-2 ${language === 'ar' ? 'ml-2' : ''} text-yellow-500 [&[data-state=active]]:text-primary-foreground`} />
+              <Wallet className={`w-6 h-6 mr-2 ${language === 'ar' ? 'ml-2' : ''} text-yellow-500 [&[data-state=active]]:text-primary-foreground`} />
               <span className="[&[data-state=active]]:text-primary-foreground">
                 {language === 'ar' ? 'الإيرادات' : 'Revenue'}
               </span>
@@ -382,7 +409,7 @@ const Finance = () => {
                         <Legend 
                           verticalAlign="bottom" 
                           height={36}
-                          formatter={(value: any, entry: any) => `${value}: ${(entry.payload.value / 1000).toFixed(0)}K`}
+                          formatter={(value: any, entry: any) => `${value}: ${entry.payload.value.toFixed(3)} OMR`}
                           wrapperStyle={{ fontSize: '12px' }}
                         />
                       </PieChart>
