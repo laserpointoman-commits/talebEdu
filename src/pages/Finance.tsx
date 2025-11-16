@@ -71,9 +71,16 @@ const Finance = () => {
       if (accountsError) throw accountsError;
       setAccounts(accountsData || []);
 
-      // Calculate totals
-      const revenue = accountsData?.filter(a => a.account_type === 'revenue').reduce((sum, a) => sum + Number(a.balance), 0) || 0;
-      const expenses = accountsData?.filter(a => a.account_type === 'expense').reduce((sum, a) => sum + Number(a.balance), 0) || 0;
+      // Fetch ALL transactions to calculate totals
+      const { data: allTransData, error: allTransError } = await supabase
+        .from('financial_transactions')
+        .select('*');
+
+      if (allTransError) throw allTransError;
+
+      // Calculate totals from actual transactions
+      const revenue = allTransData?.filter(t => t.type === 'income').reduce((sum, t) => sum + Number(t.amount), 0) || 0;
+      const expenses = allTransData?.filter(t => t.type === 'expense').reduce((sum, t) => sum + Number(t.amount), 0) || 0;
       setTotalRevenue(revenue);
       setTotalExpenses(expenses);
       setNetIncome(revenue - expenses);
