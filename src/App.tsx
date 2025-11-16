@@ -10,6 +10,8 @@ import { LanguageProvider } from "@/contexts/LanguageContext";
 import { LoadingProvider } from "@/contexts/LoadingContext";
 import { StudentsProvider } from "@/contexts/StudentsContext";
 import PageTransition from "@/components/PageTransition";
+import InstallPrompt from "@/components/mobile/InstallPrompt";
+import NetworkStatus from "@/components/mobile/NetworkStatus";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth/Auth";
 import Dashboard from "./pages/Dashboard";
@@ -53,6 +55,8 @@ function App() {
                 <Suspense fallback={<LogoLoader size="large" text={true} fullScreen={true} />}>
                   <Toaster />
                   <Sonner />
+                  <InstallPrompt />
+                  <NetworkStatus />
                   <StudentsProvider>
                     <PageTransition>
                       <Routes>
