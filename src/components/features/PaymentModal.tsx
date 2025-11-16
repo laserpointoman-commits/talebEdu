@@ -45,10 +45,13 @@ export default function PaymentModal({ feeId, totalAmount = 5000, paidAmount = 3
 
       if (error) throw error;
 
+      // Type cast the response data
+      const responseData = data as any;
+
       // Send receipt email
-      if (data.payment_id) {
+      if (responseData?.payment_id) {
         await supabase.functions.invoke('send-payment-receipt', {
-          body: { payment_id: data.payment_id }
+          body: { payment_id: responseData.payment_id }
         });
       }
 
