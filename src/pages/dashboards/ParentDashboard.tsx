@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import LogoLoader from "@/components/LogoLoader";
 import PendingStudentsList from "@/components/parent/PendingStudentsList";
 
@@ -32,12 +33,41 @@ export default function ParentDashboard() {
   const [pendingStudents, setPendingStudents] = useState<any[]>([]);
   const [walletData, setWalletData] = useState<any[]>([]);
   const [profile, setProfile] = useState<any>(null);
+  const [recentActivity, setRecentActivity] = useState<any[]>([]);
 
   useEffect(() => {
     if (user) {
       loadParentData();
+      subscribeToUpdates();
     }
   }, [user]);
+
+  const subscribeToUpdates = () => {
+    const channel = supabase
+      .channel('parent-updates')
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'students',
+        filter: `parent_id=eq.${user?.id}`
+      }, () => {
+        loadParentData();
+        toast.success(language === 'ar' ? 'تم تحديث البيانات' : 'Data updated');
+      })
+      .on('postgres_changes', { 
+        event: 'INSERT', 
+        schema: 'public', 
+        table: 'notification_history',
+        filter: `user_id=eq.${user?.id}`
+      }, () => {
+        loadParentData();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  };
 
   const loadParentData = async () => {
     try {
@@ -69,11 +99,11 @@ export default function ParentDashboard() {
       setPendingStudents(pendingData || []);
       
       // Load wallet balances separately
-      const studentIds = studentsData?.map(s => s.id) || [];
+      const approvedStudentIds = studentsData?.map(s => s.id) || [];
       const { data: walletsData } = await supabase
         .from('wallet_balances')
         .select('*')
-        .in('user_id', studentIds);
+        .in('user_id', approvedStudentIds);
 
       // Merge wallet data with students
       const studentsWithWallets = studentsData?.map(student => ({
@@ -85,6 +115,48 @@ export default function ParentDashboard() {
       
       const totalBal = walletsData?.reduce((sum, w) => sum + Number(w.balance || 0), 0) || 0;
       setWalletData([{ balance: totalBal }]);
+
+      // Load recent activity
+      const today = new Date().toISOString().split('T')[0];
+      
+      if (approvedStudentIds.length > 0) {
+        const { data: attendance } = await supabase
+          .from('attendance_records')
+          .select('*, students(first_name, last_name)')
+          .in('student_id', approvedStudentIds)
+          .eq('date', today)
+          .order('created_at', { ascending: false })
+          .limit(10);
+
+        const { data: busLogs } = await supabase
+          .from('bus_boarding_logs')
+          .select('*, students(first_name, last_name)')
+          .in('student_id', approvedStudentIds)
+          .gte('created_at', new Date(new Date().setHours(0,0,0,0)).toISOString())
+          .order('created_at', { ascending: false })
+          .limit(10);
+
+        const combined = [
+          ...(attendance || []).map(a => ({
+            id: a.id,
+            type: 'attendance',
+            student: `${(a.students as any)?.first_name} ${(a.students as any)?.last_name}`,
+            action: a.type,
+            location: a.location,
+            time: new Date(a.created_at!).toLocaleTimeString()
+          })),
+          ...(busLogs || []).map(b => ({
+            id: b.id,
+            type: 'bus',
+            student: `${(b.students as any)?.first_name} ${(b.students as any)?.last_name}`,
+            action: b.action,
+            location: b.location,
+            time: new Date(b.created_at!).toLocaleTimeString()
+          }))
+        ].sort((a, b) => b.time.localeCompare(a.time)).slice(0, 10);
+
+        setRecentActivity(combined);
+      }
 
     } catch (error) {
       console.error('Error loading parent data:', error);

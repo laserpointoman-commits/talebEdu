@@ -41,11 +41,14 @@ export interface Student {
 
 interface StudentsContextType {
   students: Student[];
+  loading: boolean;
   addStudent: (student: Omit<Student, 'id'>) => void;
   updateStudent: (id: string, student: Partial<Student>) => void;
   deleteStudent: (id: string) => void;
   getStudent: (id: string) => Student | undefined;
+  getStudentByNfc: (nfcId: string) => Promise<Student | null>;
   searchStudents: (query: string) => Student[];
+  fetchStudents: () => Promise<void>;
 }
 
 // Reduced initial mock data to prevent localStorage quota issues
@@ -280,6 +283,58 @@ export function StudentsProvider({ children }: { children: React.ReactNode }) {
     return students.find(student => student.id === id);
   };
 
+  const getStudentByNfc = async (nfcId: string): Promise<Student | null> => {
+    try {
+      const { data, error } = await supabase
+        .from('students')
+        .select('*')
+        .eq('nfc_id', nfcId)
+        .single();
+
+      if (error || !data) return null;
+
+      return {
+        id: data.id,
+        firstName: data.first_name || '',
+        lastName: data.last_name || '',
+        firstNameAr: data.first_name_ar || '',
+        lastNameAr: data.last_name_ar || '',
+        dateOfBirth: data.date_of_birth || '',
+        gender: data.gender || '',
+        nationality: data.nationality || '',
+        civilId: data.civil_id || '',
+        grade: data.grade || '',
+        class: data.class || '',
+        academicYear: data.academic_year || '',
+        enrollmentDate: data.enrollment_date || '',
+        previousSchool: data.previous_school,
+        email: data.email || '',
+        phone: data.phone || '',
+        address: data.address || '',
+        parentName: data.parent_name || '',
+        parentNameAr: data.parent_name_ar || '',
+        parentPhone: data.parent_phone || '',
+        parentEmail: data.parent_email || '',
+        parentOccupation: data.parent_occupation,
+        relationship: data.relationship || '',
+        bloodGroup: data.blood_group || '',
+        allergies: data.allergies,
+        medicalConditions: data.medical_conditions,
+        medications: data.medications,
+        emergencyContact: data.emergency_contact || '',
+        emergencyContactName: data.emergency_contact_name || '',
+        transportationAgreement: data.transportation_agreement || false,
+        profileImage: data.profile_image,
+        nfcId: data.nfc_id,
+        barcode: data.barcode,
+        status: (data.status as 'active' | 'inactive') || 'active'
+      };
+    } catch (error) {
+      console.error('Error fetching student by NFC:', error);
+      return null;
+    }
+  };
+
   const searchStudents = (query: string) => {
     const searchTerm = query.toLowerCase();
     return students.filter(student => 
@@ -296,11 +351,14 @@ export function StudentsProvider({ children }: { children: React.ReactNode }) {
   return (
     <StudentsContext.Provider value={{
       students,
+      loading,
       addStudent,
       updateStudent,
       deleteStudent,
       getStudent,
-      searchStudents
+      getStudentByNfc,
+      searchStudents,
+      fetchStudents
     }}>
       {children}
     </StudentsContext.Provider>
