@@ -1,86 +1,97 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { 
-  Wallet as WalletIcon, 
-  Plus, 
-  ArrowUpRight, 
-  ArrowDownRight,
-  CreditCard 
-} from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Wallet as WalletIcon, Loader2 } from "lucide-react";
+import LogoLoader from "@/components/LogoLoader";
+import WalletTopUp from "@/components/wallet/WalletTopUp";
+import TransactionHistory from "@/components/wallet/TransactionHistory";
+import LowBalanceAlert from "@/components/wallet/LowBalanceAlert";
 
 export default function Wallet() {
+  const { user } = useAuth();
   const { language } = useLanguage();
-  const { toast } = useToast();
-  const [topUpAmount, setTopUpAmount] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [balance, setBalance] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const handleTopUp = async () => {
-    if (!topUpAmount || Number(topUpAmount) <= 0) {
-      toast({
-        title: language === 'ar' ? 'خطأ' : 'Error',
-        description: language === 'ar' ? 'الرجاء إدخال مبلغ صحيح' : 'Please enter a valid amount',
-        variant: "destructive"
-      });
-      return;
+  useEffect(() => {
+    if (user) {
+      loadBalance();
+      subscribeToBalance();
     }
+  }, [user]);
 
-    setLoading(true);
-    // Simulate payment processing
-    setTimeout(() => {
-      toast({
-        title: language === 'ar' ? 'تم الشحن بنجاح' : 'Top-up Successful',
-        description: language === 'ar' 
-          ? `تم إضافة ${topUpAmount} ريال عماني` 
-          : `${topUpAmount} OMR added successfully`
-      });
-      setTopUpAmount("");
+  const loadBalance = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('wallet_balances')
+        .select('balance')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (error && error.code !== 'PGRST116') {
+        throw error;
+      }
+
+      setBalance(data?.balance || 0);
+    } catch (error) {
+      console.error('Error loading balance:', error);
+      setBalance(0);
+    } finally {
       setLoading(false);
-    }, 2000);
+    }
   };
 
-  const transactions = [
-    { 
-      type: 'top_up', 
-      amount: 50.00, 
-      desc: 'Wallet Top-up', 
-      descAr: 'شحن المحفظة',
-      date: '2025-01-04 10:30' 
-    },
-    { 
-      type: 'purchase', 
-      amount: -5.50, 
-      desc: 'Cafeteria Purchase', 
-      descAr: 'شراء من المقصف',
-      date: '2025-01-04 09:15' 
-    },
-    { 
-      type: 'purchase', 
-      amount: -3.00, 
-      desc: 'Store Purchase', 
-      descAr: 'شراء من المتجر',
-      date: '2025-01-03 14:20' 
-    }
-  ];
+  const subscribeToBalance = () => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel(`wallet-${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'wallet_balances',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          if (payload.new && 'balance' in payload.new) {
+            setBalance(payload.new.balance as number);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  };
+
+  if (loading) {
+    return <LogoLoader fullScreen />;
+  }
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6 p-4 md:p-6">
       <div>
-        <h1 className="text-3xl font-bold">
+        <h1 className="text-3xl font-bold flex items-center gap-2">
+          <WalletIcon className="h-8 w-8 text-primary" />
           {language === 'ar' ? 'المحفظة الرقمية' : 'Digital Wallet'}
         </h1>
         <p className="text-muted-foreground">
-          {language === 'ar' ? 'إدارة رصيد الطالب' : 'Manage student balance'}
+          {language === 'ar' ? 'إدارة رصيدك والمعاملات المالية' : 'Manage your balance and transactions'}
         </p>
       </div>
 
+      {/* Low Balance Alert */}
+      <LowBalanceAlert threshold={20} />
+
       {/* Balance Card */}
-      <Card className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground">
+      <Card className="bg-gradient-to-br from-primary via-primary to-primary/80 text-primary-foreground border-0 shadow-lg">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <WalletIcon className="h-5 w-5" />
@@ -88,112 +99,31 @@ export default function Wallet() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-5xl font-bold mb-2">
-            41.50 {language === 'ar' ? 'ريال' : 'OMR'}
-          </div>
-          <p className="text-primary-foreground/80">
-            {language === 'ar' ? 'متاح للإنفاق' : 'Available to spend'}
-          </p>
-        </CardContent>
-      </Card>
-
-      {/* Top Up Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Plus className="h-5 w-5" />
-            {language === 'ar' ? 'شحن المحفظة' : 'Top Up Wallet'}
-          </CardTitle>
-          <CardDescription>
-            {language === 'ar' 
-              ? 'أضف أموال إلى محفظة الطالب'
-              : 'Add money to student wallet'}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {[10, 20, 50, 100].map((amount) => (
-              <Button
-                key={amount}
-                variant="outline"
-                onClick={() => setTopUpAmount(amount.toString())}
-                className="h-16 text-lg"
-              >
-                {amount} {language === 'ar' ? 'ريال' : 'OMR'}
-              </Button>
-            ))}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="custom-amount">
-              {language === 'ar' ? 'مبلغ مخصص' : 'Custom Amount'}
-            </Label>
-            <div className="flex gap-2">
-              <Input
-                id="custom-amount"
-                type="number"
-                placeholder={language === 'ar' ? 'أدخل المبلغ' : 'Enter amount'}
-                value={topUpAmount}
-                onChange={(e) => setTopUpAmount(e.target.value)}
-                min="1"
-                step="0.5"
-              />
-              <Button 
-                onClick={handleTopUp}
-                disabled={loading}
-                className="px-8"
-              >
-                <CreditCard className="mr-2 h-4 w-4" />
-                {loading 
-                  ? (language === 'ar' ? 'جاري الدفع...' : 'Processing...') 
-                  : (language === 'ar' ? 'ادفع' : 'Pay')}
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Transaction History */}
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            {language === 'ar' ? 'سجل المعاملات' : 'Transaction History'}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {transactions.map((tx, idx) => (
-              <div 
-                key={idx} 
-                className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
-                    tx.type === 'top_up' ? 'bg-green-500/10' : 'bg-red-500/10'
-                  }`}>
-                    {tx.type === 'top_up' ? (
-                      <ArrowDownRight className="h-5 w-5 text-green-500" />
-                    ) : (
-                      <ArrowUpRight className="h-5 w-5 text-red-500" />
-                    )}
-                  </div>
-                  <div>
-                    <div className="font-medium">
-                      {language === 'ar' ? tx.descAr : tx.desc}
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      {tx.date}
-                    </div>
-                  </div>
-                </div>
-                <Badge variant={tx.amount > 0 ? 'default' : 'secondary'} className="text-base px-3">
-                  {tx.amount > 0 ? '+' : ''}{tx.amount.toFixed(2)} OMR
-                </Badge>
+          {balance !== null ? (
+            <>
+              <div className="text-5xl font-bold mb-2">
+                {balance.toFixed(2)} {language === 'ar' ? 'ريال' : 'OMR'}
               </div>
-            ))}
-          </div>
+              <p className="text-primary-foreground/80">
+                {language === 'ar' ? 'متاح للإنفاق' : 'Available to spend'}
+              </p>
+            </>
+          ) : (
+            <div className="flex items-center gap-2">
+              <Loader2 className="h-5 w-5 animate-spin" />
+              <span>{language === 'ar' ? 'جاري التحميل...' : 'Loading...'}</span>
+            </div>
+          )}
         </CardContent>
       </Card>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Top Up Section */}
+        <WalletTopUp onSuccess={loadBalance} />
+
+        {/* Transaction History */}
+        <TransactionHistory />
+      </div>
     </div>
   );
 }
