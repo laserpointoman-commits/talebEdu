@@ -321,7 +321,7 @@ const DeveloperDashboard: React.FC = () => {
         </CardHeader>
         <CardContent>
           <Button 
-            onClick={() => navigate('/dashboard/admin/feature-visibility')}
+            onClick={() => navigate('/dashboard/admin/features')}
             className="w-full"
             variant="outline"
           >
