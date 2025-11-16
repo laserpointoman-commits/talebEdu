@@ -61,6 +61,28 @@ export default function Auth() {
       if (error) throw error;
 
       if (data.user) {
+        // Check email confirmation status
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('email_confirmed, expected_students_count, registered_students_count, role')
+          .eq('id', data.user.id)
+          .single();
+
+        if (profile && !profile.email_confirmed) {
+          toast.info(language === 'en' ? 'Please confirm your email' : 'يرجى تأكيد بريدك الإلكتروني');
+          navigate('/email-confirmation-pending');
+          return;
+        }
+
+        // Check if parent needs to register students
+        if (profile?.role === 'parent' && 
+            profile.expected_students_count && 
+            profile.registered_students_count < profile.expected_students_count) {
+          toast.info(language === 'en' ? 'Please register your students' : 'يرجى تسجيل طلابك');
+          navigate('/dashboard/register-student');
+          return;
+        }
+
         toast.success(language === 'en' ? 'Welcome back!' : 'مرحباً بعودتك!');
         window.location.href = '/dashboard';
       }

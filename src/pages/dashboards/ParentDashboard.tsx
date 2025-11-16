@@ -21,6 +21,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import LogoLoader from "@/components/LogoLoader";
+import PendingStudentsList from "@/components/parent/PendingStudentsList";
 
 export default function ParentDashboard() {
   const { language } = useLanguage();
@@ -28,7 +29,9 @@ export default function ParentDashboard() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [children, setChildren] = useState<any[]>([]);
+  const [pendingStudents, setPendingStudents] = useState<any[]>([]);
   const [walletData, setWalletData] = useState<any[]>([]);
+  const [profile, setProfile] = useState<any>(null);
 
   useEffect(() => {
     if (user) {
@@ -38,13 +41,32 @@ export default function ParentDashboard() {
 
   const loadParentData = async () => {
     try {
-      // Load children using OLD database structure
+      // Load profile
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user?.id)
+        .single();
+      
+      setProfile(profileData);
+
+      // Load approved children only
       const { data: studentsData, error: studentsError } = await supabase
         .from('students')
         .select('*')
-        .eq('parent_id', user?.id);
+        .eq('parent_id', user?.id)
+        .eq('visible_to_parent', true);
 
       if (studentsError) throw studentsError;
+      
+      // Load pending students separately
+      const { data: pendingData } = await supabase
+        .from('students')
+        .select('*')
+        .eq('parent_id', user?.id)
+        .eq('visible_to_parent', false);
+      
+      setPendingStudents(pendingData || []);
       
       // Load wallet balances separately
       const studentIds = studentsData?.map(s => s.id) || [];
@@ -133,9 +155,19 @@ export default function ParentDashboard() {
           {language === 'ar' ? 'لوحة ولي الأمر' : 'Parent Dashboard'}
         </h1>
         <p className="text-muted-foreground">
-          {language === 'ar' ? 'مرحباً بعودتك!' : 'Welcome back!'}
+          {language === 'ar' 
+            ? `مرحباً بعودتك! إدارة ${children.length} ${children.length === 1 ? 'طفل معتمد' : 'أطفال معتمدين'}`
+            : `Welcome back! Managing ${children.length} approved ${children.length === 1 ? 'child' : 'children'}`}
         </p>
       </div>
+
+      {/* Pending Students Section */}
+      {pendingStudents.length > 0 && (
+        <PendingStudentsList 
+          students={pendingStudents} 
+          onRefresh={loadParentData}
+        />
+      )}
 
       {/* Children Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -178,15 +210,17 @@ export default function ParentDashboard() {
         ))}
 
         {/* Add Another Student Card */}
-        {children.length > 0 && (
-          <Card className="border-dashed border-2 hover:border-primary hover:bg-accent/50 transition-all cursor-pointer" onClick={() => navigate('/register-student')}>
+        {children.length > 0 && profile?.expected_students_count && profile.registered_students_count < profile.expected_students_count && (
+          <Card className="border-dashed border-2 hover:border-primary hover:bg-accent/50 transition-all cursor-pointer" onClick={() => navigate('/dashboard/register-student')}>
             <CardContent className="flex flex-col items-center justify-center py-12">
               <UserPlus className="h-12 w-12 text-primary mb-4" />
               <p className="font-semibold text-lg mb-2">
                 {language === 'ar' ? 'تسجيل طالب آخر' : 'Register Another Student'}
               </p>
               <p className="text-sm text-muted-foreground">
-                {language === 'ar' ? 'أضف طفلاً آخر إلى النظام' : 'Add another child to the system'}
+                {language === 'ar' 
+                  ? `${profile.expected_students_count - profile.registered_students_count} متبقي`
+                  : `${profile.expected_students_count - profile.registered_students_count} remaining`}
               </p>
             </CardContent>
           </Card>
@@ -198,17 +232,25 @@ export default function ParentDashboard() {
             <CardContent className="flex flex-col items-center justify-center py-16">
               <GraduationCap className="h-20 w-20 text-primary mb-6" />
               <h3 className="text-xl font-semibold mb-2">
-                {language === 'ar' ? 'سجل طالبك الأول' : 'Register Your First Student'}
+                {language === 'ar' 
+                  ? pendingStudents.length > 0 ? 'طلابك قيد المراجعة' : 'سجل طالبك الأول'
+                  : pendingStudents.length > 0 ? 'Your Students Under Review' : 'Register Your First Student'}
               </h3>
               <p className="text-muted-foreground mb-6 text-center max-w-md">
                 {language === 'ar' 
-                  ? 'ابدأ بإضافة معلومات طفلك للوصول إلى جميع خدمات المدرسة'
-                  : 'Start by adding your child\'s information to access all school services'}
+                  ? pendingStudents.length > 0
+                    ? 'طلابك قيد المراجعة من قبل الإدارة. سيظهرون هنا بعد الموافقة.'
+                    : 'ابدأ بإضافة معلومات طفلك للوصول إلى جميع خدمات المدرسة'
+                  : pendingStudents.length > 0
+                    ? 'Your students are under review by administration. They will appear here after approval.'
+                    : 'Start by adding your child\'s information to access all school services'}
               </p>
-              <Button size="lg" onClick={() => navigate('/register-student')}>
-                <UserPlus className="mr-2 h-5 w-5" />
-                {language === 'ar' ? 'تسجيل طالب' : 'Register Student'}
-              </Button>
+              {(!pendingStudents.length || (profile?.expected_students_count && profile.registered_students_count < profile.expected_students_count)) && (
+                <Button size="lg" onClick={() => navigate('/dashboard/register-student')}>
+                  <UserPlus className="mr-2 h-5 w-5" />
+                  {language === 'ar' ? 'تسجيل طالب' : 'Register Student'}
+                </Button>
+              )}
             </CardContent>
           </Card>
         )}
