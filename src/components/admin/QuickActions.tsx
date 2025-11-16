@@ -10,7 +10,8 @@ import {
   Shield,
   Users,
   Wallet,
-  GraduationCap
+  GraduationCap,
+  Receipt
 } from 'lucide-react';
 
 export function QuickActions() {
@@ -47,6 +48,12 @@ export function QuickActions() {
       label: language === 'ar' ? 'المالية' : 'Finance',
       onClick: () => navigate('/dashboard/finance'),
       color: 'text-emerald-600 bg-emerald-100 dark:bg-emerald-900/20'
+    },
+    {
+      icon: Receipt,
+      label: language === 'ar' ? 'إدارة الرسوم' : 'Fee Management',
+      onClick: () => navigate('/dashboard/admin/fees'),
+      color: 'text-orange-600 bg-orange-100 dark:bg-orange-900/20'
     },
     {
       icon: Shield,
