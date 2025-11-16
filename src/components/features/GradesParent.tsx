@@ -1,82 +1,196 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { User, GraduationCap, Calendar, Clock, BookOpen, TrendingUp, Award } from 'lucide-react';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { User, GraduationCap, Calendar, Clock, BookOpen, Loader2 } from 'lucide-react';
+import { format } from 'date-fns';
+import { toast } from 'sonner';
 
 interface Student {
   id: string;
-  name: string;
-  nameAr: string;
+  first_name: string;
+  last_name: string;
+  first_name_ar: string;
+  last_name_ar: string;
   grade: string;
   class: string;
-  image?: string;
+}
+
+interface Grade {
+  id: string;
+  marks_obtained: number;
+  grade: string;
+  remarks: string;
+  created_at: string;
+  exams: {
+    subject: string;
+    exam_type: string;
+    total_marks: number;
+    date: string;
+  };
+}
+
+interface Exam {
+  id: string;
+  subject: string;
+  exam_type: string;
+  date: string;
+  time: string;
+  total_marks: number;
+  duration: string;
+  room: string;
 }
 
 export default function GradesParent() {
   const { language } = useLanguage();
+  const { user } = useAuth();
+  const [students, setStudents] = useState<Student[]>([]);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+  const [grades, setGrades] = useState<Grade[]>([]);
+  const [upcomingExams, setUpcomingExams] = useState<Exam[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const students: Student[] = [
-    {
-      id: '1',
-      name: 'Mohammed Ali',
-      nameAr: 'محمد علي',
-      grade: 'Grade 10',
-      class: '10A',
-      image: undefined,
-    },
-    {
-      id: '2',
-      name: 'Fatima Ali',
-      nameAr: 'فاطمة علي',
-      grade: 'Grade 8',
-      class: '8B',
-      image: undefined,
-    },
-  ];
+  useEffect(() => {
+    if (user) {
+      loadStudents();
+    }
+  }, [user]);
 
-  const studentGrades = {
-    '1': {
-      gpa: 3.75,
-      rank: 5,
-      totalStudents: 30,
-      grades: [
-        { subject: language === 'en' ? 'Mathematics' : 'الرياضيات', grade: 'A', score: 92, examType: language === 'en' ? 'Midterm' : 'منتصف الفصل' },
-        { subject: language === 'en' ? 'Physics' : 'الفيزياء', grade: 'B+', score: 87, examType: language === 'en' ? 'Quiz' : 'اختبار قصير' },
-        { subject: language === 'en' ? 'English' : 'اللغة الإنجليزية', grade: 'A-', score: 90, examType: language === 'en' ? 'Assignment' : 'واجب' },
-      ],
-      upcomingExams: [
-        { subject: language === 'en' ? 'Chemistry' : 'الكيمياء', date: '2024-03-20', time: '9:00 AM' },
-        { subject: language === 'en' ? 'History' : 'التاريخ', date: '2024-03-22', time: '11:00 AM' },
-      ],
-    },
-    '2': {
-      gpa: 3.85,
-      rank: 3,
-      totalStudents: 28,
-      grades: [
-        { subject: language === 'en' ? 'Mathematics' : 'الرياضيات', grade: 'A+', score: 95, examType: language === 'en' ? 'Midterm' : 'منتصف الفصل' },
-        { subject: language === 'en' ? 'Science' : 'العلوم', grade: 'A', score: 93, examType: language === 'en' ? 'Lab Report' : 'تقرير المختبر' },
-        { subject: language === 'en' ? 'Arabic' : 'اللغة العربية', grade: 'A-', score: 89, examType: language === 'en' ? 'Essay' : 'مقال' },
-      ],
-      upcomingExams: [
-        { subject: language === 'en' ? 'Geography' : 'الجغرافيا', date: '2024-03-21', time: '10:00 AM' },
-        { subject: language === 'en' ? 'Computer Science' : 'علوم الحاسوب', date: '2024-03-23', time: '2:00 PM' },
-      ],
-    },
+  useEffect(() => {
+    if (selectedStudent) {
+      loadGrades();
+      loadUpcomingExams();
+      subscribeToGrades();
+    }
+  }, [selectedStudent]);
+
+  const loadStudents = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('students')
+        .select('id, first_name, last_name, first_name_ar, last_name_ar, grade, class')
+        .eq('parent_id', user?.id);
+
+      if (error) throw error;
+      
+      setStudents(data || []);
+      if (data && data.length > 0) {
+        setSelectedStudent(data[0]);
+      }
+    } catch (error) {
+      console.error('Error loading students:', error);
+      toast.error(language === 'ar' ? 'فشل تحميل الطلاب' : 'Failed to load students');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadGrades = async () => {
+    if (!selectedStudent) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('grades')
+        .select(`
+          id,
+          marks_obtained,
+          grade,
+          remarks,
+          created_at,
+          exams (
+            subject,
+            exam_type,
+            total_marks,
+            date
+          )
+        `)
+        .eq('student_id', selectedStudent.id)
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      if (error) throw error;
+      setGrades(data || []);
+    } catch (error) {
+      console.error('Error loading grades:', error);
+    }
+  };
+
+  const loadUpcomingExams = async () => {
+    if (!selectedStudent) return;
+
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      
+      const { data, error } = await supabase
+        .from('exams')
+        .select('*')
+        .eq('class_id', selectedStudent.class)
+        .gte('date', today)
+        .order('date', { ascending: true })
+        .limit(5);
+
+      if (error) throw error;
+      setUpcomingExams(data || []);
+    } catch (error) {
+      console.error('Error loading exams:', error);
+    }
+  };
+
+  const subscribeToGrades = () => {
+    if (!selectedStudent) return;
+
+    const channel = supabase
+      .channel(`grades-${selectedStudent.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'grades',
+          filter: `student_id=eq.${selectedStudent.id}`
+        },
+        () => {
+          loadGrades();
+          toast.success(language === 'ar' ? 'تم إضافة درجة جديدة' : 'New grade added');
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  };
+
+  const calculateGPA = () => {
+    if (grades.length === 0) return '0.00';
+    const total = grades.reduce((sum, g) => {
+      const percentage = (g.marks_obtained / (g.exams?.total_marks || 100)) * 100;
+      return sum + percentage;
+    }, 0);
+    return (total / grades.length / 25).toFixed(2);
   };
 
   const getGradeColor = (grade: string) => {
-    if (grade.startsWith('A')) return 'text-green-600';
-    if (grade.startsWith('B')) return 'text-blue-600';
-    if (grade.startsWith('C')) return 'text-yellow-600';
+    if (grade?.startsWith('A')) return 'text-green-600';
+    if (grade?.startsWith('B')) return 'text-blue-600';
+    if (grade?.startsWith('C')) return 'text-yellow-600';
     return 'text-red-600';
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   if (!selectedStudent) {
     return (
@@ -98,26 +212,22 @@ export default function GradesParent() {
               onClick={() => setSelectedStudent(student)}
             >
               <CardContent className="p-6">
-                <div className="flex items-center gap-4">
+                <div className="flex items-center space-x-4 rtl:space-x-reverse">
                   <Avatar className="h-16 w-16">
-                    <AvatarImage src={student.image} />
-                    <AvatarFallback>{student.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                    <AvatarFallback>
+                      <User className="h-8 w-8" />
+                    </AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
-                    <h3 className="text-lg font-semibold">
-                      {language === 'en' ? student.name : student.nameAr}
+                    <h3 className="font-semibold text-lg">
+                      {language === 'en' 
+                        ? `${student.first_name} ${student.last_name}`
+                        : `${student.first_name_ar} ${student.last_name_ar}`
+                      }
                     </h3>
-                    <div className="flex items-center gap-4 mt-2">
-                      <Badge variant="outline">{student.grade}</Badge>
-                      <span className="text-sm text-muted-foreground">
-                        {language === 'en' ? 'Class' : 'الصف'} {student.class}
-                      </span>
-                    </div>
-                    <div className="mt-3 flex items-center gap-2">
-                      <TrendingUp className="h-4 w-4 text-green-600" />
-                      <span className="text-sm font-medium">
-                        GPA: {studentGrades[student.id as keyof typeof studentGrades].gpa}
-                      </span>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <GraduationCap className="h-4 w-4" />
+                      <span>{student.grade} - {student.class}</span>
                     </div>
                   </div>
                 </div>
@@ -129,145 +239,165 @@ export default function GradesParent() {
     );
   }
 
-  const currentStudentGrades = studentGrades[selectedStudent.id as keyof typeof studentGrades];
+  const gpa = calculateGPA();
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={() => setSelectedStudent(null)}
-            className="mb-2"
-          >
-            ← {language === 'en' ? 'Back to Students' : 'العودة إلى الطلاب'}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="flex items-center gap-2">
+            <Avatar className="h-12 w-12">
+              <AvatarFallback>
+                <User className="h-6 w-6" />
+              </AvatarFallback>
+            </Avatar>
+            <div>
+              <h3 className="font-semibold text-lg">
+                {language === 'en'
+                  ? `${selectedStudent.first_name} ${selectedStudent.last_name}`
+                  : `${selectedStudent.first_name_ar} ${selectedStudent.last_name_ar}`
+                }
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                {selectedStudent.grade} - {selectedStudent.class}
+              </p>
+            </div>
+          </CardTitle>
+          <Button variant="ghost" size="sm" onClick={() => setSelectedStudent(null)}>
+            {language === 'en' ? 'Back to Students' : 'العودة للطلاب'}
           </Button>
-          <h2 className="text-3xl font-bold tracking-tight">
-            {language === 'en' ? selectedStudent.name : selectedStudent.nameAr}
-          </h2>
-          <p className="text-muted-foreground">
-            {selectedStudent.grade} - {language === 'en' ? 'Class' : 'الصف'} {selectedStudent.class}
-          </p>
-        </div>
+        </CardHeader>
+      </Card>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card className="p-4">
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-muted-foreground">
+              {language === 'en' ? 'GPA' : 'المعدل التراكمي'}
+            </span>
+            <span className="text-2xl font-bold text-primary">{gpa}</span>
+          </div>
+          <Progress value={parseFloat(gpa) * 25} className="mt-2" />
+        </Card>
+
+        <Card className="p-4">
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-muted-foreground">
+              {language === 'en' ? 'Total Grades' : 'مجموع الدرجات'}
+            </span>
+            <div className="text-right">
+              <div className="text-2xl font-bold text-primary">{grades.length}</div>
+              <div className="text-xs text-muted-foreground">
+                {language === 'en' ? 'Recorded' : 'مسجلة'}
+              </div>
+            </div>
+          </div>
+        </Card>
       </div>
 
-      <Tabs defaultValue="grades" className="space-y-6" dir={language === 'ar' ? 'rtl' : 'ltr'}>
-        <TabsList className={language === 'ar' ? 'flex-row-reverse' : ''}>
+      <Tabs defaultValue="grades" className="space-y-4">
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="grades">
-            <GraduationCap className="h-4 w-4 mr-2" />
             {language === 'en' ? 'Grades' : 'الدرجات'}
           </TabsTrigger>
           <TabsTrigger value="exams">
-            <Calendar className="h-4 w-4 mr-2" />
             {language === 'en' ? 'Upcoming Exams' : 'الامتحانات القادمة'}
-          </TabsTrigger>
-          <TabsTrigger value="schedule">
-            <Clock className="h-4 w-4 mr-2" />
-            {language === 'en' ? 'Schedule' : 'الجدول'}
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="grades" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center gap-3">
-                  <Award className="h-8 w-8 text-primary" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">{language === 'en' ? 'GPA' : 'المعدل'}</p>
-                    <p className="text-2xl font-bold">{currentStudentGrades.gpa}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center gap-3">
-                  <TrendingUp className="h-8 w-8 text-green-600" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">{language === 'en' ? 'Class Rank' : 'الترتيب'}</p>
-                    <p className="text-2xl font-bold">
-                      {currentStudentGrades.rank}/{currentStudentGrades.totalStudents}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center gap-3">
-                  <BookOpen className="h-8 w-8 text-blue-600" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">{language === 'en' ? 'Subjects' : 'المواد'}</p>
-                    <p className="text-2xl font-bold">{currentStudentGrades.grades.length}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
+        <TabsContent value="grades" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>{language === 'en' ? 'Recent Grades' : 'الدرجات الأخيرة'}</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <BookOpen className="h-5 w-5" />
+                {language === 'en' ? 'Recent Grades' : 'الدرجات الأخيرة'}
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {currentStudentGrades.grades.map((grade, index) => (
-                  <div key={index} className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium">{grade.subject}</p>
-                        <p className="text-xs text-muted-foreground">{grade.examType}</p>
+              {grades.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  {language === 'ar' ? 'لا توجد درجات بعد' : 'No grades yet'}
+                </div>
+              ) : (
+                <ScrollArea className="h-[400px]">
+                  <div className="space-y-4">
+                    {grades.map((gradeItem) => (
+                      <div key={gradeItem.id} className="flex items-center justify-between p-4 border rounded-lg">
+                        <div className="flex-1">
+                          <h4 className="font-semibold">{gradeItem.exams?.subject}</h4>
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                            <Badge variant="outline">{gradeItem.exams?.exam_type}</Badge>
+                            <span>{format(new Date(gradeItem.exams?.date), 'MMM dd, yyyy')}</span>
+                          </div>
+                          {gradeItem.remarks && (
+                            <p className="text-sm text-muted-foreground mt-1">{gradeItem.remarks}</p>
+                          )}
+                        </div>
+                        <div className="text-right">
+                          <div className={`text-2xl font-bold ${getGradeColor(gradeItem.grade)}`}>
+                            {gradeItem.grade}
+                          </div>
+                          <div className="text-sm text-muted-foreground">
+                            {gradeItem.marks_obtained}/{gradeItem.exams?.total_marks || 100}
+                          </div>
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <span className={`text-2xl font-bold ${getGradeColor(grade.grade)}`}>
-                          {grade.grade}
-                        </span>
-                        <p className="text-sm text-muted-foreground">{grade.score}%</p>
-                      </div>
-                    </div>
-                    <Progress value={grade.score} className="h-2" />
+                    ))}
                   </div>
-                ))}
-              </div>
+                </ScrollArea>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="exams" className="space-y-4">
-          {currentStudentGrades.upcomingExams.map((exam, index) => (
-            <Card key={index}>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium text-lg">{exam.subject}</p>
-                    <div className="flex items-center gap-4 mt-2">
-                      <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm">{exam.date}</span>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Calendar className="h-5 w-5" />
+                {language === 'en' ? 'Upcoming Exams' : 'الامتحانات القادمة'}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {upcomingExams.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  {language === 'ar' ? 'لا توجد امتحانات قادمة' : 'No upcoming exams'}
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {upcomingExams.map((exam) => (
+                    <div key={exam.id} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div className="flex-1">
+                        <h4 className="font-semibold">{exam.subject}</h4>
+                        <div className="flex items-center gap-3 text-sm text-muted-foreground mt-2">
+                          <div className="flex items-center gap-1">
+                            <Calendar className="h-4 w-4" />
+                            <span>{format(new Date(exam.date), 'MMM dd, yyyy')}</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Clock className="h-4 w-4" />
+                            <span>{exam.time}</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 mt-2">
+                          <Badge variant="outline">{exam.exam_type}</Badge>
+                          <span className="text-sm text-muted-foreground">
+                            {exam.duration} • {language === 'ar' ? 'غرفة' : 'Room'} {exam.room}
+                          </span>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Clock className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm">{exam.time}</span>
+                      <div className="text-right">
+                        <Badge variant="secondary">
+                          {language === 'en' ? 'Upcoming' : 'قادم'}
+                        </Badge>
+                        <div className="text-sm text-muted-foreground mt-2">
+                          {exam.total_marks} {language === 'ar' ? 'درجة' : 'marks'}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <Badge>{language === 'en' ? 'Upcoming' : 'قادم'}</Badge>
+                  ))}
                 </div>
-              </CardContent>
-            </Card>
-          ))}
-        </TabsContent>
-
-        <TabsContent value="schedule">
-          <Card>
-            <CardContent className="p-6">
-              <p className="text-center text-muted-foreground">
-                {language === 'en' ? 'Class schedule will be displayed here' : 'سيتم عرض جدول الحصص هنا'}
-              </p>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
