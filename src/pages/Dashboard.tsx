@@ -44,6 +44,7 @@ import NFCManagement from './admin/NFCManagement';
 import ParentalCanteenControl from '@/components/features/ParentalCanteenControl';
 import ParentInvitationsDashboard from './admin/ParentInvitationsDashboard';
 import QuickPasswordReset from './admin/QuickPasswordReset';
+import FeeManagement from './admin/FeeManagement';
 
 export default function Dashboard() {
   const { user, profile, isAuthenticated } = useAuth();
@@ -124,6 +125,7 @@ export default function Dashboard() {
         <Route path="admin/nfc" element={<NFCManagement />} />
         <Route path="admin/parent-invitations" element={<ParentInvitationsDashboard />} />
         <Route path="admin/password-reset" element={<QuickPasswordReset />} />
+        <Route path="admin/fees" element={<FeeManagement />} />
         <Route path="canteen-controls" element={<ParentalCanteenControl />} />
         <Route path="profile" element={<Profile />} />
         <Route path="settings" element={<Settings />} />
