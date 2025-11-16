@@ -72,9 +72,9 @@ function App() {
                     <BiometricGuard>
                       <PageTransition>
                         <Routes>
-                        <Route path="/" element={<Index />} />
+                        <Route path="/" element={<Auth />} />
+                        <Route path="/landing" element={<Index />} />
                         <Route path="/auth" element={<Auth />} />
-                        <Route path="/register" element={<ParentSelfSignup />} />
                         <Route path="/email-confirmation-pending" element={<EmailConfirmationPending />} />
                         <Route path="/parent-registration" element={<ParentRegistration />} />
                         <Route path="/register-student" element={<RegisterStudent />} />
