@@ -153,10 +153,7 @@ export function TransactionsList() {
     });
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-OM', {
-      style: 'currency',
-      currency: 'OMR',
-    }).format(amount);
+    return `${amount.toFixed(3)} OMR`;
   };
 
   const getCategoryLabel = (category: string) => {
