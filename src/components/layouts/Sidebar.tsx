@@ -25,6 +25,8 @@ import {
   ChefHat,
   Code,
   ArrowLeft,
+  Receipt,
+  CreditCard,
 } from 'lucide-react';
 
 interface NavItem {
@@ -106,6 +108,18 @@ const navItems: NavItem[] = [
     href: '/dashboard/finance',
     icon: DollarSign,
     roles: ['admin', 'parent', 'finance', 'developer'],
+  },
+  {
+    title: 'Fee Management',
+    href: '/dashboard/admin/fees',
+    icon: Receipt,
+    roles: ['admin', 'finance', 'developer'],
+  },
+  {
+    title: 'Parent Finance',
+    href: '/dashboard/parent-finance',
+    icon: CreditCard,
+    roles: ['parent', 'developer'],
   },
   {
     title: 'Payroll',
@@ -214,6 +228,8 @@ export default function Sidebar({ onItemClick }: SidebarProps = {}) {
         '/dashboard/canteen': 'canteen_management',
         '/dashboard/store': 'store_management',
         '/dashboard/finance': 'finance_module',
+        '/dashboard/admin/fees': 'finance_module',
+        '/dashboard/parent-finance': 'finance_module',
         '/dashboard/payroll': 'payroll_management',
         '/dashboard/messages': 'messaging_system',
         '/dashboard/reports': 'reports_analytics',
