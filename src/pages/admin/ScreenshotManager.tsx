@@ -230,8 +230,8 @@ export default function ScreenshotManager() {
     
     try {
       toast({
-        title: 'Starting Automated Generation',
-        description: 'Generating all 274 screenshots with AI. This will take 20-30 minutes.',
+        title: 'Starting Real Screenshot Capture',
+        description: 'Capturing real app screenshots automatically. This will take 20-30 minutes.',
       });
 
       const total = SCREENSHOTS.length;
@@ -244,41 +244,27 @@ export default function ScreenshotManager() {
         
         try {
           toast({
-            title: `Generating ${i + 1}/${total}`,
+            title: `Capturing ${i + 1}/${total}`,
             description: `${screenshot.name} (${screenshot.language})...`
           });
 
-          // Generate AI screenshot with detailed prompt
-          const prompt = `Generate a professional mobile app screenshot mockup.
-
-Screen: ${screenshot.name} (${screenshot.language === 'ar' ? 'Arabic' : 'English'})
-Route: ${screenshot.route}
-Description: ${screenshot.description}
-Category: ${screenshot.category}
-
-Create a realistic ${screenshot.language === 'ar' ? 'Arabic (RTL)' : 'English'} mobile interface for an educational school management system.
-- iPhone 15 proportions (390x844px)
-- Modern, clean design with proper ${screenshot.language === 'ar' ? 'right-to-left' : 'left-to-right'} layout
-- Include realistic data (Omani school context)
-- Professional color scheme
-- Proper status bar and navigation
-- Ultra high resolution, production quality`;
-
-          const { data: aiData, error: aiError } = await supabase.functions.invoke('generate-screenshot-ai', {
+          // Capture real screenshot from the running app
+          const { data: captureData, error: captureError } = await supabase.functions.invoke('capture-real-screenshot', {
             body: {
-              prompt,
-              width: 390,
-              height: 844
+              path: screenshot.route,
+              language: screenshot.language
             }
           });
 
-          if (aiError) throw aiError;
-          if (!aiData?.imageBase64) throw new Error('No image generated');
+          if (captureError) throw captureError;
+          if (!captureData?.imageBase64) throw new Error('No screenshot captured');
+
+          console.log(`Captured real screenshot for ${screenshot.name}`);
 
           // Add iPhone 15 frame
           const { data: frameData, error: frameError } = await supabase.functions.invoke('add-iphone-frame', {
             body: {
-              imageBase64: aiData.imageBase64
+              imageBase64: captureData.imageBase64
             }
           });
 
@@ -294,44 +280,29 @@ Create a realistic ${screenshot.language === 'ar' ? 'Arabic (RTL)' : 'English'} 
           successCount++;
           setProgress(((i + 1) / total) * 100);
           
-          console.log(`✓ Generated: ${screenshot.name}`);
+          console.log(`✓ Completed: ${screenshot.name}`);
           
-          // Small delay to respect rate limits
-          await new Promise(resolve => setTimeout(resolve, 500));
+          // Delay between captures
+          await new Promise(resolve => setTimeout(resolve, 2000));
         } catch (error) {
           failCount++;
           console.error(`✗ Failed: ${screenshot.name}:`, error);
-          
-          // Check for rate limit or payment errors
-          if (error instanceof Error) {
-            if (error.message.includes('429')) {
-              toast({
-                title: 'Rate Limited',
-                description: 'Waiting 10 seconds before continuing...',
-                variant: 'default'
-              });
-              await new Promise(resolve => setTimeout(resolve, 10000));
-            } else if (error.message.includes('402')) {
-              toast({
-                title: 'Out of Credits',
-                description: 'Please add credits in Settings → Workspace → Usage',
-                variant: 'destructive'
-              });
-              setIsGenerating(false);
-              return;
-            }
-          }
+          toast({
+            title: `Failed: ${screenshot.name}`,
+            description: error instanceof Error ? error.message : 'Unknown error',
+            variant: 'destructive'
+          });
         }
       }
 
       toast({
-        title: 'Generation Complete!',
+        title: 'Capture Complete!',
         description: `Success: ${successCount}, Failed: ${failCount}`,
       });
     } catch (error) {
-      console.error('Error generating screenshots:', error);
+      console.error('Error capturing screenshots:', error);
       toast({
-        title: 'Generation failed',
+        title: 'Capture failed',
         description: error instanceof Error ? error.message : 'Unknown error',
         variant: 'destructive'
       });
