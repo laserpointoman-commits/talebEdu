@@ -230,71 +230,103 @@ export default function ScreenshotManager() {
     
     try {
       toast({
-        title: 'Starting Screenshot Capture',
-        description: 'This will take several minutes. Please do not close this page.',
+        title: 'Starting Automated Generation',
+        description: 'Generating all 274 screenshots with AI. This will take 20-30 minutes.',
       });
 
       const total = SCREENSHOTS.length;
       const generated = new Set<string>();
+      let successCount = 0;
+      let failCount = 0;
 
       for (let i = 0; i < total; i++) {
         const screenshot = SCREENSHOTS[i];
         
         try {
           toast({
-            title: `Capturing ${i + 1}/${total}`,
+            title: `Generating ${i + 1}/${total}`,
             description: `${screenshot.name} (${screenshot.language})...`
           });
 
-          // Navigate to the route by updating window location
-          window.history.pushState({}, '', screenshot.route);
-          
-          // Wait for route to load
-          await new Promise(resolve => setTimeout(resolve, 3000));
+          // Generate AI screenshot with detailed prompt
+          const prompt = `Generate a professional mobile app screenshot mockup.
 
-          // Capture using browser API
-          const screenshotUrl = await captureCurrentView();
-          
-          if (!screenshotUrl) {
-            throw new Error('Failed to capture view');
-          }
+Screen: ${screenshot.name} (${screenshot.language === 'ar' ? 'Arabic' : 'English'})
+Route: ${screenshot.route}
+Description: ${screenshot.description}
+Category: ${screenshot.category}
 
-          // Add iPhone 15 frame
-          const frameResponse = await supabase.functions.invoke('add-iphone-frame', {
+Create a realistic ${screenshot.language === 'ar' ? 'Arabic (RTL)' : 'English'} mobile interface for an educational school management system.
+- iPhone 15 proportions (390x844px)
+- Modern, clean design with proper ${screenshot.language === 'ar' ? 'right-to-left' : 'left-to-right'} layout
+- Include realistic data (Omani school context)
+- Professional color scheme
+- Proper status bar and navigation
+- Ultra high resolution, production quality`;
+
+          const { data: aiData, error: aiError } = await supabase.functions.invoke('generate-screenshot-ai', {
             body: {
-              imageBase64: screenshotUrl
+              prompt,
+              width: 390,
+              height: 844
             }
           });
 
-          if (frameResponse.error || !frameResponse.data?.framedImageBase64) {
-            throw new Error(`Framing failed: ${frameResponse.error?.message}`);
-          }
+          if (aiError) throw aiError;
+          if (!aiData?.imageBase64) throw new Error('No image generated');
+
+          // Add iPhone 15 frame
+          const { data: frameData, error: frameError } = await supabase.functions.invoke('add-iphone-frame', {
+            body: {
+              imageBase64: aiData.imageBase64
+            }
+          });
+
+          if (frameError) throw frameError;
+          if (!frameData?.framedImageBase64) throw new Error('No framed image');
 
           // Store in localStorage
           const storageKey = `screenshot-${screenshot.id}-${screenshot.language}`;
-          localStorage.setItem(storageKey, frameResponse.data.framedImageBase64);
+          localStorage.setItem(storageKey, frameData.framedImageBase64);
           
           generated.add(storageKey);
           setGeneratedScreenshots(new Set(generated));
+          successCount++;
           setProgress(((i + 1) / total) * 100);
           
-          console.log(`✓ Captured: ${screenshot.name}`);
+          console.log(`✓ Generated: ${screenshot.name}`);
+          
+          // Small delay to respect rate limits
+          await new Promise(resolve => setTimeout(resolve, 500));
         } catch (error) {
+          failCount++;
           console.error(`✗ Failed: ${screenshot.name}:`, error);
-          toast({
-            title: `Failed: ${screenshot.name}`,
-            description: error instanceof Error ? error.message : 'Unknown error',
-            variant: 'destructive'
-          });
+          
+          // Check for rate limit or payment errors
+          if (error instanceof Error) {
+            if (error.message.includes('429')) {
+              toast({
+                title: 'Rate Limited',
+                description: 'Waiting 10 seconds before continuing...',
+                variant: 'default'
+              });
+              await new Promise(resolve => setTimeout(resolve, 10000));
+            } else if (error.message.includes('402')) {
+              toast({
+                title: 'Out of Credits',
+                description: 'Please add credits in Settings → Workspace → Usage',
+                variant: 'destructive'
+              });
+              setIsGenerating(false);
+              return;
+            }
+          }
         }
       }
 
-      // Navigate back to screenshot manager
-      window.history.pushState({}, '', '/admin/screenshot-manager');
-
       toast({
-        title: 'Complete!',
-        description: `Successfully captured ${generated.size}/${total} screenshots`,
+        title: 'Generation Complete!',
+        description: `Success: ${successCount}, Failed: ${failCount}`,
       });
     } catch (error) {
       console.error('Error generating screenshots:', error);
@@ -305,35 +337,6 @@ export default function ScreenshotManager() {
       });
     } finally {
       setIsGenerating(false);
-    }
-  };
-
-  const captureCurrentView = async (): Promise<string | null> => {
-    try {
-      // Create a canvas to capture the current viewport
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      
-      if (!ctx) return null;
-
-      // Set canvas size to mobile dimensions (3x for retina)
-      canvas.width = 390 * 3;
-      canvas.height = 844 * 3;
-
-      // Scale context
-      ctx.scale(3, 3);
-
-      // Draw white background
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, 390, 844);
-
-      // Note: This is a simplified version
-      // Real implementation would need a library like html2canvas
-      // For now, return a placeholder that can be framed
-      return canvas.toDataURL('image/png');
-    } catch (error) {
-      console.error('Error capturing view:', error);
-      return null;
     }
   };
 
