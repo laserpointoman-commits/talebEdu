@@ -1,582 +1,298 @@
 import { useState } from 'react';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
+import { Download, Loader2, CheckCircle, Image as ImageIcon } from 'lucide-react';
+import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/hooks/use-toast';
-import { Camera, Download, Database, Users, CheckCircle, XCircle, Loader2 } from 'lucide-react';
-import { ScreenshotUploader } from '@/components/admin/ScreenshotUploader';
 
-interface BaseScreenshotConfig {
-  id: string;
+interface ScreenshotConfig {
   name: string;
-  route: string;
-  description: string;
-  category: 'parent' | 'admin' | 'teacher' | 'student' | 'driver' | 'canteen' | 'finance' | 'other';
-}
-
-interface ScreenshotConfig extends BaseScreenshotConfig {
+  prompt: string;
+  width: number;
+  height: number;
   language: 'en' | 'ar';
 }
 
-// Base screenshot configurations (without language suffix)
-const BASE_SCREENSHOTS: BaseScreenshotConfig[] = [
-  // Parent Role (25 screenshots)
-  { id: 'parent-dashboard', name: 'Parent Dashboard', route: '/parent-dashboard', description: 'Main dashboard', category: 'parent' },
-  { id: 'parent-dashboard-expanded', name: 'Parent Dashboard - Expanded Card', route: '/parent-dashboard-expanded', description: 'Student card expanded', category: 'parent' },
-  { id: 'parent-wallet', name: 'Digital Wallet', route: '/parent-wallet', description: 'Wallet 25.50 OMR', category: 'parent' },
-  { id: 'parent-wallet-topup', name: 'Wallet Top-up', route: '/screenshot-demo/parent-wallet-topup', description: 'Top-up dialog', category: 'parent' },
-  { id: 'parent-wallet-history', name: 'Wallet History', route: '/screenshot-demo/parent-wallet-history', description: 'Transaction history', category: 'parent' },
-  { id: 'parent-tracking', name: 'Bus Tracking', route: '/screenshot-demo/parent-tracking', description: 'Muscat map live tracking', category: 'parent' },
-  { id: 'parent-tracking-bus', name: 'Bus Info', route: '/screenshot-demo/parent-tracking-bus-selected', description: 'Bus details Route A', category: 'parent' },
-  { id: 'parent-tracking-eta', name: 'ETA Notification', route: '/screenshot-demo/parent-tracking-eta', description: 'Arrival notification', category: 'parent' },
-  { id: 'parent-canteen', name: 'Canteen Controls', route: '/screenshot-demo/parent-canteen', description: 'Parental controls', category: 'parent' },
-  { id: 'parent-canteen-restrictions', name: 'Category Restrictions', route: '/screenshot-demo/parent-canteen-restrictions', description: 'Disable sweets', category: 'parent' },
-  { id: 'parent-canteen-history', name: 'Purchase History', route: '/screenshot-demo/parent-canteen-history', description: 'Last 7 days', category: 'parent' },
-  { id: 'parent-grades', name: 'Student Grades', route: '/screenshot-demo/parent-grades', description: 'Grades overview', category: 'parent' },
-  { id: 'parent-grades-subject', name: 'Subject Breakdown', route: '/screenshot-demo/parent-grades-subject', description: 'Math A+ 95%', category: 'parent' },
-  { id: 'parent-grades-attendance', name: 'Attendance Calendar', route: '/screenshot-demo/parent-grades-attendance', description: '30 days view', category: 'parent' },
-  { id: 'parent-finance', name: 'Fee Overview', route: '/screenshot-demo/parent-finance', description: 'Outstanding fees', category: 'parent' },
-  { id: 'parent-finance-invoice', name: 'Invoice Details', route: '/screenshot-demo/parent-finance-invoice', description: 'Term 1: 650 OMR', category: 'parent' },
-  { id: 'parent-finance-payment', name: 'Payment Dialog', route: '/screenshot-demo/parent-finance-payment', description: 'Installment plan', category: 'parent' },
-  { id: 'parent-finance-receipt', name: 'Payment Receipt', route: '/screenshot-demo/parent-finance-receipt', description: 'Receipt generated', category: 'parent' },
-  { id: 'registration-step-1', name: 'Registration Step 1', route: '/screenshot-demo/registration-step-1', description: 'Student info', category: 'parent' },
-  { id: 'registration-step-2', name: 'Registration Step 2', route: '/screenshot-demo/registration-step-2', description: 'Parent/Guardian', category: 'parent' },
-  { id: 'registration-step-3', name: 'Registration Step 3', route: '/screenshot-demo/registration-step-3', description: 'Emergency contacts', category: 'parent' },
-  { id: 'registration-step-4', name: 'Registration Step 4', route: '/screenshot-demo/registration-step-4', description: 'Medical info', category: 'parent' },
-  { id: 'registration-step-5', name: 'Registration Step 5', route: '/screenshot-demo/registration-step-5', description: 'Bus requirements', category: 'parent' },
-  { id: 'registration-step-6', name: 'Registration Step 6', route: '/screenshot-demo/registration-step-6', description: 'Photo upload', category: 'parent' },
-  { id: 'registration-step-7', name: 'Registration Step 7', route: '/screenshot-demo/registration-step-7', description: 'Review & submit', category: 'parent' },
+interface GeneratedScreenshot {
+  name: string;
+  imageData: string;
+  config: ScreenshotConfig;
+}
 
-  // Admin Role (45 screenshots)
-  { id: 'admin-dashboard', name: 'Admin Dashboard', route: '/screenshot-demo/admin-dashboard', description: 'Full dashboard', category: 'admin' },
-  { id: 'admin-dashboard-kpis', name: 'Admin KPI Cards', route: '/screenshot-demo/admin-dashboard-kpis', description: 'Students, Teachers, Attendance', category: 'admin' },
-  { id: 'admin-dashboard-revenue', name: 'Revenue Chart', route: '/screenshot-demo/admin-dashboard-revenue', description: 'Last 6 months', category: 'admin' },
-  { id: 'admin-dashboard-activity', name: 'Activity Feed', route: '/screenshot-demo/admin-dashboard-activity', description: 'Recent activity', category: 'admin' },
-  { id: 'admin-dashboard-quick-actions', name: 'Quick Actions', route: '/screenshot-demo/admin-dashboard-quick-actions', description: 'Action panel', category: 'admin' },
-  { id: 'admin-students', name: 'Student Management', route: '/screenshot-demo/admin-students', description: 'Students table', category: 'admin' },
-  { id: 'admin-students-filters', name: 'Student Filters', route: '/screenshot-demo/admin-students-filters', description: 'Filter by grade', category: 'admin' },
-  { id: 'admin-students-profile', name: 'Student Profile', route: '/screenshot-demo/admin-students-profile', description: 'Full details Omar', category: 'admin' },
-  { id: 'admin-students-edit', name: 'Edit Student', route: '/screenshot-demo/admin-students-edit', description: 'Edit dialog', category: 'admin' },
-  { id: 'admin-students-nfc', name: 'NFC Assignment', route: '/screenshot-demo/admin-students-nfc', description: 'Assign NFC card', category: 'admin' },
-  { id: 'admin-students-photo', name: 'Generate Photo', route: '/screenshot-demo/admin-students-photo', description: 'AI photo generation', category: 'admin' },
-  { id: 'admin-students-export', name: 'Export Students', route: '/screenshot-demo/admin-students-export', description: 'Export dialog', category: 'admin' },
-  { id: 'admin-students-bulk-import', name: 'Bulk Import', route: '/screenshot-demo/admin-students-bulk-import', description: 'CSV import', category: 'admin' },
-  { id: 'admin-student-approvals', name: 'Student Approvals', route: '/screenshot-demo/admin-student-approvals', description: 'Pending list (3)', category: 'admin' },
-  { id: 'admin-student-approval-dialog', name: 'Approval Dialog', route: '/screenshot-demo/admin-student-approval-dialog', description: 'Omar details', category: 'admin' },
-  { id: 'admin-student-approve', name: 'Approve Confirmation', route: '/screenshot-demo/admin-student-approve', description: 'Approve button', category: 'admin' },
-  { id: 'admin-student-reject', name: 'Rejection Dialog', route: '/screenshot-demo/admin-student-reject', description: 'Reason field', category: 'admin' },
-  { id: 'admin-users', name: 'User Management', route: '/screenshot-demo/admin-users', description: 'Users table', category: 'admin' },
-  { id: 'admin-users-create', name: 'Create User', route: '/screenshot-demo/admin-users-create', description: 'Teacher role', category: 'admin' },
-  { id: 'admin-users-edit', name: 'Edit Permissions', route: '/screenshot-demo/admin-users-edit', description: 'Permission dialog', category: 'admin' },
-  { id: 'admin-users-credentials', name: 'Send Credentials', route: '/screenshot-demo/admin-users-credentials', description: 'Email credentials', category: 'admin' },
-  { id: 'admin-users-reset-password', name: 'Reset Password', route: '/screenshot-demo/admin-users-reset-password', description: 'Password dialog', category: 'admin' },
-  { id: 'admin-users-deactivate', name: 'Deactivate User', route: '/screenshot-demo/admin-users-deactivate', description: 'Confirmation', category: 'admin' },
-  { id: 'admin-fees', name: 'Fee Management', route: '/screenshot-demo/admin-fees', description: 'Fee structures', category: 'admin' },
-  { id: 'admin-fees-create', name: 'Create Fee', route: '/screenshot-demo/admin-fees-create', description: 'Term 1: 650 OMR', category: 'admin' },
-  { id: 'admin-fees-assign', name: 'Assign Fees', route: '/screenshot-demo/admin-fees-assign', description: 'Bulk select students', category: 'admin' },
-  { id: 'admin-fees-tracking', name: 'Payment Tracking', route: '/screenshot-demo/admin-fees-tracking', description: 'Payment table', category: 'admin' },
-  { id: 'admin-fees-reminder', name: 'Payment Reminder', route: '/screenshot-demo/admin-fees-reminder', description: 'Reminder dialog', category: 'admin' },
-  { id: 'admin-fees-reports', name: 'Financial Reports', route: '/screenshot-demo/admin-fees-reports', description: 'Revenue breakdown', category: 'admin' },
-  { id: 'admin-nfc', name: 'NFC Management', route: '/screenshot-demo/admin-nfc', description: 'All cards list', category: 'admin' },
-  { id: 'admin-nfc-assign', name: 'Assign NFC', route: '/screenshot-demo/admin-nfc-assign', description: 'Assign to student', category: 'admin' },
-  { id: 'admin-nfc-write', name: 'Write NFC Tag', route: '/screenshot-demo/admin-nfc-write', description: 'Write interface', category: 'admin' },
-  { id: 'admin-buses', name: 'Bus Management', route: '/screenshot-demo/admin-buses', description: 'Buses list (3)', category: 'admin' },
-  { id: 'admin-buses-add', name: 'Add Bus', route: '/screenshot-demo/admin-buses-add', description: 'Add bus dialog', category: 'admin' },
-  { id: 'admin-routes', name: 'Route Management', route: '/screenshot-demo/admin-routes', description: 'Muscat routes', category: 'admin' },
-  { id: 'admin-routes-map', name: 'Routes on Map', route: '/screenshot-demo/admin-routes-map', description: 'Muscat map', category: 'admin' },
-  { id: 'admin-routes-create', name: 'Create Route', route: '/screenshot-demo/admin-routes-create', description: 'Add stops', category: 'admin' },
-  { id: 'admin-routes-stops', name: 'Route Stops', route: '/screenshot-demo/admin-routes-stops', description: 'Stop list', category: 'admin' },
-  { id: 'admin-drivers', name: 'Driver Management', route: '/screenshot-demo/admin-drivers', description: 'Drivers list', category: 'admin' },
-  { id: 'admin-drivers-add', name: 'Add Driver', route: '/screenshot-demo/admin-drivers-add', description: 'License upload', category: 'admin' },
-  { id: 'admin-parent-invitations', name: 'Parent Invitations', route: '/screenshot-demo/admin-parent-invitations', description: 'Invitations dashboard', category: 'admin' },
-  { id: 'admin-parent-bulk-invite', name: 'Bulk Invite', route: '/screenshot-demo/admin-parent-bulk-invite', description: 'Bulk dialog', category: 'admin' },
-  { id: 'admin-finance-dashboard', name: 'Finance Dashboard', route: '/screenshot-demo/admin-finance-dashboard', description: 'Finance overview', category: 'admin' },
-  { id: 'admin-finance-revenue', name: 'Revenue Analysis', route: '/screenshot-demo/admin-finance-revenue', description: 'Revenue charts', category: 'admin' },
-  { id: 'admin-finance-reports', name: 'Financial Reports', route: '/screenshot-demo/admin-finance-reports', description: 'Export reports', category: 'admin' },
-
-  // Teacher Role (20 screenshots)
-  { id: 'teacher-dashboard', name: 'Teacher Dashboard', route: '/screenshot-demo/teacher-dashboard', description: 'Class overview', category: 'teacher' },
-  { id: 'teacher-dashboard-schedule', name: "Today's Schedule", route: '/screenshot-demo/teacher-dashboard-schedule', description: '6 classes', category: 'teacher' },
-  { id: 'teacher-dashboard-exams', name: 'Upcoming Exams', route: '/screenshot-demo/teacher-dashboard-exams', description: 'Exam widget', category: 'teacher' },
-  { id: 'teacher-attendance', name: 'Attendance', route: '/screenshot-demo/teacher-attendance', description: 'Class roster', category: 'teacher' },
-  { id: 'teacher-attendance-roster', name: 'Class Roster', route: '/screenshot-demo/teacher-attendance-roster', description: 'Grade 5-A (28)', category: 'teacher' },
-  { id: 'teacher-attendance-mark', name: 'Mark Attendance', route: '/screenshot-demo/teacher-attendance-mark', description: 'Checkboxes', category: 'teacher' },
-  { id: 'teacher-attendance-nfc', name: 'NFC Scan Mode', route: '/screenshot-demo/teacher-attendance-nfc', description: 'Tap wristbands', category: 'teacher' },
-  { id: 'teacher-attendance-report', name: 'Attendance Report', route: '/screenshot-demo/teacher-attendance-report', description: 'Weekly view', category: 'teacher' },
-  { id: 'teacher-grades', name: 'Grade Management', route: '/screenshot-demo/teacher-grades', description: 'Teacher view', category: 'teacher' },
-  { id: 'teacher-grades-entry', name: 'Enter Grades', route: '/screenshot-demo/teacher-grades-entry', description: 'Math exam 28 students', category: 'teacher' },
-  { id: 'teacher-grades-distribution', name: 'Grade Distribution', route: '/screenshot-demo/teacher-grades-distribution', description: 'Distribution chart', category: 'teacher' },
-  { id: 'teacher-grades-export', name: 'Export Grades', route: '/screenshot-demo/teacher-grades-export', description: 'Excel export', category: 'teacher' },
-  { id: 'teacher-homework', name: 'Homework', route: '/screenshot-demo/teacher-homework', description: 'Homework list', category: 'teacher' },
-  { id: 'teacher-homework-assign', name: 'Assign Homework', route: '/screenshot-demo/teacher-homework-assign', description: 'Assignment dialog', category: 'teacher' },
-  { id: 'teacher-homework-submissions', name: 'Homework Submissions', route: '/screenshot-demo/teacher-homework-submissions', description: 'Submissions tracking', category: 'teacher' },
-  { id: 'teacher-exams', name: 'Exam Management', route: '/screenshot-demo/teacher-exams', description: 'Exams list', category: 'teacher' },
-  { id: 'teacher-exams-create', name: 'Create Exam', route: '/screenshot-demo/teacher-exams-create', description: 'Exam schedule', category: 'teacher' },
-  { id: 'teacher-exams-schedule', name: 'Exam Schedule', route: '/screenshot-demo/teacher-exams-schedule', description: 'Calendar view', category: 'teacher' },
-  { id: 'teacher-exams-results', name: 'Exam Results', route: '/screenshot-demo/teacher-exams-results', description: 'Results entry', category: 'teacher' },
-  { id: 'teacher-exams-analysis', name: 'Results Analysis', route: '/screenshot-demo/teacher-exams-analysis', description: 'Performance analysis', category: 'teacher' },
-
-  // Student Role (15 screenshots)
-  { id: 'student-dashboard', name: 'Student Dashboard', route: '/screenshot-demo/student-dashboard', description: "Omar's dashboard", category: 'student' },
-  { id: 'student-dashboard-schedule', name: "Today's Schedule", route: '/screenshot-demo/student-dashboard-schedule', description: 'Class schedule', category: 'student' },
-  { id: 'student-dashboard-homework', name: 'Homework Widget', route: '/screenshot-demo/student-dashboard-homework', description: 'Due assignments', category: 'student' },
-  { id: 'student-wallet', name: 'Student Wallet', route: '/screenshot-demo/student-wallet', description: '25.50 OMR balance', category: 'student' },
-  { id: 'student-wallet-balance', name: 'Wallet Balance', route: '/screenshot-demo/student-wallet-balance', description: 'Balance card', category: 'student' },
-  { id: 'student-wallet-purchases', name: 'Recent Purchases', route: '/screenshot-demo/student-wallet-purchases', description: 'Canteen items', category: 'student' },
-  { id: 'student-wallet-request', name: 'Request Money', route: '/screenshot-demo/student-wallet-request', description: 'Request dialog', category: 'student' },
-  { id: 'student-canteen', name: 'Canteen Menu', route: '/screenshot-demo/student-canteen', description: 'Student menu', category: 'student' },
-  { id: 'student-canteen-menu', name: 'Browse Menu', route: '/screenshot-demo/student-canteen-menu', description: 'Product grid', category: 'student' },
-  { id: 'student-canteen-cart', name: 'Shopping Cart', route: '/screenshot-demo/student-canteen-cart', description: 'Lays + Water 0.55', category: 'student' },
-  { id: 'student-canteen-checkout', name: 'Checkout', route: '/screenshot-demo/student-canteen-checkout', description: 'Pay with wallet', category: 'student' },
-  { id: 'student-social', name: 'Social Hub', route: '/screenshot-demo/student-social', description: 'Social feed', category: 'student' },
-  { id: 'student-friends', name: 'Friends List', route: '/screenshot-demo/student-friends', description: 'Friends', category: 'student' },
-  { id: 'student-messenger', name: 'Messenger', route: '/screenshot-demo/student-messenger', description: 'Chat interface', category: 'student' },
-  { id: 'student-messages-send', name: 'Send Message', route: '/screenshot-demo/student-messages-send', description: 'Message flow', category: 'student' },
-
-  // Driver Role (10 screenshots)
-  { id: 'driver-dashboard', name: 'Driver Dashboard', route: '/screenshot-demo/driver-dashboard', description: 'Route overview', category: 'driver' },
-  { id: 'driver-dashboard-route', name: 'Route Map', route: '/screenshot-demo/driver-dashboard-route', description: 'Muscat route', category: 'driver' },
-  { id: 'driver-dashboard-students', name: 'Students List', route: '/screenshot-demo/driver-dashboard-students', description: 'Assigned students', category: 'driver' },
-  { id: 'driver-start-route', name: 'Start Route', route: '/screenshot-demo/driver-start-route', description: 'Start button', category: 'driver' },
-  { id: 'driver-boarding-mode', name: 'Boarding Mode', route: '/screenshot-demo/driver-boarding-mode', description: 'NFC active', category: 'driver' },
-  { id: 'driver-nfc-scan', name: 'NFC Scan', route: '/screenshot-demo/driver-nfc-scan', description: 'Scan wristband', category: 'driver' },
-  { id: 'driver-student-checked-in', name: 'Student Boarded', route: '/screenshot-demo/driver-student-checked-in', description: 'Omar checked in', category: 'driver' },
-  { id: 'driver-student-checked-out', name: 'Student Alighted', route: '/screenshot-demo/driver-student-checked-out', description: 'Omar checked out', category: 'driver' },
-  { id: 'driver-complete-route', name: 'Complete Route', route: '/screenshot-demo/driver-complete-route', description: 'Confirmation', category: 'driver' },
-  { id: 'driver-route-history', name: 'Route History', route: '/screenshot-demo/driver-route-history', description: 'Past routes', category: 'driver' },
-
-  // Canteen Role (8 screenshots)
-  { id: 'canteen-dashboard', name: 'Canteen Dashboard', route: '/screenshot-demo/canteen-dashboard', description: 'POS system', category: 'canteen' },
-  { id: 'canteen-pos', name: 'Point of Sale', route: '/screenshot-demo/canteen-pos', description: 'POS interface', category: 'canteen' },
-  { id: 'canteen-scan-nfc', name: 'Scan NFC', route: '/screenshot-demo/canteen-scan-nfc', description: 'NFC reader active', category: 'canteen' },
-  { id: 'canteen-student-balance', name: 'Student Balance', route: '/screenshot-demo/canteen-student-balance', description: 'Omar 25.50 OMR', category: 'canteen' },
-  { id: 'canteen-add-items', name: 'Add Items', route: '/screenshot-demo/canteen-add-items', description: 'Product selection', category: 'canteen' },
-  { id: 'canteen-process-payment', name: 'Process Payment', route: '/screenshot-demo/canteen-process-payment', description: 'Deduct 2.35 OMR', category: 'canteen' },
-  { id: 'canteen-transaction-complete', name: 'Transaction Complete', route: '/screenshot-demo/canteen-transaction-complete', description: 'Success message', category: 'canteen' },
-  { id: 'canteen-daily-report', name: 'Daily Report', route: '/screenshot-demo/canteen-daily-report', description: 'Sales report', category: 'canteen' },
-
-  // Finance Role (8 screenshots)
-  { id: 'finance-dashboard', name: 'Finance Dashboard', route: '/screenshot-demo/finance-dashboard', description: 'Finance overview', category: 'finance' },
-  { id: 'finance-payments', name: 'Payment Tracking', route: '/screenshot-demo/finance-payments', description: 'Payments table', category: 'finance' },
-  { id: 'finance-record-payment', name: 'Record Payment', route: '/screenshot-demo/finance-record-payment', description: 'Payment dialog', category: 'finance' },
-  { id: 'finance-receipt-generate', name: 'Generate Receipt', route: '/screenshot-demo/finance-receipt-generate', description: 'Receipt generation', category: 'finance' },
-  { id: 'finance-receipt-view', name: 'View Receipt', route: '/screenshot-demo/finance-receipt-view', description: 'Receipt preview', category: 'finance' },
-  { id: 'finance-reports', name: 'Financial Reports', route: '/screenshot-demo/finance-reports', description: 'Reports dashboard', category: 'finance' },
-  { id: 'finance-revenue-chart', name: 'Revenue Chart', route: '/screenshot-demo/finance-revenue-chart', description: 'Revenue vs expenses', category: 'finance' },
-  { id: 'finance-export', name: 'Export Reports', route: '/screenshot-demo/finance-export', description: 'Export dialog', category: 'finance' },
-
-  // Device & Kiosk (6 screenshots)
-  { id: 'device-nfc-kiosk', name: 'NFC Kiosk', route: '/screenshot-demo/device-nfc-kiosk', description: 'Standalone scanner', category: 'other' },
-  { id: 'device-entrance-checkpoint', name: 'Entrance Checkpoint', route: '/screenshot-demo/device-entrance-checkpoint', description: 'School entrance', category: 'other' },
-  { id: 'device-testing', name: 'Device Testing', route: '/screenshot-demo/device-testing', description: 'Testing interface', category: 'other' },
-  { id: 'device-nfc-scan-success', name: 'Scan Success', route: '/screenshot-demo/device-nfc-scan-success', description: 'Success state', category: 'other' },
-  { id: 'device-nfc-scan-error', name: 'Scan Error', route: '/screenshot-demo/device-nfc-scan-error', description: 'Error state', category: 'other' },
-  { id: 'device-offline-mode', name: 'Offline Mode', route: '/screenshot-demo/device-offline-mode', description: 'Offline indicator', category: 'other' }
-];
-
-// Generate 274 screenshots (137 English + 137 Arabic)
+// All 274 screenshot configurations
 const SCREENSHOTS: ScreenshotConfig[] = [
-  ...BASE_SCREENSHOTS.map(s => ({ ...s, language: 'en' as const })),
-  ...BASE_SCREENSHOTS.map(s => ({ ...s, language: 'ar' as const }))
+  {
+    name: 'parent-dashboard',
+    language: 'en',
+    width: 1400,
+    height: 900,
+    prompt: 'Modern parent dashboard UI for school management system TalebEdu. Show: Large "Welcome, Sarah" header at top with time and date. Below that, 3 student profile cards in a row, each card shows circular student photo, name "Ahmed Ali" age 12, Grade 7, and a bright green "Present" status badge. Below cards: 8 large icon buttons in 2 rows with labels (Track Bus with bus icon, View Wallet with wallet icon, Canteen Orders with food icon, Check Grades with chart icon, Attendance with calendar icon, Messages with envelope icon, Pay Fees with credit card icon, Reports with document icon). Right sidebar: Digital wallet balance card showing "$250" in large bold text with green gradient background, and Activity feed section below showing 3 recent items with icons, descriptions and timestamps. Use professional blue (#2563eb) and white color scheme, modern card shadows, generous spacing, clean typography. Professional educational app design with modern UI trends.'
+  },
+  {
+    name: 'parent-dashboard-ar',
+    language: 'ar',
+    width: 1400,
+    height: 900,
+    prompt: 'Arabic (RTL) parent dashboard UI for TalebEdu. Complete right-to-left layout. Top right corner: "مرحباً، سارة" header with Arabic date and time. Below: 3 student profile cards RIGHT-ALIGNED showing circular photos, Arabic names "أحمد علي" عمر 12، الصف السابع، with bright green "حاضر" status badges. Below: 8 large icon buttons in Arabic RIGHT-ALIGNED in 2 rows (تتبع الحافلة with bus icon، المحفظة with wallet icon، الكافتيريا with food icon، الدرجات with chart icon، الحضور with calendar icon، الرسائل with envelope icon، دفع الرسوم with credit card icon، التقارير with document icon). LEFT sidebar (RTL): "رصيد المحفظة" card showing "$250" in large bold text with green gradient, and activity feed below in Arabic with icons and timestamps. Professional blue (#2563eb) and white theme, RTL text direction, Arabic numerals, modern shadows and spacing.'
+  },
+  {
+    name: 'bus-tracking-map',
+    language: 'en',
+    width: 1400,
+    height: 900,
+    prompt: 'Live GPS bus tracking map interface for TalebEdu. Full-screen interactive map showing realistic Muscat, Oman street map with: Animated blue bus icon on road with motion trail effect, thick blue route line connecting 5 circular stop markers numbered 1-5, green home icon at final destination, pulsing current location pin. Top right floating overlay: White rounded card with drop shadow showing "Bus #12 - Route A", ETA countdown "8 minutes away", Next Stop "Al Khuwair Main Street", student boarding status "Ahmed is safely on board" with green checkmark icon and timestamp. Bottom: Horizontal route timeline showing all 5 stops with labels, current position highlighted in blue, completed stops in green, upcoming stops in gray. Modern clean map UI with blue (#2563eb), white, and green (#22c55e) color scheme, realistic OpenStreetMap-style map texture, professional shadows and spacing.'
+  },
+  {
+    name: 'bus-tracking-map-ar',
+    language: 'ar',
+    width: 1400,
+    height: 900,
+    prompt: 'Arabic (RTL) GPS bus tracking map for TalebEdu. Full-screen map of Muscat with: Blue animated bus icon, blue route line, 5 numbered stop markers, green home icon, pulsing location pin. Top LEFT floating overlay card (RTL layout): White rounded card showing "حافلة رقم 12 - المسار أ"، ETA "8 دقائق"، "المحطة التالية: شارع الخوير الرئيسي"، "أحمد على متن الحافلة بأمان" with green checkmark and Arabic timestamp. Bottom: Horizontal timeline RIGHT-ALIGNED showing 5 stops with Arabic labels, current position in blue, completed in green, upcoming in gray. Blue (#2563eb), white, green (#22c55e) colors, RTL layout, Arabic text and numerals, realistic map style.'
+  },
+  {
+    name: 'digital-wallet',
+    language: 'en',
+    width: 1200,
+    height: 900,
+    prompt: 'Digital wallet interface for TalebEdu student wallet. Top section: Large prominent balance card with beautiful blue-to-purple gradient background (#2563eb to #7c3aed) showing "$250.00" in huge 48px bold white text, "Available Balance" subtitle in white, and two action buttons "Top Up Wallet" (green) and "Transfer Money" (blue outline). Middle section: "Recent Transactions" heading with filter tabs (All, Income, Expenses). Below: Detailed transaction list showing 8 transactions with circular colored icons (green for income, red for expenses), transaction descriptions (Canteen Purchase Sandwich & Juice $5.50, Monthly Bus Fee $20.00, Wallet Top-Up from Parent $100.00, Bookstore Purchase $15.25), precise dates and times, and amounts in green (+) or red (-). Right sidebar: Colorful pie chart showing spending breakdown with legend (Canteen 45% orange, Transport 30% blue, Books 15% purple, Other 10% gray). Bottom: Date range filter buttons. Modern financial app design with blue/purple/green color scheme, card shadows, icons, clean spacing.'
+  },
+  {
+    name: 'digital-wallet-ar',
+    language: 'ar',
+    width: 1200,
+    height: 900,
+    prompt: 'Arabic (RTL) digital wallet for TalebEdu. Top: Large balance card with blue-purple gradient showing "250.00 ريال عماني" in huge white text, "الرصيد المتاح" subtitle, and two buttons "شحن المحفظة" (green) and "تحويل الأموال" (blue outline). Middle: "المعاملات الأخيرة" heading RIGHT-ALIGNED with filter tabs in Arabic. Below: Transaction list RIGHT-ALIGNED showing 8 items with colored icons, Arabic descriptions (شراء من الكافتيريا، رسوم الحافلة الشهرية، شحن المحفظة من ولي الأمر، شراء من المكتبة), Arabic dates and times, amounts with Arabic numerals in green/red. LEFT sidebar (RTL): Pie chart with Arabic labels (الكافتيريا 45%، النقل 30%، الكتب 15%، أخرى 10%) with colored legend. Bottom: Date filters in Arabic. Blue/purple/green theme, RTL layout, Arabic numerals and text, modern shadows.'
+  }
 ];
 
 export default function ScreenshotManager() {
-  const [isInitializing, setIsInitializing] = useState(false);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [dataStatus, setDataStatus] = useState<'unknown' | 'ready' | 'empty'>('unknown');
-  const [generatedScreenshots, setGeneratedScreenshots] = useState<Set<string>>(new Set());
+  const [generating, setGenerating] = useState(false);
+  const [generatedScreenshots, setGeneratedScreenshots] = useState<GeneratedScreenshot[]>([]);
+  const [currentlyGenerating, setCurrentlyGenerating] = useState<string | null>(null);
+  const [progress, setProgress] = useState({ current: 0, total: 0 });
 
-  const initializeMockData = async () => {
-    setIsInitializing(true);
+  const generateScreenshotWithAI = async (config: ScreenshotConfig): Promise<string> => {
     try {
-      // First, create test accounts
-      toast({ title: 'Creating test accounts...', description: 'Setting up 6 user accounts' });
-      
-      const { error: accountsError } = await supabase.functions.invoke('create-test-accounts');
-      if (accountsError) throw accountsError;
+      const { data, error } = await supabase.functions.invoke('generate-screenshot-ai', {
+        body: {
+          prompt: `${config.prompt} Ultra high resolution screenshot for professional presentation. Modern, polished UI design.`,
+          width: config.width,
+          height: config.height
+        }
+      });
 
-      // Then, seed comprehensive mock data
-      toast({ title: 'Seeding mock data...', description: 'Creating students, products, routes...' });
-      
-      const { data, error } = await supabase.functions.invoke('seed-mock-data');
-      
       if (error) throw error;
+      if (!data?.imageBase64) throw new Error('No image generated');
 
-      toast({
-        title: '✅ Mock Data Initialized',
-        description: `Created ${data.summary.students} students, ${data.summary.products} products, ${data.summary.routes} routes`,
-      });
-      
-      setDataStatus('ready');
+      return data.imageBase64;
     } catch (error) {
-      console.error('Error initializing data:', error);
-      toast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to initialize mock data',
-        variant: 'destructive',
+      console.error('AI generation error:', error);
+      throw error;
+    }
+  };
+
+  const frameWithiPhone = async (imageBase64: string): Promise<string> => {
+    try {
+      const { data, error } = await supabase.functions.invoke('add-iphone-frame', {
+        body: { imageBase64 }
       });
-    } finally {
-      setIsInitializing(false);
+
+      if (error) throw error;
+      return data.framedImageBase64 || imageBase64;
+    } catch (error) {
+      console.error('Frame error:', error);
+      return imageBase64;
     }
   };
 
   const generateAllScreenshots = async () => {
-    setIsGenerating(true);
-    setProgress(0);
+    setGenerating(true);
+    setGeneratedScreenshots([]);
+    setProgress({ current: 0, total: SCREENSHOTS.length });
+    
+    const results: GeneratedScreenshot[] = [];
     
     try {
-      toast({
-        title: 'Generating Placeholder Frames',
-        description: 'Creating iPhone-framed placeholders for all 274 screenshots (takes ~30 seconds)',
-      });
-
-      const total = SCREENSHOTS.length;
-      const generated = new Set<string>();
-
-      for (let i = 0; i < total; i++) {
-        const screenshot = SCREENSHOTS[i];
+      for (let i = 0; i < SCREENSHOTS.length; i++) {
+        const config = SCREENSHOTS[i];
+        setCurrentlyGenerating(config.name);
+        setProgress({ current: i + 1, total: SCREENSHOTS.length });
         
         try {
-          // Create placeholder SVG
-          const placeholderSvg = `
-            <svg width="390" height="844" xmlns="http://www.w3.org/2000/svg">
-              <rect width="390" height="844" fill="#0A0A0A"/>
-              <text x="195" y="380" text-anchor="middle" fill="#FFFFFF" font-size="18" font-family="system-ui, -apple-system">
-                ${screenshot.name}
-              </text>
-              <text x="195" y="420" text-anchor="middle" fill="#666666" font-size="14" font-family="system-ui, -apple-system">
-                ${screenshot.language.toUpperCase()} • ${screenshot.category}
-              </text>
-              <text x="195" y="450" text-anchor="middle" fill="#444444" font-size="12" font-family="monospace">
-                ${screenshot.route}
-              </text>
-              <text x="195" y="480" text-anchor="middle" fill="#888888" font-size="11" font-family="system-ui, -apple-system">
-                Replace with real screenshot
-              </text>
-            </svg>
-          `;
-
-          const placeholderBase64 = `data:image/svg+xml;base64,${btoa(placeholderSvg)}`;
-
-          // Add iPhone 15 frame
-          const { data: frameData, error: frameError } = await supabase.functions.invoke('add-iphone-frame', {
-            body: {
-              imageBase64: placeholderBase64
-            }
+          console.log(`Generating ${i + 1}/${SCREENSHOTS.length}: ${config.name}`);
+          
+          const aiImage = await generateScreenshotWithAI(config);
+          const framedImage = await frameWithiPhone(aiImage);
+          
+          results.push({
+            name: config.name,
+            imageData: framedImage,
+            config
           });
-
-          if (frameError) throw frameError;
-          if (!frameData?.framedImageBase64) throw new Error('No framed image');
-
-          // Store in localStorage
-          const storageKey = `screenshot-${screenshot.id}-${screenshot.language}`;
-          localStorage.setItem(storageKey, frameData.framedImageBase64);
           
-          generated.add(storageKey);
-          setGeneratedScreenshots(new Set(generated));
-          setProgress(((i + 1) / total) * 100);
+          console.log(`✓ Generated: ${config.name}`);
           
-          // Small delay to prevent overwhelming
-          await new Promise(resolve => setTimeout(resolve, 50));
         } catch (error) {
-          console.error(`Failed: ${screenshot.name}:`, error);
+          console.error(`Error generating ${config.name}:`, error);
+          toast.error(`Failed: ${config.name}`);
         }
+        
+        await new Promise(resolve => setTimeout(resolve, 500));
       }
-
-      toast({
-        title: 'Placeholders Generated!',
-        description: `Created ${generated.size} framed placeholders. Download and replace with real screenshots.`,
-      });
-    } catch (error) {
-      console.error('Error generating:', error);
-      toast({
-        title: 'Generation failed',
-        description: error instanceof Error ? error.message : 'Unknown error',
-        variant: 'destructive'
-      });
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-
-  const downloadAllScreenshots = () => {
-    try {
-      const screenshots = SCREENSHOTS.filter(s => {
-        const storageKey = `screenshot-${s.id}-${s.language}`;
-        return generatedScreenshots.has(storageKey);
-      });
       
-      if (screenshots.length === 0) {
-        toast({
-          title: 'No screenshots to download',
-          description: 'Generate screenshots first',
-          variant: 'destructive'
-        });
-        return;
-      }
-
-      toast({
-        title: 'Starting download',
-        description: `Downloading ${screenshots.length} screenshots...`
-      });
-
-      // Create download links with staggered timing
-      screenshots.forEach((screenshot, index) => {
-        setTimeout(() => {
-          const storageKey = `screenshot-${screenshot.id}-${screenshot.language}`;
-          const imageData = localStorage.getItem(storageKey);
-          if (imageData) {
-            const link = document.createElement('a');
-            link.href = imageData;
-            link.download = `${screenshot.id}-${screenshot.language}.png`;
-            link.style.display = 'none';
-            document.body.appendChild(link);
-            link.click();
-            setTimeout(() => document.body.removeChild(link), 100);
-          }
-        }, index * 150); // Stagger downloads
-      });
-
-      toast({
-        title: 'Download started',
-        description: `Downloaded ${screenshots.length} screenshots`,
-        variant: 'default'
-      });
+      setGeneratedScreenshots(results);
+      toast.success(`Generated ${results.length} screenshots!`);
+      
     } catch (error) {
-      console.error('Download failed:', error);
-      toast({
-        title: 'Download failed',
-        description: error instanceof Error ? error.message : 'Unknown error',
-        variant: 'destructive'
-      });
+      console.error('Generation error:', error);
+      toast.error('Generation failed');
+    } finally {
+      setGenerating(false);
+      setCurrentlyGenerating(null);
     }
   };
 
-  const categoryColors = {
-    parent: 'bg-blue-500',
-    admin: 'bg-purple-500',
-    teacher: 'bg-green-500',
-    student: 'bg-yellow-500',
-    driver: 'bg-orange-500',
-    canteen: 'bg-pink-500',
-    finance: 'bg-cyan-500',
-    other: 'bg-gray-500'
+  const downloadAllAsZip = async () => {
+    if (generatedScreenshots.length === 0) {
+      toast.error('No screenshots to download');
+      return;
+    }
+
+    try {
+      for (const screenshot of generatedScreenshots) {
+        const base64Data = screenshot.imageData.split(',')[1] || screenshot.imageData;
+        const byteCharacters = atob(base64Data);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type: 'image/png' });
+        
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${screenshot.name}.png`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+
+      toast.success('All screenshots downloaded!');
+    } catch (error) {
+      console.error('Download error:', error);
+      toast.error('Download failed');
+    }
   };
 
   return (
-    <div className="container mx-auto p-6 max-w-7xl">
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-2">Screenshot Manager</h1>
-        <p className="text-muted-foreground">
-          Generate 274 iPhone 15 framed placeholders (137 screens × 2 languages). Download and replace with real screenshots.
-        </p>
-      </div>
+    <div className="container mx-auto p-6">
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold">AI Screenshot Generator</h1>
+          <p className="text-muted-foreground mt-2">
+            Generate all 274 professional screenshots using AI - fully automated with iPhone frames
+          </p>
+        </div>
 
-      {/* Status Panel */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Database Status</CardTitle>
-            <Database className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center space-x-2">
-              {dataStatus === 'ready' ? (
-                <>
-                  <CheckCircle className="h-5 w-5 text-green-500" />
-                  <span>Mock data ready</span>
-                </>
-              ) : dataStatus === 'empty' ? (
-                <>
-                  <XCircle className="h-5 w-5 text-red-500" />
-                  <span>No data found</span>
-                </>
-              ) : (
-                <>
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                  <span>Checking...</span>
-                </>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Test Accounts</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">6 Accounts</div>
-            <p className="text-xs text-muted-foreground">All roles configured</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Screenshots</CardTitle>
-            <Camera className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {generatedScreenshots.size}/{SCREENSHOTS.length}
-            </div>
-            <p className="text-xs text-muted-foreground">Ready for manual</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Actions */}
-      <Card className="mb-8">
-        <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
-          <CardDescription>Generate framed placeholders (~30 seconds) then replace with real screenshots</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex flex-wrap gap-4">
-            <Button
-              onClick={initializeMockData}
-              disabled={isInitializing || dataStatus === 'ready'}
-              className="flex items-center gap-2"
-            >
-              {isInitializing ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Initializing...
-                </>
-              ) : (
-                <>
-                  <Database className="h-4 w-4" />
-                  Initialize Mock Data
-                </>
-              )}
-            </Button>
-
-            <Button
-              onClick={generateAllScreenshots}
-              disabled={isGenerating || dataStatus !== 'ready'}
-              variant="default"
-              className="flex items-center gap-2"
-            >
-              {isGenerating ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Generating {Math.round(progress)}%
-                </>
-              ) : (
-                <>
-                  <Camera className="h-4 w-4" />
-                  Generate All Screenshots
-                </>
-              )}
-            </Button>
-
-            <Button
-              onClick={downloadAllScreenshots}
-              disabled={generatedScreenshots.size === 0}
-              variant="outline"
-              className="flex items-center gap-2"
-            >
-              <Download className="h-4 w-4" />
-              Download All (ZIP)
-            </Button>
-          </div>
-
-          {isGenerating && (
-            <div className="space-y-2">
-              <Progress value={progress} className="h-2" />
-              <p className="text-sm text-muted-foreground">
-                Capturing {Math.round((progress / 100) * SCREENSHOTS.length)} of {SCREENSHOTS.length} screenshots...
-              </p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Manual Screenshot Uploader */}
-      <div className="mb-8">
-        <ScreenshotUploader />
-      </div>
-
-      {/* Screenshots Grid */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Screenshots Library</CardTitle>
-          <CardDescription>{SCREENSHOTS.length} screenshots covering all app features in English and Arabic</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {SCREENSHOTS.map((screenshot) => {
-              const storageKey = `screenshot-${screenshot.id}-${screenshot.language}`;
-              const isGenerated = generatedScreenshots.has(storageKey);
-              
-              return (
-                <div
-                  key={`${screenshot.id}-${screenshot.language}`}
-                  className="border rounded-lg p-4 space-y-2 hover:shadow-md transition-shadow"
+        <Card className="p-6">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-semibold">Automated Generation</h3>
+                <p className="text-sm text-muted-foreground">
+                  AI-powered screenshot generation with professional framing
+                  {generating && ` - Progress: ${progress.current}/${progress.total}`}
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  onClick={generateAllScreenshots}
+                  disabled={generating}
+                  size="lg"
                 >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <h3 className="font-semibold">{screenshot.name}</h3>
-                      <p className="text-sm text-muted-foreground">{screenshot.description}</p>
-                      <Badge variant="secondary" className="mt-1">
-                        {screenshot.language.toUpperCase()}
-                      </Badge>
-                    </div>
-                    {isGenerated && (
-                      <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0 ml-2" />
-                    )}
-                  </div>
-                <div className="flex items-center justify-between">
-                  <Badge variant="secondary" className={`${categoryColors[screenshot.category]} text-white`}>
-                    {screenshot.category}
-                  </Badge>
-                  <span className="text-xs text-muted-foreground">{screenshot.route}</span>
+                  {generating ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Generating {progress.current}/{progress.total}
+                    </>
+                  ) : (
+                    <>
+                      <ImageIcon className="mr-2 h-4 w-4" />
+                      Generate All Screenshots
+                    </>
+                  )}
+                </Button>
+                <Button
+                  onClick={downloadAllAsZip}
+                  disabled={generatedScreenshots.length === 0}
+                  size="lg"
+                  variant="outline"
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  Download All ({generatedScreenshots.length})
+                </Button>
+              </div>
+            </div>
+            
+            {generating && currentlyGenerating && (
+              <div className="p-4 bg-muted rounded-lg">
+                <div className="text-sm font-medium">Generating: {currentlyGenerating}</div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  Creating AI screenshot and applying iPhone frame...
+                </div>
+                <div className="w-full bg-background rounded-full h-2 mt-2">
+                  <div 
+                    className="bg-primary h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${(progress.current / progress.total) * 100}%` }}
+                  />
                 </div>
               </div>
-              );
-            })}
+            )}
+            
+            {generatedScreenshots.length > 0 && !generating && (
+              <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="h-5 w-5 text-green-500" />
+                  <div>
+                    <div className="font-medium text-green-700 dark:text-green-400">
+                      Generation Complete!
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      {generatedScreenshots.length} screenshots ready
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
-        </CardContent>
-      </Card>
+        </Card>
 
-      <Separator className="my-8" />
-
-      {/* Instructions */}
-      <Card>
-        <CardHeader>
-          <CardTitle>How to Use</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <h3 className="font-semibold">Step 1: Initialize Mock Data</h3>
-            <p className="text-sm text-muted-foreground">
-              Click "Initialize Mock Data" to create 10 Omani students, 30+ canteen products, 
-              3 Muscat bus routes, and comprehensive test data.
-            </p>
-          </div>
-          
-          <div className="space-y-2">
-            <h3 className="font-semibold">Step 2: Generate Screenshots</h3>
-            <p className="text-sm text-muted-foreground">
-              Click "Generate All Screenshots" to automatically capture 21 screenshots 
-              framed in iPhone 15 with transparent backgrounds. Takes ~45 seconds.
-            </p>
-          </div>
-          
-          <div className="space-y-2">
-            <h3 className="font-semibold">Step 3: Download & Use</h3>
-            <p className="text-sm text-muted-foreground">
-              Download the ZIP file and extract screenshots to /src/assets/presentation/real/ 
-              for use in the 150+ page manual.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+        {generatedScreenshots.length > 0 && (
+          <Card className="p-6">
+            <h3 className="font-semibold mb-4">Generated Screenshots</h3>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {generatedScreenshots.map((screenshot) => (
+                <div key={screenshot.name} className="space-y-2">
+                  <div className="aspect-[9/16] bg-muted rounded-lg overflow-hidden border">
+                    <img 
+                      src={screenshot.imageData} 
+                      alt={screenshot.name}
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
+                  <div className="text-xs text-center">
+                    <div className="font-medium truncate">{screenshot.name}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+        )}
+      </div>
     </div>
   );
 }
