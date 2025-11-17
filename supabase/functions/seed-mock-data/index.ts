@@ -17,14 +17,15 @@ Deno.serve(async (req) => {
     console.log('Starting comprehensive mock data seeding...');
 
     // Step 1: Get parent account ID
-    const { data: parentProfile } = await supabase
+    const { data: parentProfile, error: parentError } = await supabase
       .from('profiles')
       .select('id')
       .eq('email', 'parent@talebschool.com')
-      .single();
+      .maybeSingle();
 
     if (!parentProfile) {
-      throw new Error('Parent test account not found. Run create-test-accounts first.');
+      console.error('Parent profile not found:', parentError);
+      throw new Error('Parent test account not found. Please click "Initialize Test Accounts" first to create the parent@talebschool.com account.');
     }
 
     const parentId = parentProfile.id;
