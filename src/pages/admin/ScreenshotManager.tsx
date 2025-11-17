@@ -242,11 +242,11 @@ export default function ScreenshotManager() {
             description: `${screenshot.name} (${screenshot.language.toUpperCase()})...`
           });
 
-          // Generate screenshot with AI based on title and description
+          // Capture real screenshot from the actual route
           const captureResponse = await supabase.functions.invoke('capture-screenshot', {
             body: {
-              title: `${screenshot.name} (${screenshot.language === 'en' ? 'English' : 'Arabic'})`,
-              description: screenshot.description,
+              route: screenshot.route,
+              language: screenshot.language,
               width: 390,
               height: 844
             }
