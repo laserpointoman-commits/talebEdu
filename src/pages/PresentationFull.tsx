@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Globe, Download, Smartphone, Shield, Wallet, Bus, UtensilsCrossed, GraduationCap, Users, BarChart, Bell, Clock, MapPin, CreditCard, CheckCircle, BookOpen, Calendar, MessageSquare, FileText, Mail, UserPlus, ClipboardCheck, LogIn, Home, Settings, Plus, Edit, Trash, Eye, Search, Filter, ArrowRight, UserCheck, DollarSign, Receipt, TrendingUp, FileSpreadsheet, Package, AlertTriangle } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import logo from '@/assets/talebedu-logo-hq.png';
 import screenshotNfc from '@/assets/presentation/screenshot-nfc.jpg';
 import screenshotBus from '@/assets/presentation/screenshot-bus.jpg';
 import screenshotWallet from '@/assets/presentation/screenshot-wallet.jpg';
@@ -38,9 +39,7 @@ const PresentationFull = () => {
       {/* Cover Page */}
       <section className="min-h-screen flex flex-col items-center justify-center p-8 print:break-after-page">
         <div className="text-center space-y-8">
-          <div className="w-32 h-32 mx-auto rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-2xl">
-            <span className="text-7xl font-bold text-white">ت</span>
-          </div>
+          <img src={logo} alt="TalebEdu Logo" className="w-48 h-48 mx-auto object-contain" />
           <h1 className="text-6xl font-bold bg-gradient-to-r from-blue-500 to-blue-600 bg-clip-text text-transparent">
             {isArabic ? 'منصة طالب المدرسية' : 'TalebEdu Platform'}
           </h1>
