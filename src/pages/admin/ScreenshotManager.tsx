@@ -227,81 +227,13 @@ export default function ScreenshotManager() {
     setIsGenerating(true);
     setProgress(0);
     
-    try {
-      const total = SCREENSHOTS.length;
-      const generated = new Set<string>();
-      const baseUrl = window.location.origin;
-
-      for (let i = 0; i < total; i++) {
-        const screenshot = SCREENSHOTS[i];
-        
-        try {
-          // Step 1: Capture screenshot using Puppeteer
-          toast({
-            title: `Generating ${i + 1}/${total}`,
-            description: `${screenshot.name} (${screenshot.language.toUpperCase()})...`
-          });
-
-          // Capture real screenshot from the actual route
-          const captureResponse = await supabase.functions.invoke('capture-screenshot', {
-            body: {
-              route: screenshot.route,
-              language: screenshot.language,
-              width: 390,
-              height: 844
-            }
-          });
-
-          if (captureResponse.error || !captureResponse.data?.imageBase64) {
-            throw new Error(`Capture failed: ${captureResponse.error?.message || 'No image data'}`);
-          }
-
-          // Step 2: Add iPhone 15 frame
-          const frameResponse = await supabase.functions.invoke('add-iphone-frame', {
-            body: {
-              imageBase64: captureResponse.data.imageBase64
-            }
-          });
-
-          if (frameResponse.error || !frameResponse.data?.framedImageBase64) {
-            throw new Error(`Framing failed: ${frameResponse.error?.message || 'No framed image'}`);
-          }
-
-          // Store in localStorage with language suffix
-          const framedImage = frameResponse.data.framedImageBase64;
-          const storageKey = `screenshot-${screenshot.id}-${screenshot.language}`;
-          localStorage.setItem(storageKey, framedImage);
-          
-          generated.add(storageKey);
-          setGeneratedScreenshots(new Set(generated));
-          setProgress(((i + 1) / total) * 100);
-          
-          console.log(`✓ Generated: ${screenshot.name} (${screenshot.language})`);
-        } catch (error) {
-          console.error(`✗ Failed to generate ${screenshot.name}:`, error);
-          toast({
-            title: `Failed: ${screenshot.name}`,
-            description: error instanceof Error ? error.message : 'Unknown error',
-            variant: 'destructive'
-          });
-        }
-      }
-
-      toast({
-        title: 'Screenshot generation complete!',
-        description: `Successfully captured ${generated.size}/${total} screenshots`,
-        variant: 'default'
-      });
-    } catch (error) {
-      console.error('Error generating screenshots:', error);
-      toast({
-        title: 'Generation failed',
-        description: error instanceof Error ? error.message : 'Unknown error',
-        variant: 'destructive'
-      });
-    } finally {
-      setIsGenerating(false);
-    }
+    toast({
+      title: 'Screenshot Generation Not Available',
+      description: 'Automated screenshot capture requires manual setup. Please capture screenshots manually for each route.',
+      variant: 'default'
+    });
+    
+    setIsGenerating(false);
   };
 
   const downloadAllScreenshots = () => {
