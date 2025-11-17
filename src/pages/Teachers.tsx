@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { PageHeader } from '@/components/ui/page-header';
 import { Search, Edit, UserPlus, Mail, Phone, Eye, EyeOff, Trash2, Calendar, GraduationCap, MapPin, CreditCard, User } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { z } from 'zod';
@@ -490,19 +491,20 @@ export default function Teachers() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">{t('dashboard.teachers')}</h2>
-          <p className="text-muted-foreground">
-            {language === 'en' ? 'Manage and view all teacher profiles' : 'إدارة وعرض جميع ملفات المعلمين'}
-          </p>
-        </div>
-        <Button onClick={() => setIsAddDialogOpen(true)}>
-          <UserPlus className="h-4 w-4 mr-2" />
-          {language === 'en' ? 'Add Teacher' : 'إضافة معلم'}
-        </Button>
-      </div>
+    <div className="space-y-6 p-4 md:p-6" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+      <PageHeader
+        showBackButton
+        title="Teachers"
+        titleAr="المعلمين"
+        subtitle="Manage and view all teacher profiles"
+        subtitleAr="إدارة وعرض جميع ملفات المعلمين"
+        actions={
+          <Button onClick={() => setIsAddDialogOpen(true)} size="sm">
+            <UserPlus className="h-4 w-4 mr-2" />
+            {language === 'en' ? 'Add' : 'إضافة'}
+          </Button>
+        }
+      />
 
       <div className="relative">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />

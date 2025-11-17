@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { PageHeader } from '@/components/ui/page-header';
 import { Search, Edit, Nfc, ScanLine, UserPlus, Trash2, GraduationCap } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from '@/hooks/use-toast';
@@ -234,33 +235,28 @@ export default function Students() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">{t('dashboard.students')}</h2>
-          <p className="text-muted-foreground">
-            {language === 'en' ? 'Manage and view all student profiles' : 'إدارة وعرض جميع ملفات الطلاب'}
-          </p>
-        </div>
-        <div className="flex gap-2">
-          {selectedStudents.length > 0 && user?.role === 'admin' && (
-            <Button onClick={handleBulkDelete} variant="destructive">
-              <Trash2 className="h-4 w-4 mr-2" />
-              {language === 'en' 
-                ? `Delete (${selectedStudents.length})` 
-                : `حذف (${selectedStudents.length})`}
+    <div className="space-y-6 p-4 md:p-6" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+      <PageHeader
+        showBackButton
+        title="Students"
+        titleAr="الطلاب"
+        subtitle="Manage and view all student profiles"
+        subtitleAr="إدارة وعرض جميع ملفات الطلاب"
+        actions={
+          <div className="flex gap-2">
+            {selectedStudents.length > 0 && user?.role === 'admin' && (
+              <Button onClick={handleBulkDelete} variant="destructive" size="sm">
+                <Trash2 className="h-4 w-4 mr-2" />
+                {language === 'en' ? `Delete (${selectedStudents.length})` : `حذف (${selectedStudents.length})`}
+              </Button>
+            )}
+            <Button onClick={() => setIsRegistrationOpen(true)} size="sm">
+              <UserPlus className="h-4 w-4 mr-2" />
+              {t('students.addStudent')}
             </Button>
-          )}
-          <Button onClick={handleNfcRead} variant="outline">
-            <Nfc className="h-4 w-4 mr-2" />
-            {language === 'en' ? 'Read NFC' : 'قراءة NFC'}
-          </Button>
-          <Button onClick={handleAddStudent}>
-            <UserPlus className="h-4 w-4 mr-2" />
-            {language === 'en' ? 'Add Student' : 'إضافة طالب'}
-          </Button>
-        </div>
-      </div>
+          </div>
+        }
+      />
 
       {/* Show class selection for teachers */}
       {profile?.role === 'teacher' && !selectedClass && (

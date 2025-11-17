@@ -1,6 +1,5 @@
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "./button";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 interface PageHeaderProps {
@@ -38,30 +37,30 @@ export function PageHeader({
   const displaySubtitle = isArabic && subtitleAr ? subtitleAr : subtitle;
 
   return (
-    <div className="mb-6 space-y-2">
-      <div className={`flex items-center gap-4 ${isArabic ? 'flex-row-reverse' : ''}`}>
-        {showBackButton && (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleBack}
-            className="shrink-0"
-            aria-label={isArabic ? 'رجوع' : 'Go back'}
-          >
-            {isArabic ? <ArrowRight className="h-5 w-5" /> : <ArrowLeft className="h-5 w-5" />}
-          </Button>
-        )}
-        <div className={`flex-1 ${isArabic ? 'text-right' : ''}`}>
-          <h1 className="text-3xl font-bold">{displayTitle}</h1>
-          {displaySubtitle && (
-            <p className="text-muted-foreground">{displaySubtitle}</p>
+    <div className="relative mb-6">
+      {showBackButton && (
+        <button
+          onClick={handleBack}
+          className={`absolute top-0 ${isArabic ? 'right-0' : 'left-0'} p-2 hover:bg-accent rounded-md transition-colors`}
+          aria-label={isArabic ? 'رجوع' : 'Go back'}
+        >
+          {isArabic ? <ArrowRight className="h-4 w-4" /> : <ArrowLeft className="h-4 w-4" />}
+        </button>
+      )}
+      <div className={`${showBackButton ? 'pt-10' : ''} space-y-2`}>
+        <div className={`flex items-center justify-between ${isArabic ? 'flex-row-reverse' : ''}`}>
+          <div className={`flex-1 ${isArabic ? 'text-right' : ''}`}>
+            <h1 className="text-2xl md:text-3xl font-bold">{displayTitle}</h1>
+            {displaySubtitle && (
+              <p className="text-sm md:text-base text-muted-foreground mt-1">{displaySubtitle}</p>
+            )}
+          </div>
+          {actions && (
+            <div className="shrink-0">
+              {actions}
+            </div>
           )}
         </div>
-        {actions && (
-          <div className={`shrink-0 ${isArabic ? 'order-first' : ''}`}>
-            {actions}
-          </div>
-        )}
       </div>
     </div>
   );
