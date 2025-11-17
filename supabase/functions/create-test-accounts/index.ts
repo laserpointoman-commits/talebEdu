@@ -64,17 +64,23 @@ Deno.serve(async (req) => {
           console.log(`Password updated for ${account.email}`);
         }
 
-        // Ensure profile exists - using upsert with onConflict
-        console.log(`Upserting profile for ${account.email} with role ${account.role}`);
+        // Ensure profile exists - delete and recreate to avoid RLS issues
+        console.log(`Checking profile for ${account.email} with role ${account.role}`);
+        
+        // Delete existing profile if it exists
+        await supabase
+          .from('profiles')
+          .delete()
+          .eq('id', existingUser.id);
+        
+        // Insert new profile
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
-          .upsert({ 
+          .insert({ 
             id: existingUser.id,
             email: account.email,
             role: account.role as any,
             full_name: account.full_name
-          }, {
-            onConflict: 'id'
           })
           .select()
           .single();
@@ -83,7 +89,7 @@ Deno.serve(async (req) => {
           console.error(`Profile error for ${account.email}:`, profileError);
           results.push({ email: account.email, status: 'profile_error', error: profileError.message, user_id: existingUser.id });
         } else {
-          console.log(`Profile created/updated successfully for ${account.email}`, profileData);
+          console.log(`Profile created successfully for ${account.email}`, profileData);
           results.push({ email: account.email, status: 'updated', user_id: existingUser.id });
         }
       } else {
