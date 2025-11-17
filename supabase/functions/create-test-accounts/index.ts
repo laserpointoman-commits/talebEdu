@@ -35,108 +35,78 @@ Deno.serve(async (req) => {
 
     const results = [];
 
+  // Get all existing users first
+  const { data: userData } = await supabase.auth.admin.listUsers();
+  const existingUsers = userData?.users || [];
+
   for (const account of testAccounts) {
     try {
-      // Special handling for teacher account due to corruption issues
-      if (account.email === 'teacher@talebschool.com') {
-        // First, try to delete any existing teacher account
-        const { data: userData } = await supabase.auth.admin.listUsers();
-        const existingTeacher = userData?.users?.find(u => u.email === 'teacher@talebschool.com');
-        
-        if (existingTeacher) {
-          // Delete the existing teacher account completely
-          await supabase.auth.admin.deleteUser(existingTeacher.id);
-        }
-        
-        // Create fresh teacher account
-        const { data: newTeacher, error: createError } = await supabase.auth.admin.createUser({
-          email: 'teacher@talebschool.com',
-          password: 'Teacher123!',
+      const existingUser = existingUsers.find(u => u.email === account.email);
+      
+      if (existingUser) {
+        // User exists - just ensure profile exists and password is updated
+        const { error: updateError } = await supabase.auth.admin.updateUserById(existingUser.id, {
+          password: account.password,
           email_confirm: true,
           user_metadata: {
-            full_name: 'Test Teacher',
-            role: 'teacher'
+            full_name: account.full_name,
+            role: account.role
           }
         });
-        
-        if (createError) {
-          console.error('Failed to create teacher account:', createError);
-          results.push({ email: account.email, status: 'error', error: createError.message });
-        } else if (newTeacher?.user) {
-          // Create profile for teacher
-          const { error: profileError } = await supabase
-            .from('profiles')
-            .upsert({ 
-              id: newTeacher.user.id,
-              email: 'teacher@talebschool.com',
-              role: 'teacher' as any,
-              full_name: 'Test Teacher'
-            })
-            .select()
-            .single();
-            
-          if (profileError) {
-            console.error('Teacher profile error:', profileError);
-            results.push({ email: account.email, status: 'profile_error', error: profileError.message });
-          } else {
-            results.push({ email: account.email, status: 'created_successfully' });
-          }
+
+        if (updateError) {
+          console.error(`Password update error for ${account.email}:`, updateError);
+        }
+
+        // Ensure profile exists
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .upsert({ 
+            id: existingUser.id,
+            email: account.email,
+            role: account.role as any,
+            full_name: account.full_name
+          }, {
+            onConflict: 'id'
+          });
+          
+        if (profileError) {
+          console.error(`Profile error for ${account.email}:`, profileError);
+          results.push({ email: account.email, status: 'profile_error', error: profileError.message });
+        } else {
+          results.push({ email: account.email, status: 'updated', user_id: existingUser.id });
         }
       } else {
-        // Handle other accounts normally
-        const { data: userData } = await supabase.auth.admin.listUsers();
-        const existingUser = userData?.users?.find(u => u.email === account.email);
-        
-        if (existingUser) {
-          // Update password
-          const { error: updateError } = await supabase.auth.admin.updateUserById(existingUser.id, {
-            password: account.password,
-            email_confirm: true
-          });
-
-          if (updateError) {
-            console.error(`Password update error for ${account.email}:`, updateError);
-            results.push({ email: account.email, status: 'password_update_failed', error: updateError.message });
-          } else {
-            // Upsert profile
-            await supabase
-              .from('profiles')
-              .upsert({ 
-                id: existingUser.id,
-                email: account.email,
-                role: account.role as any,
-                full_name: account.full_name
-              });
-            
-            results.push({ email: account.email, status: 'password_updated' });
+        // Create new user
+        const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+          email: account.email,
+          password: account.password,
+          email_confirm: true,
+          user_metadata: {
+            full_name: account.full_name,
+            role: account.role
           }
-        } else {
-          // Create new user
-          const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-            email: account.email,
-            password: account.password,
-            email_confirm: true,
-            user_metadata: {
-              full_name: account.full_name,
-              role: account.role
-            }
-          });
+        });
 
-          if (authError) {
-            console.error(`User creation error for ${account.email}:`, authError);
-            results.push({ email: account.email, status: 'error', error: authError.message });
-          } else if (authData?.user) {
-            // Upsert profile
-            await supabase
-              .from('profiles')
-              .upsert({ 
-                id: authData.user.id,
-                email: account.email,
-                role: account.role as any,
-                full_name: account.full_name
-              });
-              
-            results.push({ email: account.email, status: 'created_successfully' });
+        if (authError) {
+          console.error(`User creation error for ${account.email}:`, authError);
+          results.push({ email: account.email, status: 'error', error: authError.message });
+        } else if (authData?.user) {
+          // Create profile
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .insert({ 
+              id: authData.user.id,
+              email: account.email,
+              role: account.role as any,
+              full_name: account.full_name
+            });
+            
+          if (profileError) {
+            console.error(`Profile creation error for ${account.email}:`, profileError);
+            results.push({ email: account.email, status: 'profile_error', error: profileError.message });
+          } else {
+            results.push({ email: account.email, status: 'created', user_id: authData.user.id });
           }
         }
       }
