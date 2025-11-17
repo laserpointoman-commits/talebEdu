@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Loader2, Search, Download } from 'lucide-react';
 import StudentFeeCard from '@/components/finance/StudentFeeCard';
+import { PageHeader } from '@/components/ui/page-header';
 import { wrapBidiText } from '@/utils/bidirectional';
 
 export default function FeeManagement() {
@@ -79,17 +80,13 @@ export default function FeeManagement() {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold mb-2">
-          {language === 'en' ? 'Fee Management' : 'إدارة الرسوم'}
-        </h1>
-        <p className="text-muted-foreground">
-          {language === 'en'
-            ? 'Manage student fees, record payments, and track payment history'
-            : 'إدارة رسوم الطلاب وتسجيل المدفوعات وتتبع سجل الدفع'}
-        </p>
-      </div>
+      <PageHeader
+        showBackButton
+        title="Fee Management"
+        titleAr="إدارة الرسوم"
+        subtitle="Manage student fees, record payments, and track payment history"
+        subtitleAr="إدارة رسوم الطلاب وتسجيل المدفوعات وتتبع سجل الدفع"
+      />
 
       {/* Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
