@@ -11,15 +11,11 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Create admin client with service role key
+    // Create admin client with service role key - this bypasses RLS
     const supabase = createClient(supabaseUrl, supabaseServiceKey, {
       auth: {
         autoRefreshToken: false,
-        persistSession: false,
-        detectSessionInUrl: false
-      },
-      db: {
-        schema: 'public'
+        persistSession: false
       }
     });
 
