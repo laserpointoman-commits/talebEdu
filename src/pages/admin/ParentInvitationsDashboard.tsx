@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { InviteParentDialog } from "@/components/admin/InviteParentDialog";
 import { BulkInviteDialog } from "@/components/admin/BulkInviteDialog";
+import { PageHeader } from "@/components/ui/page-header";
 import { toast } from "sonner";
 import { Mail, Users, Copy, RefreshCw, Trash2, QrCode, Search, Download } from "lucide-react";
 import { format } from "date-fns";
@@ -167,27 +168,26 @@ export default function ParentInvitationsDashboard() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6" dir={language === 'ar' ? 'rtl' : 'ltr'}>
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">
-              {language === 'ar' ? 'دعوات أولياء الأمور' : 'Parent Invitations'}
-            </h1>
-            <p className="text-muted-foreground">
-              {language === 'ar' ? 'إدارة دعوات تسجيل أولياء الأمور' : 'Manage parent registration invitations'}
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <Button onClick={() => setBulkDialogOpen(true)} variant="outline">
-              <Users className={language === 'ar' ? "ml-2 h-4 w-4" : "mr-2 h-4 w-4"} />
-              {language === 'ar' ? 'دعوة جماعية' : 'Bulk Invite'}
-            </Button>
-            <Button onClick={() => setInviteDialogOpen(true)}>
-              <Mail className={language === 'ar' ? "ml-2 h-4 w-4" : "mr-2 h-4 w-4"} />
-              {language === 'ar' ? 'دعوة ولي أمر' : 'Invite Parent'}
-            </Button>
-          </div>
-        </div>
+      <div className="space-y-6 p-4 md:p-6" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+        <PageHeader
+          showBackButton
+          title="Parent Invitations"
+          titleAr="دعوات أولياء الأمور"
+          subtitle="Manage parent registration invitations"
+          subtitleAr="إدارة دعوات تسجيل أولياء الأمور"
+          actions={
+            <div className="flex gap-2">
+              <Button onClick={() => setBulkDialogOpen(true)} variant="outline" size="sm">
+                <Users className={language === 'ar' ? "ml-2 h-4 w-4" : "mr-2 h-4 w-4"} />
+                {language === 'ar' ? 'جماعية' : 'Bulk'}
+              </Button>
+              <Button onClick={() => setInviteDialogOpen(true)} size="sm">
+                <Mail className={language === 'ar' ? "ml-2 h-4 w-4" : "mr-2 h-4 w-4"} />
+                {language === 'ar' ? 'دعوة' : 'Invite'}
+              </Button>
+            </div>
+          }
+        />
 
         <div className="grid gap-4 md:grid-cols-4">
           <Card>

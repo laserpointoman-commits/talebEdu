@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Label } from '@/components/ui/label';
+import { PageHeader } from '@/components/ui/page-header';
 import { CheckCircle2, XCircle, Clock, Bus, School, Calendar as CalendarIcon, Download, Search } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { toast } from '@/hooks/use-toast';
@@ -229,24 +230,25 @@ export default function Attendance() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">{t('dashboard.attendance')}</h2>
-          <p className="text-muted-foreground">
-            {language === 'en' ? 'Track and manage student attendance' : 'تتبع وإدارة حضور الطلاب'}
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={handleExportReport}>
-            <Download className="h-4 w-4 mr-2" />
-            {language === 'en' ? 'Export Report' : 'تصدير التقرير'}
-          </Button>
-          <Button onClick={() => setIsMarkAttendanceOpen(true)}>
-            {language === 'en' ? 'Mark Attendance' : 'تسجيل الحضور'}
-          </Button>
-        </div>
-      </div>
+    <div className="space-y-6 p-4 md:p-6" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+      <PageHeader
+        showBackButton
+        title="Attendance"
+        titleAr="الحضور"
+        subtitle="Track and manage student attendance"
+        subtitleAr="تتبع وإدارة حضور الطلاب"
+        actions={
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={handleExportReport} size="sm">
+              <Download className="h-4 w-4 mr-2" />
+              {language === 'en' ? 'Export' : 'تصدير'}
+            </Button>
+            <Button onClick={() => setIsMarkAttendanceOpen(true)} size="sm">
+              {language === 'en' ? 'Mark' : 'تسجيل'}
+            </Button>
+          </div>
+        }
+      />
 
       {/* Filters */}
       <Card>

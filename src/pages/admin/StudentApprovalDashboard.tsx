@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { PageHeader } from '@/components/ui/page-header';
 import { Loader2, User, Clock } from 'lucide-react';
 import StudentApprovalDialog from '@/components/admin/StudentApprovalDialog';
 
@@ -44,7 +45,14 @@ export default function StudentApprovalDashboard() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-4 md:p-6" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+      <PageHeader
+        showBackButton
+        title="Student Approval"
+        titleAr="الموافقة على الطلاب"
+        subtitle="Review and approve pending student registrations"
+        subtitleAr="مراجعة والموافقة على تسجيلات الطلاب المعلقة"
+      />
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">

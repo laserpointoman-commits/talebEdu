@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { PageHeader } from '@/components/ui/page-header';
 import { TrendingUp, TrendingDown, Wallet, CreditCard, Users, Calendar, Download, ArrowUpRight, ArrowDownRight, FileText, Clock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -203,26 +204,24 @@ const Finance = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-6 max-w-7xl">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-              {language === 'ar' ? 'النظام المالي' : 'Financial System'}
-            </h1>
-            <p className="text-sm sm:text-base text-muted-foreground mt-1">
-              {language === 'ar' ? 'لوحة التحكم المالية الشاملة' : 'Comprehensive Financial Dashboard'}
-            </p>
-          </div>
-          <div className="flex gap-2 w-full sm:w-auto">
-            <AddTransactionDialog onTransactionAdded={fetchFinancialData} />
-            <Button className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70" variant="outline">
-              <Download className="mr-2 h-4 w-4" />
-              {language === 'ar' ? 'تصدير التقرير' : 'Export Report'}
-            </Button>
-          </div>
-        </div>
+    <div className="min-h-screen bg-background p-4 md:p-6" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+      <div className="container mx-auto max-w-7xl space-y-6">
+        <PageHeader
+          showBackButton
+          title="Financial System"
+          titleAr="النظام المالي"
+          subtitle="Comprehensive Financial Dashboard"
+          subtitleAr="لوحة التحكم المالية الشاملة"
+          actions={
+            <div className="flex gap-2">
+              <AddTransactionDialog onTransactionAdded={fetchFinancialData} />
+              <Button className="bg-gradient-to-r from-primary to-primary/80" variant="outline" size="sm">
+                <Download className="mr-2 h-4 w-4" />
+                {language === 'ar' ? 'تصدير' : 'Export'}
+              </Button>
+            </div>
+          }
+        />
 
         {/* Key Metrics */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
