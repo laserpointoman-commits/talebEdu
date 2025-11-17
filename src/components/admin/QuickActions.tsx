@@ -3,170 +3,18 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import {
-  LayoutDashboard,
-  Users,
-  GraduationCap,
-  BookOpen,
-  Calendar,
-  DollarSign,
-  Bus,
-  ShoppingBag,
-  MessageSquare,
-  FileText,
-  Settings,
-  ClipboardList,
-  Wallet,
-  MapPin,
-  Award,
-  Package,
-  ChefHat,
-  Code,
-  Receipt,
-  CreditCard,
-} from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from '@tanstack/react-query';
+import * as Icons from 'lucide-react';
 
 interface QuickAction {
+  id: string;
   title: string;
   href: string;
-  icon: React.ElementType;
-  roles: string[];
+  icon: string;
+  display_order: number;
+  is_active: boolean;
 }
-
-const quickActionItems: QuickAction[] = [
-  {
-    title: 'dashboard.students',
-    href: '/dashboard/students',
-    icon: GraduationCap,
-    roles: ['admin', 'teacher'],
-  },
-  {
-    title: 'dashboard.teachers',
-    href: '/dashboard/teachers',
-    icon: Users,
-    roles: ['admin'],
-  },
-  {
-    title: 'dashboard.classes',
-    href: '/dashboard/classes',
-    icon: BookOpen,
-    roles: ['admin', 'teacher'],
-  },
-  {
-    title: 'dashboard.schedule',
-    href: '/dashboard/schedule',
-    icon: Calendar,
-    roles: ['teacher', 'student', 'parent'],
-  },
-  {
-    title: 'dashboard.examSchedule',
-    href: '/dashboard/exams',
-    icon: ClipboardList,
-    roles: ['teacher', 'student', 'parent'],
-  },
-  {
-    title: 'dashboard.homework',
-    href: '/dashboard/homework',
-    icon: FileText,
-    roles: ['teacher', 'student', 'parent'],
-  },
-  {
-    title: 'dashboard.grades',
-    href: '/dashboard/grades',
-    icon: Award,
-    roles: ['teacher', 'student', 'parent'],
-  },
-  {
-    title: 'dashboard.attendance',
-    href: '/dashboard/nfc-attendance',
-    icon: ClipboardList,
-    roles: ['admin', 'teacher'],
-  },
-  {
-    title: 'dashboard.tracking',
-    href: '/dashboard/bus-tracking',
-    icon: MapPin,
-    roles: ['parent', 'driver', 'admin'],
-  },
-  {
-    title: 'dashboard.transport',
-    href: '/dashboard/transport',
-    icon: Bus,
-    roles: ['admin'],
-  },
-  {
-    title: 'dashboard.finance',
-    href: '/dashboard/finance',
-    icon: DollarSign,
-    roles: ['admin', 'parent', 'finance'],
-  },
-  {
-    title: 'Fee Management',
-    href: '/dashboard/admin/fees',
-    icon: Receipt,
-    roles: ['admin', 'finance'],
-  },
-  {
-    title: 'Parent Finance',
-    href: '/dashboard/parent-finance',
-    icon: CreditCard,
-    roles: ['parent'],
-  },
-  {
-    title: 'Payroll',
-    href: '/dashboard/payroll',
-    icon: DollarSign,
-    roles: ['admin', 'teacher', 'finance'],
-  },
-  {
-    title: 'dashboard.wallet',
-    href: '/dashboard/wallet',
-    icon: Wallet,
-    roles: ['parent', 'student', 'admin'],
-  },
-  {
-    title: 'dashboard.store',
-    href: '/dashboard/store',
-    icon: Package,
-    roles: ['admin', 'parent'],
-  },
-  {
-    title: 'dashboard.kitchen',
-    href: '/dashboard/kitchen',
-    icon: ChefHat,
-    roles: ['parent'],
-  },
-  {
-    title: 'dashboard.canteen',
-    href: '/dashboard/canteen',
-    icon: ShoppingBag,
-    roles: ['admin', 'parent', 'student'],
-  },
-  {
-    title: 'dashboard.messages',
-    href: '/dashboard/messages',
-    icon: MessageSquare,
-    roles: ['admin', 'teacher', 'parent'],
-  },
-  {
-    title: 'dashboard.reports',
-    href: '/dashboard/reports',
-    icon: FileText,
-    roles: ['admin', 'driver', 'finance'],
-  },
-  {
-    title: 'NFC Management',
-    href: '/dashboard/admin/nfc',
-    icon: Code,
-    roles: ['admin'],
-  },
-  {
-    title: 'dashboard.settings',
-    href: '/dashboard/settings',
-    icon: Settings,
-    roles: ['admin'],
-  },
-];
 
 const colorClasses = [
   'text-blue-600 bg-blue-100 dark:bg-blue-900/20',
@@ -186,9 +34,43 @@ export function QuickActions() {
 
   const userRole = profile?.role || 'student';
   
-  const filteredActions = quickActionItems
-    .filter(item => item.roles.includes(userRole))
-    .slice(0, 8); // Show max 8 quick actions
+  const { data: actions = [], isLoading } = useQuery({
+    queryKey: ['quick-actions', userRole],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('quick_actions')
+        .select('*')
+        .eq('role', userRole)
+        .eq('is_active', true)
+        .order('display_order')
+        .limit(8);
+      
+      if (error) throw error;
+      return data as QuickAction[];
+    }
+  });
+
+  const getIconComponent = (iconName: string) => {
+    const Icon = (Icons as any)[iconName] || Icons.Home;
+    return Icon;
+  };
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>{t('dashboard.quickActions')}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="h-24 bg-muted animate-pulse rounded-lg" />
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
@@ -199,11 +81,11 @@ export function QuickActions() {
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {filteredActions.map((action, index) => {
-            const Icon = action.icon;
+          {actions.map((action, index) => {
+            const Icon = getIconComponent(action.icon);
             return (
               <Button
-                key={action.href}
+                key={action.id}
                 variant="outline"
                 className="h-auto flex-col gap-2 p-4 hover:scale-105 transition-transform"
                 onClick={() => navigate(action.href)}

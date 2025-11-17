@@ -2990,6 +2990,42 @@ export type Database = {
           },
         ]
       }
+      quick_actions: {
+        Row: {
+          created_at: string
+          display_order: number
+          href: string
+          icon: string
+          id: string
+          is_active: boolean
+          role: Database["public"]["Enums"]["user_role"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          href: string
+          icon: string
+          id?: string
+          is_active?: boolean
+          role: Database["public"]["Enums"]["user_role"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          href?: string
+          icon?: string
+          id?: string
+          is_active?: boolean
+          role?: Database["public"]["Enums"]["user_role"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       role_feature_visibility: {
         Row: {
           category: string | null
