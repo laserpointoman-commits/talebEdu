@@ -8,6 +8,7 @@ import NFCScanner from "@/components/nfc/NFCScanner";
 import { Bus, MapPin, Users, AlertTriangle, CheckCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import LogoLoader from "@/components/LogoLoader";
+import { QuickActions } from "@/components/admin/QuickActions";
 
 export default function DriverDashboard() {
   const { language } = useLanguage();
@@ -182,6 +183,9 @@ export default function DriverDashboard() {
         </Card>
       </div>
 
+      {/* Quick Actions */}
+      <QuickActions />
+
       {/* NFC Scanner for Bus Boarding */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div>
@@ -237,7 +241,7 @@ export default function DriverDashboard() {
         </Card>
       </div>
 
-      {/* Quick Actions */}
+      {/* Action Buttons */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Button size="lg" className="h-16">
           <CheckCircle className="mr-2 h-5 w-5" />

@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import LogoLoader from '@/components/LogoLoader';
+import { QuickActions } from '@/components/admin/QuickActions';
 
 const FinanceDashboard = () => {
   const navigate = useNavigate();
@@ -218,7 +219,7 @@ const FinanceDashboard = () => {
         ))}
       </div>
 
-      {/* Finance Modules */}
+      {/* Finance Modules - Kept for Finance-specific actions */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 md:gap-4">
         {financeModules.map((module, index) => (
           <Card 
@@ -241,6 +242,9 @@ const FinanceDashboard = () => {
           </Card>
         ))}
       </div>
+
+      {/* Quick Actions */}
+      <QuickActions />
 
       {/* Recent Activity */}
       <Card 

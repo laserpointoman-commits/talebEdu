@@ -17,6 +17,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import LogoLoader from "@/components/LogoLoader";
+import { QuickActions } from "@/components/admin/QuickActions";
 
 export default function TeacherDashboard() {
   const { language } = useLanguage();
@@ -125,63 +126,6 @@ export default function TeacherDashboard() {
     };
   };
 
-  const quickActions = [
-    {
-      icon: Scan,
-      titleEn: "NFC Attendance",
-      titleAr: "مسح الحضور",
-      descEn: "Mark attendance with NFC",
-      descAr: "تسجيل الحضور بالسوار الذكي",
-      onClick: () => navigate('/dashboard/nfc-attendance'),
-      color: "text-blue-500"
-    },
-    {
-      icon: Award,
-      titleEn: "Post Grades",
-      titleAr: "رفع الدرجات",
-      descEn: "Enter student grades",
-      descAr: "إدخال درجات الطلاب",
-      onClick: () => navigate('/dashboard/grades'),
-      color: "text-green-500"
-    },
-    {
-      icon: Calendar,
-      titleEn: "Exams",
-      titleAr: "الامتحانات",
-      descEn: "Manage exams schedule",
-      descAr: "إدارة جدول الامتحانات",
-      onClick: () => navigate('/dashboard/exams'),
-      color: "text-purple-500"
-    },
-    {
-      icon: BookOpen,
-      titleEn: "Homework",
-      titleAr: "الواجبات",
-      descEn: "Assign homework",
-      descAr: "تعيين واجبات",
-      onClick: () => navigate('/dashboard/homework'),
-      color: "text-orange-500"
-    },
-    {
-      icon: Users,
-      titleEn: "My Classes",
-      titleAr: "فصولي",
-      descEn: "View class lists",
-      descAr: "عرض قوائم الفصول",
-      onClick: () => navigate('/dashboard/classes'),
-      color: "text-cyan-500"
-    },
-    {
-      icon: MessageSquare,
-      titleEn: "Messages",
-      titleAr: "الرسائل",
-      descEn: "Chat with parents",
-      descAr: "محادثة أولياء الأمور",
-      onClick: () => navigate('/dashboard/messages'),
-      color: "text-pink-500"
-    }
-  ];
-
   if (loading) {
     return <LogoLoader fullScreen />;
   }
@@ -246,32 +190,7 @@ export default function TeacherDashboard() {
       </div>
 
       {/* Quick Actions */}
-      <div>
-        <h2 className="text-xl font-semibold mb-4">
-          {language === 'ar' ? 'إجراءات سريعة' : 'Quick Actions'}
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {quickActions.map((action, idx) => (
-            <Card 
-              key={idx}
-              className="cursor-pointer hover:shadow-lg transition-all hover:-translate-y-1"
-              onClick={action.onClick}
-            >
-              <CardHeader>
-                <div className={`h-12 w-12 rounded-full bg-muted flex items-center justify-center mb-3 ${action.color}`}>
-                  <action.icon className="h-6 w-6" />
-                </div>
-                <CardTitle className="text-lg">
-                  {language === 'ar' ? action.titleAr : action.titleEn}
-                </CardTitle>
-                <CardDescription>
-                  {language === 'ar' ? action.descAr : action.descEn}
-                </CardDescription>
-              </CardHeader>
-            </Card>
-          ))}
-        </div>
-      </div>
+      <QuickActions />
 
       {/* Today's Schedule */}
       <Card>
