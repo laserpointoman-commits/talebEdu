@@ -3742,6 +3742,44 @@ export type Database = {
         }
         Relationships: []
       }
+      user_quick_action_preferences: {
+        Row: {
+          created_at: string
+          custom_order: number | null
+          id: string
+          is_visible: boolean
+          quick_action_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          custom_order?: number | null
+          id?: string
+          is_visible?: boolean
+          quick_action_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          custom_order?: number | null
+          id?: string
+          is_visible?: boolean
+          quick_action_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_quick_action_preferences_quick_action_id_fkey"
+            columns: ["quick_action_id"]
+            isOneToOne: false
+            referencedRelation: "quick_actions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_role_assignments: {
         Row: {
           created_at: string
