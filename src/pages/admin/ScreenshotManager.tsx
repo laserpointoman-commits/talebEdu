@@ -8,21 +8,24 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { Camera, Download, Database, Users, CheckCircle, XCircle, Loader2 } from 'lucide-react';
 
-interface ScreenshotConfig {
+interface BaseScreenshotConfig {
   id: string;
   name: string;
   route: string;
   description: string;
   category: 'parent' | 'admin' | 'teacher' | 'student' | 'driver' | 'canteen' | 'finance' | 'other';
+}
+
+interface ScreenshotConfig extends BaseScreenshotConfig {
   language: 'en' | 'ar';
 }
 
 // Base screenshot configurations (without language suffix)
-const BASE_SCREENSHOTS = [
+const BASE_SCREENSHOTS: BaseScreenshotConfig[] = [
   // Parent Role (25 screenshots)
-  { id: 'parent-dashboard', name: 'Parent Dashboard', route: '/parent-dashboard', description: 'Main dashboard', category: 'parent' as const },
-  { id: 'parent-dashboard-expanded', name: 'Parent Dashboard - Expanded Card', route: '/parent-dashboard-expanded', description: 'Student card expanded', category: 'parent' as const },
-  { id: 'parent-wallet', name: 'Digital Wallet', route: '/parent-wallet', description: 'Wallet 25.50 OMR', category: 'parent' as const },
+  { id: 'parent-dashboard', name: 'Parent Dashboard', route: '/parent-dashboard', description: 'Main dashboard', category: 'parent' },
+  { id: 'parent-dashboard-expanded', name: 'Parent Dashboard - Expanded Card', route: '/parent-dashboard-expanded', description: 'Student card expanded', category: 'parent' },
+  { id: 'parent-wallet', name: 'Digital Wallet', route: '/parent-wallet', description: 'Wallet 25.50 OMR', category: 'parent' },
   { id: 'parent-wallet-topup', name: 'Wallet Top-up', route: '/screenshot-demo/parent-wallet-topup', description: 'Top-up dialog', category: 'parent' },
   { id: 'parent-wallet-history', name: 'Wallet History', route: '/screenshot-demo/parent-wallet-history', description: 'Transaction history', category: 'parent' },
   { id: 'parent-tracking', name: 'Bus Tracking', route: '/screenshot-demo/parent-tracking', description: 'Muscat map live tracking', category: 'parent' },
@@ -171,6 +174,12 @@ const BASE_SCREENSHOTS = [
   { id: 'device-nfc-scan-success', name: 'Scan Success', route: '/screenshot-demo/device-nfc-scan-success', description: 'Success state', category: 'other' },
   { id: 'device-nfc-scan-error', name: 'Scan Error', route: '/screenshot-demo/device-nfc-scan-error', description: 'Error state', category: 'other' },
   { id: 'device-offline-mode', name: 'Offline Mode', route: '/screenshot-demo/device-offline-mode', description: 'Offline indicator', category: 'other' }
+];
+
+// Generate 274 screenshots (137 English + 137 Arabic)
+const SCREENSHOTS: ScreenshotConfig[] = [
+  ...BASE_SCREENSHOTS.map(s => ({ ...s, language: 'en' as const })),
+  ...BASE_SCREENSHOTS.map(s => ({ ...s, language: 'ar' as const }))
 ];
 
 export default function ScreenshotManager() {
