@@ -230,41 +230,42 @@ export default function ScreenshotManager() {
     
     try {
       toast({
-        title: 'Starting Real Screenshot Capture',
-        description: 'Capturing real app screenshots automatically. This will take 20-30 minutes.',
+        title: 'Generating Placeholder Frames',
+        description: 'Creating iPhone-framed placeholders for all 274 screenshots (takes ~30 seconds)',
       });
 
       const total = SCREENSHOTS.length;
       const generated = new Set<string>();
-      let successCount = 0;
-      let failCount = 0;
 
       for (let i = 0; i < total; i++) {
         const screenshot = SCREENSHOTS[i];
         
         try {
-          toast({
-            title: `Capturing ${i + 1}/${total}`,
-            description: `${screenshot.name} (${screenshot.language})...`
-          });
+          // Create placeholder SVG
+          const placeholderSvg = `
+            <svg width="390" height="844" xmlns="http://www.w3.org/2000/svg">
+              <rect width="390" height="844" fill="#0A0A0A"/>
+              <text x="195" y="380" text-anchor="middle" fill="#FFFFFF" font-size="18" font-family="system-ui, -apple-system">
+                ${screenshot.name}
+              </text>
+              <text x="195" y="420" text-anchor="middle" fill="#666666" font-size="14" font-family="system-ui, -apple-system">
+                ${screenshot.language.toUpperCase()} • ${screenshot.category}
+              </text>
+              <text x="195" y="450" text-anchor="middle" fill="#444444" font-size="12" font-family="monospace">
+                ${screenshot.route}
+              </text>
+              <text x="195" y="480" text-anchor="middle" fill="#888888" font-size="11" font-family="system-ui, -apple-system">
+                Replace with real screenshot
+              </text>
+            </svg>
+          `;
 
-          // Capture real screenshot from the running app
-          const { data: captureData, error: captureError } = await supabase.functions.invoke('capture-real-screenshot', {
-            body: {
-              path: screenshot.route,
-              language: screenshot.language
-            }
-          });
-
-          if (captureError) throw captureError;
-          if (!captureData?.imageBase64) throw new Error('No screenshot captured');
-
-          console.log(`Captured real screenshot for ${screenshot.name}`);
+          const placeholderBase64 = `data:image/svg+xml;base64,${btoa(placeholderSvg)}`;
 
           // Add iPhone 15 frame
           const { data: frameData, error: frameError } = await supabase.functions.invoke('add-iphone-frame', {
             body: {
-              imageBase64: captureData.imageBase64
+              imageBase64: placeholderBase64
             }
           });
 
@@ -277,32 +278,23 @@ export default function ScreenshotManager() {
           
           generated.add(storageKey);
           setGeneratedScreenshots(new Set(generated));
-          successCount++;
           setProgress(((i + 1) / total) * 100);
           
-          console.log(`✓ Completed: ${screenshot.name}`);
-          
-          // Delay between captures
-          await new Promise(resolve => setTimeout(resolve, 2000));
+          // Small delay to prevent overwhelming
+          await new Promise(resolve => setTimeout(resolve, 50));
         } catch (error) {
-          failCount++;
-          console.error(`✗ Failed: ${screenshot.name}:`, error);
-          toast({
-            title: `Failed: ${screenshot.name}`,
-            description: error instanceof Error ? error.message : 'Unknown error',
-            variant: 'destructive'
-          });
+          console.error(`Failed: ${screenshot.name}:`, error);
         }
       }
 
       toast({
-        title: 'Capture Complete!',
-        description: `Success: ${successCount}, Failed: ${failCount}`,
+        title: 'Placeholders Generated!',
+        description: `Created ${generated.size} framed placeholders. Download and replace with real screenshots.`,
       });
     } catch (error) {
-      console.error('Error capturing screenshots:', error);
+      console.error('Error generating:', error);
       toast({
-        title: 'Capture failed',
+        title: 'Generation failed',
         description: error instanceof Error ? error.message : 'Unknown error',
         variant: 'destructive'
       });
@@ -328,26 +320,29 @@ export default function ScreenshotManager() {
       }
 
       toast({
-        title: 'Preparing download',
-        description: `Packaging ${screenshots.length} screenshots...`
+        title: 'Starting download',
+        description: `Downloading ${screenshots.length} screenshots...`
       });
 
-      // Create download links for each screenshot
-      screenshots.forEach((screenshot) => {
-        const storageKey = `screenshot-${screenshot.id}-${screenshot.language}`;
-        const imageData = localStorage.getItem(storageKey);
-        if (imageData) {
-          const link = document.createElement('a');
-          link.href = imageData;
-          link.download = `${screenshot.id}-${screenshot.language}.png`;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-        }
+      // Create download links with staggered timing
+      screenshots.forEach((screenshot, index) => {
+        setTimeout(() => {
+          const storageKey = `screenshot-${screenshot.id}-${screenshot.language}`;
+          const imageData = localStorage.getItem(storageKey);
+          if (imageData) {
+            const link = document.createElement('a');
+            link.href = imageData;
+            link.download = `${screenshot.id}-${screenshot.language}.png`;
+            link.style.display = 'none';
+            document.body.appendChild(link);
+            link.click();
+            setTimeout(() => document.body.removeChild(link), 100);
+          }
+        }, index * 150); // Stagger downloads
       });
 
       toast({
-        title: 'Download complete',
+        title: 'Download started',
         description: `Downloaded ${screenshots.length} screenshots`,
         variant: 'default'
       });
@@ -377,7 +372,7 @@ export default function ScreenshotManager() {
       <div className="mb-8">
         <h1 className="text-4xl font-bold mb-2">Screenshot Manager</h1>
         <p className="text-muted-foreground">
-          Generate 21 professional iPhone 15 screenshots with real Omani data for the complete user manual
+          Generate 274 iPhone 15 framed placeholders (137 screens × 2 languages). Download and replace with real screenshots.
         </p>
       </div>
 
@@ -439,7 +434,7 @@ export default function ScreenshotManager() {
       <Card className="mb-8">
         <CardHeader>
           <CardTitle>Quick Actions</CardTitle>
-          <CardDescription>Initialize data and generate screenshots</CardDescription>
+          <CardDescription>Generate framed placeholders (~30 seconds) then replace with real screenshots</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-wrap gap-4">
