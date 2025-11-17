@@ -81,3 +81,12 @@ verify_jwt = true
 
 [functions.generate-presentation-screenshots]
 verify_jwt = false
+
+[functions.seed-mock-data]
+verify_jwt = false
+
+[functions.capture-screenshot]
+verify_jwt = false
+
+[functions.add-iphone-frame]
+verify_jwt = false

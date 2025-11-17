@@ -33,6 +33,7 @@ import StudentRegistrationWizard from "./components/parent/StudentRegistrationWi
 import StudentApprovalDashboard from "./pages/admin/StudentApprovalDashboard";
 import Presentation from "./pages/Presentation";
 import PresentationFull from "./pages/PresentationFull";
+import ScreenshotManager from "./pages/admin/ScreenshotManager";
 // Removed test page
 
 // Create a stable QueryClient instance
@@ -92,6 +93,7 @@ function App() {
                         <Route path="/checkpoint" element={<EntranceCheckpoint />} />
                         <Route path="/presentation" element={<Presentation />} />
                         <Route path="/presentation-full" element={<PresentationFull />} />
+                        <Route path="/admin/screenshot-manager" element={<ScreenshotManager />} />
                         <Route path="*" element={<NotFound />} />
                       </Routes>
                     </PageTransition>
