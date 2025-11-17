@@ -1,8 +1,7 @@
-import { Button } from '@/components/ui/button';
+import { useState } from 'react';
 import { Card } from '@/components/ui/card';
-import { Globe, Download, Smartphone, Shield, Wallet, Bus, UtensilsCrossed, GraduationCap, Users, BarChart, Bell, Clock, MapPin, CreditCard, CheckCircle, BookOpen, Calendar, MessageSquare, FileText, Mail, UserPlus, ClipboardCheck, LogIn, Home, Settings, Plus, Edit, Trash, Eye, Search, Filter, ArrowRight, UserCheck, DollarSign, Receipt, TrendingUp, FileSpreadsheet, Package, AlertTriangle } from 'lucide-react';
+import { Globe, Download, Smartphone, Shield, Wallet, Bus, UtensilsCrossed, GraduationCap, Users, BarChart, Bell, Clock, MapPin, CreditCard, CheckCircle, BookOpen, Calendar, MessageSquare, FileText, Mail, UserPlus, ClipboardCheck, LogIn, Home, Settings, Plus, Edit, Trash, Eye, Search, Filter, ArrowRight, UserCheck, DollarSign, Receipt, TrendingUp, FileSpreadsheet, Package, AlertTriangle, Info, Zap, AlertCircle } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import logo from '@/assets/talebedu-logo-hq.png';
 import screenshotNfc from '@/assets/presentation/screenshot-nfc.jpg';
 import screenshotBus from '@/assets/presentation/screenshot-bus.jpg';
 import screenshotWallet from '@/assets/presentation/screenshot-wallet.jpg';
@@ -19,544 +18,437 @@ const PresentationFull = () => {
     window.print();
   };
 
+  const CalloutBox = ({ type = 'info', icon: Icon, title, children }: any) => {
+    const styles = {
+      info: 'bg-blue-50 dark:bg-blue-950 border-blue-500 text-blue-700 dark:text-blue-300',
+      success: 'bg-green-50 dark:bg-green-950 border-green-500 text-green-700 dark:text-green-300',
+      warning: 'bg-yellow-50 dark:bg-yellow-950 border-yellow-500 text-yellow-700 dark:text-yellow-300',
+      tip: 'bg-purple-50 dark:bg-purple-950 border-purple-500 text-purple-700 dark:text-purple-300',
+    };
+    
+    return (
+      <div className={`${styles[type]} border-l-4 p-4 rounded-r-lg break-inside-avoid`}>
+        <div className="flex items-start gap-3">
+          <Icon className="h-5 w-5 flex-shrink-0 mt-1" />
+          <div>
+            <p className="font-semibold">{title}</p>
+            <div className="text-sm mt-1">{children}</div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const ChapterDivider = ({ number, title, subtitle, icon: Icon, pages }: any) => (
+    <section className="min-h-screen flex items-center justify-center p-8 print:break-after-page">
+      <div className="text-center space-y-8 max-w-2xl">
+        <Icon className="h-24 w-24 mx-auto text-blue-500" />
+        <div className="text-8xl font-bold bg-gradient-to-br from-blue-500 to-blue-600 bg-clip-text text-transparent">
+          {number}
+        </div>
+        <h1 className="text-5xl font-bold">{title}</h1>
+        <p className="text-xl text-muted-foreground">{subtitle}</p>
+        <p className="text-sm text-muted-foreground">{pages}</p>
+      </div>
+    </section>
+  );
+
+  const FeatureSection = ({ title, number, description, callouts, screenshot, screenshotCaption }: any) => (
+    <div className="grid grid-cols-5 gap-8 items-center min-h-[600px] break-inside-avoid mb-16">
+      {/* Text Column - 40% */}
+      <div className={`col-span-2 space-y-6 ${isArabic ? 'order-2' : 'order-1'}`}>
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-white flex items-center justify-center font-bold text-xl shadow-lg">
+            {number}
+          </div>
+          <h3 className="text-3xl font-bold bg-gradient-to-r from-blue-500 to-blue-600 bg-clip-text text-transparent">
+            {title}
+          </h3>
+        </div>
+        
+        <p className="text-lg leading-relaxed">{description}</p>
+        
+        {/* Numbered callouts */}
+        <div className="space-y-3">
+          {callouts.map((callout: any, idx: number) => (
+            <div key={idx} className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
+                {idx + 1}
+              </div>
+              <p>{callout}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+      
+      {/* Screenshot Column - 60% */}
+      <div className={`col-span-3 ${isArabic ? 'order-1' : 'order-2'}`}>
+        <div className="relative">
+          <div className="absolute -inset-4 bg-gradient-to-br from-blue-500/10 to-blue-600/10 rounded-3xl blur-xl"></div>
+          <img 
+            src={screenshot} 
+            alt={title}
+            className="relative w-full rounded-2xl shadow-2xl border-4 border-gray-200 dark:border-gray-800"
+          />
+          <p className="text-center text-sm text-muted-foreground mt-4 italic">
+            {screenshotCaption}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="min-h-screen bg-background print:bg-white" dir={isArabic ? 'rtl' : 'ltr'}>
-      {/* Control Bar */}
-      <div className="fixed top-4 right-4 z-50 flex gap-2 print:hidden">
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => setLanguage(isArabic ? 'en' : 'ar')}
+    <div className="min-h-screen bg-background text-foreground" dir={isArabic ? 'rtl' : 'ltr'}>
+      {/* Control Bar - Hidden in print */}
+      <div className="fixed top-4 right-4 z-50 flex items-center gap-4 no-print bg-white dark:bg-gray-900 p-4 rounded-lg shadow-lg">
+        <button
+          onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}
+          className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
         >
           <Globe className="h-4 w-4" />
-        </Button>
-        <Button onClick={handlePrint}>
-          <Download className="h-4 w-4 mr-2" />
+          {language === 'en' ? 'العربية' : 'English'}
+        </button>
+        <button
+          onClick={handlePrint}
+          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-colors"
+        >
+          <Download className="h-4 w-4" />
           {isArabic ? 'تحميل PDF' : 'Download PDF'}
-        </Button>
+        </button>
       </div>
 
       {/* Cover Page */}
       <section className="min-h-screen flex flex-col items-center justify-center p-8 print:break-after-page">
         <div className="text-center space-y-8">
-          <img src={logo} alt="TalebEdu Logo" className="w-48 h-48 mx-auto object-contain" />
+          <div className="text-[140px] font-bold leading-none bg-gradient-to-br from-primary via-primary to-secondary bg-clip-text text-transparent filter drop-shadow-2xl">
+            t
+          </div>
           <h1 className="text-6xl font-bold bg-gradient-to-r from-blue-500 to-blue-600 bg-clip-text text-transparent">
             {isArabic ? 'منصة طالب المدرسية' : 'TalebEdu Platform'}
           </h1>
-          <p className="text-2xl text-muted-foreground max-w-3xl mx-auto">
-            {isArabic 
-              ? 'دليل شامل - جميع الأدوار والوظائف'
-              : 'Complete Guide - All Roles & Features'}
+          <p className="text-2xl text-muted-foreground">
+            {isArabic ? 'دليل المستخدم الكامل ودليل التطبيق' : 'Complete User Manual & Implementation Guide'}
           </p>
-          <div className="mt-12 space-y-4 text-lg text-muted-foreground">
-            <p>{isArabic ? 'إصدار 2025' : '2025 Edition'}</p>
-            <p className="text-blue-600 font-semibold" dir="ltr">+966 53 445 5688</p>
+          <p className="text-lg text-muted-foreground">
+            {isArabic ? 'الإصدار 1.0 - إصدار 2025' : 'Version 1.0 - 2025 Edition'}
+          </p>
+          <div className="mt-12 space-y-4 text-lg">
+            <p className="text-blue-600 font-semibold" dir="ltr">
+              📞 +968 9695 4540
+            </p>
+            <p className="text-blue-600 font-semibold" dir="ltr">
+              📧 info@talebEdu.com
+            </p>
           </div>
         </div>
       </section>
 
-      {/* Parent Registration Flow */}
+      {/* Table of Contents */}
       <section className="min-h-screen p-8 print:break-after-page">
-        <h2 className="text-4xl font-bold mb-8 text-center">
-          {isArabic ? 'تسجيل ولي الأمر - خطوة بخطوة' : 'Parent Registration - Step by Step'}
+        <h2 className="text-5xl font-bold mb-12 text-center bg-gradient-to-r from-blue-500 to-blue-600 bg-clip-text text-transparent">
+          {isArabic ? 'جدول المحتويات' : 'Table of Contents'}
         </h2>
-        <div className="max-w-4xl mx-auto space-y-8">
-          <Card className="p-6 break-inside-avoid">
-            <div className="flex items-center gap-4 mb-6">
-              <div className="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold text-lg">1</div>
-              <h3 className="text-2xl font-semibold">{isArabic ? 'استلام رابط الدعوة' : 'Receive Invitation Link'}</h3>
-            </div>
-            <div className="space-y-4">
-              <p className="text-lg text-muted-foreground leading-relaxed">
-                {isArabic
-                  ? 'تقوم إدارة المدرسة بإرسال رابط دعوة فريد عبر البريد الإلكتروني أو رسالة نصية.'
-                  : 'School administration sends a unique invitation link via email or SMS.'}
-              </p>
-              <div className="bg-blue-50 dark:bg-blue-950 p-4 rounded-lg">
-                <Mail className="h-6 w-6 text-blue-600 mb-2" />
-                <p className="text-sm font-mono break-all">https://talebedu.app/parent-registration?token=abc123xyz</p>
-              </div>
-            </div>
-          </Card>
-
-          <Card className="p-6 break-inside-avoid">
-            <div className="flex items-center gap-4 mb-6">
-              <div className="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold text-lg">2</div>
-              <h3 className="text-2xl font-semibold">{isArabic ? 'إنشاء الحساب' : 'Create Account'}</h3>
-            </div>
-            <div className="space-y-4">
-              <div className="grid md:grid-cols-2 gap-4">
-                {[
-                  { icon: UserCheck, text: isArabic ? 'الاسم الكامل' : 'Full Name' },
-                  { icon: Mail, text: isArabic ? 'البريد الإلكتروني' : 'Email' },
-                  { icon: Smartphone, text: isArabic ? 'رقم الجوال' : 'Phone Number' },
-                  { icon: Shield, text: isArabic ? 'كلمة المرور' : 'Password' },
-                ].map((field, i) => (
-                  <div key={i} className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-900 rounded-lg">
-                    <field.icon className="h-5 w-5 text-blue-600" />
-                    <span>{field.text}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </Card>
-
-          <Card className="p-6 break-inside-avoid">
-            <div className="flex items-center gap-4 mb-6">
-              <div className="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold text-lg">3</div>
-              <h3 className="text-2xl font-semibold">{isArabic ? 'تسجيل بيانات الطالب' : 'Register Student Data'}</h3>
-            </div>
-            <div className="space-y-3">
-              {[
-                isArabic ? 'الاسم الكامل بالعربي والإنجليزي' : 'Full name in Arabic and English',
-                isArabic ? 'الصف والشعبة' : 'Grade and Section',
-                isArabic ? 'تاريخ الميلاد' : 'Date of Birth',
-                isArabic ? 'معلومات الحساسية الغذائية' : 'Food Allergy Information',
-                isArabic ? 'رقم الطوارئ' : 'Emergency Contact',
-                isArabic ? 'صورة شخصية' : 'Profile Photo',
-              ].map((item, i) => (
-                <div key={i} className="flex items-center gap-3">
-                  <CheckCircle className="h-5 w-5 text-green-500 shrink-0" />
-                  <span className="text-lg">{item}</span>
-                </div>
-              ))}
-            </div>
-          </Card>
-
-          <Card className="p-6 break-inside-avoid">
-            <div className="flex items-center gap-4 mb-6">
-              <div className="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold text-lg">4</div>
-              <h3 className="text-2xl font-semibold">{isArabic ? 'انتظار الموافقة' : 'Wait for Approval'}</h3>
-            </div>
-            <div className="p-4 bg-yellow-100 dark:bg-yellow-950 rounded-lg text-center">
-              <Clock className="h-12 w-12 mx-auto mb-2 text-yellow-600" />
-              <p className="text-lg font-semibold">{isArabic ? 'قيد المراجعة...' : 'Under Review...'}</p>
-            </div>
-          </Card>
-
-          <Card className="p-6 break-inside-avoid">
-            <div className="flex items-center gap-4 mb-6">
-              <div className="w-10 h-10 rounded-full bg-green-500 text-white flex items-center justify-center font-bold text-lg">5</div>
-              <h3 className="text-2xl font-semibold">{isArabic ? 'البدء' : 'Start Using'}</h3>
-            </div>
-            <div className="p-6 bg-green-50 dark:bg-green-950 rounded-lg border-2 border-green-500">
-              <CheckCircle className="h-12 w-12 mx-auto mb-2 text-green-600" />
-              <p className="text-lg font-semibold text-center text-green-700 dark:text-green-400">
-                {isArabic ? '✓ تمت الموافقة' : '✓ Approved'}
-              </p>
-            </div>
-          </Card>
-        </div>
-      </section>
-
-      {/* Attendance with Screenshot */}
-      <section className="min-h-screen p-8 print:break-after-page">
-        <h2 className="text-4xl font-bold mb-8 text-center">
-          {isArabic ? 'متابعة الحضور' : 'Attendance Tracking'}
-        </h2>
-        <div className="max-w-5xl mx-auto">
-          <Card className="p-8">
-            <div className="grid md:grid-cols-2 gap-8 items-center">
-              <div className="space-y-6">
-                <h3 className="text-2xl font-semibold">
-                  {isArabic ? 'تسجيل فوري بتقنية NFC' : 'Instant NFC Registration'}
-                </h3>
-                <p className="text-lg text-muted-foreground leading-relaxed">
-                  {isArabic
-                    ? 'يستخدم الطلاب بطاقات NFC للتسجيل السريع عند دخول المدرسة. إشعار فوري لولي الأمر.'
-                    : 'Students use NFC cards for quick check-in when entering school. Instant parent notification.'}
-                </p>
-                <div className="space-y-3">
-                  {[
-                    { icon: CheckCircle, text: isArabic ? 'تسجيل أقل من ثانية' : 'Registration in less than 1 second' },
-                    { icon: Bell, text: isArabic ? 'إشعار فوري للوالدين' : 'Instant parent notification' },
-                    { icon: Calendar, text: isArabic ? 'سجل كامل للحضور' : 'Complete attendance log' },
-                  ].map((item, i) => (
-                    <div key={i} className="flex items-center gap-3 p-3 bg-blue-50 dark:bg-blue-950 rounded-lg">
-                      <item.icon className="h-5 w-5 text-blue-600" />
-                      <span>{item.text}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div className="rounded-lg overflow-hidden shadow-2xl">
-                <img 
-                  src={screenshotNfc} 
-                  alt={isArabic ? 'شاشة الحضور' : 'Attendance Screen'} 
-                  className="w-full h-auto"
-                />
-              </div>
-            </div>
-          </Card>
-        </div>
-      </section>
-
-      {/* Bus Tracking with Screenshot */}
-      <section className="min-h-screen p-8 print:break-after-page">
-        <h2 className="text-4xl font-bold mb-8 text-center">
-          {isArabic ? 'تتبع الحافلة المدرسية' : 'School Bus Tracking'}
-        </h2>
-        <div className="max-w-5xl mx-auto">
-          <Card className="p-8">
-            <div className="grid md:grid-cols-2 gap-8 items-center">
-              <div className="space-y-6">
-                <h3 className="text-2xl font-semibold">
-                  {isArabic ? 'تتبع مباشر بنظام GPS' : 'Live GPS Tracking'}
-                </h3>
-                <p className="text-lg text-muted-foreground leading-relaxed">
-                  {isArabic
-                    ? 'متابعة موقع الحافلة في الوقت الفعلي ومعرفة الوقت المتوقع للوصول.'
-                    : 'Track bus location in real-time and know expected arrival time.'}
-                </p>
-                <div className="space-y-3">
-                  {[
-                    { icon: MapPin, text: isArabic ? 'خريطة مباشرة' : 'Live map' },
-                    { icon: Clock, text: isArabic ? 'وقت الوصول المتوقع' : 'Expected arrival time' },
-                    { icon: Bell, text: isArabic ? 'إشعارات الركوب والنزول' : 'Boarding/exit notifications' },
-                    { icon: Users, text: isArabic ? 'معلومات السائق' : 'Driver information' },
-                  ].map((item, i) => (
-                    <div key={i} className="flex items-center gap-3 p-3 bg-orange-50 dark:bg-orange-950 rounded-lg">
-                      <item.icon className="h-5 w-5 text-orange-600" />
-                      <span>{item.text}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div className="rounded-lg overflow-hidden shadow-2xl">
-                <img 
-                  src={screenshotBus} 
-                  alt={isArabic ? 'شاشة الحافلة' : 'Bus Screen'} 
-                  className="w-full h-auto"
-                />
-              </div>
-            </div>
-          </Card>
-        </div>
-      </section>
-
-      {/* Digital Wallet with Screenshot */}
-      <section className="min-h-screen p-8 print:break-after-page">
-        <h2 className="text-4xl font-bold mb-8 text-center">
-          {isArabic ? 'المحفظة الرقمية' : 'Digital Wallet'}
-        </h2>
-        <div className="max-w-5xl mx-auto">
-          <Card className="p-8">
-            <div className="grid md:grid-cols-2 gap-8 items-center">
-              <div className="space-y-6">
-                <h3 className="text-2xl font-semibold">
-                  {isArabic ? 'إدارة مالية آمنة' : 'Secure Financial Management'}
-                </h3>
-                <div className="p-6 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg text-white mb-4">
-                  <p className="text-sm opacity-90">{isArabic ? 'الرصيد الحالي' : 'Current Balance'}</p>
-                  <p className="text-4xl font-bold">250.00 {isArabic ? 'ريال' : 'SAR'}</p>
-                </div>
-                <div className="space-y-3">
-                  {[
-                    { icon: Plus, text: isArabic ? 'تعبئة فورية' : 'Instant top-up' },
-                    { icon: Eye, text: isArabic ? 'سجل معاملات كامل' : 'Complete transaction history' },
-                    { icon: ArrowRight, text: isArabic ? 'تحويل بين الطلاب' : 'Transfer between students' },
-                    { icon: AlertTriangle, text: isArabic ? 'تنبيهات الرصيد المنخفض' : 'Low balance alerts' },
-                  ].map((item, i) => (
-                    <div key={i} className="flex items-center gap-3 p-3 bg-green-50 dark:bg-green-950 rounded-lg">
-                      <item.icon className="h-5 w-5 text-green-600" />
-                      <span>{item.text}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div className="rounded-lg overflow-hidden shadow-2xl">
-                <img 
-                  src={screenshotWallet} 
-                  alt={isArabic ? 'شاشة المحفظة' : 'Wallet Screen'} 
-                  className="w-full h-auto"
-                />
-              </div>
-            </div>
-          </Card>
-        </div>
-      </section>
-
-      {/* Canteen Management with Screenshot */}
-      <section className="min-h-screen p-8 print:break-after-page">
-        <h2 className="text-4xl font-bold mb-8 text-center">
-          {isArabic ? 'إدارة المقصف' : 'Canteen Management'}
-        </h2>
-        <div className="max-w-5xl mx-auto">
-          <Card className="p-8">
-            <div className="grid md:grid-cols-2 gap-8 items-center">
-              <div className="space-y-6">
-                <h3 className="text-2xl font-semibold">
-                  {isArabic ? 'تحكم كامل في المصروف' : 'Full Spending Control'}
-                </h3>
-                <p className="text-lg text-muted-foreground leading-relaxed">
-                  {isArabic
-                    ? 'تحديد الحد اليومي للمصروف والمنتجات المسموحة ومتابعة جميع المشتريات.'
-                    : 'Set daily spending limit, allowed products, and track all purchases.'}
-                </p>
-                <div className="space-y-3">
-                  {[
-                    { icon: DollarSign, text: isArabic ? 'حد يومي للمصروف' : 'Daily spending limit' },
-                    { icon: UtensilsCrossed, text: isArabic ? 'تحديد المنتجات المسموحة' : 'Set allowed products' },
-                    { icon: AlertTriangle, text: isArabic ? 'معلومات الحساسية' : 'Allergy information' },
-                    { icon: Eye, text: isArabic ? 'تقارير المشتريات' : 'Purchase reports' },
-                  ].map((item, i) => (
-                    <div key={i} className="flex items-center gap-3 p-3 bg-yellow-50 dark:bg-yellow-950 rounded-lg">
-                      <item.icon className="h-5 w-5 text-yellow-600" />
-                      <span>{item.text}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div className="rounded-lg overflow-hidden shadow-2xl">
-                <img 
-                  src={screenshotCanteen} 
-                  alt={isArabic ? 'شاشة المقصف' : 'Canteen Screen'} 
-                  className="w-full h-auto"
-                />
-              </div>
-            </div>
-          </Card>
-        </div>
-      </section>
-
-      {/* Grades with Screenshot */}
-      <section className="min-h-screen p-8 print:break-after-page">
-        <h2 className="text-4xl font-bold mb-8 text-center">
-          {isArabic ? 'متابعة الدرجات' : 'Grades Tracking'}
-        </h2>
-        <div className="max-w-5xl mx-auto">
-          <Card className="p-8">
-            <div className="grid md:grid-cols-2 gap-8 items-center">
-              <div className="space-y-6">
-                <h3 className="text-2xl font-semibold">
-                  {isArabic ? 'الأداء الأكاديمي' : 'Academic Performance'}
-                </h3>
-                <p className="text-lg text-muted-foreground leading-relaxed">
-                  {isArabic
-                    ? 'متابعة الدرجات في جميع المواد، الواجبات المنزلية، والاختبارات.'
-                    : 'Track grades in all subjects, homework, and exams.'}
-                </p>
-                <div className="space-y-3">
-                  {[
-                    { icon: BookOpen, text: isArabic ? 'درجات جميع المواد' : 'All subject grades' },
-                    { icon: FileText, text: isArabic ? 'متابعة الواجبات' : 'Homework tracking' },
-                    { icon: Calendar, text: isArabic ? 'جدول الاختبارات' : 'Exam schedule' },
-                    { icon: TrendingUp, text: isArabic ? 'تقارير الأداء' : 'Performance reports' },
-                  ].map((item, i) => (
-                    <div key={i} className="flex items-center gap-3 p-3 bg-purple-50 dark:bg-purple-950 rounded-lg">
-                      <item.icon className="h-5 w-5 text-purple-600" />
-                      <span>{item.text}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div className="rounded-lg overflow-hidden shadow-2xl">
-                <img 
-                  src={screenshotGrades} 
-                  alt={isArabic ? 'شاشة الدرجات' : 'Grades Screen'} 
-                  className="w-full h-auto"
-                />
-              </div>
-            </div>
-          </Card>
-        </div>
-      </section>
-
-      {/* Finance with Screenshot */}
-      <section className="min-h-screen p-8 print:break-after-page">
-        <h2 className="text-4xl font-bold mb-8 text-center">
-          {isArabic ? 'الإدارة المالية' : 'Financial Management'}
-        </h2>
-        <div className="max-w-5xl mx-auto">
-          <Card className="p-8">
-            <div className="grid md:grid-cols-2 gap-8 items-center">
-              <div className="space-y-6">
-                <h3 className="text-2xl font-semibold">
-                  {isArabic ? 'الرسوم والمدفوعات' : 'Fees & Payments'}
-                </h3>
-                <p className="text-lg text-muted-foreground leading-relaxed">
-                  {isArabic
-                    ? 'عرض الرسوم المستحقة، الدفع الإلكتروني، وخطط التقسيط.'
-                    : 'View due fees, electronic payment, and installment plans.'}
-                </p>
-                <div className="space-y-3">
-                  {[
-                    { icon: Eye, text: isArabic ? 'الرسوم المستحقة' : 'Due fees' },
-                    { icon: CreditCard, text: isArabic ? 'الدفع الإلكتروني' : 'Electronic payment' },
-                    { icon: Calendar, text: isArabic ? 'خطط التقسيط' : 'Installment plans' },
-                    { icon: Receipt, text: isArabic ? 'إيصالات إلكترونية' : 'Electronic receipts' },
-                  ].map((item, i) => (
-                    <div key={i} className="flex items-center gap-3 p-3 bg-teal-50 dark:bg-teal-950 rounded-lg">
-                      <item.icon className="h-5 w-5 text-teal-600" />
-                      <span>{item.text}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div className="rounded-lg overflow-hidden shadow-2xl">
-                <img 
-                  src={screenshotFinance} 
-                  alt={isArabic ? 'شاشة المالية' : 'Finance Screen'} 
-                  className="w-full h-auto"
-                />
-              </div>
-            </div>
-          </Card>
-        </div>
-      </section>
-
-      {/* Notifications with Screenshot */}
-      <section className="min-h-screen p-8 print:break-after-page">
-        <h2 className="text-4xl font-bold mb-8 text-center">
-          {isArabic ? 'نظام الإشعارات' : 'Notification System'}
-        </h2>
-        <div className="max-w-5xl mx-auto">
-          <Card className="p-8">
-            <div className="grid md:grid-cols-2 gap-8 items-center">
-              <div className="space-y-6">
-                <h3 className="text-2xl font-semibold">
-                  {isArabic ? 'تواصل فوري' : 'Instant Communication'}
-                </h3>
-                <p className="text-lg text-muted-foreground leading-relaxed">
-                  {isArabic
-                    ? 'إشعارات فورية للحضور، المعاملات المالية، الدرجات، والأحداث المهمة.'
-                    : 'Instant notifications for attendance, financial transactions, grades, and important events.'}
-                </p>
-                <div className="space-y-3">
-                  {[
-                    { icon: Bell, text: isArabic ? 'الحضور والانصراف' : 'Attendance notifications' },
-                    { icon: CreditCard, text: isArabic ? 'المعاملات المالية' : 'Financial transactions' },
-                    { icon: MessageSquare, text: isArabic ? 'إعلانات المدرسة' : 'School announcements' },
-                    { icon: Calendar, text: isArabic ? 'تذكير بالواجبات' : 'Homework reminders' },
-                  ].map((item, i) => (
-                    <div key={i} className="flex items-center gap-3 p-3 bg-red-50 dark:bg-red-950 rounded-lg">
-                      <item.icon className="h-5 w-5 text-red-600" />
-                      <span>{item.text}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div className="rounded-lg overflow-hidden shadow-2xl">
-                <img 
-                  src={screenshotNotifications} 
-                  alt={isArabic ? 'شاشة الإشعارات' : 'Notifications Screen'} 
-                  className="w-full h-auto"
-                />
-              </div>
-            </div>
-          </Card>
-        </div>
-      </section>
-
-      {/* All User Roles */}
-      <section className="min-h-screen p-8 print:break-after-page">
-        <h2 className="text-4xl font-bold mb-8 text-center">
-          {isArabic ? 'جميع أدوار المستخدمين' : 'All User Roles'}
-        </h2>
-        <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-3 gap-6 max-w-7xl mx-auto">
           {[
-            { 
-              icon: Shield, 
-              title: isArabic ? 'المدير' : 'Admin', 
-              color: 'bg-red-50 dark:bg-red-950 border-red-500',
-              features: isArabic ? ['إدارة كاملة', 'إضافة مستخدمين', 'إدارة الرسوم', 'برمجة NFC'] : ['Full management', 'Add users', 'Fee management', 'NFC programming']
-            },
-            { 
-              icon: Users, 
-              title: isArabic ? 'ولي الأمر' : 'Parent', 
-              color: 'bg-blue-50 dark:bg-blue-950 border-blue-500',
-              features: isArabic ? ['متابعة الحضور', 'المحفظة', 'تتبع الحافلة', 'الدرجات'] : ['Track attendance', 'Wallet', 'Bus tracking', 'Grades']
-            },
-            { 
-              icon: GraduationCap, 
-              title: isArabic ? 'المعلم' : 'Teacher', 
-              color: 'bg-green-50 dark:bg-green-950 border-green-500',
-              features: isArabic ? ['إدخال الدرجات', 'الواجبات', 'الحضور', 'التقارير'] : ['Grade entry', 'Homework', 'Attendance', 'Reports']
-            },
-            { 
-              icon: Smartphone, 
-              title: isArabic ? 'الطالب' : 'Student', 
-              color: 'bg-purple-50 dark:bg-purple-950 border-purple-500',
-              features: isArabic ? ['عرض الدرجات', 'المحفظة', 'الأصدقاء', 'الرسائل'] : ['View grades', 'Wallet', 'Friends', 'Messages']
-            },
-            { 
-              icon: Bus, 
-              title: isArabic ? 'السائق' : 'Driver', 
-              color: 'bg-orange-50 dark:bg-orange-950 border-orange-500',
-              features: isArabic ? ['تسجيل الركوب', 'تحديث الموقع', 'قائمة الطلاب', 'المسار'] : ['Record boarding', 'Update location', 'Student list', 'Route']
-            },
-            { 
-              icon: UtensilsCrossed, 
-              title: isArabic ? 'المقصف' : 'Canteen', 
-              color: 'bg-yellow-50 dark:bg-yellow-950 border-yellow-500',
-              features: isArabic ? ['إتمام البيع', 'مسح NFC', 'إدارة المخزون', 'القيود'] : ['Complete sale', 'Scan NFC', 'Inventory', 'Restrictions']
-            },
-            { 
-              icon: CreditCard, 
-              title: isArabic ? 'المالية' : 'Finance', 
-              color: 'bg-teal-50 dark:bg-teal-950 border-teal-500',
-              features: isArabic ? ['الفواتير', 'المدفوعات', 'التقارير', 'المتأخرات'] : ['Invoices', 'Payments', 'Reports', 'Overdue']
-            },
-          ].map((role, i) => (
-            <Card key={i} className={`p-6 ${role.color} border-l-4 break-inside-avoid`}>
-              <div className="flex items-center gap-4 mb-4">
-                <role.icon className="h-10 w-10" />
-                <h3 className="text-2xl font-semibold">{role.title}</h3>
+            { icon: BookOpen, title: isArabic ? 'مقدمة' : 'Introduction', pages: '10 pages', color: 'text-blue-500' },
+            { icon: Smartphone, title: isArabic ? 'البدء' : 'Getting Started', pages: '8 pages', color: 'text-blue-500' },
+            { icon: Users, title: isArabic ? 'دليل ولي الأمر' : 'Parent Guide', pages: '35 pages', color: 'text-blue-500' },
+            { icon: Settings, title: isArabic ? 'دليل المسؤول' : 'Admin Guide', pages: '40 pages', color: 'text-green-500' },
+            { icon: GraduationCap, title: isArabic ? 'دليل المعلم' : 'Teacher Guide', pages: '20 pages', color: 'text-purple-500' },
+            { icon: BookOpen, title: isArabic ? 'دليل الطالب' : 'Student Guide', pages: '15 pages', color: 'text-orange-500' },
+            { icon: Bus, title: isArabic ? 'دليل السائق' : 'Driver Guide', pages: '10 pages', color: 'text-red-500' },
+            { icon: UtensilsCrossed, title: isArabic ? 'دليل المقصف' : 'Canteen Staff', pages: '10 pages', color: 'text-yellow-500' },
+            { icon: DollarSign, title: isArabic ? 'دليل المالية' : 'Finance Staff', pages: '12 pages', color: 'text-gray-500' },
+          ].map((chapter, idx) => (
+            <Card key={idx} className="p-6 hover:shadow-lg transition-shadow">
+              <div className="flex items-start gap-4">
+                <chapter.icon className={`h-8 w-8 ${chapter.color}`} />
+                <div>
+                  <h3 className="font-bold text-lg mb-2">{chapter.title}</h3>
+                  <p className="text-sm text-muted-foreground">{chapter.pages}</p>
+                </div>
               </div>
-              <ul className="space-y-2">
-                {role.features.map((feature, j) => (
-                  <li key={j} className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 shrink-0" />
-                    <span className="text-sm">{feature}</span>
-                  </li>
-                ))}
-              </ul>
             </Card>
           ))}
         </div>
       </section>
 
-      {/* Closing */}
-      <section className="min-h-screen flex flex-col items-center justify-center p-8">
-        <div className="text-center space-y-8">
-          <div className="w-32 h-32 mx-auto rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-2xl">
-            <span className="text-7xl font-bold text-white">ت</span>
+
+      {/* Chapter 1: Parent Guide */}
+      <ChapterDivider
+        number="01"
+        title={isArabic ? 'دليل ولي الأمر' : 'Parent Guide'}
+        subtitle={isArabic ? 'دليل شامل لأولياء الأمور' : 'Complete guide for parents'}
+        icon={Users}
+        pages={isArabic ? '35 صفحة' : '35 pages'}
+      />
+
+      {/* Parent Dashboard Feature */}
+      <section className="p-8">
+        <FeatureSection
+          number={1}
+          title={isArabic ? 'لوحة تحكم ولي الأمر' : 'Parent Dashboard'}
+          description={isArabic 
+            ? 'توفر لوحة تحكم ولي الأمر نظرة عامة شاملة على جميع أطفالك في مكان واحد. تحقق من الحضور، تتبع الحافلة، أدر المحفظة، وابق على اطلاع بجميع الأنشطة المدرسية.'
+            : 'The parent dashboard provides a comprehensive overview of all your children in one place. Check attendance, track buses, manage wallets, and stay informed about all school activities.'}
+          callouts={isArabic ? [
+            'يتم عرض رصيد المحفظة بشكل بارز في الأعلى للوصول السريع',
+            'تعرض بطاقات الطلاب حالة الحضور والإجراءات السريعة',
+            'توفر أزرار الإجراءات السريعة وصولاً فورياً إلى الميزات الرئيسية',
+            'يعرض موجز النشاط الأخير جميع التحديثات المهمة'
+          ] : [
+            'Wallet balance is displayed prominently at the top for quick access',
+            'Student cards show attendance status and quick actions for each child',
+            'Quick action buttons provide instant access to key features',
+            'Recent activity feed shows all important updates in real-time'
+          ]}
+          screenshot={screenshotNfc}
+          screenshotCaption={isArabic ? 'الشكل 1: لوحة تحكم ولي الأمر تعرض نظرة عامة على الطلاب والإجراءات السريعة' : 'Figure 1: Parent Dashboard showing student overview and quick actions'}
+        />
+
+        <CalloutBox type="tip" icon={Zap} title={isArabic ? 'نصيحة احترافية' : 'Pro Tip'}>
+          {isArabic 
+            ? 'اضغط على أي بطاقة طالب لرؤية معلومات مفصلة بما في ذلك الحضور الأخير، الدرجات، وسجل المحفظة. يمكنك أيضاً التبديل بسرعة بين الأطفال المتعددين.'
+            : 'Tap on any student card to see detailed information including recent attendance, grades, and wallet history. You can also quickly switch between multiple children.'}
+        </CalloutBox>
+      </section>
+
+      {/* Bus Tracking Feature */}
+      <section className="p-8">
+        <FeatureSection
+          number={2}
+          title={isArabic ? 'تتبع الحافلة المباشر' : 'Live Bus Tracking'}
+          description={isArabic
+            ? 'تتبع موقع حافلة طفلك في الوقت الفعلي على خريطة تفاعلية. احصل على تحديثات الوصول الفوري، شاهد المسار الكامل، واعرف بالضبط متى يتم اصطحاف طفلك أو توصيله.'
+            : 'Track your child\'s bus location in real-time on an interactive map. Get instant arrival updates, see the complete route, and know exactly when your child is picked up or dropped off.'}
+          callouts={isArabic ? [
+            'يتحرك أيقونة الحافلة الزرقاء في الوقت الفعلي على الخريطة',
+            'يظهر خط المسار الأزرق المسار الكامل مع جميع التوقفات',
+            'يشير أيقونة المنزل الأخضر إلى موقع طفلك',
+            'تعرض بطاقة الوقت المتوقع للوصول الوقت الدقيق للوصول والمحطة التالية',
+            'تؤكد حالة الطالب ما إذا كان طفلك على متن الحافلة'
+          ] : [
+            'Blue bus icon moves in real-time on the map showing exact location',
+            'Blue route line shows the complete path with all stops clearly marked',
+            'Green home icon indicates your child\'s pickup/drop-off location',
+            'ETA card displays precise arrival time and next stop information',
+            'Student status confirms whether your child is on board or waiting'
+          ]}
+          screenshot={screenshotBus}
+          screenshotCaption={isArabic ? 'الشكل 2: خريطة تتبع الحافلة المباشرة مع المسار ووقت الوصول المتوقع' : 'Figure 2: Live bus tracking map with route and ETA information'}
+        />
+
+        <CalloutBox type="info" icon={Bell} title={isArabic ? 'الإشعارات' : 'Notifications'}>
+          {isArabic
+            ? 'قم بتمكين إشعارات الدفع لتلقي تحديثات تلقائية عندما تكون الحافلة على بعد 10 دقائق، 5 دقائق، وعند صعود/نزول طفلك.'
+            : 'Enable push notifications to receive automatic updates when the bus is 10 minutes away, 5 minutes away, and when your child boards/exits.'}
+        </CalloutBox>
+      </section>
+
+      {/* Digital Wallet Feature */}
+      <section className="p-8">
+        <FeatureSection
+          number={3}
+          title={isArabic ? 'المحفظة الرقمية' : 'Digital Wallet'}
+          description={isArabic
+            ? 'أدر أموال طفلك بأمان من خلال المحفظة الرقمية المدمجة. قم بإيداع الأموال، حدد حدود الإنفاق، وتتبع جميع المعاملات في الوقت الفعلي مع تحليلات مفصلة.'
+            : 'Manage your child\'s money securely through the integrated digital wallet. Top up funds, set spending limits, and track all transactions in real-time with detailed analytics.'}
+          callouts={isArabic ? [
+            'يظهر عرض الرصيد الكبير الأموال المتاحة بوضوح',
+            'يتيح زر الإيداع البارز إضافة الأموال بسرعة',
+            'يعرض قائمة المعاملات الأخيرة جميع عمليات الشراء والإيداع',
+            'يصور الرسم البياني الدائري تحليل الإنفاق حسب الفئة',
+            'تنبهك تنبيهات الرصيد المنخفض عندما تحتاج الأموال إلى الإيداع'
+          ] : [
+            'Large balance display shows available funds clearly and prominently',
+            'Prominent top-up button allows quick addition of funds',
+            'Recent transactions list shows all purchases and top-ups with details',
+            'Pie chart visualizes spending breakdown by category',
+            'Low balance alerts notify you when funds need to be added'
+          ]}
+          screenshot={screenshotWallet}
+          screenshotCaption={isArabic ? 'الشكل 3: نظرة عامة على المحفظة الرقمية مع المعاملات والتحليلات' : 'Figure 3: Digital wallet overview with transactions and analytics'}
+        />
+
+        <CalloutBox type="warning" icon={AlertTriangle} title={isArabic ? 'إعداد الحدود' : 'Setting Limits'}>
+          {isArabic
+            ? 'يُوصى بشدة بتعيين حدود إنفاق يومية وأسبوعية لمساعدة طفلك على تعلم الميزانية. يمكنك أيضاً تقييد فئات معينة من عناصر المقصف.'
+            : 'It\'s highly recommended to set daily and weekly spending limits to help your child learn budgeting. You can also restrict specific categories of canteen items.'}
+        </CalloutBox>
+      </section>
+
+      {/* Canteen Management Feature */}
+      <section className="p-8">
+        <FeatureSection
+          number={4}
+          title={isArabic ? 'طلب المقصف' : 'Canteen Ordering'}
+          description={isArabic
+            ? 'تصفح قائمة المقصف، اطلب الوجبات مسبقاً، وأدر تفضيلات طفلك الغذائية. جميع المشتريات تتم من خلال المحفظة الرقمية للراحة والأمان.'
+            : 'Browse the canteen menu, pre-order meals, and manage your child\'s dietary preferences. All purchases are made through the digital wallet for convenience and security.'}
+          callouts={isArabic ? [
+            'تتيح علامات الفئات التصفح السهل للوجبات والوجبات الخفيفة والمشروبات',
+            'تعرض عناصر الطعام الصور والأسعار والسعرات الحرارية والشارات الغذائية',
+            'يتتبع أيقونة السلة عدد العناصر المضافة',
+            'يظهر رصيد المحفظة دائماً للإنفاق الواعي'
+          ] : [
+            'Category tabs allow easy browsing of meals, snacks, and drinks',
+            'Food items display photos, prices, calories, and dietary badges',
+            'Cart icon tracks the number of items added',
+            'Wallet balance is always visible for conscious spending'
+          ]}
+          screenshot={screenshotCanteen}
+          screenshotCaption={isArabic ? 'الشكل 4: قائمة المقصف مع الفئات وتفاصيل العناصر' : 'Figure 4: Canteen menu with categories and item details'}
+        />
+
+        <CalloutBox type="success" icon={CheckCircle} title={isArabic ? 'الرقابة الأبوية' : 'Parental Controls'}>
+          {isArabic
+            ? 'قم بإعداد قيود على عناصر محددة مثل المشروبات الغازية أو الحلوى. يمكنك أيضاً حظر فئات معينة تماماً من خيارات طلب طفلك.'
+            : 'Set up restrictions on specific items like soft drinks or candy. You can also block certain categories entirely from your child\'s ordering options.'}
+        </CalloutBox>
+      </section>
+
+      {/* Grades Feature */}
+      <section className="p-8">
+        <FeatureSection
+          number={5}
+          title={isArabic ? 'لوحة الدرجات' : 'Grades Dashboard'}
+          description={isArabic
+            ? 'تتبع الأداء الأكاديمي لطفلك مع عرض مفصل للدرجات حسب المادة. شاهد الاتجاهات، قارن بمتوسط الصف، وراقب التقدم طوال الفصل الدراسي.'
+            : 'Track your child\'s academic performance with detailed grade breakdowns by subject. See trends, compare with class averages, and monitor progress throughout the semester.'}
+          callouts={isArabic ? [
+            'تعرض بطاقات المواد الدرجة الحالية والاتجاه ومتوسط الصف',
+            'يلخص عرض المعدل التراكمي الكبير الأداء العام',
+            'يصور الرسم البياني للأداء الاتجاهات على مدار الفصل الدراسي',
+            'يوضح عرض الترتيب موقع طفلك في الصف'
+          ] : [
+            'Subject cards display current grade, trend, and class average',
+            'Large GPA display summarizes overall performance',
+            'Performance chart visualizes trends over the semester',
+            'Rank display shows your child\'s position in class'
+          ]}
+          screenshot={screenshotGrades}
+          screenshotCaption={isArabic ? 'الشكل 5: لوحة الدرجات الأكاديمية مع تحليل الأداء' : 'Figure 5: Academic grades dashboard with performance analysis'}
+        />
+      </section>
+
+      {/* Chapter 2: Admin Guide */}
+      <ChapterDivider
+        number="02"
+        title={isArabic ? 'دليل المسؤول' : 'Admin Guide'}
+        subtitle={isArabic ? 'أدوات قوية لإدارة المدرسة' : 'Powerful tools for school management'}
+        icon={Settings}
+        pages={isArabic ? '40 صفحة' : '40 pages'}
+      />
+
+      {/* Admin Dashboard */}
+      <section className="p-8">
+        <FeatureSection
+          number={6}
+          title={isArabic ? 'لوحة تحكم المسؤول' : 'Admin Dashboard'}
+          description={isArabic
+            ? 'أدر المدرسة بأكملها من لوحة تحكم مركزية واحدة. راقب المقاييس الرئيسية، تتبع الحضور، أدر المستخدمين، وولد التقارير الشاملة.'
+            : 'Manage the entire school from a single centralized dashboard. Monitor key metrics, track attendance, manage users, and generate comprehensive reports.'}
+          callouts={isArabic ? [
+            'تعرض بطاقات مؤشرات الأداء الرئيسية مقاييس حيوية مثل إجمالي الطلاب والموظفين',
+            'تصور الرسوم البيانية اتجاهات الحضور والإيرادات والتوزيع',
+            'توفر أزرار الإجراءات السريعة وصولاً فورياً إلى المهام الشائعة',
+            'تنبه شارة العناصر المعلقة إلى الموافقات المطلوبة'
+          ] : [
+            'KPI cards display vital metrics like total students and staff',
+            'Charts visualize attendance trends, revenue, and distribution',
+            'Quick action buttons provide instant access to common tasks',
+            'Pending items badge alerts you to required approvals'
+          ]}
+          screenshot={screenshotFinance}
+          screenshotCaption={isArabic ? 'الشكل 6: لوحة تحكم المسؤول مع المقاييس والرسوم البيانية' : 'Figure 6: Admin dashboard with metrics and charts'}
+        />
+      </section>
+
+      {/* Notifications Feature */}
+      <section className="p-8">
+        <FeatureSection
+          number={7}
+          title={isArabic ? 'مركز الإشعارات' : 'Notifications Center'}
+          description={isArabic
+            ? 'ابق على اطلاع بجميع أنشطة المدرسة من خلال نظام إشعارات شامل. تلقى تحديثات حول الحضور، الدفعات، الدرجات، والمزيد.'
+            : 'Stay informed about all school activities through a comprehensive notification system. Receive updates about attendance, payments, grades, and more.'}
+          callouts={isArabic ? [
+            'تعرض شارة غير المقروءة عدد الإشعارات الجديدة',
+            'تشير أنواع الإشعارات بالألوان إلى الأولوية والفئة',
+            'تتيح علامات التصفية عرض إشعارات محددة فقط',
+            'يوضح زر الإجراءات الخطوات التالية لكل إشعار'
+          ] : [
+            'Unread badge shows count of new notifications',
+            'Notification types are color-coded for priority and category',
+            'Filter tabs allow viewing only specific notifications',
+            'Actions button clarifies next steps for each notification'
+          ]}
+          screenshot={screenshotNotifications}
+          screenshotCaption={isArabic ? 'الشكل 7: مركز الإشعارات مع عناصر مصنفة حسب الأولوية' : 'Figure 7: Notifications center with prioritized items'}
+        />
+      </section>
+
+      {/* Closing Page */}
+      <section className="min-h-screen flex flex-col items-center justify-center p-8 print:break-after-page">
+        <div className="text-center space-y-8 max-w-2xl">
+          <div className="text-8xl font-bold leading-none bg-gradient-to-br from-primary via-primary to-secondary bg-clip-text text-transparent filter drop-shadow-2xl">
+            t
           </div>
-          <h2 className="text-5xl font-bold bg-gradient-to-r from-blue-500 to-blue-600 bg-clip-text text-transparent">
-            {isArabic ? 'شكراً لاهتمامكم' : 'Thank You'}
+          <h2 className="text-4xl font-bold">
+            {isArabic ? 'شكراً لاختيارك منصة طالب' : 'Thank You for Choosing TalebEdu'}
           </h2>
-          <p className="text-2xl text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-xl text-muted-foreground">
             {isArabic 
-              ? 'منصة طالب المدرسية - نظام شامل لإدارة المدارس'
-              : 'TalebEdu Platform - Complete School Management System'}
+              ? 'نحن ملتزمون بتقديم أفضل تجربة لإدارة المدرسة'
+              : 'We\'re committed to providing the best school management experience'}
           </p>
-          <div className="space-y-2 text-lg text-muted-foreground">
-            <p className="text-blue-600 font-semibold" dir="ltr">+966 53 445 5688</p>
-            <p className="text-blue-600">info@talebedu.app</p>
+          <div className="mt-12 space-y-4 text-lg">
+            <p className="font-semibold">{isArabic ? 'اتصل بنا' : 'Contact Us'}</p>
+            <p className="text-blue-600 font-semibold" dir="ltr">
+              📞 +968 9695 4540
+            </p>
+            <p className="text-blue-600 font-semibold" dir="ltr">
+              📧 info@talebEdu.com
+            </p>
           </div>
         </div>
       </section>
 
+      {/* Print Styles */}
       <style>{`
         @media print {
           @page {
-            size: A4;
-            margin: 1cm;
-          }
-          
-          .print\\:break-after-page {
-            page-break-after: always;
-            break-after: page;
-          }
-          
-          .break-inside-avoid {
-            page-break-inside: avoid;
-            break-inside: avoid;
+            size: A4 landscape;
+            margin: 20mm 25mm 20mm 30mm;
           }
           
           * {
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
+            color-adjust: exact !important;
+          }
+          
+          .no-print {
+            display: none !important;
+          }
+          
+          .print\\:break-after-page {
+            break-after: page;
+          }
+          
+          .break-inside-avoid {
+            break-inside: avoid;
+          }
+          
+          h1, h2, h3, h4, h5, h6 {
+            break-after: avoid;
+          }
+          
+          img {
+            max-width: 100%;
+            height: auto;
+            break-inside: avoid;
           }
         }
       `}</style>
