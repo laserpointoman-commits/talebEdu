@@ -215,37 +215,76 @@ export default function ScreenshotManager() {
   const generateAllScreenshots = async () => {
     setIsGenerating(true);
     setProgress(0);
-    const newGenerated = new Set<string>();
-
+    
     try {
-      for (let i = 0; i < SCREENSHOTS.length; i++) {
+      const total = SCREENSHOTS.length;
+      const generated = new Set<string>();
+      const baseUrl = window.location.origin;
+
+      for (let i = 0; i < total; i++) {
         const screenshot = SCREENSHOTS[i];
         
-        toast({
-          title: `📸 Capturing ${i + 1}/${SCREENSHOTS.length}`,
-          description: screenshot.name,
-        });
+        try {
+          // Step 1: Capture screenshot using Puppeteer
+          toast({
+            title: `Capturing ${i + 1}/${total}`,
+            description: `${screenshot.name}...`
+          });
 
-        // Simulate screenshot capture
-        // In production, this would call capture-screenshot and add-iphone-frame functions
-        await new Promise(resolve => setTimeout(resolve, 1000));
+          const captureResponse = await supabase.functions.invoke('capture-screenshot', {
+            body: {
+              url: `${baseUrl}${screenshot.route}`,
+              width: 390,
+              height: 844,
+              deviceScaleFactor: 3
+            }
+          });
 
-        newGenerated.add(screenshot.id);
-        setGeneratedScreenshots(new Set(newGenerated));
-        setProgress(((i + 1) / SCREENSHOTS.length) * 100);
+          if (captureResponse.error || !captureResponse.data?.imageBase64) {
+            throw new Error(`Capture failed: ${captureResponse.error?.message || 'No image data'}`);
+          }
+
+          // Step 2: Add iPhone 15 frame
+          const frameResponse = await supabase.functions.invoke('add-iphone-frame', {
+            body: {
+              imageBase64: captureResponse.data.imageBase64
+            }
+          });
+
+          if (frameResponse.error || !frameResponse.data?.framedImageBase64) {
+            throw new Error(`Framing failed: ${frameResponse.error?.message || 'No framed image'}`);
+          }
+
+          // Step 3: Store in browser (for now, later can upload to Supabase Storage)
+          const framedImage = frameResponse.data.framedImageBase64;
+          localStorage.setItem(`screenshot_${screenshot.id}`, framedImage);
+          
+          generated.add(screenshot.id);
+          setGeneratedScreenshots(new Set(generated));
+          setProgress(((i + 1) / total) * 100);
+          
+          console.log(`✓ Generated: ${screenshot.name}`);
+        } catch (error) {
+          console.error(`✗ Failed to generate ${screenshot.name}:`, error);
+          toast({
+            title: `Failed: ${screenshot.name}`,
+            description: error instanceof Error ? error.message : 'Unknown error',
+            variant: 'destructive'
+          });
+        }
       }
 
       toast({
-        title: '✅ All Screenshots Generated',
-        description: `${SCREENSHOTS.length} screenshots ready for download`,
+        title: 'Screenshot generation complete!',
+        description: `Successfully captured ${generated.size}/${total} screenshots`,
+        variant: 'default'
       });
-
     } catch (error) {
       console.error('Error generating screenshots:', error);
       toast({
-        title: 'Error',
-        description: 'Failed to generate screenshots',
-        variant: 'destructive',
+        title: 'Generation failed',
+        description: error instanceof Error ? error.message : 'Unknown error',
+        variant: 'destructive'
       });
     } finally {
       setIsGenerating(false);
@@ -253,10 +292,49 @@ export default function ScreenshotManager() {
   };
 
   const downloadAllScreenshots = () => {
-    toast({
-      title: 'Download Started',
-      description: 'Preparing talebdu-screenshots.zip...',
-    });
+    try {
+      const screenshots = SCREENSHOTS.filter(s => generatedScreenshots.has(s.id));
+      
+      if (screenshots.length === 0) {
+        toast({
+          title: 'No screenshots to download',
+          description: 'Generate screenshots first',
+          variant: 'destructive'
+        });
+        return;
+      }
+
+      toast({
+        title: 'Preparing download',
+        description: `Packaging ${screenshots.length} screenshots...`
+      });
+
+      // Create download links for each screenshot
+      screenshots.forEach((screenshot) => {
+        const imageData = localStorage.getItem(`screenshot_${screenshot.id}`);
+        if (imageData) {
+          const link = document.createElement('a');
+          link.href = imageData;
+          link.download = `${screenshot.id}.svg`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        }
+      });
+
+      toast({
+        title: 'Download complete',
+        description: `Downloaded ${screenshots.length} screenshots`,
+        variant: 'default'
+      });
+    } catch (error) {
+      console.error('Download failed:', error);
+      toast({
+        title: 'Download failed',
+        description: error instanceof Error ? error.message : 'Unknown error',
+        variant: 'destructive'
+      });
+    }
   };
 
   const categoryColors = {
