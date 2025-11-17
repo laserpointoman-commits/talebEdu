@@ -10,6 +10,18 @@ interface ApprovalRequest {
   studentId: string;
   approved: boolean;
   rejectionReason?: string;
+  feeConfig?: {
+    amount: number;
+    academic_year: string;
+    fee_type: string;
+    due_date: string;
+    discount_amount: number;
+    discount_reason: string;
+    installments: {
+      total_installments: number;
+      frequency: string;
+    } | null;
+  };
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -18,7 +30,7 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { studentId, approved, rejectionReason }: ApprovalRequest = await req.json();
+    const { studentId, approved, rejectionReason, feeConfig }: ApprovalRequest = await req.json();
 
     console.log(`${approved ? 'Approving' : 'Rejecting'} student:`, studentId);
 
