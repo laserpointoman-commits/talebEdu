@@ -1,20 +1,10 @@
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { supabase } from '@/integrations/supabase/client';
-import { useQuery } from '@tanstack/react-query';
+import { useQuickActionPreferences } from '@/hooks/use-quick-action-preferences';
+import { CustomizeQuickActionsDialog } from './CustomizeQuickActionsDialog';
 import * as Icons from 'lucide-react';
-
-interface QuickAction {
-  id: string;
-  title: string;
-  href: string;
-  icon: string;
-  display_order: number;
-  is_active: boolean;
-}
 
 const colorClasses = [
   'text-blue-600 bg-blue-100 dark:bg-blue-900/20',
@@ -30,25 +20,7 @@ const colorClasses = [
 export function QuickActions() {
   const { t } = useLanguage();
   const navigate = useNavigate();
-  const { profile } = useAuth();
-
-  const userRole = profile?.role || 'student';
-  
-  const { data: actions = [], isLoading } = useQuery({
-    queryKey: ['quick-actions', userRole],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('quick_actions')
-        .select('*')
-        .eq('role', userRole)
-        .eq('is_active', true)
-        .order('display_order')
-        .limit(8);
-      
-      if (error) throw error;
-      return data as QuickAction[];
-    }
-  });
+  const { visibleActions, isLoading } = useQuickActionPreferences();
 
   const getIconComponent = (iconName: string) => {
     const Icon = (Icons as any)[iconName] || Icons.Home;
@@ -58,8 +30,9 @@ export function QuickActions() {
   if (isLoading) {
     return (
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
           <CardTitle>{t('dashboard.quickActions')}</CardTitle>
+          <CustomizeQuickActionsDialog />
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -74,30 +47,38 @@ export function QuickActions() {
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
         <CardTitle>
           {t('dashboard.quickActions')}
         </CardTitle>
+        <CustomizeQuickActionsDialog />
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {actions.map((action, index) => {
-            const Icon = getIconComponent(action.icon);
-            return (
-              <Button
-                key={action.id}
-                variant="outline"
-                className="h-auto flex-col gap-2 p-4 hover:scale-105 transition-transform"
-                onClick={() => navigate(action.href)}
-              >
-                <div className={`p-3 rounded-lg ${colorClasses[index % colorClasses.length]}`}>
-                  <Icon className="h-6 w-6" />
-                </div>
-                <span className="text-xs text-center">{t(action.title)}</span>
-              </Button>
-            );
-          })}
-        </div>
+        {visibleActions.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            <p>{t('No quick actions visible')}</p>
+            <p className="text-sm mt-2">{t('Click Customize to show actions')}</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {visibleActions.map((action, index) => {
+              const Icon = getIconComponent(action.icon);
+              return (
+                <Button
+                  key={action.id}
+                  variant="outline"
+                  className="h-auto flex-col gap-2 p-4 hover:scale-105 transition-transform"
+                  onClick={() => navigate(action.href)}
+                >
+                  <div className={`p-3 rounded-lg ${colorClasses[index % colorClasses.length]}`}>
+                    <Icon className="h-6 w-6" />
+                  </div>
+                  <span className="text-xs text-center">{t(action.title)}</span>
+                </Button>
+              );
+            })}
+          </div>
+        )}
       </CardContent>
     </Card>
   );
