@@ -3127,6 +3127,86 @@ export type Database = {
           },
         ]
       }
+      student_fee_history: {
+        Row: {
+          action_type: string
+          amount: number | null
+          changed_at: string | null
+          changed_by: string | null
+          created_at: string | null
+          description: string | null
+          description_ar: string | null
+          id: string
+          new_values: Json | null
+          old_values: Json | null
+          payment_method: string | null
+          student_fee_id: string | null
+          student_id: string | null
+          transaction_reference: string | null
+        }
+        Insert: {
+          action_type: string
+          amount?: number | null
+          changed_at?: string | null
+          changed_by?: string | null
+          created_at?: string | null
+          description?: string | null
+          description_ar?: string | null
+          id?: string
+          new_values?: Json | null
+          old_values?: Json | null
+          payment_method?: string | null
+          student_fee_id?: string | null
+          student_id?: string | null
+          transaction_reference?: string | null
+        }
+        Update: {
+          action_type?: string
+          amount?: number | null
+          changed_at?: string | null
+          changed_by?: string | null
+          created_at?: string | null
+          description?: string | null
+          description_ar?: string | null
+          id?: string
+          new_values?: Json | null
+          old_values?: Json | null
+          payment_method?: string | null
+          student_fee_id?: string | null
+          student_id?: string | null
+          transaction_reference?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_fee_history_changed_by_fkey"
+            columns: ["changed_by"]
+            isOneToOne: false
+            referencedRelation: "available_contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_fee_history_changed_by_fkey"
+            columns: ["changed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_fee_history_student_fee_id_fkey"
+            columns: ["student_fee_id"]
+            isOneToOne: false
+            referencedRelation: "student_fees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_fee_history_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       student_fees: {
         Row: {
           academic_year: string
