@@ -23,6 +23,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import LogoLoader from "@/components/LogoLoader";
 import PendingStudentsList from "@/components/parent/PendingStudentsList";
+import { QuickActions } from "@/components/admin/QuickActions";
 
 export default function ParentDashboard() {
   const { language } = useLanguage();
@@ -349,32 +350,7 @@ export default function ParentDashboard() {
       </Card>
 
       {/* Quick Actions */}
-      <div>
-        <h2 className="text-xl font-semibold mb-4">
-          {language === 'ar' ? 'إجراءات سريعة' : 'Quick Actions'}
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {quickActions.map((action, idx) => (
-            <Card 
-              key={idx} 
-              className="cursor-pointer hover:shadow-lg transition-all hover:-translate-y-1"
-              onClick={action.onClick}
-            >
-              <CardHeader>
-                <div className={`h-12 w-12 rounded-full bg-muted flex items-center justify-center mb-3 ${action.color}`}>
-                  <action.icon className="h-6 w-6" />
-                </div>
-                <CardTitle className="text-lg">
-                  {language === 'ar' ? action.titleAr : action.titleEn}
-                </CardTitle>
-                <CardDescription>
-                  {language === 'ar' ? action.descAr : action.descEn}
-                </CardDescription>
-              </CardHeader>
-            </Card>
-          ))}
-        </div>
-      </div>
+      <QuickActions />
 
       {/* Recent Activity */}
       <Card>
