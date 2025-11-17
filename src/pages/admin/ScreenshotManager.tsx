@@ -238,16 +238,17 @@ export default function ScreenshotManager() {
         try {
           // Step 1: Capture screenshot using Puppeteer
           toast({
-            title: `Capturing ${i + 1}/${total}`,
-            description: `${screenshot.name}...`
+            title: `Generating ${i + 1}/${total}`,
+            description: `${screenshot.name} (${screenshot.language.toUpperCase()})...`
           });
 
+          // Generate screenshot with AI based on title and description
           const captureResponse = await supabase.functions.invoke('capture-screenshot', {
             body: {
-              url: `${baseUrl}${screenshot.route}`,
+              title: `${screenshot.name} (${screenshot.language === 'en' ? 'English' : 'Arabic'})`,
+              description: screenshot.description,
               width: 390,
-              height: 844,
-              deviceScaleFactor: 3
+              height: 844
             }
           });
 
@@ -266,15 +267,16 @@ export default function ScreenshotManager() {
             throw new Error(`Framing failed: ${frameResponse.error?.message || 'No framed image'}`);
           }
 
-          // Step 3: Store in browser (for now, later can upload to Supabase Storage)
+          // Store in localStorage with language suffix
           const framedImage = frameResponse.data.framedImageBase64;
-          localStorage.setItem(`screenshot_${screenshot.id}`, framedImage);
+          const storageKey = `screenshot-${screenshot.id}-${screenshot.language}`;
+          localStorage.setItem(storageKey, framedImage);
           
-          generated.add(screenshot.id);
+          generated.add(storageKey);
           setGeneratedScreenshots(new Set(generated));
           setProgress(((i + 1) / total) * 100);
           
-          console.log(`✓ Generated: ${screenshot.name}`);
+          console.log(`✓ Generated: ${screenshot.name} (${screenshot.language})`);
         } catch (error) {
           console.error(`✗ Failed to generate ${screenshot.name}:`, error);
           toast({
@@ -304,7 +306,10 @@ export default function ScreenshotManager() {
 
   const downloadAllScreenshots = () => {
     try {
-      const screenshots = SCREENSHOTS.filter(s => generatedScreenshots.has(s.id));
+      const screenshots = SCREENSHOTS.filter(s => {
+        const storageKey = `screenshot-${s.id}-${s.language}`;
+        return generatedScreenshots.has(storageKey);
+      });
       
       if (screenshots.length === 0) {
         toast({
@@ -322,11 +327,12 @@ export default function ScreenshotManager() {
 
       // Create download links for each screenshot
       screenshots.forEach((screenshot) => {
-        const imageData = localStorage.getItem(`screenshot_${screenshot.id}`);
+        const storageKey = `screenshot-${screenshot.id}-${screenshot.language}`;
+        const imageData = localStorage.getItem(storageKey);
         if (imageData) {
           const link = document.createElement('a');
           link.href = imageData;
-          link.download = `${screenshot.id}.svg`;
+          link.download = `${screenshot.id}-${screenshot.language}.png`;
           document.body.appendChild(link);
           link.click();
           document.body.removeChild(link);
@@ -493,24 +499,31 @@ export default function ScreenshotManager() {
       <Card>
         <CardHeader>
           <CardTitle>Screenshots Library</CardTitle>
-          <CardDescription>21 screenshots covering all app features</CardDescription>
+          <CardDescription>{SCREENSHOTS.length} screenshots covering all app features in English and Arabic</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {SCREENSHOTS.map((screenshot) => (
-              <div
-                key={screenshot.id}
-                className="border rounded-lg p-4 space-y-2 hover:shadow-md transition-shadow"
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <h3 className="font-semibold">{screenshot.name}</h3>
-                    <p className="text-sm text-muted-foreground">{screenshot.description}</p>
+            {SCREENSHOTS.map((screenshot) => {
+              const storageKey = `screenshot-${screenshot.id}-${screenshot.language}`;
+              const isGenerated = generatedScreenshots.has(storageKey);
+              
+              return (
+                <div
+                  key={`${screenshot.id}-${screenshot.language}`}
+                  className="border rounded-lg p-4 space-y-2 hover:shadow-md transition-shadow"
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <h3 className="font-semibold">{screenshot.name}</h3>
+                      <p className="text-sm text-muted-foreground">{screenshot.description}</p>
+                      <Badge variant="secondary" className="mt-1">
+                        {screenshot.language.toUpperCase()}
+                      </Badge>
+                    </div>
+                    {isGenerated && (
+                      <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0 ml-2" />
+                    )}
                   </div>
-                  {generatedScreenshots.has(screenshot.id) && (
-                    <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0 ml-2" />
-                  )}
-                </div>
                 <div className="flex items-center justify-between">
                   <Badge variant="secondary" className={`${categoryColors[screenshot.category]} text-white`}>
                     {screenshot.category}
@@ -518,7 +531,8 @@ export default function ScreenshotManager() {
                   <span className="text-xs text-muted-foreground">{screenshot.route}</span>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         </CardContent>
       </Card>
