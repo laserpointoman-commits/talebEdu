@@ -14,13 +14,15 @@ interface ScreenshotConfig {
   route: string;
   description: string;
   category: 'parent' | 'admin' | 'teacher' | 'student' | 'driver' | 'canteen' | 'finance' | 'other';
+  language: 'en' | 'ar';
 }
 
-const SCREENSHOTS: ScreenshotConfig[] = [
+// Base screenshot configurations (without language suffix)
+const BASE_SCREENSHOTS = [
   // Parent Role (25 screenshots)
-  { id: 'parent-dashboard', name: 'Parent Dashboard', route: '/screenshot-demo/parent-dashboard', description: 'Main dashboard', category: 'parent' },
-  { id: 'parent-dashboard-expanded', name: 'Parent Dashboard - Expanded Card', route: '/screenshot-demo/parent-dashboard-expanded', description: 'Student card expanded', category: 'parent' },
-  { id: 'parent-wallet', name: 'Digital Wallet', route: '/screenshot-demo/parent-wallet', description: 'Wallet 25.50 OMR', category: 'parent' },
+  { id: 'parent-dashboard', name: 'Parent Dashboard', route: '/parent-dashboard', description: 'Main dashboard', category: 'parent' as const },
+  { id: 'parent-dashboard-expanded', name: 'Parent Dashboard - Expanded Card', route: '/parent-dashboard-expanded', description: 'Student card expanded', category: 'parent' as const },
+  { id: 'parent-wallet', name: 'Digital Wallet', route: '/parent-wallet', description: 'Wallet 25.50 OMR', category: 'parent' as const },
   { id: 'parent-wallet-topup', name: 'Wallet Top-up', route: '/screenshot-demo/parent-wallet-topup', description: 'Top-up dialog', category: 'parent' },
   { id: 'parent-wallet-history', name: 'Wallet History', route: '/screenshot-demo/parent-wallet-history', description: 'Transaction history', category: 'parent' },
   { id: 'parent-tracking', name: 'Bus Tracking', route: '/screenshot-demo/parent-tracking', description: 'Muscat map live tracking', category: 'parent' },
