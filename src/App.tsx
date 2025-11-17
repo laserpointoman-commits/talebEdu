@@ -31,6 +31,7 @@ import ParentSelfSignup from "./pages/ParentSelfSignup";
 import EmailConfirmationPending from "./pages/EmailConfirmationPending";
 import StudentRegistrationWizard from "./components/parent/StudentRegistrationWizard";
 import StudentApprovalDashboard from "./pages/admin/StudentApprovalDashboard";
+import Presentation from "./pages/Presentation";
 // Removed test page
 
 // Create a stable QueryClient instance
@@ -88,6 +89,7 @@ function App() {
                         {/* Test page removed */}
                         <Route path="/nfc-kiosk" element={<NFCKiosk />} />
                         <Route path="/checkpoint" element={<EntranceCheckpoint />} />
+                        <Route path="/presentation" element={<Presentation />} />
                         <Route path="*" element={<NotFound />} />
                       </Routes>
                     </PageTransition>
