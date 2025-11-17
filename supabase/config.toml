@@ -90,3 +90,6 @@ verify_jwt = false
 
 [functions.add-iphone-frame]
 verify_jwt = false
+
+[functions.generate-screenshot-ai]
+verify_jwt = false
