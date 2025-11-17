@@ -26,6 +26,25 @@
     <meta name="twitter:title" content="talebEdu - School Management System" />
     <meta name="twitter:description" content="Comprehensive school management system with academic, finance, transportation and canteen modules" />
     <meta name="twitter:image" content="/favicon.png" />
+    
+    <script>
+      // Register service worker for offline support
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then(registration => {
+              console.log('Service Worker registered:', registration);
+              // Register for background sync
+              if ('sync' in registration) {
+                registration.sync.register('sync-data')
+                  .then(() => console.log('Background sync registered'))
+                  .catch(err => console.log('Background sync failed:', err));
+              }
+            })
+            .catch(err => console.log('Service Worker registration failed:', err));
+        });
+      }
+    </script>
   </head>
 
   <body>

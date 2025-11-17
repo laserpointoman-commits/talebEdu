@@ -9,6 +9,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { LoadingProvider } from "@/contexts/LoadingContext";
 import { StudentsProvider } from "@/contexts/StudentsContext";
+import { OfflineIndicator } from "@/components/OfflineIndicator";
 import PageTransition from "@/components/PageTransition";
 import InstallPrompt from "@/components/mobile/InstallPrompt";
 import NetworkStatus from "@/components/mobile/NetworkStatus";
@@ -66,6 +67,7 @@ function App() {
                 <Suspense fallback={<LogoLoader size="large" text={true} fullScreen={true} />}>
                   <Toaster />
                   <Sonner />
+                  <OfflineIndicator />
                   <InstallPrompt />
                   <NetworkStatus />
                   <StudentsProvider>
