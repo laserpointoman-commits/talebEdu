@@ -38,13 +38,17 @@ Deno.serve(async (req) => {
   // Get all existing users first
   const { data: userData } = await supabase.auth.admin.listUsers();
   const existingUsers = userData?.users || [];
+  
+  console.log(`Found ${existingUsers.length} existing users`);
 
   for (const account of testAccounts) {
     try {
       const existingUser = existingUsers.find(u => u.email === account.email);
       
       if (existingUser) {
-        // User exists - just ensure profile exists and password is updated
+        console.log(`User ${account.email} already exists with ID: ${existingUser.id}`);
+        
+        // Update password
         const { error: updateError } = await supabase.auth.admin.updateUserById(existingUser.id, {
           password: account.password,
           email_confirm: true,
@@ -56,10 +60,13 @@ Deno.serve(async (req) => {
 
         if (updateError) {
           console.error(`Password update error for ${account.email}:`, updateError);
+        } else {
+          console.log(`Password updated for ${account.email}`);
         }
 
-        // Ensure profile exists
-        const { error: profileError } = await supabase
+        // Ensure profile exists - using upsert with onConflict
+        console.log(`Upserting profile for ${account.email} with role ${account.role}`);
+        const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .upsert({ 
             id: existingUser.id,
@@ -68,15 +75,20 @@ Deno.serve(async (req) => {
             full_name: account.full_name
           }, {
             onConflict: 'id'
-          });
+          })
+          .select()
+          .single();
           
         if (profileError) {
           console.error(`Profile error for ${account.email}:`, profileError);
-          results.push({ email: account.email, status: 'profile_error', error: profileError.message });
+          results.push({ email: account.email, status: 'profile_error', error: profileError.message, user_id: existingUser.id });
         } else {
+          console.log(`Profile created/updated successfully for ${account.email}`, profileData);
           results.push({ email: account.email, status: 'updated', user_id: existingUser.id });
         }
       } else {
+        console.log(`Creating new user ${account.email}`);
+        
         // Create new user
         const { data: authData, error: authError } = await supabase.auth.admin.createUser({
           email: account.email,
@@ -92,20 +104,26 @@ Deno.serve(async (req) => {
           console.error(`User creation error for ${account.email}:`, authError);
           results.push({ email: account.email, status: 'error', error: authError.message });
         } else if (authData?.user) {
+          console.log(`User created successfully: ${account.email} with ID: ${authData.user.id}`);
+          
           // Create profile
-          const { error: profileError } = await supabase
+          console.log(`Creating profile for new user ${account.email}`);
+          const { data: profileData, error: profileError } = await supabase
             .from('profiles')
             .insert({ 
               id: authData.user.id,
               email: account.email,
               role: account.role as any,
               full_name: account.full_name
-            });
+            })
+            .select()
+            .single();
             
           if (profileError) {
             console.error(`Profile creation error for ${account.email}:`, profileError);
-            results.push({ email: account.email, status: 'profile_error', error: profileError.message });
+            results.push({ email: account.email, status: 'profile_error', error: profileError.message, user_id: authData.user.id });
           } else {
+            console.log(`Profile created successfully for ${account.email}`, profileData);
             results.push({ email: account.email, status: 'created', user_id: authData.user.id });
           }
         }
