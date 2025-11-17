@@ -1,149 +1,99 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders } from '../_shared/cors.ts';
+import puppeteer from "https://deno.land/x/puppeteer@16.2.0/mod.ts";
 
-const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+const APP_URL = Deno.env.get('VITE_SUPABASE_URL')?.replace('supabase.co', 'lovableproject.com') || 'https://b9b768f5-1a7c-4563-ab9c-d1b25b963f4b.lovableproject.com';
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
+  let browser;
   try {
-    const { title, description, width = 390, height = 844 } = await req.json();
+    const { route, language = 'en', width = 390, height = 844 } = await req.json();
 
-    if (!title && !description) {
+    if (!route) {
       return new Response(
-        JSON.stringify({ error: 'Title or description is required for AI generation' }),
+        JSON.stringify({ error: 'Route is required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log(`Generating screenshot for: ${title}`);
+    console.log(`Capturing screenshot for route: ${route} (${language})`);
 
-    // Create detailed prompt for AI image generation
-    const prompt = `Generate a mobile app screenshot mockup for an educational school management system.
+    // Launch headless browser
+    browser = await puppeteer.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
+    });
 
-Screen: ${title}
-${description ? `Description: ${description}` : ''}
+    const page = await browser.newPage();
 
-Style requirements:
-- Modern iOS/mobile interface design
-- Clean, professional layout
-- iPhone 15 screen proportions (390x844px)
-- Proper status bar at top with time, battery, signal
-- Bottom navigation bar if applicable
-- Use a professional color scheme with blues, whites, and accent colors
-- Include realistic UI elements: buttons, cards, lists, icons
-- Text should be legible and properly sized
-- Include relevant icons and imagery
-- Make it look like a real, polished production app
-- Ultra high resolution, crisp and clear
-- Professional gradient backgrounds where appropriate
+    // Set mobile viewport (iPhone 15 dimensions)
+    await page.setViewport({
+      width,
+      height,
+      deviceScaleFactor: 3, // iPhone 15 has 3x retina display
+      isMobile: true,
+      hasTouch: true
+    });
 
-Generate a pixel-perfect, production-quality mobile app screenshot.`;
+    // Set language preference
+    await page.evaluateOnNewDocument((lang) => {
+      localStorage.setItem('language', lang);
+    }, language);
 
-    // Retry logic for AI API calls
-    let lastError;
-    const maxRetries = 3;
-    const retryDelay = 2000; // 2 seconds
+    // Navigate to the route
+    const fullUrl = `${APP_URL}${route}`;
+    console.log(`Navigating to: ${fullUrl}`);
     
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-      try {
-        console.log(`Attempt ${attempt}/${maxRetries} to generate screenshot`);
-        
-        // Call Lovable AI to generate the screenshot with timeout
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
-        
-        const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${LOVABLE_API_KEY}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            model: "google/gemini-2.5-flash-image",
-            messages: [
-              {
-                role: "user",
-                content: prompt
-              }
-            ],
-            modalities: ["image", "text"]
-          }),
-          signal: controller.signal
-        });
-        
-        clearTimeout(timeoutId);
+    await page.goto(fullUrl, {
+      waitUntil: 'networkidle2',
+      timeout: 30000
+    });
 
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error(`Lovable AI API error (attempt ${attempt}):`, errorText);
-          
-          // Retry on 503 or 429 errors
-          if ((response.status === 503 || response.status === 429) && attempt < maxRetries) {
-            lastError = new Error(`AI API returned ${response.status}: ${errorText}`);
-            console.log(`Retrying in ${retryDelay}ms...`);
-            await new Promise(resolve => setTimeout(resolve, retryDelay * attempt));
-            continue;
-          }
-          
-          throw new Error(`AI API returned ${response.status}: ${errorText}`);
-        }
+    // Wait a bit more for animations and dynamic content
+    await page.waitForTimeout(2000);
 
-        const data = await response.json();
-        const generatedImageUrl = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+    // Capture screenshot as base64
+    const screenshotBuffer = await page.screenshot({
+      type: 'png',
+      encoding: 'binary'
+    });
 
-        if (!generatedImageUrl) {
-          console.error('No image in AI response:', JSON.stringify(data));
-          throw new Error('No image generated by AI');
-        }
-        
-        // Success - break out of retry loop
-        console.log(`Screenshot generated successfully on attempt ${attempt}`);
-        lastError = null;
-        
-        return new Response(
-          JSON.stringify({ 
-            success: true,
-            imageBase64: generatedImageUrl,
-            width: width * 3,
-            height: height * 3,
-            timestamp: new Date().toISOString()
-          }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-        
-      } catch (error) {
-        lastError = error;
-        
-        if (error instanceof Error && error.name === 'AbortError') {
-          console.error(`Request timeout on attempt ${attempt}`);
-          if (attempt < maxRetries) {
-            console.log(`Retrying after timeout...`);
-            await new Promise(resolve => setTimeout(resolve, retryDelay * attempt));
-            continue;
-          }
-        }
-        
-        // If not a retryable error or last attempt, throw
-        if (attempt === maxRetries) {
-          throw error;
-        }
-        
-        console.log(`Retrying after error in ${retryDelay * attempt}ms...`);
-        await new Promise(resolve => setTimeout(resolve, retryDelay * attempt));
-      }
-    }
-    
-    // If we get here, all retries failed
-    throw lastError || new Error('Failed to generate screenshot after retries');
+    // Convert to base64
+    const base64Image = btoa(
+      new Uint8Array(screenshotBuffer).reduce(
+        (data, byte) => data + String.fromCharCode(byte),
+        ''
+      )
+    );
+
+    const imageBase64 = `data:image/png;base64,${base64Image}`;
+
+    console.log(`Screenshot captured successfully for ${route}`);
+
+    return new Response(
+      JSON.stringify({ 
+        success: true,
+        imageBase64,
+        width: width * 3,
+        height: height * 3,
+        timestamp: new Date().toISOString()
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
 
   } catch (error) {
-    console.error('Error generating screenshot:', error);
+    console.error('Error capturing screenshot:', error);
     return new Response(
       JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
+  } finally {
+    if (browser) {
+      await browser.close();
+    }
   }
 });
