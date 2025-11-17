@@ -54,9 +54,9 @@ const PresentationFull = () => {
   );
 
   const FeatureSection = ({ title, number, description, callouts, screenshot, screenshotCaption }: any) => (
-    <div className="grid grid-cols-5 gap-8 items-center min-h-[600px] break-inside-avoid mb-16">
-      {/* Text Column - 40% */}
-      <div className={`col-span-2 space-y-6 ${isArabic ? 'order-2' : 'order-1'}`}>
+    <div className="grid grid-cols-12 gap-8 items-center min-h-[700px] max-h-[850px] break-inside-avoid mb-12 px-4 py-6 print:min-h-[170mm] print:max-h-[170mm]">
+      {/* Text Column - 60% */}
+      <div className={`col-span-7 space-y-6 ${isArabic ? 'order-2' : 'order-1'}`}>
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-white flex items-center justify-center font-bold text-xl shadow-lg">
             {number}
@@ -81,15 +81,17 @@ const PresentationFull = () => {
         </div>
       </div>
       
-      {/* Screenshot Column - 60% */}
-      <div className={`col-span-3 ${isArabic ? 'order-1' : 'order-2'}`}>
-        <div className="relative">
-          <div className="absolute -inset-4 bg-gradient-to-br from-blue-500/10 to-blue-600/10 rounded-3xl blur-xl"></div>
-          <img 
-            src={screenshot} 
-            alt={title}
-            className="relative w-full rounded-2xl shadow-2xl border-4 border-gray-200 dark:border-gray-800"
-          />
+      {/* Screenshot Column - 40% */}
+      <div className={`col-span-5 flex items-center justify-center ${isArabic ? 'order-1' : 'order-2'}`}>
+        <div className="w-full">
+          <div className="relative">
+            <div className="absolute -inset-4 bg-gradient-to-br from-blue-500/10 to-blue-600/10 rounded-3xl blur-xl"></div>
+            <img 
+              src={screenshot} 
+              alt={title}
+              className="relative w-full h-auto max-h-[600px] object-contain rounded-2xl shadow-2xl border-4 border-gray-200 dark:border-gray-800 print:max-h-[140mm]"
+            />
+          </div>
           <p className="text-center text-sm text-muted-foreground mt-4 italic">
             {screenshotCaption}
           </p>
@@ -435,20 +437,55 @@ const PresentationFull = () => {
           
           .print\\:break-after-page {
             break-after: page;
+            page-break-after: always;
           }
           
           .break-inside-avoid {
-            break-inside: avoid;
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
+          }
+          
+          /* Feature sections = 1 page each */
+          section {
+            page-break-inside: avoid;
+          }
+          
+          /* Screenshot constraints for print */
+          section img {
+            max-height: 140mm !important;
+            max-width: 100% !important;
+            width: auto !important;
+            height: auto !important;
+            object-fit: contain !important;
           }
           
           h1, h2, h3, h4, h5, h6 {
             break-after: avoid;
           }
           
-          img {
-            max-width: 100%;
-            height: auto;
-            break-inside: avoid;
+          /* Headers and footers */
+          @page :left {
+            @top-left {
+              content: "TalebEdu User Manual";
+              font-size: 9pt;
+              color: #6b7280;
+            }
+            @bottom-center {
+              content: counter(page);
+              font-size: 10pt;
+            }
+          }
+          
+          @page :right {
+            @top-right {
+              content: "Version 1.0 - 2025";
+              font-size: 9pt;
+              color: #6b7280;
+            }
+            @bottom-center {
+              content: counter(page);
+              font-size: 10pt;
+            }
           }
         }
       `}</style>
