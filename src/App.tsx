@@ -34,6 +34,7 @@ import StudentApprovalDashboard from "./pages/admin/StudentApprovalDashboard";
 import Presentation from "./pages/Presentation";
 import PresentationFull from "./pages/PresentationFull";
 import ScreenshotManager from "./pages/admin/ScreenshotManager";
+import DemoRoutes from "./pages/screenshot-demo/DemoRoutes";
 // Removed test page
 
 // Create a stable QueryClient instance
