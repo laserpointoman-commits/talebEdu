@@ -95,7 +95,10 @@ function App() {
                         <Route path="/checkpoint" element={<EntranceCheckpoint />} />
                         <Route path="/presentation" element={<Presentation />} />
                         <Route path="/presentation-full" element={<PresentationFull />} />
+                        <Route path="/presentation-expanded" element={<PresentationFullExpanded />} />
                         <Route path="/admin/screenshot-manager" element={<ScreenshotManager />} />
+                        <Route path="/screenshot-demo/en/*" element={<DemoRoutes language="en" />} />
+                        <Route path="/screenshot-demo/ar/*" element={<DemoRoutes language="ar" />} />
                         <Route path="*" element={<NotFound />} />
                       </Routes>
                     </PageTransition>

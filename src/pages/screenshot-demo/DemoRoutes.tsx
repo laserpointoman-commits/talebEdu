@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { Route, Routes, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { LanguageProvider, useLanguage } from '@/contexts/LanguageContext';
 
 // Import all dashboard components
 import ParentDashboard from '@/pages/dashboards/ParentDashboard';
@@ -67,9 +68,25 @@ const DemoWrapper = ({ userId, role, children }: { userId: string; role: string;
   return <div className="demo-container w-[390px] h-[844px] overflow-auto">{children}</div>;
 };
 
-export default function DemoRoutes() {
+interface DemoRoutesProps {
+  language?: 'en' | 'ar';
+}
+
+const LanguageWrapper = ({ language, children }: { language: 'en' | 'ar'; children: React.ReactNode }) => {
+  const { setLanguage } = useLanguage();
+  
+  useEffect(() => {
+    setLanguage(language);
+  }, [language, setLanguage]);
+  
+  return <>{children}</>;
+};
+
+export default function DemoRoutes({ language = 'en' }: DemoRoutesProps) {
   return (
-    <Routes>
+    <LanguageProvider>
+      <LanguageWrapper language={language}>
+        <Routes>
       {/* Parent Role - 25 states */}
       <Route path="/parent-dashboard" element={<DemoWrapper userId="parent" role="parent"><ParentDashboard /></DemoWrapper>} />
       <Route path="/parent-dashboard-expanded" element={<DemoWrapper userId="parent" role="parent"><ParentDashboard /></DemoWrapper>} />
@@ -219,9 +236,11 @@ export default function DemoRoutes() {
       <Route path="/device-nfc-kiosk" element={<DemoWrapper userId="admin" role="admin"><div>NFC Kiosk</div></DemoWrapper>} />
       <Route path="/device-entrance-checkpoint" element={<DemoWrapper userId="admin" role="admin"><div>Entrance</div></DemoWrapper>} />
       <Route path="/device-testing" element={<DemoWrapper userId="admin" role="admin"><div>Testing</div></DemoWrapper>} />
-      <Route path="/device-nfc-scan-success" element={<DemoWrapper userId="admin" role="admin"><div>Success</div></DemoWrapper>} />
-      <Route path="/device-nfc-scan-error" element={<DemoWrapper userId="admin" role="admin"><div>Error</div></DemoWrapper>} />
-      <Route path="/device-offline-mode" element={<DemoWrapper userId="admin" role="admin"><div>Offline</div></DemoWrapper>} />
-    </Routes>
+        <Route path="/device-nfc-scan-success" element={<DemoWrapper userId="admin" role="admin"><div>Success</div></DemoWrapper>} />
+        <Route path="/device-nfc-scan-error" element={<DemoWrapper userId="admin" role="admin"><div>Error</div></DemoWrapper>} />
+        <Route path="/device-offline-mode" element={<DemoWrapper userId="admin" role="admin"><div>Offline</div></DemoWrapper>} />
+      </Routes>
+      </LanguageWrapper>
+    </LanguageProvider>
   );
 }
