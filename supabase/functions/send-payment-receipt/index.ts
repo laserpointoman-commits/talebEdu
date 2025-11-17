@@ -1,5 +1,8 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { Resend } from "https://esm.sh/resend@2.0.0";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
@@ -254,20 +257,24 @@ serve(async (req: Request): Promise<Response> => {
     `;
 
     // Send email
-    const emailResponse = await resend.emails.send({
+    const { data: emailData, error: emailError } = await resend.emails.send({
       from: "TalebEdu <onboarding@resend.dev>",
       to: [payment.parent.email],
       subject: `Payment Receipt - ${receiptNumber}`,
       html: htmlContent
     });
 
-    console.log("Email sent successfully:", emailResponse);
+    if (emailError) {
+      console.error("Email sending error:", emailError);
+    } else {
+      console.log("Email sent successfully:", emailData);
+    }
 
     // Update payment record
     await supabase
       .from('payment_transactions')
       .update({
-        email_sent: true,
+        email_sent: !emailError,
         email_sent_at: new Date().toISOString(),
         receipt_number: receiptNumber
       })
@@ -277,7 +284,8 @@ serve(async (req: Request): Promise<Response> => {
       JSON.stringify({ 
         success: true, 
         receipt_number: receiptNumber,
-        email_id: emailResponse.id 
+        email_sent: !emailError,
+        email_id: emailData?.id 
       }),
       {
         status: 200,
