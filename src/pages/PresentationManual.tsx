@@ -13,7 +13,81 @@ const PresentationManual = () => {
   };
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br from-background via-primary/5 to-background ${isArabic ? 'rtl' : 'ltr'}`}>
+    <>
+      <style>{`
+        @media print {
+          @page {
+            size: landscape;
+            margin: 1.5cm;
+          }
+          
+          body {
+            print-color-adjust: exact;
+            -webkit-print-color-adjust: exact;
+          }
+          
+          .no-print {
+            display: none !important;
+          }
+          
+          .page-break {
+            page-break-before: always;
+            break-before: page;
+          }
+          
+          .page-break-after {
+            page-break-after: always;
+            break-after: page;
+          }
+          
+          .avoid-break {
+            page-break-inside: avoid;
+            break-inside: avoid;
+          }
+          
+          section {
+            page-break-inside: avoid;
+            break-inside: avoid;
+          }
+          
+          h1, h2, h3, h4, h5, h6 {
+            page-break-after: avoid;
+            break-after: avoid;
+            page-break-inside: avoid;
+            break-inside: avoid;
+          }
+          
+          ul, ol {
+            page-break-inside: avoid;
+            break-inside: avoid;
+          }
+          
+          .feature-card, .role-section, .step-item {
+            page-break-inside: avoid;
+            break-inside: avoid;
+          }
+        }
+        
+        @keyframes float {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-20px); }
+        }
+        
+        @keyframes fade-in {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .animate-float {
+          animation: float 6s ease-in-out infinite;
+        }
+        
+        .animate-fade-in {
+          animation: fade-in 0.8s ease-out forwards;
+        }
+      `}</style>
+      
+      <div className={`min-h-screen bg-gradient-to-br from-background via-primary/5 to-background ${isArabic ? 'rtl' : 'ltr'}`}>
       {/* Control Bar - Hidden in Print */}
       <div className="no-print fixed top-4 right-4 z-50 flex gap-2 bg-card/95 backdrop-blur-lg p-3 rounded-2xl shadow-elegant border border-border/50">
         <Button
@@ -35,8 +109,8 @@ const PresentationManual = () => {
         </Button>
       </div>
 
-      {/* Cover Page */}
-      <section className="min-h-screen flex flex-col items-center justify-center p-8 relative overflow-hidden">
+        {/* Cover Page */}
+        <section className="min-h-screen flex flex-col items-center justify-center p-8 relative overflow-hidden page-break-after">
         {/* Animated Background Elements */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-float"></div>
@@ -82,8 +156,8 @@ const PresentationManual = () => {
         </div>
       </section>
 
-      {/* Table of Contents */}
-      <section className="min-h-screen flex items-center justify-center p-8 page-break">
+        {/* Table of Contents */}
+        <section className="min-h-screen flex items-center justify-center p-8 page-break page-break-after">
         <div className="max-w-4xl w-full">
           <h2 className="text-5xl font-bold mb-12 bg-gradient-primary bg-clip-text text-transparent text-center">
             {isArabic ? "المحتويات" : "Table of Contents"}
@@ -120,7 +194,7 @@ const PresentationManual = () => {
       </section>
 
       {/* System Overview */}
-      <section className="min-h-screen p-8 page-break">
+      <section className="min-h-screen p-8 page-break page-break-after avoid-break">
         <div className="max-w-6xl mx-auto">
           <div className="flex items-center gap-4 mb-12">
             <div className="text-6xl font-bold bg-gradient-primary bg-clip-text text-transparent">01</div>
@@ -142,7 +216,7 @@ const PresentationManual = () => {
               </p>
             </div>
 
-            <div className="bg-gradient-to-br from-primary/10 to-secondary/10 rounded-3xl p-8 border border-border/50">
+            <div className="bg-gradient-to-br from-primary/10 to-secondary/10 rounded-3xl p-8 border border-border/50 avoid-break">
               <h4 className="text-2xl font-bold text-foreground mb-4">
                 {isArabic ? "الأهداف الرئيسية" : "Key Objectives"}
               </h4>
@@ -229,7 +303,7 @@ const PresentationManual = () => {
       </section>
 
       {/* Administrator Guide */}
-      <section className="min-h-screen p-8 page-break">
+      <section className="min-h-screen p-8 page-break page-break-after avoid-break">
         <div className="max-w-6xl mx-auto">
           <div className="flex items-center gap-4 mb-12">
             <div className="text-6xl">👨‍💼</div>
@@ -438,7 +512,7 @@ const PresentationManual = () => {
             </div>
 
             {/* Financial Management */}
-            <div className="bg-gradient-to-br from-primary/10 via-secondary/5 to-transparent border border-border/50 rounded-3xl p-8">
+            <div className="bg-gradient-to-br from-primary/10 via-secondary/5 to-transparent border border-border/50 rounded-3xl p-8 avoid-break">
               <h3 className="text-3xl font-bold text-foreground mb-6 flex items-center gap-3">
                 <span className="w-12 h-12 rounded-2xl bg-gradient-primary flex items-center justify-center text-primary-foreground font-bold">4</span>
                 {isArabic ? "الإدارة المالية" : "Financial Management"}
@@ -476,7 +550,7 @@ const PresentationManual = () => {
       </section>
 
       {/* Teacher Guide */}
-      <section className="min-h-screen p-8 page-break">
+      <section className="min-h-screen p-8 page-break page-break-after avoid-break">
         <div className="max-w-6xl mx-auto">
           <div className="flex items-center gap-4 mb-12">
             <div className="text-6xl">👨‍🏫</div>
@@ -633,7 +707,7 @@ const PresentationManual = () => {
       </section>
 
       {/* Parent Guide */}
-      <section className="min-h-screen p-8 page-break">
+      <section className="min-h-screen p-8 page-break page-break-after avoid-break">
         <div className="max-w-6xl mx-auto">
           <div className="flex items-center gap-4 mb-12">
             <div className="text-6xl">👨‍👩‍👧‍👦</div>
@@ -680,7 +754,7 @@ const PresentationManual = () => {
             </div>
 
             {/* Bus Tracking */}
-            <div className="bg-gradient-to-br from-primary/10 via-secondary/5 to-transparent border border-border/50 rounded-3xl p-8">
+            <div className="bg-gradient-to-br from-primary/10 via-secondary/5 to-transparent border border-border/50 rounded-3xl p-8 avoid-break">
               <h3 className="text-3xl font-bold text-foreground mb-6 flex items-center gap-3">
                 <span className="w-12 h-12 rounded-2xl bg-gradient-primary flex items-center justify-center text-primary-foreground font-bold">1</span>
                 {isArabic ? "تتبع الحافلة" : "Bus Tracking"}
@@ -872,7 +946,7 @@ const PresentationManual = () => {
       </section>
 
       {/* Student Guide */}
-      <section className="min-h-screen p-8 page-break">
+      <section className="min-h-screen p-8 page-break page-break-after avoid-break">
         <div className="max-w-6xl mx-auto">
           <div className="flex items-center gap-4 mb-12">
             <div className="text-6xl">🎓</div>
@@ -912,7 +986,7 @@ const PresentationManual = () => {
             </div>
 
             {/* Using NFC Card */}
-            <div className="bg-gradient-to-br from-primary/10 via-secondary/5 to-transparent border border-border/50 rounded-3xl p-8">
+            <div className="bg-gradient-to-br from-primary/10 via-secondary/5 to-transparent border border-border/50 rounded-3xl p-8 avoid-break">
               <h3 className="text-3xl font-bold text-foreground mb-6 flex items-center gap-3">
                 <span className="w-12 h-12 rounded-2xl bg-gradient-primary flex items-center justify-center text-primary-foreground font-bold">1</span>
                 {isArabic ? "استخدام بطاقة NFC" : "Using NFC Card"}
@@ -1038,7 +1112,7 @@ const PresentationManual = () => {
       </section>
 
       {/* Driver Guide */}
-      <section className="min-h-screen p-8 page-break">
+      <section className="min-h-screen p-8 page-break page-break-after avoid-break">
         <div className="max-w-6xl mx-auto">
           <div className="flex items-center gap-4 mb-12">
             <div className="text-6xl">🚌</div>
@@ -1077,7 +1151,7 @@ const PresentationManual = () => {
               </div>
             </div>
 
-            <div className="bg-gradient-to-br from-primary/10 via-secondary/5 to-transparent border border-border/50 rounded-3xl p-8">
+            <div className="bg-gradient-to-br from-primary/10 via-secondary/5 to-transparent border border-border/50 rounded-3xl p-8 avoid-break">
               <h3 className="text-3xl font-bold text-foreground mb-6 flex items-center gap-3">
                 <span className="w-12 h-12 rounded-2xl bg-gradient-primary flex items-center justify-center text-primary-foreground font-bold">1</span>
                 {isArabic ? "بداية الرحلة" : "Starting Trip"}
@@ -1168,7 +1242,7 @@ const PresentationManual = () => {
       </section>
 
       {/* FAQ */}
-      <section className="min-h-screen p-8 page-break">
+      <section className="min-h-screen p-8 page-break page-break-after avoid-break">
         <div className="max-w-6xl mx-auto">
           <div className="flex items-center gap-4 mb-12">
             <div className="text-6xl font-bold bg-gradient-primary bg-clip-text text-transparent">08</div>
@@ -1260,7 +1334,7 @@ const PresentationManual = () => {
       </section>
 
       {/* Thank You Page */}
-      <section className="min-h-screen flex items-center justify-center p-8 page-break">
+      <section className="min-h-screen flex items-center justify-center p-8 page-break avoid-break">
         <div className="text-center max-w-4xl">
           <img 
             src={logo} 
@@ -1279,36 +1353,8 @@ const PresentationManual = () => {
           <div className="h-1 w-32 mx-auto bg-gradient-primary rounded-full"></div>
         </div>
       </section>
-
-      {/* Print Styles */}
-      <style>{`
-        @media print {
-          @page {
-            size: A4;
-            margin: 15mm;
-          }
-          
-          .no-print {
-            display: none !important;
-          }
-          
-          .page-break {
-            page-break-before: always;
-            break-before: page;
-          }
-          
-          body {
-            print-color-adjust: exact;
-            -webkit-print-color-adjust: exact;
-          }
-          
-          .animate-float,
-          .animate-fade-in {
-            animation: none !important;
-          }
-        }
-      `}</style>
     </div>
+    </>
   );
 };
 
