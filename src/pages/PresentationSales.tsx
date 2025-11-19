@@ -1358,7 +1358,7 @@ export default function PresentationSales() {
           <ScrollReveal direction="up" delay={0.5}>
             <div className="mt-16 text-lg text-muted-foreground">
               <p>{isArabic ? 'المصادر والمراجع' : 'Sources & References'}</p>
-              <div className="mt-6 max-w-3xl mx-auto text-sm space-y-2 text-left">
+              <div className="mt-6 max-w-3xl mx-auto text-sm space-y-2 text-left" dir="ltr">
                 <p>• Ministry of Education Oman, Oman Observer (2025)</p>
                 <p>• Data Horizon Research - Middle East EdTech Market (2024)</p>
                 <p>• LearningMate - Michigan DataHub ROI Study (2024)</p>
