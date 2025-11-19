@@ -5,7 +5,15 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function NetworkStatus() {
-  const { language } = useLanguage();
+  // Safely get language with fallback
+  let language = 'en';
+  try {
+    const languageContext = useLanguage();
+    language = languageContext.language;
+  } catch (error) {
+    // Language provider not available yet, use default
+  }
+  
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [showAlert, setShowAlert] = useState(false);
 

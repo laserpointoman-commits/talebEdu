@@ -5,7 +5,15 @@ import { Download, X } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 export default function InstallPrompt() {
-  const { language } = useLanguage();
+  // Safely get language with fallback
+  let language = 'en';
+  try {
+    const languageContext = useLanguage();
+    language = languageContext.language;
+  } catch (error) {
+    // Language provider not available yet, use default
+  }
+  
   const [showPrompt, setShowPrompt] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 
