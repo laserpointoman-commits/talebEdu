@@ -11,6 +11,7 @@ import {
   Receipt, TrendingUp, FileSpreadsheet, Package, AlertTriangle, 
   Info, Zap, AlertCircle, Printer
 } from 'lucide-react';
+import talebEduLogo from '@/assets/talebedu-logo-blue.png';
 
 export default function PresentationFullExpanded() {
   const { language, setLanguage } = useLanguage();
@@ -158,6 +159,9 @@ export default function PresentationFullExpanded() {
         {/* Cover Page */}
         <section className="min-h-screen flex items-center justify-center p-8 print:break-after-page">
           <div className="text-center space-y-8">
+            <div className="inline-block p-4 rounded-full bg-primary/10 mb-4">
+              <img src={talebEduLogo} alt="TalebEdu" className="w-32 h-32 object-contain mx-auto" />
+            </div>
             <div className="text-7xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
               TalebEdu
             </div>
@@ -496,7 +500,9 @@ export default function PresentationFullExpanded() {
         {/* Thank You Page */}
         <section className="min-h-screen flex items-center justify-center p-8">
           <div className="text-center space-y-6">
-            <CheckCircle className="h-24 w-24 mx-auto text-green-500" />
+            <div className="inline-block p-4 rounded-full bg-primary/10 mb-4">
+              <img src={talebEduLogo} alt="TalebEdu" className="w-24 h-24 object-contain mx-auto" />
+            </div>
             <h1 className="text-4xl font-bold">Thank You!</h1>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
               We hope this manual helps you make the most of the TalebEdu platform. 
