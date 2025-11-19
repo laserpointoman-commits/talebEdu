@@ -7,24 +7,27 @@ import { StaggeredReveal, StaggerItem } from '@/components/animations/StaggeredR
 import {
   CheckCircle2, Shield, Clock, Users, TrendingUp, 
   Smartphone, Globe, Zap, Award, BarChart3, 
-  Bus, CreditCard, GraduationCap, Bell, MapPin,
-  Phone, Mail, Globe2, DollarSign, X, Check
+  Bus, CreditCard, Bell, MapPin,
+  Phone, Mail, Globe2, DollarSign, X, Check,
+  ShoppingBag, Package, Store, Home, Utensils
 } from 'lucide-react';
+import talebEduLogo from '@/assets/talebedu-logo-hq.png';
 
 export default function PresentationSales() {
-  const { language } = useLanguage();
+  const { language, setLanguage } = useLanguage();
   const isArabic = language === 'ar';
 
-  const handlePrint = () => {
-    window.print();
+  const toggleLanguage = () => {
+    setLanguage(isArabic ? 'en' : 'ar');
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
       {/* Control Bar - Hidden in Print */}
       <div className="no-print fixed top-4 right-4 z-50 flex gap-2">
-        <Button onClick={handlePrint} variant="glass" size="sm">
-          🖨️ {isArabic ? 'طباعة' : 'Print PDF'}
+        <Button onClick={toggleLanguage} variant="glass" size="sm" className="flex items-center gap-2">
+          <Globe className="w-4 h-4" />
+          {isArabic ? 'English' : 'العربية'}
         </Button>
       </div>
 
@@ -36,7 +39,7 @@ export default function PresentationSales() {
         <div className="relative z-10 text-center space-y-8 px-8">
           <ScrollReveal direction="scale">
             <div className="inline-block p-4 rounded-full bg-primary/10 mb-8">
-              <GraduationCap className="w-20 h-20 text-primary" />
+              <img src={talebEduLogo} alt="TalebEdu" className="w-20 h-20 object-contain" />
             </div>
           </ScrollReveal>
           
@@ -61,7 +64,7 @@ export default function PresentationSales() {
           </ScrollReveal>
           
           <ScrollReveal direction="up" delay={0.5}>
-            <div className="flex items-center justify-center gap-6 text-xl mt-12">
+            <div className="flex items-center justify-center gap-6 text-xl mt-12" dir="ltr">
               <div className="flex items-center gap-2">
                 <Phone className="w-6 h-6 text-primary" />
                 <span>+968 9656 4540</span>
@@ -403,11 +406,30 @@ export default function PresentationSales() {
               <Card className="glass border-primary/20 hover-lift h-full">
                 <CardContent className="p-6 text-center">
                   <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                    <GraduationCap className="w-8 h-8 text-primary" />
+                    <Utensils className="w-8 h-8 text-primary" />
                   </div>
                   <h3 className="font-semibold text-lg mb-2">
-                    {isArabic ? 'إدارة الكافتيريا الذكية' : 'Smart Canteen Management'}
+                    {isArabic ? 'مقصف بدون نقد مع تحكم الأهل' : 'Cashless Canteen with Parent Controls'}
                   </h3>
+                  <p className="text-sm text-muted-foreground">
+                    {isArabic ? 'دفع NFC - منع المنتجات وحدود الإنفاق' : 'NFC payment - restrict products & spending limits'}
+                  </p>
+                </CardContent>
+              </Card>
+            </StaggerItem>
+
+            <StaggerItem>
+              <Card className="glass border-primary/20 hover-lift h-full">
+                <CardContent className="p-6 text-center">
+                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                    <ShoppingBag className="w-8 h-8 text-primary" />
+                  </div>
+                  <h3 className="font-semibold text-lg mb-2">
+                    {isArabic ? 'متجر المدرسة' : 'School Store'}
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    {isArabic ? 'كتب وأقلام وزي - توصيل للصف أو المنزل' : 'Books, pens, uniforms - delivery to classroom or home'}
+                  </p>
                 </CardContent>
               </Card>
             </StaggerItem>
@@ -1162,7 +1184,7 @@ export default function PresentationSales() {
           <div className="max-w-4xl mx-auto text-center">
             <ScrollReveal direction="scale">
               <div className="inline-block p-4 rounded-full bg-primary/10 mb-8">
-                <GraduationCap className="w-20 h-20 text-primary" />
+                <img src={talebEduLogo} alt="TalebEdu" className="w-20 h-20 object-contain" />
               </div>
             </ScrollReveal>
 
@@ -1259,7 +1281,7 @@ export default function PresentationSales() {
         <div className="container mx-auto px-8 text-center">
           <ScrollReveal direction="scale">
             <div className="inline-block p-6 rounded-full bg-primary/10 mb-8">
-              <GraduationCap className="w-32 h-32 text-primary" />
+              <img src={talebEduLogo} alt="TalebEdu" className="w-32 h-32 object-contain" />
             </div>
           </ScrollReveal>
 
