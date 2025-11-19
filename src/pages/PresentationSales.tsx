@@ -370,7 +370,7 @@ export default function PresentationSales() {
                     <CheckCircle2 className="w-8 h-8 text-primary" />
                   </div>
                   <h3 className="font-semibold text-lg mb-2">
-                    {isArabic ? 'حضور NFC وصول' : 'NFC Attendance & Access'}
+                    {isArabic ? 'حضور NFC' : 'NFC Attendance'}
                   </h3>
                 </CardContent>
               </Card>
