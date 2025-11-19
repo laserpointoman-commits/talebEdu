@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Globe, Download, Smartphone, Shield, Wallet, Bus, UtensilsCrossed, GraduationCap, Users, BarChart, Bell, Clock, MapPin, CreditCard, CheckCircle, BookOpen, Calendar, MessageSquare, FileText } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import talebEduLogoBlue from '@/assets/talebedu-logo-blue.png';
 
 const Presentation = () => {
   const { language, setLanguage } = useLanguage();
@@ -32,7 +33,7 @@ const Presentation = () => {
       <section className="min-h-screen flex flex-col items-center justify-center p-8 page-break">
         <div className="text-center space-y-8">
           <img 
-            src="/src/assets/talebedu-logo-hq.png" 
+            src={talebEduLogoBlue} 
             alt="TalebEdu" 
             className="h-32 mx-auto"
           />
@@ -1281,7 +1282,7 @@ const Presentation = () => {
             <p className="text-primary font-semibold">+966 XX XXX XXXX</p>
           </div>
           <img 
-            src="/src/assets/talebedu-logo-hq.png" 
+            src={talebEduLogoBlue} 
             alt="TalebEdu" 
             className="h-24 mx-auto mt-8"
           />

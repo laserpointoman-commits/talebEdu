@@ -11,7 +11,7 @@ import {
   Phone, Mail, Globe2, DollarSign, X, Check,
   ShoppingBag, Package, Store, Home, Utensils
 } from 'lucide-react';
-import talebEduLogo from '@/assets/talebedu-logo-hq.png';
+import talebEduLogo from '@/assets/talebedu-logo-blue.png';
 
 export default function PresentationSales() {
   const { language, setLanguage } = useLanguage();
