@@ -35,6 +35,7 @@ import Presentation from "./pages/Presentation";
 import PresentationFull from "./pages/PresentationFull";
 import PresentationFullExpanded from "./pages/PresentationFullExpanded";
 import PresentationManual from "./pages/PresentationManual";
+import PresentationSales from "./pages/PresentationSales";
 import ScreenshotManager from "./pages/admin/ScreenshotManager";
 import DemoRoutes from "./pages/screenshot-demo/DemoRoutes";
 // Removed test page
@@ -98,6 +99,7 @@ function App() {
                         <Route path="/presentation-full" element={<PresentationFull />} />
                         <Route path="/presentation-expanded" element={<PresentationFullExpanded />} />
                         <Route path="/presentation-manual" element={<PresentationManual />} />
+                        <Route path="/presentation-sales" element={<PresentationSales />} />
                         <Route path="/admin/screenshot-manager" element={<ScreenshotManager />} />
                         <Route path="/screenshot-demo/en/*" element={<DemoRoutes language="en" />} />
                         <Route path="/screenshot-demo/ar/*" element={<DemoRoutes language="ar" />} />
