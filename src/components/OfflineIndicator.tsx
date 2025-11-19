@@ -6,7 +6,15 @@ import { Card } from './ui/card';
 
 export function OfflineIndicator() {
   const { isOnline, isSyncing, syncPendingChanges } = useOffline();
-  const { language } = useLanguage();
+  
+  // Safely get language with fallback
+  let language = 'en';
+  try {
+    const languageContext = useLanguage();
+    language = languageContext.language;
+  } catch (error) {
+    // Language provider not available yet, use default
+  }
 
   if (isOnline && !isSyncing) return null;
 
