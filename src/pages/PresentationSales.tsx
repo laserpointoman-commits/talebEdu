@@ -1339,7 +1339,7 @@ export default function PresentationSales() {
           </ScrollReveal>
 
           <ScrollReveal direction="up" delay={0.4}>
-            <div className="space-y-4 text-2xl">
+            <div className="space-y-4 text-2xl" dir="ltr">
               <div className="flex items-center justify-center gap-3">
                 <Phone className="w-8 h-8 text-primary" />
                 <span className="font-bold">+968 9656 4540</span>
