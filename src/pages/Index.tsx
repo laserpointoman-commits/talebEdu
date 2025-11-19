@@ -208,15 +208,6 @@ const Index = () => {
                 {language === 'en' ? 'العربية' : 'English'}
               </Button>
               
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate('/presentation-sales')}
-                className="gap-2"
-              >
-                {language === 'en' ? 'About' : 'حول'}
-              </Button>
-              
               <Button onClick={() => navigate('/auth')} className="gap-2">
                 {t('login')}
                 <ChevronRight className={`h-4 w-4 ${dir === 'rtl' ? 'rotate-180' : ''}`} />

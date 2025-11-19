@@ -130,16 +130,16 @@ export default function Auth() {
         />
       </div>
 
-      {/* Top Actions - Website Button & Language Switcher */}
+      {/* Top Actions - About Button & Language Switcher */}
       <div className="fixed top-6 right-6 z-50 flex items-center gap-3">
         <Button
           variant="outline"
           size="sm"
-          onClick={() => navigate('/landing')}
+          onClick={() => navigate('/presentation-sales')}
           className="gap-2 backdrop-blur-sm bg-background/80 hover:bg-background/90 border-border/50 hover:border-primary/50 transition-colors"
         >
           <Globe className="h-4 w-4" />
-          {language === 'en' ? 'Visit Website' : 'زيارة الموقع'}
+          {language === 'en' ? 'About' : 'حول'}
         </Button>
         <Button
           variant="outline"
