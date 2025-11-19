@@ -74,7 +74,7 @@ const Index = () => {
     },
     {
       icon: ShoppingBag,
-      titleEn: "Cafeteria & Store",
+      titleEn: "Canteen & Store",
       titleAr: "المقصف والمتجر",
       descEn: "Cashless purchases with automatic wallet deduction",
       descAr: "مشتريات بدون نقود مع خصم تلقائي من المحفظة"

@@ -53,8 +53,8 @@ export default function Schedule() {
       time: '12:15 - 13:00', 
       subject: t('schedule.break'), 
       teacher: '-', 
-      room: t('schedule.cafeteria'), 
-      class: '-' 
+      room: t('schedule.canteen'), 
+      class: '-'
     },
     { 
       time: '13:00 - 13:45', 
