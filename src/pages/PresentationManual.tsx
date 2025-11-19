@@ -119,11 +119,12 @@ const PresentationManual = () => {
 
         <div className="relative z-10 text-center space-y-8 max-w-4xl">
           <div className="animate-fade-in">
-            <img 
-              src={logo} 
-              alt="TalebEdu Logo" 
-              className="w-40 h-40 mx-auto mb-8 drop-shadow-glow hover:scale-110 transition-transform duration-500"
-            />
+            <div className="relative inline-flex items-center justify-center w-40 h-40 mx-auto mb-8 rounded-full bg-primary/10 drop-shadow-glow hover:scale-110 transition-transform duration-500">
+              <div className="absolute -inset-6 bg-primary/20 blur-3xl rounded-full" />
+              <span className="relative text-7xl font-bold text-primary leading-none">
+                t
+              </span>
+            </div>
           </div>
           
           <h1 className="text-7xl md:text-8xl font-bold bg-gradient-primary bg-clip-text text-transparent animate-fade-in mb-6">
@@ -1336,11 +1337,12 @@ const PresentationManual = () => {
       {/* Thank You Page */}
       <section className="min-h-screen flex items-center justify-center p-8 page-break avoid-break">
         <div className="text-center max-w-4xl">
-          <img 
-            src={logo} 
-            alt="TalebEdu Logo" 
-            className="w-32 h-32 mx-auto mb-8 animate-float"
-          />
+          <div className="relative inline-flex items-center justify-center w-32 h-32 mx-auto mb-8 rounded-full bg-primary/10 animate-float">
+            <div className="absolute -inset-5 bg-primary/20 blur-2xl rounded-full" />
+            <span className="relative text-5xl font-bold text-primary leading-none">
+              t
+            </span>
+          </div>
           <h2 className="text-5xl font-bold bg-gradient-primary bg-clip-text text-transparent mb-6">
             {isArabic ? "شكراً لاستخدام TalebEdu" : "Thank You for Using TalebEdu"}
           </h2>

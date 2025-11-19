@@ -159,8 +159,11 @@ export default function PresentationFullExpanded() {
         {/* Cover Page */}
         <section className="min-h-screen flex items-center justify-center p-8 print:break-after-page">
           <div className="text-center space-y-8">
-            <div className="inline-block p-4 rounded-full bg-primary/10 mb-4">
-              <img src={talebEduLogo} alt="TalebEdu" className="w-32 h-32 object-contain mx-auto" />
+            <div className="relative inline-flex items-center justify-center w-32 h-32 rounded-full bg-primary/10 mb-4">
+              <div className="absolute -inset-4 bg-primary/20 blur-2xl rounded-full" />
+              <span className="relative text-6xl font-bold text-primary leading-none">
+                t
+              </span>
             </div>
             <div className="text-7xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
               TalebEdu
@@ -500,8 +503,11 @@ export default function PresentationFullExpanded() {
         {/* Thank You Page */}
         <section className="min-h-screen flex items-center justify-center p-8">
           <div className="text-center space-y-6">
-            <div className="inline-block p-4 rounded-full bg-primary/10 mb-4">
-              <img src={talebEduLogo} alt="TalebEdu" className="w-24 h-24 object-contain mx-auto" />
+            <div className="relative inline-flex items-center justify-center w-24 h-24 rounded-full bg-primary/10 mb-4">
+              <div className="absolute -inset-3 bg-primary/20 blur-2xl rounded-full" />
+              <span className="relative text-4xl font-bold text-primary leading-none">
+                t
+              </span>
             </div>
             <h1 className="text-4xl font-bold">Thank You!</h1>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">

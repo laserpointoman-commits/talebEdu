@@ -32,11 +32,12 @@ const Presentation = () => {
       {/* Cover Page */}
       <section className="min-h-screen flex flex-col items-center justify-center p-8 page-break">
         <div className="text-center space-y-8">
-          <img 
-            src={talebEduLogoBlue} 
-            alt="TalebEdu" 
-            className="h-32 mx-auto"
-          />
+          <div className="relative inline-flex items-center justify-center w-32 h-32 rounded-full bg-primary/10 mx-auto mb-4">
+            <div className="absolute -inset-4 bg-primary/20 blur-2xl rounded-full" />
+            <span className="relative text-6xl font-bold text-primary leading-none">
+              t
+            </span>
+          </div>
           <h1 className="text-6xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
             {isArabic ? 'طالب التعليمية' : 'TalebEdu'}
           </h1>
