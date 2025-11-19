@@ -22,7 +22,7 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 import Footer from './Footer';
 import FloatingChat from '@/components/chat/FloatingChat';
-
+import talebEduLogoBlue from '@/assets/talebedu-logo-blue.png';
 interface DashboardLayoutProps {
   children: ReactNode;
 }
@@ -156,10 +156,12 @@ function DashboardLayout({ children }: DashboardLayoutProps) {
         {/* Center Section - App Logo and Name - Always LTR */}
         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center gap-3 md:gap-4" dir="ltr">
           <div className="relative">
-            <div className="text-4xl md:text-6xl font-bold text-primary leading-none">
-              t
-            </div>
             <div className="absolute -inset-4 bg-primary/20 blur-xl rounded-full opacity-50 hidden md:block" />
+            <img
+              src={talebEduLogoBlue}
+              alt="TalebEdu Logo"
+              className="relative z-10 h-10 w-10 md:h-14 md:w-14 object-contain"
+            />
           </div>
           <span className="font-semibold text-2xl md:text-3xl text-foreground">
             talebEdu
