@@ -38,8 +38,11 @@ export default function PresentationSales() {
         
         <div className="relative z-10 text-center space-y-8 px-8">
           <ScrollReveal direction="scale">
-            <div className="inline-block p-4 rounded-full bg-primary/10 mb-8">
-              <img src={talebEduLogo} alt="TalebEdu" className="w-20 h-20 object-contain" />
+            <div className="relative inline-flex items-center justify-center w-24 h-24 rounded-full bg-primary/10 mb-8">
+              <div className="absolute -inset-3 bg-primary/20 blur-xl rounded-full" />
+              <span className="relative text-5xl font-bold text-primary leading-none">
+                t
+              </span>
             </div>
           </ScrollReveal>
           
@@ -1313,8 +1316,11 @@ export default function PresentationSales() {
       <section className="min-h-screen flex items-center justify-center print-page">
         <div className="container mx-auto px-8 text-center">
           <ScrollReveal direction="scale">
-            <div className="inline-block p-6 rounded-full bg-primary/10 mb-8">
-              <img src={talebEduLogo} alt="TalebEdu" className="w-32 h-32 object-contain" />
+            <div className="relative inline-flex items-center justify-center w-32 h-32 rounded-full bg-primary/10 mb-8">
+              <div className="absolute -inset-4 bg-primary/20 blur-2xl rounded-full" />
+              <span className="relative text-6xl font-bold text-primary leading-none">
+                t
+              </span>
             </div>
           </ScrollReveal>
 

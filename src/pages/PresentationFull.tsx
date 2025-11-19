@@ -124,8 +124,11 @@ const PresentationFull = () => {
       {/* Cover Page */}
       <section className="min-h-screen flex flex-col items-center justify-center p-8 print:break-after-page">
         <div className="text-center space-y-8">
-          <div className="inline-block p-6 rounded-full bg-primary/10 mb-4">
-            <img src={talebEduLogo} alt="TalebEdu" className="w-32 h-32 object-contain mx-auto" />
+          <div className="relative inline-flex items-center justify-center w-32 h-32 rounded-full bg-primary/10 mb-4">
+            <div className="absolute -inset-4 bg-primary/20 blur-2xl rounded-full" />
+            <span className="relative text-6xl font-bold text-primary leading-none">
+              t
+            </span>
           </div>
           <h1 className="text-6xl font-bold bg-gradient-to-r from-blue-500 to-blue-600 bg-clip-text text-transparent">
             {isArabic ? 'منصة طالب المدرسية' : 'TalebEdu Platform'}
@@ -395,8 +398,11 @@ const PresentationFull = () => {
       {/* Closing Page */}
       <section className="min-h-screen flex flex-col items-center justify-center p-8 print:break-after-page">
         <div className="text-center space-y-8 max-w-2xl">
-          <div className="inline-block p-6 rounded-full bg-primary/10 mb-4">
-            <img src={talebEduLogo} alt="TalebEdu" className="w-24 h-24 object-contain mx-auto" />
+          <div className="relative inline-flex items-center justify-center w-24 h-24 rounded-full bg-primary/10 mb-4">
+            <div className="absolute -inset-3 bg-primary/20 blur-2xl rounded-full" />
+            <span className="relative text-4xl font-bold text-primary leading-none">
+              t
+            </span>
           </div>
           <h2 className="text-4xl font-bold">
             {isArabic ? 'شكراً لاختيارك منصة طالب' : 'Thank You for Choosing TalebEdu'}
