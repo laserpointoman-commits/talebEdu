@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { User, Session } from '@supabase/supabase-js';
 import { toast } from 'sonner';
@@ -35,7 +34,6 @@ export const useAuth = () => {
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -95,7 +93,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         // Handle sign out (splash is handled in logout function)
         if (event === 'SIGNED_OUT') {
-          navigate('/auth');
+          window.location.href = '/auth';
         }
       }
     );
@@ -112,7 +110,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (userProfile?.role === 'parent' && !userProfile.email_confirmed) {
           const currentPath = window.location.pathname;
           if (currentPath !== '/email-confirmation-pending' && currentPath !== '/auth') {
-            navigate('/email-confirmation-pending');
+            window.location.href = '/email-confirmation-pending';
             setLoading(false);
             return;
           }
@@ -125,7 +123,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             userProfile.registered_students_count < userProfile.expected_students_count) {
           const currentPath = window.location.pathname;
           if (currentPath !== '/dashboard/register-student' && currentPath !== '/auth') {
-            navigate('/dashboard/register-student');
+            window.location.href = '/dashboard/register-student';
             setLoading(false);
             return;
           }
