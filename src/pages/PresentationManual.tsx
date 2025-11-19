@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Printer, Globe } from "lucide-react";
-import logo from "@/assets/talebedu-logo-hq.png";
+import logo from "@/assets/talebedu-logo-blue.png";
 
 const PresentationManual = () => {
   const { language, setLanguage } = useLanguage();

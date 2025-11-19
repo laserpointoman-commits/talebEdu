@@ -165,7 +165,7 @@ export default function RegisterStudent() {
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <img 
-              src="/src/assets/talebedu-logo-hq.png" 
+              src="/src/assets/talebedu-logo-blue.png" 
               alt="TalebEdu Logo" 
               className="h-12 w-12 object-contain"
             />
