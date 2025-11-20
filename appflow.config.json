@@ -3,6 +3,7 @@
     {
       "appId": "4125732c",
       "dependencyInstallCommand": "npm install --legacy-peer-deps",
+      "buildCommand": "npm run build && npx cap sync ios",
       "iosPath": "ios/App"
     }
   ]
