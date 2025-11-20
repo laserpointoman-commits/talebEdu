@@ -2,6 +2,7 @@
   "apps": [
     {
       "appId": "4125732c",
+      "dependencyInstallCommand": "npm install --legacy-peer-deps",
       "iosPath": "ios/App"
     }
   ]
