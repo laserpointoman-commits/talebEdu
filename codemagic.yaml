@@ -11,7 +11,7 @@ workflows:
         XCODE_WORKSPACE: "ios/App/App.xcworkspace"
         XCODE_SCHEME: "App"
         APP_STORE_APPLE_ID: 1234567890 # You'll need to update this
-      xcode: 15.0
+      xcode: 16.4
       node: 18.17.0
     triggering:
       events:
