@@ -27,7 +27,18 @@ workflows:
           npm run build
       - name: Setup iOS project
         script: |
-          npx cap sync ios
+          # Update CocoaPods to ensure compatibility with Xcode 16.4
+          sudo gem install cocoapods
+          
+          # Copy web assets to iOS
+          npx cap copy ios
+          
+          # Update iOS dependencies
+          npx cap update ios
+          
+          # Install CocoaPods dependencies with repo update
+          cd ios/App
+          pod install --repo-update
       - name: Set build number
         script: |
           cd ios/App
