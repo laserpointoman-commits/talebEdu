@@ -1,4 +1,4 @@
-package app.lovable.talebedu;
+package com.talebedu.app;
 
 import com.getcapacitor.BridgeActivity;
 
