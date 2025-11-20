@@ -10,7 +10,7 @@ workflows:
       vars:
         XCODE_WORKSPACE: "ios/App/App.xcworkspace"
         XCODE_SCHEME: "App"
-        APP_STORE_APPLE_ID: 1234567890 # You'll need to update this
+        APP_STORE_APPLE_ID: 6755542368
       xcode: 16.4
       node: 18.17.0
     triggering:
@@ -54,7 +54,7 @@ workflows:
     publishing:
       email:
         recipients:
-          - your-email@example.com # Update this with your actual email
+          - khanfar.zozo@icloud.com
         notify:
           success: true
           failure: true
