@@ -3,8 +3,6 @@ workflows:
     name: iOS Build - TalebEdu
     max_build_duration: 60
     instance_type: mac_mini_m1
-    integrations:
-      app_store_connect: CodemagicAPI
     environment:
       ios_signing:
         distribution_type: app_store
@@ -45,13 +43,7 @@ workflows:
     publishing:
       email:
         recipients:
-          - your-email@example.com # Update this
+          - your-email@example.com # Update this with your actual email
         notify:
           success: true
           failure: true
-      app_store_connect:
-        auth: integration
-        submit_to_testflight: true
-        beta_groups:
-          - Internal Testers
-        submit_to_app_store: false
