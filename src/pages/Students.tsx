@@ -17,6 +17,7 @@ import { toast } from '@/hooks/use-toast';
 import { z } from 'zod';
 import StudentRegistration from '@/components/features/StudentRegistration';
 import { supabase } from '@/integrations/supabase/client';
+import { nfcService } from '@/services/nfcService';
 
 // Removed mock students - using StudentsContext instead
 
@@ -35,6 +36,7 @@ export default function Students() {
   const [uploadedImage, setUploadedImage] = useState<string>('');
   const [teacherClasses, setTeacherClasses] = useState<any[]>([]);
   const [selectedClass, setSelectedClass] = useState<any | null>(null);
+  const [writingNfc, setWritingNfc] = useState<string | null>(null);
   
   // Confirmation dialog states
   const [bulkDeleteConfirmOpen, setBulkDeleteConfirmOpen] = useState(false);
@@ -176,6 +178,47 @@ export default function Students() {
         description: `Found student: ${randomStudent.name}`,
       });
     }, 2000);
+  };
+
+  const handleWriteNFC = async (student: any) => {
+    if (!student.nfcId) {
+      toast({
+        title: language === 'ar' ? 'خطأ' : 'Error',
+        description: language === 'ar' ? 'لم يتم تعيين رقم NFC لهذا الطالب' : 'No NFC ID assigned to this student',
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setWritingNfc(student.id);
+    try {
+      const nfcData = {
+        id: student.nfcId,
+        type: 'student' as const,
+        name: student.name,
+        additionalData: {
+          studentId: student.id,
+          grade: student.grade,
+          class: student.class
+        }
+      };
+      
+      const success = await nfcService.writeTag(nfcData);
+      if (success) {
+        toast({
+          title: language === 'ar' ? 'نجح' : 'Success',
+          description: language === 'ar' ? 'تم كتابة بطاقة NFC بنجاح' : 'NFC tag written successfully',
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: language === 'ar' ? 'خطأ' : 'Error',
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setWritingNfc(null);
+    }
   };
 
   const canEdit = profile?.role === 'admin' || profile?.role === 'teacher';
@@ -382,9 +425,22 @@ export default function Students() {
             </CardHeader>
             <CardContent>
               <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
+                <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">NFC ID:</span>
-                  <span className="font-medium">{student.nfcId}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium">{student.nfcId}</span>
+                    {student.nfcId && canEdit && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 w-7 p-0"
+                        onClick={() => handleWriteNFC(student)}
+                        disabled={writingNfc === student.id}
+                      >
+                        <Nfc className={`h-4 w-4 ${writingNfc === student.id ? 'animate-pulse' : ''}`} />
+                      </Button>
+                    )}
+                  </div>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">{t('common.status')}:</span>
@@ -443,7 +499,20 @@ export default function Students() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label className="text-muted-foreground">{t('common.nfcId')}</Label>
-                  <p className="font-medium number-display">{selectedStudent.nfcId || (language === 'ar' ? 'لم يتم تعيين' : 'Not assigned')}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="font-medium number-display">{selectedStudent.nfcId || (language === 'ar' ? 'لم يتم تعيين' : 'Not assigned')}</p>
+                    {selectedStudent.nfcId && canEdit && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleWriteNFC(selectedStudent)}
+                        disabled={writingNfc === selectedStudent.id}
+                      >
+                        <Nfc className={`h-4 w-4 mr-2 ${writingNfc === selectedStudent.id ? 'animate-pulse' : ''}`} />
+                        {language === 'ar' ? 'كتابة NFC' : 'Write NFC'}
+                      </Button>
+                    )}
+                  </div>
                 </div>
                 <div>
                   <Label className="text-muted-foreground">{t('common.barcode')}</Label>
