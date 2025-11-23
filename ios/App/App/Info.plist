@@ -52,5 +52,13 @@
 		<string>NDEF</string>
 		<string>TAG</string>
 	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>TalebEdu needs camera access to take profile photos for students and staff members</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>TalebEdu needs access to your photo library to select profile pictures</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>TalebEdu uses your location to help set home locations for student pickup and bus tracking</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>TalebEdu needs location access to provide real-time bus tracking for parent safety</string>
 </dict>
 </plist>
