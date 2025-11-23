@@ -6,10 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Search, User, Scan, Smartphone, Eye, Wifi } from "lucide-react";
+import { Plus, Search, User, Scan, Smartphone, Eye, Wifi, Nfc } from "lucide-react";
 import LogoLoader from "@/components/LogoLoader";
 import AddStudentDialog from "@/components/admin/AddStudentDialog";
 import StudentNFCDialog from "@/components/admin/StudentNFCDialog";
+import { nfcService } from "@/services/nfcService";
 import {
   Dialog,
   DialogContent,
@@ -29,6 +30,7 @@ export default function StudentManagement() {
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const [nfcDialogOpen, setNfcDialogOpen] = useState(false);
   const [nfcStudent, setNfcStudent] = useState<any>(null);
+  const [writingNfc, setWritingNfc] = useState<string | null>(null);
 
   useEffect(() => {
     loadStudents();
@@ -54,6 +56,38 @@ export default function StudentManagement() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleWriteNFC = async (student: any) => {
+    setWritingNfc(student.id);
+    try {
+      const nfcData = {
+        id: student.nfc_id,
+        type: 'student' as const,
+        name: `${student.first_name} ${student.last_name}`,
+        additionalData: {
+          studentId: student.student_id,
+          grade: student.grade,
+          class: student.class
+        }
+      };
+      
+      const success = await nfcService.writeTag(nfcData);
+      if (success) {
+        toast({
+          title: language === 'ar' ? 'نجح' : 'Success',
+          description: language === 'ar' ? 'تم كتابة بطاقة NFC بنجاح' : 'NFC tag written successfully',
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: language === 'ar' ? 'خطأ' : 'Error',
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setWritingNfc(null);
     }
   };
 
@@ -126,9 +160,22 @@ export default function StudentManagement() {
               </div>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="flex items-center gap-2 text-sm">
-                <Scan className="h-4 w-4 text-primary" />
-                <span className="font-mono text-xs">{student.nfc_id || language === 'ar' ? 'لم يتم تعيين' : 'Not assigned'}</span>
+              <div className="flex items-center justify-between gap-2 text-sm">
+                <div className="flex items-center gap-2">
+                  <Scan className="h-4 w-4 text-primary" />
+                  <span className="font-mono text-xs">{student.nfc_id || (language === 'ar' ? 'لم يتم تعيين' : 'Not assigned')}</span>
+                </div>
+                {student.nfc_id && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-7 w-7 p-0"
+                    onClick={() => handleWriteNFC(student)}
+                    disabled={writingNfc === student.id}
+                  >
+                    <Nfc className={`h-4 w-4 ${writingNfc === student.id ? 'animate-pulse' : ''}`} />
+                  </Button>
+                )}
               </div>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <span>{language === 'ar' ? 'الصف:' : 'Grade:'}</span>
