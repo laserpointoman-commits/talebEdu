@@ -50,7 +50,6 @@
     "@tanstack/react-query": "^5.83.0",
     "@types/mapbox-gl": "^3.4.1",
     "capacitor-native-biometric": "^4.2.2",
-    "capacitor-nfc": "^0.1.5",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
