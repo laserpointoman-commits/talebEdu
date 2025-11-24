@@ -25,18 +25,14 @@ class NFCService {
   }
 
   private async checkNFCSupport(): Promise<boolean> {
-    // Check if Web NFC API is available
+    // Check if Web NFC API is available (Chrome Android)
     if ('NDEFReader' in window) {
       this.isNFCSupported = true;
       return true;
     }
     
-    // For Capacitor mobile apps, check if we're in a native environment
-    if (window.Capacitor?.isNativePlatform()) {
-      this.isNFCSupported = true;
-      return true;
-    }
-
+    // For iOS/native apps without Web NFC, NFC is not currently supported
+    // This prevents build errors while maintaining graceful degradation
     this.isNFCSupported = false;
     return false;
   }
@@ -54,11 +50,8 @@ class NFCService {
         return true;
       }
 
-      // For native mobile apps through Capacitor
-      if (window.Capacitor?.isNativePlatform()) {
-        // Native permission handling would go here
-        return true;
-      }
+      // Native NFC requires specific plugins - currently using Web NFC only
+      // For iOS native support, additional setup would be required
 
       return false;
     } catch (error) {
@@ -90,20 +83,7 @@ class NFCService {
         return true;
       }
 
-      // For native mobile apps through Capacitor
-      if (window.Capacitor?.isNativePlatform()) {
-        // Native NFC write would go here
-        // For now, we'll simulate it
-        console.log('Writing NFC tag (native):', data);
-        
-        // Simulate write delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        toast.success('NFC tag written successfully');
-        return true;
-      }
-
-      // Fallback: simulation mode for development
+      // Fallback: simulation mode for development/testing
       console.log('Writing NFC tag (simulation):', data);
       await new Promise(resolve => setTimeout(resolve, 1000));
       toast.success('NFC tag written successfully (Simulation Mode)');
@@ -153,17 +133,8 @@ class NFCService {
         });
       }
 
-      // For native mobile apps through Capacitor
-      if (window.Capacitor?.isNativePlatform()) {
-        // Native NFC read would go here
-        console.log('Reading NFC tag (native)');
-        
-        // Simulate read - in production this would use native NFC
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // Return simulated data for development
-        return null;
-      }
+      // Native NFC not currently implemented
+      // For iOS/Android native support, additional plugin setup required
 
       return null;
 
@@ -214,11 +185,8 @@ class NFCService {
         });
       }
 
-      // For native mobile apps
-      if (window.Capacitor?.isNativePlatform()) {
-        // Native continuous scanning would go here
-        console.log('Starting NFC scan (native)');
-      }
+      // Native continuous scanning not currently implemented
+      // Using Web NFC API for supported browsers
 
     } catch (error) {
       console.error('Error starting NFC scan:', error);

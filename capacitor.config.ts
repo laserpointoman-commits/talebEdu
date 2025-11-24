@@ -5,9 +5,6 @@ const config: CapacitorConfig = {
   appName: 'TalebEdu',
   webDir: 'dist',
   plugins: {
-    CapacitorNFC: {
-      enabled: true
-    },
     PushNotifications: {
       presentationOptions: ["badge", "sound", "alert"]
     },
