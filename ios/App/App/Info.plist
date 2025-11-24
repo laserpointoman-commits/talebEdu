@@ -60,5 +60,9 @@
 	<string>TalebEdu uses your location to help set home locations for student pickup and bus tracking</string>
 	<key>NSLocationAlwaysUsageDescription</key>
 	<string>TalebEdu needs location access to provide real-time bus tracking for parent safety</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
 </dict>
 </plist>
