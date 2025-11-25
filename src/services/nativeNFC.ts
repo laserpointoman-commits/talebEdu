@@ -1,7 +1,8 @@
 import { toast } from 'sonner';
+import { Capacitor } from '@capacitor/core';
 
 // Native iOS NFC Service
-// This service provides NFC functionality for iOS devices using CoreNFC
+// This service provides NFC functionality for iOS devices using CoreNFC via Capacitor plugin
 
 export interface NFCData {
   id: string;
@@ -10,17 +11,15 @@ export interface NFCData {
   additionalData?: Record<string, any>;
 }
 
-declare global {
-  interface Window {
-    webkit?: {
-      messageHandlers?: {
-        nfc?: {
-          postMessage: (message: any) => void;
-        };
-      };
-    };
-  }
+interface NFCBridgePlugin {
+  checkAvailability(): Promise<{ available: boolean }>;
+  readTag(): Promise<NFCData>;
+  writeTag(options: { data: NFCData }): Promise<{ success: boolean }>;
+  stopScan(): Promise<void>;
 }
+
+// Register the native plugin
+const NFCBridge = Capacitor.registerPlugin<NFCBridgePlugin>('NFCBridgePlugin');
 
 class NativeNFCService {
   private isNFCSupported: boolean = false;
@@ -30,26 +29,22 @@ class NativeNFCService {
     this.checkNFCSupport();
   }
 
-  private checkNFCSupport(): boolean {
-    // Check if running on iOS
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    
-    // Check if Web NFC API is available (for Android Chrome)
-    if ('NDEFReader' in window) {
-      this.isNFCSupported = true;
-      return true;
-    }
-    
-    // For iOS, we'll use native bridge when available
-    if (isIOS && window.webkit?.messageHandlers?.nfc) {
-      this.isNFCSupported = true;
-      return true;
-    }
-    
-    // Assume iOS devices support NFC (will be handled by native code)
-    if (isIOS) {
-      this.isNFCSupported = true;
-      return true;
+  private async checkNFCSupport(): Promise<boolean> {
+    try {
+      // Check if running on native platform
+      if (Capacitor.isNativePlatform()) {
+        const result = await NFCBridge.checkAvailability();
+        this.isNFCSupported = result.available;
+        return result.available;
+      }
+      
+      // Check if Web NFC API is available (for Android Chrome web)
+      if ('NDEFReader' in window) {
+        this.isNFCSupported = true;
+        return true;
+      }
+    } catch (error) {
+      console.error('Error checking NFC support:', error);
     }
 
     this.isNFCSupported = false;
@@ -62,26 +57,8 @@ class NativeNFCService {
       return false;
     }
 
-    try {
-      // Web NFC API (Android Chrome)
-      if ('NDEFReader' in window) {
-        return true;
-      }
-
-      // iOS native bridge
-      if (window.webkit?.messageHandlers?.nfc) {
-        window.webkit.messageHandlers.nfc.postMessage({
-          action: 'requestPermission'
-        });
-        return true;
-      }
-
-      // For iOS, permission is handled at runtime
-      return true;
-    } catch (error) {
-      console.error('Error requesting NFC permission:', error);
-      return false;
-    }
+    // On native iOS, permission is requested automatically when NFC is used
+    return true;
   }
 
   async writeTag(data: NFCData): Promise<boolean> {
@@ -91,7 +68,19 @@ class NativeNFCService {
     }
 
     try {
-      // Web NFC API (Android Chrome)
+      // Use native plugin on iOS/Android
+      if (Capacitor.isNativePlatform()) {
+        const result = await NFCBridge.writeTag({ data });
+        if (result.success) {
+          toast.success('NFC tag written successfully');
+          return true;
+        } else {
+          toast.error('Failed to write NFC tag');
+          return false;
+        }
+      }
+
+      // Web NFC API fallback (Android Chrome web)
       if ('NDEFReader' in window) {
         const ndef = new (window as any).NDEFReader();
         
@@ -107,50 +96,15 @@ class NativeNFCService {
         return true;
       }
 
-      // iOS native bridge
-      if (window.webkit?.messageHandlers?.nfc) {
-        window.webkit.messageHandlers.nfc.postMessage({
-          action: 'writeTag',
-          data: data
-        });
-        
-        // Wait for response from native code
-        return new Promise((resolve) => {
-          const handler = (event: any) => {
-            if (event.detail.action === 'writeComplete') {
-              window.removeEventListener('nfcResponse', handler);
-              if (event.detail.success) {
-                toast.success('NFC tag written successfully');
-                resolve(true);
-              } else {
-                toast.error('Failed to write NFC tag');
-                resolve(false);
-              }
-            }
-          };
-          window.addEventListener('nfcResponse', handler);
-          
-          // Timeout after 30 seconds
-          setTimeout(() => {
-            window.removeEventListener('nfcResponse', handler);
-            toast.error('NFC write timeout');
-            resolve(false);
-          }, 30000);
-        });
-      }
-
-      // Fallback simulation
-      console.log('Writing NFC tag (simulation):', data);
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      toast.success('NFC tag written successfully (Simulation Mode)');
-      return true;
+      toast.error('NFC not available');
+      return false;
 
     } catch (error: any) {
       console.error('Error writing NFC tag:', error);
       
-      if (error.name === 'NotAllowedError') {
+      if (error.message?.includes('permission')) {
         toast.error('NFC permission denied');
-      } else if (error.name === 'NetworkError') {
+      } else if (error.message?.includes('not found') || error.message?.includes('No tag')) {
         toast.error('No NFC tag found nearby');
       } else {
         toast.error('Failed to write NFC tag');
@@ -167,7 +121,13 @@ class NativeNFCService {
     }
 
     try {
-      // Web NFC API (Android Chrome)
+      // Use native plugin on iOS/Android
+      if (Capacitor.isNativePlatform()) {
+        const data = await NFCBridge.readTag();
+        return data;
+      }
+
+      // Web NFC API fallback (Android Chrome web)
       if ('NDEFReader' in window) {
         const ndef = new (window as any).NDEFReader();
         
@@ -189,36 +149,14 @@ class NativeNFCService {
         });
       }
 
-      // iOS native bridge
-      if (window.webkit?.messageHandlers?.nfc) {
-        window.webkit.messageHandlers.nfc.postMessage({
-          action: 'readTag'
-        });
-        
-        return new Promise((resolve) => {
-          const handler = (event: any) => {
-            if (event.detail.action === 'readComplete') {
-              window.removeEventListener('nfcResponse', handler);
-              resolve(event.detail.data || null);
-            }
-          };
-          window.addEventListener('nfcResponse', handler);
-          
-          // Timeout after 30 seconds
-          setTimeout(() => {
-            window.removeEventListener('nfcResponse', handler);
-            resolve(null);
-          }, 30000);
-        });
-      }
-
       return null;
 
     } catch (error: any) {
       console.error('Error reading NFC tag:', error);
       
-      if (error.name === 'NotAllowedError') {
-        toast.error('NFC permission denied');
+      if (error.message?.includes('permission') || error.message?.includes('cancelled')) {
+        // User cancelled or denied permission
+        return null;
       } else {
         toast.error('Failed to read NFC tag');
       }
@@ -240,7 +178,26 @@ class NativeNFCService {
     this.isScanning = true;
 
     try {
-      // Web NFC API (Android Chrome)
+      // On native platforms, use continuous scanning
+      if (Capacitor.isNativePlatform()) {
+        // iOS/Android native scanning - read one tag at a time
+        while (this.isScanning) {
+          try {
+            const data = await NFCBridge.readTag();
+            if (data && this.isScanning) {
+              onTagRead(data);
+            }
+          } catch (error: any) {
+            if (error.message?.includes('cancelled') || !this.isScanning) {
+              break;
+            }
+            console.error('NFC scan error:', error);
+          }
+        }
+        return;
+      }
+
+      // Web NFC API fallback (Android Chrome web)
       if ('NDEFReader' in window) {
         const ndef = new (window as any).NDEFReader();
         await ndef.scan();
@@ -261,20 +218,6 @@ class NativeNFCService {
         });
       }
 
-      // iOS native bridge
-      if (window.webkit?.messageHandlers?.nfc) {
-        window.webkit.messageHandlers.nfc.postMessage({
-          action: 'startScanning'
-        });
-        
-        const handler = (event: any) => {
-          if (event.detail.action === 'tagRead' && event.detail.data) {
-            onTagRead(event.detail.data);
-          }
-        };
-        window.addEventListener('nfcResponse', handler);
-      }
-
     } catch (error) {
       console.error('Error starting NFC scan:', error);
       this.isScanning = false;
@@ -282,14 +225,16 @@ class NativeNFCService {
     }
   }
 
-  stopScanning(): void {
+  async stopScanning(): Promise<void> {
     this.isScanning = false;
     
-    // Stop iOS native scanning
-    if (window.webkit?.messageHandlers?.nfc) {
-      window.webkit.messageHandlers.nfc.postMessage({
-        action: 'stopScanning'
-      });
+    // Stop native scanning
+    if (Capacitor.isNativePlatform()) {
+      try {
+        await NFCBridge.stopScan();
+      } catch (error) {
+        console.error('Error stopping NFC scan:', error);
+      }
     }
   }
 
