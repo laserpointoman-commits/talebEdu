@@ -15,10 +15,21 @@ const config: CapacitorConfig = {
       showSpinner: false,
       splashFullScreen: true,
       splashImmersive: true
+    },
+    Keyboard: {
+      resize: 'native',
+      style: 'dark',
+      resizeOnFullScreen: true
+    },
+    StatusBar: {
+      style: 'dark',
+      backgroundColor: '#ffffff'
     }
   },
   ios: {
-    contentInset: 'always'
+    contentInset: 'always',
+    scrollEnabled: false,
+    allowsLinkPreview: false
   }
 };
 

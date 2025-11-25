@@ -18,7 +18,8 @@ def capacitor_pods
   pod 'CapacitorPushNotifications', :path => '../../node_modules/@capacitor/push-notifications'
   pod 'CapacitorNativeBiometric', :path => '../../node_modules/capacitor-native-biometric'
   pod 'CommunityKeepAwake', :path => '../../node_modules/@capacitor-community/keep-awake'
-  # NFC plugin removed due to compatibility issues - using Web NFC API instead
+  # Native NFC implementation will use CoreNFC framework (no plugin needed)
+  # See IOS_NFC_SETUP.md for native Swift implementation
 end
 
 target 'App' do
