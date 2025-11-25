@@ -7,7 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { GraduationCap, Mail, Lock, Globe, Eye, EyeOff } from 'lucide-react';
+import { Mail, Lock, Globe, Eye, EyeOff } from 'lucide-react';
+import appIcon from '@/assets/app-icon.png';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { motion } from 'framer-motion';
 
@@ -177,9 +178,9 @@ export default function Auth() {
                   ],
                 }}
                 transition={{ duration: 2, repeat: Infinity }}
-                className="p-4 rounded-2xl bg-gradient-to-br from-primary to-primary/80"
+                className="p-2 rounded-2xl"
               >
-                <GraduationCap className="h-12 w-12 text-white" />
+                <img src={appIcon} alt="TalebEdu Logo" className="h-20 w-20 object-contain" />
               </motion.div>
             </div>
             <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
