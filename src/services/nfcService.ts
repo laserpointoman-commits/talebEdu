@@ -23,9 +23,17 @@ export interface NFCData {
 class NFCService {
   private isNFCSupported: boolean = false;
   private isScanning: boolean = false;
+  private supportCheckPromise: Promise<boolean> | null = null;
 
   constructor() {
-    this.checkNFCSupport();
+    // Start the check but don't block
+    this.supportCheckPromise = this.checkNFCSupport();
+    
+    // For native iOS/Android, assume NFC is available by default
+    // (iPhone 7+ and most modern Android phones have NFC)
+    if (Capacitor.isNativePlatform() && NFCPluginNative) {
+      this.isNFCSupported = true;
+    }
   }
 
   private async checkNFCSupport(): Promise<boolean> {
@@ -37,8 +45,9 @@ class NFCService {
         return result.available;
       } catch (error) {
         console.error('NFC check failed:', error);
-        this.isNFCSupported = false;
-        return false;
+        // Keep assuming true for native platforms even if check fails
+        this.isNFCSupported = true;
+        return true;
       }
     }
     
@@ -51,8 +60,16 @@ class NFCService {
     this.isNFCSupported = false;
     return false;
   }
+  
+  private async ensureSupportChecked(): Promise<void> {
+    if (this.supportCheckPromise) {
+      await this.supportCheckPromise;
+    }
+  }
 
   async requestPermission(): Promise<boolean> {
+    await this.ensureSupportChecked();
+    
     if (!this.isNFCSupported) {
       toast.error('NFC is not supported on this device');
       return false;
@@ -79,6 +96,8 @@ class NFCService {
   }
 
   async writeTag(data: NFCData): Promise<boolean> {
+    await this.ensureSupportChecked();
+    
     if (!this.isNFCSupported) {
       toast.error('NFC is not supported on this device');
       return false;
@@ -139,6 +158,8 @@ class NFCService {
   }
 
   async readTag(): Promise<NFCData | null> {
+    await this.ensureSupportChecked();
+    
     if (!this.isNFCSupported) {
       toast.error('NFC is not supported on this device');
       return null;
@@ -198,6 +219,8 @@ class NFCService {
   }
 
   async startScanning(onTagRead: (data: NFCData) => void): Promise<void> {
+    await this.ensureSupportChecked();
+    
     if (this.isScanning) {
       return;
     }
