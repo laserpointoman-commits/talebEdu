@@ -7,16 +7,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Register custom plugins
-        self.registerCustomPlugins()
+        // Override point for customization after application launch.
         return true
-    }
-    
-    func registerCustomPlugins() {
-        // Register NFC Plugin
-        if let bridgeViewController = self.window?.rootViewController as? CAPBridgeViewController {
-            bridgeViewController.registerPlugin(NFCPlugin.self)
-        }
     }
     
     func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {

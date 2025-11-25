@@ -30,13 +30,14 @@ export function QuickActions() {
   if (isLoading) {
     return (
       <Card>
-        <CardHeader className="flex flex-row items-center justify-end space-y-0 pb-2">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+          <CardTitle>{t('dashboard.quickActions')}</CardTitle>
           <CustomizeQuickActionsDialog />
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-4 md:grid-cols-8 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {[...Array(8)].map((_, i) => (
-              <div key={i} className="aspect-square bg-muted animate-pulse rounded-md" />
+              <div key={i} className="h-24 bg-muted animate-pulse rounded-lg" />
             ))}
           </div>
         </CardContent>
@@ -46,7 +47,10 @@ export function QuickActions() {
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-end space-y-0 pb-2">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+        <CardTitle>
+          {t('dashboard.quickActions')}
+        </CardTitle>
         <CustomizeQuickActionsDialog />
       </CardHeader>
       <CardContent>
@@ -56,20 +60,20 @@ export function QuickActions() {
             <p className="text-sm mt-2">{t('Click Customize to show actions')}</p>
           </div>
         ) : (
-          <div className="grid grid-cols-4 md:grid-cols-8 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {visibleActions.map((action, index) => {
               const Icon = getIconComponent(action.icon);
               return (
                 <Button
                   key={action.id}
                   variant="outline"
-                  className="aspect-square h-auto flex-col gap-2 p-3 hover:scale-105 transition-transform rounded-md"
+                  className="h-auto flex-col gap-2 p-4 hover:scale-105 transition-transform"
                   onClick={() => navigate(action.href)}
                 >
-                  <div className={`p-2 rounded-md ${colorClasses[index % colorClasses.length]}`}>
-                    <Icon className="h-5 w-5" />
+                  <div className={`p-3 rounded-lg ${colorClasses[index % colorClasses.length]}`}>
+                    <Icon className="h-6 w-6" />
                   </div>
-                  <span className="text-[10px] text-center leading-tight">{t(action.title)}</span>
+                  <span className="text-xs text-center">{t(action.title)}</span>
                 </Button>
               );
             })}

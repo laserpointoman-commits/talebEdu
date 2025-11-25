@@ -132,9 +132,6 @@ export default function TeacherDashboard() {
 
   return (
     <div className="space-y-6 p-6">
-      {/* Quick Actions */}
-      <QuickActions />
-      
       <div>
         <h1 className="text-3xl font-bold">
           {language === 'ar' ? 'لوحة المعلم' : 'Teacher Dashboard'}
@@ -191,6 +188,9 @@ export default function TeacherDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Quick Actions */}
+      <QuickActions />
 
       {/* Today's Schedule */}
       <Card>

@@ -109,9 +109,6 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-6">
-      {/* Quick Actions */}
-      <QuickActions />
-      
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">
@@ -204,6 +201,9 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Quick Actions */}
+      <QuickActions />
 
       {/* System Monitor and Activity Feed */}
       <div className="grid gap-6 md:grid-cols-2">

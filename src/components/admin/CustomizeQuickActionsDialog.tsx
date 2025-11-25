@@ -34,8 +34,9 @@ export function CustomizeQuickActionsDialog() {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="icon">
-          <Settings className="h-4 w-4" />
+        <Button variant="outline" size="sm">
+          <Settings className="h-4 w-4 mr-2" />
+          {t('Customize')}
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">

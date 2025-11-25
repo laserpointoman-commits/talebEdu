@@ -18,7 +18,6 @@ def capacitor_pods
   pod 'CapacitorPushNotifications', :path => '../../node_modules/@capacitor/push-notifications'
   pod 'CapacitorNativeBiometric', :path => '../../node_modules/capacitor-native-biometric'
   pod 'CommunityKeepAwake', :path => '../../node_modules/@capacitor-community/keep-awake'
-  # NFC plugin removed due to compatibility issues - using Web NFC API instead
 end
 
 target 'App' do

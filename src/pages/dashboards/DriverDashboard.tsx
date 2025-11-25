@@ -135,9 +135,6 @@ export default function DriverDashboard() {
 
   return (
     <div className="space-y-6 p-6">
-      {/* Quick Actions */}
-      <QuickActions />
-      
       <div>
         <h1 className="text-3xl font-bold">
           {language === 'ar' ? 'لوحة السائق' : 'Driver Dashboard'}
@@ -185,6 +182,9 @@ export default function DriverDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Quick Actions */}
+      <QuickActions />
 
       {/* NFC Scanner for Bus Boarding */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

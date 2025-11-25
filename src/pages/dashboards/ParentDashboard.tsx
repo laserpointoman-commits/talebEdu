@@ -222,9 +222,6 @@ export default function ParentDashboard() {
 
   return (
     <div className="space-y-6 p-6">
-      {/* Quick Actions */}
-      <QuickActions />
-      
       {/* Welcome Header */}
       <div>
         <h1 className="text-3xl font-bold">
@@ -351,6 +348,9 @@ export default function ParentDashboard() {
           </p>
         </CardContent>
       </Card>
+
+      {/* Quick Actions */}
+      <QuickActions />
 
       {/* Recent Activity */}
       <Card>
