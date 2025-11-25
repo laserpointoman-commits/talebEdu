@@ -5,7 +5,7 @@ const config: CapacitorConfig = {
   appName: 'TalebEdu',
   webDir: 'dist',
   plugins: {
-    CapacitorNFC: {
+    NFCPlugin: {
       enabled: true
     },
     PushNotifications: {
@@ -18,10 +18,14 @@ const config: CapacitorConfig = {
       showSpinner: false,
       splashFullScreen: true,
       splashImmersive: true
+    },
+    StatusBar: {
+      style: 'light'
     }
   },
   ios: {
-    contentInset: 'always'
+    contentInset: 'always',
+    backgroundColor: '#FFFFFF'
   }
 };
 
