@@ -1,23 +1,16 @@
 import { toast } from 'sonner';
-import { Capacitor } from '@capacitor/core';
-
-// Declare NFCPlugin
-declare global {
-  interface Window {
-    Capacitor?: any;
-  }
-}
+import { Capacitor, registerPlugin } from '@capacitor/core';
 
 interface NFCPlugin {
   isAvailable(): Promise<{ available: boolean }>;
-  write(options: { data: any }): Promise<{ success: boolean }>;
-  read(): Promise<{ data: any }>;
+  write(options: { data: string }): Promise<{ success: boolean }>;
+  read(): Promise<{ data: string }>;
   stopScan(): Promise<void>;
 }
 
-// Register plugin
+// Register plugin using modern Capacitor API
 const NFCPluginNative = Capacitor.isNativePlatform() 
-  ? (Capacitor as any).Plugins?.NFCPlugin as NFCPlugin
+  ? registerPlugin<NFCPlugin>('NFCPlugin')
   : null;
 
 export interface NFCData {
@@ -73,7 +66,7 @@ class NFCService {
       }
 
       // For native mobile apps through Capacitor
-      if (window.Capacitor?.isNativePlatform()) {
+      if (Capacitor.isNativePlatform()) {
         // Native permission handling would go here
         return true;
       }
@@ -95,7 +88,9 @@ class NFCService {
       // For native iOS/Android
       if (Capacitor.isNativePlatform() && NFCPluginNative) {
         console.log('Writing NFC tag (native iOS/Android):', data);
-        const result = await NFCPluginNative.write({ data });
+        const result = await NFCPluginNative.write({ 
+          data: JSON.stringify(data) 
+        });
         
         if (result.success) {
           toast.success('NFC tag written successfully');
@@ -156,8 +151,9 @@ class NFCService {
         const result = await NFCPluginNative.read();
         
         if (result.data) {
+          const parsedData = JSON.parse(result.data);
           toast.success('NFC tag read successfully');
-          return result.data as NFCData;
+          return parsedData as NFCData;
         } else {
           toast.error('No data found on NFC tag');
           return null;
