@@ -153,21 +153,20 @@ function DashboardLayout({ children }: DashboardLayoutProps) {
           <LanguageSwitcher />
         </div>
 
-        {/* Center Section - App Logo and Name - Always LTR */}
-        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center gap-3 md:gap-4" dir="ltr">
-          <div className="relative">
-            <div className="text-5xl md:text-6xl lg:text-7xl font-bold text-primary leading-none">
-              t
+        {/* Right Section - Logo and User Menu */}
+        <div className="flex items-center gap-2 md:gap-4 w-auto justify-end">
+          {/* App Logo and Name - Always LTR */}
+          <div className="flex items-center justify-center gap-2 md:gap-3" dir="ltr">
+            <div className="relative">
+              <div className="text-4xl md:text-5xl lg:text-6xl font-bold text-primary leading-none">
+                t
+              </div>
+              <div className="absolute -inset-3 bg-primary/20 blur-xl rounded-full opacity-50 hidden md:block" />
             </div>
-            <div className="absolute -inset-4 bg-primary/20 blur-xl rounded-full opacity-50 hidden md:block" />
+            <span className="font-semibold text-xl md:text-2xl lg:text-3xl text-foreground">
+              talebEdu
+            </span>
           </div>
-          <span className="font-semibold text-2xl md:text-3xl lg:text-4xl text-foreground">
-            talebEdu
-          </span>
-        </div>
-
-        {/* Right Section - User Menu */}
-        <div className="flex items-center gap-2 md:gap-3 w-auto justify-end">
           {/* Role Switcher for Developer Testing Mode */}
           {isDeveloper && currentTestRole && (
             <div className={`flex items-center gap-2 ${dir === 'rtl' ? 'flex-row-reverse' : ''}`}>
