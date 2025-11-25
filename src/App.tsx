@@ -1,5 +1,4 @@
 import React, { Suspense, useEffect } from "react";
-import { useLocation } from "react-router-dom";
 import LogoLoader from "./components/LogoLoader";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -52,22 +51,14 @@ const createQueryClient = () => new QueryClient({
   },
 });
 
-// Scroll to top on route change
-function ScrollToTop() {
-  const location = useLocation();
-  
-  useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'instant' });
-  }, [location.pathname]);
-  
-  return null;
-}
-
 function App() {
+  // Create query client inside component but memoized
   const [queryClient] = React.useState(createQueryClient);
 
+  // Initialize push notifications on app startup
   useEffect(() => {
     PushNotificationService.initialize();
+    
     return () => {
       PushNotificationService.removeAllListeners();
     };
@@ -89,7 +80,6 @@ function App() {
                   <StudentsProvider>
                     <BiometricGuard>
                       <PageTransition>
-                        <ScrollToTop />
                         <Routes>
                         <Route path="/" element={<Auth />} />
                         <Route path="/landing" element={<Index />} />
