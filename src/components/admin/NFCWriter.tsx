@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,9 +15,22 @@ export default function NFCWriter() {
   const { language } = useLanguage();
   const [isWriting, setIsWriting] = useState(false);
   const [writeSuccess, setWriteSuccess] = useState(false);
+  const [isNFCSupported, setIsNFCSupported] = useState(false);
+  const [checkingNfc, setCheckingNfc] = useState(true);
   const [nfcData, setNfcData] = useState<Partial<NFCData>>({
     type: 'student'
   });
+
+  useEffect(() => {
+    const checkSupport = async () => {
+      setCheckingNfc(true);
+      await new Promise(resolve => setTimeout(resolve, 500));
+      const supported = nfcService.isSupported();
+      setIsNFCSupported(supported);
+      setCheckingNfc(false);
+    };
+    checkSupport();
+  }, []);
 
   const handleWrite = async () => {
     if (!nfcData.id || !nfcData.name || !nfcData.type) {
@@ -46,8 +59,6 @@ export default function NFCWriter() {
     }
   };
 
-  const isNFCSupported = nfcService.isSupported();
-
   return (
     <div className="space-y-6">
       <Card>
@@ -64,21 +75,28 @@ export default function NFCWriter() {
         </CardHeader>
         <CardContent className="space-y-6">
           {/* NFC Status */}
-          <div className={`p-4 rounded-lg border ${isNFCSupported ? 'bg-green-500/10 border-green-500/20' : 'bg-orange-500/10 border-orange-500/20'}`}>
+          <div className={`p-4 rounded-lg border ${
+            checkingNfc ? 'bg-blue-500/10 border-blue-500/20' :
+            isNFCSupported ? 'bg-green-500/10 border-green-500/20' : 'bg-orange-500/10 border-orange-500/20'
+          }`}>
             <div className="flex items-center gap-3">
-              {isNFCSupported ? (
+              {checkingNfc ? (
+                <Loader2 className="h-5 w-5 text-blue-600 animate-spin" />
+              ) : isNFCSupported ? (
                 <CheckCircle className="h-5 w-5 text-green-600" />
               ) : (
                 <AlertCircle className="h-5 w-5 text-orange-600" />
               )}
               <div>
                 <p className="font-medium">
-                  {isNFCSupported 
+                  {checkingNfc ? (language === 'ar' ? 'جاري الفحص...' : 'Checking...') :
+                   isNFCSupported 
                     ? (language === 'ar' ? 'NFC متاح' : 'NFC Available')
                     : (language === 'ar' ? 'NFC غير متاح' : 'NFC Not Available')}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  {isNFCSupported 
+                  {checkingNfc ? (language === 'ar' ? 'فحص دعم NFC' : 'Checking NFC support') :
+                   isNFCSupported 
                     ? (language === 'ar' ? 'الجهاز يدعم NFC' : 'Device supports NFC')
                     : (language === 'ar' ? 'يتطلب جهاز بميزة NFC' : 'Requires NFC-enabled device')}
                 </p>

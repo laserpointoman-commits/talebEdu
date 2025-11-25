@@ -25,6 +25,7 @@ export default function StudentManagement() {
   const [students, setStudents] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [nfcSupported, setNfcSupported] = useState(false);
+  const [checkingNfc, setCheckingNfc] = useState(true);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
@@ -34,10 +35,17 @@ export default function StudentManagement() {
 
   useEffect(() => {
     loadStudents();
-    if ('NDEFReader' in window) {
-      setNfcSupported(true);
-    }
+    checkNfcSupport();
   }, []);
+
+  const checkNfcSupport = async () => {
+    setCheckingNfc(true);
+    // Give the native plugin time to initialize
+    await new Promise(resolve => setTimeout(resolve, 500));
+    const supported = nfcService.isSupported();
+    setNfcSupported(supported);
+    setCheckingNfc(false);
+  };
 
   const loadStudents = async () => {
     try {
