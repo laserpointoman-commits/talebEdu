@@ -37,22 +37,22 @@ export function PageHeader({
   const displaySubtitle = isArabic && subtitleAr ? subtitleAr : subtitle;
 
   return (
-    <div className="relative mb-6">
+    <div className="relative mb-8 pt-safe">
       {showBackButton && (
         <button
           onClick={handleBack}
-          className={`absolute top-0 ${isArabic ? 'right-0' : 'left-0'} p-2 hover:bg-accent rounded-md transition-colors`}
+          className={`absolute top-safe ${isArabic ? 'right-0' : 'left-0'} p-3 hover:bg-accent rounded-lg transition-colors`}
           aria-label={isArabic ? 'رجوع' : 'Go back'}
         >
-          {isArabic ? <ArrowRight className="h-4 w-4" /> : <ArrowLeft className="h-4 w-4" />}
+          {isArabic ? <ArrowRight className="h-6 w-6" /> : <ArrowLeft className="h-6 w-6" />}
         </button>
       )}
-      <div className={`${showBackButton ? 'pt-10' : ''} space-y-2`}>
+      <div className={`${showBackButton ? 'pt-14' : 'pt-2'} space-y-3`}>
         <div className={`flex items-center justify-between ${isArabic ? 'flex-row-reverse' : ''}`}>
           <div className={`flex-1 ${isArabic ? 'text-right' : ''}`}>
-            <h1 className="text-2xl md:text-3xl font-bold">{displayTitle}</h1>
+            <h1 className="text-3xl md:text-4xl font-bold leading-tight">{displayTitle}</h1>
             {displaySubtitle && (
-              <p className="text-sm md:text-base text-muted-foreground mt-1">{displaySubtitle}</p>
+              <p className="text-base md:text-lg text-muted-foreground mt-2">{displaySubtitle}</p>
             )}
           </div>
           {actions && (

@@ -46,12 +46,7 @@
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
 	<key>NFCReaderUsageDescription</key>
-	<string>This app needs NFC to scan student wristbands for attendance tracking</string>
-	<key>com.apple.developer.nfc.readersession.formats</key>
-	<array>
-		<string>NDEF</string>
-		<string>TAG</string>
-	</array>
+	<string>TalebEdu needs NFC access to scan and program student wristbands for attendance tracking and secure identification</string>
 	<key>NSCameraUsageDescription</key>
 	<string>TalebEdu needs camera access to take profile photos for students and staff members</string>
 	<key>NSPhotoLibraryUsageDescription</key>
