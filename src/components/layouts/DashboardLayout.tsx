@@ -102,21 +102,23 @@ function DashboardLayout({ children }: DashboardLayoutProps) {
 
   return (
     <div className="min-h-screen bg-background" dir={dir}>
-      {/* Top Bar - Mobile optimized with centered logo */}
+      {/* Top Bar - iOS Safe Area Aware */}
       <header 
-        className="fixed left-0 right-0 top-0 h-12 md:h-16 border-b border-border/40 bg-background/95 backdrop-blur-sm flex items-center justify-between px-1 md:px-6 z-50"
+        className="fixed left-0 right-0 top-0 z-50 ios-header"
       >
+        <div className="h-16 md:h-20 border-b border-border/40 bg-background/95 backdrop-blur-sm flex items-center justify-between px-3 md:px-6">
+
         {/* Left Section - Menu, Home, Language */}
-        <div className="flex items-center gap-0.5 md:gap-2 w-[120px] md:w-[180px]">
+        <div className="flex items-center gap-2 md:gap-3 w-auto">
           {/* Desktop Toggle */}
           <Button
             variant="ghost"
             size="icon"
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="hidden lg:flex h-9 w-9"
+            className="hidden lg:flex h-10 w-10 md:h-11 md:w-11"
             aria-label="Toggle sidebar"
           >
-            {isSidebarOpen ? <X className="h-6 w-6 md:h-7 md:w-7" /> : <Menu className="h-6 w-6 md:h-7 md:w-7" />}
+            {isSidebarOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </Button>
 
           {/* Mobile Sidebar */}
@@ -125,7 +127,7 @@ function DashboardLayout({ children }: DashboardLayoutProps) {
               <Button
                 variant="ghost"
                 size="icon"
-                className="lg:hidden h-7 w-7"
+                className="lg:hidden h-10 w-10"
                 aria-label="Toggle mobile sidebar"
               >
                 <Menu className="h-6 w-6" />
@@ -141,41 +143,39 @@ function DashboardLayout({ children }: DashboardLayoutProps) {
             variant="ghost"
             size="icon"
             onClick={() => navigate('/dashboard')}
-            className="h-7 w-7 md:h-9 md:w-9"
+            className="h-10 w-10 md:h-11 md:w-11"
             aria-label="Go to home"
           >
-            <Home className="h-6 w-6 md:h-7 md:w-7" />
+            <Home className="h-6 w-6" />
           </Button>
           
-          {/* Language Switcher - Mobile scale */}
-          <div className="scale-[0.85] md:scale-100 origin-left">
-            <LanguageSwitcher />
-          </div>
+          {/* Language Switcher */}
+          <LanguageSwitcher />
         </div>
 
         {/* Center Section - App Logo and Name - Always LTR */}
         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center gap-3 md:gap-4" dir="ltr">
           <div className="relative">
-            <div className="text-4xl md:text-6xl font-bold text-primary leading-none">
+            <div className="text-5xl md:text-6xl lg:text-7xl font-bold text-primary leading-none">
               t
             </div>
             <div className="absolute -inset-4 bg-primary/20 blur-xl rounded-full opacity-50 hidden md:block" />
           </div>
-          <span className="font-semibold text-2xl md:text-3xl text-foreground">
+          <span className="font-semibold text-2xl md:text-3xl lg:text-4xl text-foreground">
             talebEdu
           </span>
         </div>
 
-        {/* Right Section - Mobile optimized */}
-        <div className="flex items-center gap-1 md:gap-2 w-[120px] md:w-[180px] justify-end">
-          {/* Role Switcher for Developer Testing Mode - Mobile optimized */}
+        {/* Right Section - User Menu */}
+        <div className="flex items-center gap-2 md:gap-3 w-auto justify-end">
+          {/* Role Switcher for Developer Testing Mode */}
           {isDeveloper && currentTestRole && (
-            <div className={`flex items-center gap-0.5 md:gap-2 ${dir === 'rtl' ? 'flex-row-reverse' : ''}`}>
-              <Badge variant="secondary" className="text-[8px] md:text-xs px-0.5 md:px-2 hidden sm:inline-flex">
-                {language === 'ar' ? 'وضع الاختبار' : 'Testing Mode'}
+            <div className={`flex items-center gap-2 ${dir === 'rtl' ? 'flex-row-reverse' : ''}`}>
+              <Badge variant="secondary" className="text-xs px-2 hidden sm:inline-flex">
+                {language === 'ar' ? 'وضع الاختبار' : 'Testing'}
               </Badge>
               <Select value={currentTestRole} onValueChange={handleRoleSwitch}>
-                <SelectTrigger className="w-[100px] md:w-[180px] h-7 md:h-9 text-[10px] md:text-sm">
+                <SelectTrigger className="w-[140px] md:w-[180px] h-9 md:h-10 text-sm">
                   <SelectValue>
                     {(() => {
                       const currentRole = roles.find(r => r.value === currentTestRole);
@@ -184,7 +184,7 @@ function DashboardLayout({ children }: DashboardLayoutProps) {
                         return (
                           <div className={`flex items-center gap-2 ${dir === 'rtl' ? 'flex-row-reverse' : ''}`}>
                             <Icon className={`h-4 w-4 ${currentRole.color}`} />
-                            <span>{currentRole.label}</span>
+                            <span className="truncate">{currentRole.label}</span>
                           </div>
                         );
                       }
@@ -215,52 +215,56 @@ function DashboardLayout({ children }: DashboardLayoutProps) {
             </div>
           )}
 
-          {/* User Account Menu - Mobile optimized */}
+          {/* User Account Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-7 w-7 md:h-10 md:w-10 rounded-full">
-                <Avatar className="h-7 w-7 md:h-10 md:w-10">
+              <Button variant="ghost" className="relative h-10 w-10 md:h-11 md:w-11 rounded-full">
+                <Avatar className="h-10 w-10 md:h-11 md:w-11">
                   <AvatarFallback className="bg-gradient-primary text-white">
-                    <User className="h-5 w-5 md:h-7 md:w-7" />
+                    <User className="h-6 w-6" />
                   </AvatarFallback>
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-48 md:w-56 bg-background" align={dir === 'rtl' ? 'start' : 'end'} forceMount>
-              <DropdownMenuLabel className="font-normal">
-                <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">{profile?.full_name || user?.email}</p>
-                  <p className="text-xs leading-none text-muted-foreground">
+            <DropdownMenuContent className="w-56 bg-background" align={dir === 'rtl' ? 'start' : 'end'} forceMount>
+              <DropdownMenuLabel className="font-normal py-3">
+                <div className="flex flex-col space-y-1.5">
+                  <p className="text-base font-medium leading-none">{profile?.full_name || user?.email}</p>
+                  <p className="text-sm leading-none text-muted-foreground">
                     {user?.email}
                   </p>
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
+              <DropdownMenuItem asChild className="py-3">
                 <Link to="/dashboard/profile" className={`flex cursor-pointer ${dir === 'rtl' ? 'flex-row-reverse' : ''}`}>
-                  <User className={`h-6 w-6 ${dir === 'rtl' ? 'ml-2' : 'mr-2'}`} />
-                  <span>{t('dashboard.profile')}</span>
+                  <User className={`h-5 w-5 ${dir === 'rtl' ? 'ml-3' : 'mr-3'}`} />
+                  <span className="text-base">{t('dashboard.profile')}</span>
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem asChild>
+              <DropdownMenuItem asChild className="py-3">
                 <Link to="/dashboard/settings" className={`flex cursor-pointer ${dir === 'rtl' ? 'flex-row-reverse' : ''}`}>
-                  <Settings className={`h-6 w-6 ${dir === 'rtl' ? 'ml-2' : 'mr-2'}`} />
-                  <span>{t('dashboard.settings')}</span>
+                  <Settings className={`h-5 w-5 ${dir === 'rtl' ? 'ml-3' : 'mr-3'}`} />
+                  <span className="text-base">{t('dashboard.settings')}</span>
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleLogout} className={`text-destructive ${dir === 'rtl' ? 'flex flex-row-reverse' : ''}`}>
-                <LogOut className={`h-6 w-6 ${dir === 'rtl' ? 'ml-2' : 'mr-2'}`} />
-                <span>{t('auth.logout')}</span>
+              <DropdownMenuItem onClick={handleLogout} className={`text-destructive py-3 ${dir === 'rtl' ? 'flex flex-row-reverse' : ''}`}>
+                <LogOut className={`h-5 w-5 ${dir === 'rtl' ? 'ml-3' : 'mr-3'}`} />
+                <span className="text-base">{t('auth.logout')}</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
+        </div>
       </header>
 
-      {/* Main layout - fixed padding for header - Mobile optimized */}
+      {/* Main layout - iOS Safe Area Aware */}
       <div 
-        className="flex h-screen pt-12 md:pt-16"
+        className="flex h-screen"
+        style={{ 
+          paddingTop: 'calc(4rem + env(safe-area-inset-top, 0px))',
+        }}
       >
         {/* Desktop Sidebar */}
         <div className={cn(
@@ -273,11 +277,16 @@ function DashboardLayout({ children }: DashboardLayoutProps) {
         </div>
         
         <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Main Content - with footer at the bottom - Mobile optimized padding */}
-          <main className="flex-1 overflow-y-auto bg-muted/10">
+          {/* Main Content - iOS Safe Area Aware */}
+          <main 
+            className="flex-1 overflow-y-auto bg-muted/10"
+            style={{
+              paddingBottom: 'env(safe-area-inset-bottom, 0px)'
+            }}
+          >
             <div className={cn(
               "flex flex-col h-full",
-              isMobile ? "px-2" : "px-4 py-4"
+              isMobile ? "px-3 py-4" : "px-6 py-6"
             )}>
               <div className="flex-1">
                 {children}
