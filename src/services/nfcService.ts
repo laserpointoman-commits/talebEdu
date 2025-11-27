@@ -9,9 +9,7 @@ interface NFCPlugin {
 }
 
 // Register plugin using modern Capacitor API
-const NFCPluginNative = Capacitor.isNativePlatform() 
-  ? registerPlugin<NFCPlugin>('NFCPlugin')
-  : null;
+const NFCPluginNative = registerPlugin<NFCPlugin>('NFCPlugin');
 
 export interface NFCData {
   id: string;
@@ -28,17 +26,17 @@ class NFCService {
   constructor() {
     // Start the check but don't block
     this.supportCheckPromise = this.checkNFCSupport();
-    
-    // For native iOS/Android, assume NFC is available by default
-    // (iPhone 7+ and most modern Android phones have NFC)
-    if (Capacitor.isNativePlatform() && NFCPluginNative) {
+
+    // For native iOS/Android, optimistically assume NFC is available
+    // (will be confirmed by checkNFCSupport)
+    if (Capacitor.isNativePlatform()) {
       this.isNFCSupported = true;
     }
   }
 
   private async checkNFCSupport(): Promise<boolean> {
-    // For native iOS/Android
-    if (Capacitor.isNativePlatform() && NFCPluginNative) {
+    // For native iOS/Android, ask the native plugin directly
+    if (Capacitor.isNativePlatform()) {
       try {
         const result = await NFCPluginNative.isAvailable();
         this.isNFCSupported = result.available;
@@ -50,7 +48,7 @@ class NFCService {
         return true;
       }
     }
-    
+
     // Check if Web NFC API is available (fallback)
     if ('NDEFReader' in window) {
       this.isNFCSupported = true;
@@ -105,7 +103,7 @@ class NFCService {
 
     try {
       // For native iOS/Android
-      if (Capacitor.isNativePlatform() && NFCPluginNative) {
+      if (Capacitor.isNativePlatform()) {
         console.log('Writing NFC tag (native iOS/Android):', data);
         const result = await NFCPluginNative.write({ 
           data: JSON.stringify(data) 
@@ -167,7 +165,7 @@ class NFCService {
 
     try {
       // For native iOS/Android
-      if (Capacitor.isNativePlatform() && NFCPluginNative) {
+      if (Capacitor.isNativePlatform()) {
         console.log('Reading NFC tag (native iOS/Android)');
         const result = await NFCPluginNative.read();
         
@@ -234,7 +232,7 @@ class NFCService {
 
     try {
       // For native iOS/Android - use read in a loop
-      if (Capacitor.isNativePlatform() && NFCPluginNative) {
+      if (Capacitor.isNativePlatform()) {
         console.log('Starting NFC scan (native iOS/Android)');
         // Note: iOS requires user interaction for each scan
         // Continuous scanning is handled by repeatedly calling read()
@@ -272,7 +270,7 @@ class NFCService {
   async stopScanning(): Promise<void> {
     this.isScanning = false;
     
-    if (Capacitor.isNativePlatform() && NFCPluginNative) {
+    if (Capacitor.isNativePlatform()) {
       try {
         await NFCPluginNative.stopScan();
       } catch (error) {
