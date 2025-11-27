@@ -57,10 +57,15 @@ function App() {
 
   // Initialize push notifications on app startup
   useEffect(() => {
-    PushNotificationService.initialize();
+    // Wrap in try/catch to prevent blocking app startup
+    PushNotificationService.initialize().catch(error => {
+      console.error('Push notification initialization failed:', error);
+    });
     
     return () => {
-      PushNotificationService.removeAllListeners();
+      PushNotificationService.removeAllListeners().catch(error => {
+        console.error('Error removing push notification listeners:', error);
+      });
     };
   }, []);
 
