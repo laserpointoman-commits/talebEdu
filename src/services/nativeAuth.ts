@@ -60,13 +60,21 @@ export class NativeAuthService {
 
         if (error) throw error;
         return data;
+      } else {
+        toast.error(language === 'en' ? 'No saved credentials found. Please sign in manually first.' : 'لم يتم العثور على بيانات اعتماد محفوظة. يرجى تسجيل الدخول يدويًا أولاً.');
+        return null;
       }
     } catch (error: any) {
       console.error('Biometric auth error:', error);
+      
+      // Handle specific error codes
       if (error.code === 'BiometricAuthFailed') {
         toast.error(language === 'en' ? 'Biometric authentication failed' : 'فشلت المصادقة البيومترية');
-      } else if (error.code === 'UserCancel') {
+      } else if (error.code === 'UserCancel' || error.code === -128) {
         // User cancelled, do nothing
+      } else if (error.code === 1 || error.errorMessage?.includes('KeychainError error 1')) {
+        // No credentials stored - this is normal on first use
+        toast.info(language === 'en' ? 'Please sign in manually first to enable biometric authentication' : 'يرجى تسجيل الدخول يدويًا أولاً لتمكين المصادقة البيومترية');
       } else {
         toast.error(language === 'en' ? 'Authentication error' : 'خطأ في المصادقة');
       }
@@ -82,7 +90,12 @@ export class NativeAuthService {
         server: 'talebedu.app'
       });
       return !!(credentials.username && credentials.password);
-    } catch {
+    } catch (error: any) {
+      // KeychainError 1 means no credentials stored yet - this is normal
+      if (error.code === 1 || error.errorMessage?.includes('KeychainError error 1')) {
+        return false;
+      }
+      console.error('Error checking saved credentials:', error);
       return false;
     }
   }
