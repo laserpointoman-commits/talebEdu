@@ -20,15 +20,16 @@ public class NFCPlugin: CAPPlugin, NFCNDEFReaderSessionDelegate {
             return
         }
         
-        guard let data = call.getObject("data") else {
-            call.reject("No data provided")
-            return
-        }
-        
-        // Create NDEF message from data
-        guard let jsonData = try? JSONSerialization.data(withJSONObject: data),
-              let jsonString = String(data: jsonData, encoding: .utf8) else {
-            call.reject("Invalid data format")
+        // Accept either a JSON object or a JSON string
+        let jsonString: String
+        if let dataString = call.getString("data") {
+            jsonString = dataString
+        } else if let dataObject = call.getObject("data"),
+                  let jsonData = try? JSONSerialization.data(withJSONObject: dataObject),
+                  let jsonStr = String(data: jsonData, encoding: .utf8) {
+            jsonString = jsonStr
+        } else {
+            call.reject("No data provided or invalid format")
             return
         }
         
