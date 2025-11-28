@@ -41,11 +41,16 @@ class NFCService {
         const result = await NFCPluginNative.isAvailable();
         this.isNFCSupported = result.available;
         return result.available;
-      } catch (error) {
+      } catch (error: any) {
         console.error('NFC check failed:', error);
-        // Keep assuming true for native platforms even if check fails
-        this.isNFCSupported = true;
-        return true;
+        // If the native plugin is missing (UNIMPLEMENTED), mark as not supported
+        if (error.code === 'UNIMPLEMENTED') {
+          this.isNFCSupported = false;
+          return false;
+        }
+        // For any other error, assume not supported to avoid repeated failures
+        this.isNFCSupported = false;
+        return false;
       }
     }
 
