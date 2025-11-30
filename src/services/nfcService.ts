@@ -1,6 +1,5 @@
 import { toast } from 'sonner';
-import { Capacitor } from '@capacitor/core';
-import { NFC, NDEFWriteOptions, NFCError, NDEFMessagesTransformable } from '@exxili/capacitor-nfc';
+import { Capacitor, registerPlugin } from '@capacitor/core';
 
 export interface NFCData {
   id: string;
@@ -9,59 +8,37 @@ export interface NFCData {
   additionalData?: Record<string, any>;
 }
 
+interface NFCPluginInterface {
+  isSupported(): Promise<{ supported: boolean }>;
+  read(): Promise<void>;
+  write(options: { text: string }): Promise<void>;
+  addListener(eventName: string, callback: (data: any) => void): Promise<any>;
+  removeAllListeners(): Promise<void>;
+}
+
+const NFCPlugin = registerPlugin<NFCPluginInterface>('NFCPlugin');
+
 class NFCService {
   private isNFCSupported: boolean = false;
   private isScanning: boolean = false;
   private supportCheckPromise: Promise<boolean> | null = null;
 
   constructor() {
-    // Start the check but don't block
     this.supportCheckPromise = this.checkNFCSupport();
-
-    // For native iOS/Android, optimistically assume NFC is available
+    
     if (Capacitor.isNativePlatform()) {
       this.isNFCSupported = true;
     }
   }
 
-  /** Get the native Capawesome NFC plugin instance (if installed). */
-  private getNativeNfcPlugin(): any | null {
-    try {
-      const anyCapacitor = Capacitor as any;
-      return anyCapacitor?.Plugins?.Nfc ?? (window as any)?.Capacitor?.Plugins?.Nfc ?? null;
-    } catch {
-      return null;
-    }
-  }
-
-  /** Minimal NDEF text record builder (same format Capawesome expects). */
-  private createNdefTextRecord(text: string): any {
-    const encoder = new TextEncoder();
-    const languageCode = 'en';
-    const langBytes = Array.from(encoder.encode(languageCode));
-    const textBytes = Array.from(encoder.encode(text));
-
-    // Status byte: bit 7 = encoding (0 = UTF‑8), bits 5..0 = language code length
-    const statusByte = langBytes.length & 0x3f;
-    const payload = [statusByte, ...langBytes, ...textBytes];
-
-    return {
-      id: [],
-      tnf: 1, // TypeNameFormat.WellKnown
-      type: [0x54], // "T" (text record)
-      payload,
-    };
-  }
-
   private async checkNFCSupport(): Promise<boolean> {
     try {
       if (Capacitor.isNativePlatform()) {
-        const { supported } = await NFC.isSupported();
-        this.isNFCSupported = !!supported;
+        const result = await NFCPlugin.isSupported();
+        this.isNFCSupported = result.supported === true;
         return this.isNFCSupported;
       }
 
-      // Web NFC API (Chrome Android) – fallback for browser usage
       if ('NDEFReader' in window) {
         this.isNFCSupported = true;
         return true;
@@ -71,7 +48,6 @@ class NFCService {
       return false;
     } catch (error: any) {
       console.error('NFC support check failed:', error);
-      // Treat missing/UNIMPLEMENTED plugin as "not supported" rather than crashing
       this.isNFCSupported = false;
       return false;
     }
@@ -91,22 +67,11 @@ class NFCService {
       return false;
     }
 
-    try {
-      // Native mobile apps – system UI is presented automatically on scan
-      if (Capacitor.isNativePlatform()) {
-        return true;
-      }
-
-      // Web NFC – permissions are requested when scanning starts
-      if ('NDEFReader' in window) {
-        return true;
-      }
-
-      return false;
-    } catch (error) {
-      console.error('Error requesting NFC permission:', error);
-      return false;
+    if (Capacitor.isNativePlatform() || 'NDEFReader' in window) {
+      return true;
     }
+
+    return false;
   }
 
   async writeTag(data: NFCData): Promise<boolean> {
@@ -118,68 +83,49 @@ class NFCService {
     }
 
     try {
-      // Native iOS/Android using @exxili/capacitor-nfc
       if (Capacitor.isNativePlatform()) {
         console.log('Writing NFC tag via native plugin with data:', data);
-
-        const message: NDEFWriteOptions<string> = {
-          records: [
-            {
-              type: 'T',
-              payload: JSON.stringify(data),
-            },
-          ],
-        };
-
+        
         return await new Promise<boolean>((resolve) => {
-          const cleanup = (offWrite?: () => void, offError?: () => void) => {
-            try {
-              offWrite && offWrite();
-              offError && offError();
-            } catch (err) {
-              console.warn('Error during NFC cleanup (write):', err);
+          let resolved = false;
+          
+          const cleanup = async () => {
+            if (!resolved) {
+              resolved = true;
+              await NFCPlugin.removeAllListeners();
             }
           };
-
-          const offWrite = NFC.onWrite(() => {
+          
+          NFCPlugin.addListener('nfcWriteSuccess', async () => {
             toast.success('NFC tag written successfully');
-            cleanup(offWrite, offError);
+            await cleanup();
             resolve(true);
           });
 
-          const offError = NFC.onError((error: NFCError) => {
-            console.error('Error writing NFC tag via native plugin:', error);
+          NFCPlugin.addListener('nfcError', async (event: any) => {
+            console.error('Error writing NFC tag:', event.error);
             toast.error('Failed to write NFC tag');
-            cleanup(offWrite, offError);
+            await cleanup();
             resolve(false);
           });
 
-          NFC.writeNDEF(message).catch((error) => {
+          NFCPlugin.write({ text: JSON.stringify(data) }).catch(async (error) => {
             console.error('Error starting NFC write:', error);
             toast.error('Failed to start NFC write session');
-            cleanup(offWrite, offError);
+            await cleanup();
             resolve(false);
           });
         });
       }
 
-      // Web NFC API (Chrome Android) – fallback
       if ('NDEFReader' in window) {
         const ndef = new (window as any).NDEFReader();
-
-        const records = [
-          {
-            recordType: 'text',
-            data: JSON.stringify(data),
-          },
-        ];
-
+        const records = [{ recordType: 'text', data: JSON.stringify(data) }];
         await ndef.write({ records });
         toast.success('NFC tag written successfully');
         return true;
       }
 
-      // Simulation mode for development / unsupported environments
       console.log('Writing NFC tag (simulation):', data);
       await new Promise((resolve) => setTimeout(resolve, 1000));
       toast.success('NFC tag written successfully (Simulation Mode)');
@@ -208,60 +154,47 @@ class NFCService {
     }
 
     try {
-      // Native iOS/Android – use @exxili/capacitor-nfc
       if (Capacitor.isNativePlatform()) {
         return await new Promise<NFCData | null>((resolve) => {
-          const cleanup = (offRead?: () => void, offError?: () => void) => {
-            try {
-              offRead && offRead();
-              offError && offError();
-            } catch (err) {
-              console.warn('Error during NFC cleanup (read):', err);
+          let resolved = false;
+          
+          const cleanup = async () => {
+            if (!resolved) {
+              resolved = true;
+              await NFCPlugin.removeAllListeners();
             }
           };
-
-          const offRead = NFC.onRead((event: NDEFMessagesTransformable) => {
+          
+          NFCPlugin.addListener('nfcTagScanned', async (event: any) => {
             try {
-              const asString = event.string();
-              const firstRecord = asString.messages[0]?.records[0];
-              const text = firstRecord?.payload as string | undefined;
-
-              if (text) {
-                const parsed = JSON.parse(text);
-                cleanup(offRead, offError);
-                resolve(parsed as NFCData);
-                return;
-              }
-
-              cleanup(offRead, offError);
-              resolve(null);
+              const parsed = JSON.parse(event.message);
+              await cleanup();
+              resolve(parsed as NFCData);
             } catch (err) {
-              console.error('Error parsing NFC tag via native plugin:', err);
-              cleanup(offRead, offError);
+              console.error('Error parsing NFC tag:', err);
+              await cleanup();
               resolve(null);
             }
           });
 
-          const offError = NFC.onError((error: NFCError) => {
-            console.error('Failed to read NFC tag via native plugin:', error);
+          NFCPlugin.addListener('nfcError', async (event: any) => {
+            console.error('Failed to read NFC tag:', event.error);
             toast.error('Failed to read NFC tag');
-            cleanup(offRead, offError);
+            await cleanup();
             resolve(null);
           });
 
-          NFC.startScan().catch((error) => {
-            console.error('Failed to start NFC scan session (read):', error);
+          NFCPlugin.read().catch(async (error) => {
+            console.error('Failed to start NFC read session:', error);
             toast.error('Failed to start NFC read session');
-            cleanup(offRead, offError);
+            await cleanup();
             resolve(null);
           });
         });
       }
 
-      // Web NFC API
       if ('NDEFReader' in window) {
         const ndef = new (window as any).NDEFReader();
-
         await ndef.scan();
 
         return await new Promise<NFCData | null>((resolve) => {
@@ -309,44 +242,48 @@ class NFCService {
     this.isScanning = true;
 
     try {
-      // Native iOS/Android
       if (Capacitor.isNativePlatform()) {
         console.log('Starting continuous NFC scan via native plugin');
-
-        try {
-          const offRead = NFC.onRead((event: NDEFMessagesTransformable) => {
-            try {
-              const asString = event.string();
-              const firstRecord = asString.messages[0]?.records[0];
-              const text = firstRecord?.payload as string | undefined;
-
-              if (text) {
-                const parsed = JSON.parse(text);
-                onTagRead(parsed as NFCData);
-              }
-            } catch (err) {
-              console.error('Error handling scanned NFC tag:', err);
+        
+        NFCPlugin.addListener('nfcTagScanned', (event: any) => {
+          if (!this.isScanning) return;
+          
+          try {
+            const parsed = JSON.parse(event.message);
+            onTagRead(parsed as NFCData);
+            
+            // Automatically start next scan
+            if (this.isScanning) {
+              setTimeout(() => {
+                if (this.isScanning) {
+                  NFCPlugin.read().catch(console.error);
+                }
+              }, 500);
             }
-          });
+          } catch (err) {
+            console.error('Error handling scanned NFC tag:', err);
+          }
+        });
 
-          const offError = NFC.onError((error: NFCError) => {
-            console.error('NFC reading error:', error);
-          });
-
-          await NFC.startScan();
-
-          // Note: we don't store offRead/offError here; stopScanning will simply flip the flag.
-          // If you want stricter cleanup, we can extend this service later to track and dispose listeners.
-        } catch (error) {
-          console.error('Failed to start NFC scan session (continuous):', error);
-          toast.error('Failed to start NFC scan session');
-          this.isScanning = false;
-        }
-
+        NFCPlugin.addListener('nfcError', (event: any) => {
+          if (!this.isScanning) return;
+          console.error('NFC reading error:', event.error);
+          
+          // Continue scanning on error
+          if (this.isScanning) {
+            setTimeout(() => {
+              if (this.isScanning) {
+                NFCPlugin.read().catch(console.error);
+              }
+            }, 1000);
+          }
+        });
+        
+        // Start first scan
+        await NFCPlugin.read();
         return;
       }
 
-      // Web NFC API – fallback
       if ('NDEFReader' in window) {
         const ndef = new (window as any).NDEFReader();
         await ndef.scan();
@@ -375,6 +312,10 @@ class NFCService {
 
   async stopScanning(): Promise<void> {
     this.isScanning = false;
+    
+    if (Capacitor.isNativePlatform()) {
+      await NFCPlugin.removeAllListeners();
+    }
   }
 
   isSupported(): boolean {
@@ -386,5 +327,4 @@ class NFCService {
   }
 }
 
-// Singleton instance
 export const nfcService = new NFCService();
