@@ -18,12 +18,20 @@ const config: CapacitorConfig = {
     },
     StatusBar: {
       style: 'light'
+    },
+    NFCPlugin: {
+      ios: {
+        nfcReaderUsage: "This app needs access to NFC to scan student wristbands"
+      }
     }
   },
   ios: {
     contentInset: 'always',
     backgroundColor: '#FFFFFF',
     allowsBackForwardNavigationGestures: true
+  },
+  android: {
+    allowMixedContent: true
   }
 };
 
