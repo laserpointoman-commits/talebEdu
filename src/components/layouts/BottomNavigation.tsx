@@ -2,7 +2,7 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard,
   MessageSquare,
@@ -24,7 +24,6 @@ interface NavItem {
   icon: React.ElementType;
 }
 
-// Define navigation items per role
 const getNavItemsForRole = (role: string): NavItem[] => {
   const baseItems: NavItem[] = [
     {
@@ -88,7 +87,6 @@ export default function BottomNavigation() {
   const { language, dir } = useLanguage();
   const location = useLocation();
 
-  // Handle developer role testing
   const effectiveRole = profile?.role === 'developer'
     ? sessionStorage.getItem('developerViewRole') || 'developer'
     : profile?.role || 'student';
@@ -103,68 +101,86 @@ export default function BottomNavigation() {
   };
 
   return (
-    <nav 
-      className="fixed bottom-0 left-0 right-0 z-50 lg:hidden"
-      style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+    <div 
+      className="fixed bottom-0 left-0 right-0 z-50 lg:hidden flex justify-center pointer-events-none"
+      style={{ paddingBottom: 'env(safe-area-inset-bottom, 8px)' }}
       dir={dir}
     >
-      {/* Glassmorphism background */}
-      <div className="absolute inset-0 bg-background/80 backdrop-blur-xl border-t border-border/50" />
-      
-      {/* Navigation items */}
-      <div className="relative flex items-center justify-around px-2 py-2">
-        {navItems.map((item) => {
-          const active = isActive(item.href);
-          const Icon = item.icon;
-          
-          return (
-            <NavLink
-              key={item.href}
-              to={item.href}
-              className="relative flex flex-col items-center justify-center min-w-[56px] py-1"
-            >
-              {/* Active indicator pill */}
-              {active && (
+      {/* Floating Navigation Pill */}
+      <motion.nav 
+        initial={{ y: 100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ type: 'spring', stiffness: 260, damping: 20, delay: 0.1 }}
+        className="pointer-events-auto mx-4 mb-2"
+      >
+        {/* Outer glow */}
+        <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full scale-110 opacity-50" />
+        
+        {/* Main container */}
+        <div className="relative flex items-center gap-1 px-3 py-2 rounded-[28px] bg-card/95 backdrop-blur-2xl border border-border/50 shadow-[0_8px_32px_rgba(0,0,0,0.12),0_2px_8px_rgba(0,0,0,0.08)]">
+          {navItems.map((item, index) => {
+            const active = isActive(item.href);
+            const Icon = item.icon;
+            
+            return (
+              <NavLink
+                key={item.href}
+                to={item.href}
+                className="relative"
+              >
                 <motion.div
-                  layoutId="bottomNavIndicator"
-                  className="absolute -top-1 w-12 h-1 rounded-full bg-primary"
-                  initial={false}
-                  transition={{ type: 'spring', stiffness: 500, damping: 35 }}
-                />
-              )}
-              
-              {/* Icon container */}
-              <motion.div
-                className={cn(
-                  "flex items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300",
-                  active 
-                    ? "bg-primary text-primary-foreground shadow-lg shadow-primary/30" 
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                )}
-                whileTap={{ scale: 0.9 }}
-                animate={active ? { y: -4 } : { y: 0 }}
-                transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-              >
-                <Icon className={cn(
-                  "transition-all duration-300",
-                  active ? "h-6 w-6" : "h-5 w-5"
-                )} />
-              </motion.div>
-              
-              {/* Label */}
-              <motion.span
-                className={cn(
-                  "text-[10px] font-medium mt-1 transition-colors duration-300",
-                  active ? "text-primary" : "text-muted-foreground"
-                )}
-                animate={active ? { opacity: 1 } : { opacity: 0.7 }}
-              >
-                {language === 'ar' ? item.titleAr : item.title}
-              </motion.span>
-            </NavLink>
-          );
-        })}
-      </div>
-    </nav>
+                  className={cn(
+                    "relative flex items-center gap-2 px-4 py-2.5 rounded-full transition-all duration-300",
+                    active && "bg-primary"
+                  )}
+                  whileTap={{ scale: 0.92 }}
+                  layout
+                  transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                >
+                  {/* Active glow effect */}
+                  <AnimatePresence>
+                    {active && (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.8 }}
+                        className="absolute inset-0 bg-primary rounded-full blur-md opacity-40"
+                        layoutId="navGlow"
+                      />
+                    )}
+                  </AnimatePresence>
+                  
+                  {/* Icon */}
+                  <Icon 
+                    className={cn(
+                      "relative z-10 transition-all duration-300",
+                      active 
+                        ? "h-[22px] w-[22px] text-primary-foreground" 
+                        : "h-5 w-5 text-muted-foreground"
+                    )} 
+                    strokeWidth={active ? 2.5 : 2}
+                  />
+                  
+                  {/* Label - only show when active */}
+                  <AnimatePresence mode="wait">
+                    {active && (
+                      <motion.span
+                        initial={{ opacity: 0, width: 0 }}
+                        animate={{ opacity: 1, width: 'auto' }}
+                        exit={{ opacity: 0, width: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="relative z-10 text-sm font-semibold text-primary-foreground whitespace-nowrap overflow-hidden"
+                      >
+                        {language === 'ar' ? item.titleAr : item.title}
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+                </motion.div>
+              </NavLink>
+            );
+          })}
+        </div>
+      </motion.nav>
+    </div>
   );
 }
