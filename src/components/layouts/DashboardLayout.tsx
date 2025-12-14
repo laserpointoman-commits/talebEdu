@@ -18,10 +18,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { LogOut, User, Settings, Menu, X, Home, Shield, School, Users, GraduationCap, Car } from 'lucide-react';
 import Sidebar from './Sidebar';
+import BottomNavigation from './BottomNavigation';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 import Footer from './Footer';
-import FloatingChat from '@/components/chat/FloatingChat';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -280,7 +280,7 @@ function DashboardLayout({ children }: DashboardLayoutProps) {
           <main 
             className="flex-1 overflow-y-auto bg-muted/10"
             style={{
-              paddingBottom: 'env(safe-area-inset-bottom, 0px)'
+              paddingBottom: isMobile ? 'calc(5rem + env(safe-area-inset-bottom, 0px))' : 'env(safe-area-inset-bottom, 0px)'
             }}
           >
             <div className={cn(
@@ -296,8 +296,8 @@ function DashboardLayout({ children }: DashboardLayoutProps) {
         </div>
       </div>
       
-      {/* Floating Chat Window */}
-      <FloatingChat />
+      {/* Bottom Navigation for Mobile */}
+      <BottomNavigation />
     </div>
   );
 }
