@@ -141,6 +141,9 @@ export default function TeacherDashboard() {
         </p>
       </div>
 
+      {/* Quick Actions - At the top */}
+      <QuickActions />
+
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="hover:shadow-lg transition-shadow">
@@ -188,9 +191,6 @@ export default function TeacherDashboard() {
           </CardContent>
         </Card>
       </div>
-
-      {/* Quick Actions */}
-      <QuickActions />
 
       {/* Today's Schedule */}
       <Card>

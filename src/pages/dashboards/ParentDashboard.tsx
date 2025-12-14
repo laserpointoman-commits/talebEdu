@@ -234,6 +234,9 @@ export default function ParentDashboard() {
         </p>
       </div>
 
+      {/* Quick Actions - At the top */}
+      <QuickActions />
+
       {/* Pending Students Section */}
       {pendingStudents.length > 0 && (
         <PendingStudentsList 
@@ -348,9 +351,6 @@ export default function ParentDashboard() {
           </p>
         </CardContent>
       </Card>
-
-      {/* Quick Actions */}
-      <QuickActions />
 
       {/* Recent Activity */}
       <Card>

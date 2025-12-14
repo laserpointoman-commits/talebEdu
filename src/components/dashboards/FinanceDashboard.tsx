@@ -185,6 +185,9 @@ const FinanceDashboard = () => {
         </p>
       </div>
 
+      {/* Quick Actions - At the top */}
+      <QuickActions />
+
       {/* Quick Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {quickStats.map((stat, index) => (
@@ -242,9 +245,6 @@ const FinanceDashboard = () => {
           </Card>
         ))}
       </div>
-
-      {/* Quick Actions */}
-      <QuickActions />
 
       {/* Recent Activity */}
       <Card 

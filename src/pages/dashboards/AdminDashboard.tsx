@@ -123,6 +123,9 @@ export default function AdminDashboard() {
         </Badge>
       </div>
 
+      {/* Quick Actions - At the top */}
+      <QuickActions />
+
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card className="hover:shadow-lg transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -201,9 +204,6 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
       </div>
-
-      {/* Quick Actions */}
-      <QuickActions />
 
       {/* System Monitor and Activity Feed */}
       <div className="grid gap-6 md:grid-cols-2">
