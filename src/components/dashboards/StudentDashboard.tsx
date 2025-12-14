@@ -9,6 +9,9 @@ export default function StudentDashboard() {
 
   return (
     <div className="space-y-6">
+      {/* Quick Actions - At the top */}
+      <QuickActions />
+
       <div>
         <h2 className="text-xl md:text-3xl font-bold tracking-tight">
           {language === 'en' 
@@ -21,9 +24,6 @@ export default function StudentDashboard() {
             : 'رحلتك التعليمية تستمر هنا'}
         </p>
       </div>
-
-      {/* Quick Actions */}
-      <QuickActions />
     </div>
   );
 }
