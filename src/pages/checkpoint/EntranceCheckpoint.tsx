@@ -139,39 +139,42 @@ export default function EntranceCheckpoint() {
   const simulateNFCScan = async (nfcId: string) => {
     setIsScanning(true);
     
-    // Simulate database lookup
-    const mockStudents: StudentRecord[] = [
-      {
-        id: '1',
-        nfcId: 'NFC001',
-        name: 'أحمد محمد',
-        grade: '5',
-        class: 'A',
-        photo: '',
-        parentPhone: '+966501234567'
-      },
-      {
-        id: '2',
-        nfcId: 'NFC002',
-        name: 'فاطمة علي',
-        grade: '4',
-        class: 'B',
-        photo: '',
-        parentPhone: '+966502345678'
+    try {
+      // Look up student in database by NFC ID
+      const { data: student, error } = await supabase
+        .from('students')
+        .select('*')
+        .eq('nfc_id', nfcId)
+        .maybeSingle();
+      
+      if (error) throw error;
+      
+      if (student) {
+        const studentRecord: StudentRecord = {
+          id: student.id,
+          nfcId: student.nfc_id,
+          name: student.first_name_ar && student.last_name_ar 
+            ? `${student.first_name_ar} ${student.last_name_ar}`
+            : `${student.first_name} ${student.last_name}`,
+          grade: student.grade || '',
+          class: student.class || '',
+          photo: student.profile_image,
+          parentPhone: student.parent_phone
+        };
+        setCurrentStudent(studentRecord);
+        processCheckpoint(studentRecord);
+      } else {
+        toast({
+          title: "Unknown Card",
+          description: "This NFC card is not registered",
+          variant: "destructive"
+        });
       }
-    ];
-
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    const student = mockStudents.find(s => s.nfcId === nfcId);
-    
-    if (student) {
-      setCurrentStudent(student);
-      processCheckpoint(student);
-    } else {
+    } catch (error) {
+      console.error('Error looking up student:', error);
       toast({
-        title: "Unknown Card",
-        description: "This NFC card is not registered",
+        title: "Error",
+        description: "Failed to look up student",
         variant: "destructive"
       });
     }

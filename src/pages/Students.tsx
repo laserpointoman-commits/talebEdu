@@ -165,19 +165,38 @@ export default function Students() {
     setIsProfileDialogOpen(true);
   };
 
-  const handleNfcRead = () => {
+  const handleNfcScan = async () => {
     setIsNfcDialogOpen(true);
-    // Simulate NFC reading
-    setTimeout(() => {
-      const randomStudent = mappedStudents[Math.floor(Math.random() * mappedStudents.length)];
-      setSelectedStudent(randomStudent);
-      setIsNfcDialogOpen(false);
-      setIsProfileDialogOpen(true);
+    try {
+      const tagData = await nfcService.readTag();
+      if (tagData && tagData.id) {
+        // Find student with matching NFC ID
+        const foundStudent = mappedStudents.find(s => s.nfcId === tagData.id);
+        if (foundStudent) {
+          setSelectedStudent(foundStudent);
+          setIsNfcDialogOpen(false);
+          setIsProfileDialogOpen(true);
+          toast({
+            title: language === 'ar' ? 'تم المسح بنجاح' : 'NFC Scan Successful',
+            description: language === 'ar' ? `تم العثور على: ${foundStudent.nameAr}` : `Found student: ${foundStudent.name}`,
+          });
+        } else {
+          toast({
+            title: language === 'ar' ? 'لم يتم العثور' : 'Not Found',
+            description: language === 'ar' ? 'لم يتم العثور على طالب بهذا المعرف' : 'No student found with this NFC ID',
+            variant: 'destructive',
+          });
+          setIsNfcDialogOpen(false);
+        }
+      }
+    } catch (error: any) {
       toast({
-        title: 'NFC Read Successful',
-        description: `Found student: ${randomStudent.name}`,
+        title: language === 'ar' ? 'خطأ' : 'Error',
+        description: error.message,
+        variant: 'destructive',
       });
-    }, 2000);
+      setIsNfcDialogOpen(false);
+    }
   };
 
   const handleWriteNFC = async (student: any) => {
@@ -192,18 +211,13 @@ export default function Students() {
 
     setWritingNfc(student.id);
     try {
-      const nfcData = {
+      // Write minimal data to fit on NFC tag (most tags have 48-144 bytes)
+      const success = await nfcService.writeTag({
         id: student.nfcId,
         type: 'student' as const,
-        name: student.name,
-        additionalData: {
-          studentId: student.id,
-          grade: student.grade,
-          class: student.class
-        }
-      };
+        name: student.name.substring(0, 20), // Truncate to save space
+      });
       
-      const success = await nfcService.writeTag(nfcData);
       if (success) {
         toast({
           title: language === 'ar' ? 'نجح' : 'Success',
@@ -368,9 +382,9 @@ export default function Students() {
               dir="ltr"
             />
           </div>
-          <Button variant="outline">
-            <ScanLine className="h-4 w-4 mr-2" />
-            {language === 'en' ? 'Scan Barcode' : 'مسح الباركود'}
+          <Button variant="outline" onClick={handleNfcScan}>
+            <Nfc className="h-4 w-4 mr-2" />
+            {language === 'en' ? 'Scan NFC' : 'مسح NFC'}
           </Button>
         </div>
       )}

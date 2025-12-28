@@ -49,6 +49,11 @@ const translations = {
     'dashboard.tracking': 'Bus Tracking',
     'dashboard.profile': 'Profile',
     'dashboard.store': 'Store',
+    'dashboard.feeManagement': 'Fee Management',
+    'dashboard.parentFinance': 'Parent Finance',
+    'dashboard.payroll': 'Payroll',
+    'dashboard.userManagement': 'User Management',
+    'dashboard.nfcManagement': 'NFC Management',
     
     // Parent Dashboard
     'parent.welcome': 'Welcome',
@@ -438,6 +443,11 @@ const translations = {
     'dashboard.tracking': 'تتبع الحافلة',
     'dashboard.profile': 'الملف الشخصي',
     'dashboard.store': 'المتجر',
+    'dashboard.feeManagement': 'إدارة الرسوم',
+    'dashboard.parentFinance': 'المالية للوالدين',
+    'dashboard.payroll': 'الرواتب',
+    'dashboard.userManagement': 'إدارة المستخدمين',
+    'dashboard.nfcManagement': 'إدارة NFC',
     
     // Parent Dashboard
     'parent.welcome': 'مرحباً',

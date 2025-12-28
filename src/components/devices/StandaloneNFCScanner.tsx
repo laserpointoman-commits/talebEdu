@@ -73,86 +73,102 @@ export default function StandaloneNFCScanner({
     };
   }, []);
 
-  // Mock student data for testing
-  const mockStudents: StudentData[] = [
-    {
-      id: '1',
-      firstName: 'Ahmed',
-      lastName: 'Al-Said',
-      firstNameAr: 'أحمد',
-      lastNameAr: 'السعيد',
-      grade: '5',
-      class: '5A',
-      profileImage: undefined,
-      nfcId: 'NFC123456'
-    },
-    {
-      id: '2',
-      firstName: 'Fatima',
-      lastName: 'Al-Rashid',
-      firstNameAr: 'فاطمة',
-      lastNameAr: 'الرشيد',
-      grade: '7',
-      class: '7B',
-      profileImage: undefined,
-      nfcId: 'NFC789012'
-    },
-    {
-      id: '3',
-      firstName: 'Mohammed',
-      lastName: 'Al-Hassan',
-      firstNameAr: 'محمد',
-      lastNameAr: 'الحسن',
-      grade: '3',
-      class: '3C',
-      profileImage: undefined,
-      nfcId: 'NFC345678'
-    }
-  ];
-
   const handleNFCScan = async (nfcId?: string) => {
     setIsScanning(true);
     
-    // Simulate NFC scan delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    // For testing, randomly select a student
-    const testNfcId = nfcId || mockStudents[Math.floor(Math.random() * mockStudents.length)].nfcId;
-    const student = mockStudents.find(s => s.nfcId === testNfcId);
-    
-    if (student) {
-      // Determine action based on time of day or previous scans
-      const hour = new Date().getHours();
-      const action: 'check_in' | 'check_out' = hour < 12 ? 'check_in' : 'check_out';
+    try {
+      // Real NFC scan or use provided nfcId
+      let scannedNfcId = nfcId;
       
-      const studentWithAction = { ...student, action };
-      setCurrentStudent(studentWithAction);
-      setShowStudentModal(true);
-      
-      // Update counters
-      if (action === 'check_in') {
-        setTodayCount(prev => ({ ...prev, checkIn: prev.checkIn + 1 }));
-      } else {
-        setTodayCount(prev => ({ ...prev, checkOut: prev.checkOut + 1 }));
+      if (!scannedNfcId) {
+        try {
+          // Try real NFC scan
+          const { nfcService } = await import('@/services/nfcService');
+          const tagData = await nfcService.readTag();
+          scannedNfcId = tagData?.id;
+        } catch {
+          // NFC not available, show error
+          toast({
+            title: language === 'en' ? "NFC Required" : "NFC مطلوب",
+            description: language === 'en' ? "Please scan an NFC card" : "يرجى مسح بطاقة NFC",
+            variant: "destructive"
+          });
+          setIsScanning(false);
+          return;
+        }
       }
       
-      // Auto-close modal after 3 seconds
-      setTimeout(() => {
-        setShowStudentModal(false);
-        setCurrentStudent(null);
-      }, 3000);
-      
-      // Send to backend (when connected to Supabase)
-      if (isOnline) {
-        await sendToBackend(studentWithAction);
-      } else {
-        // Store locally for later sync
-        storeOffline(studentWithAction);
+      if (!scannedNfcId) {
+        toast({
+          title: language === 'en' ? "No Card Detected" : "لم يتم الكشف عن بطاقة",
+          description: language === 'en' ? "Please try again" : "يرجى المحاولة مرة أخرى",
+          variant: "destructive"
+        });
+        setIsScanning(false);
+        return;
       }
-    } else {
+      
+      // Look up student in database by NFC ID
+      const { data: student, error } = await supabase
+        .from('students')
+        .select('*')
+        .eq('nfc_id', scannedNfcId)
+        .maybeSingle();
+      
+      if (error) throw error;
+      
+      if (student) {
+        // Determine action based on time of day or previous scans
+        const hour = new Date().getHours();
+        const action: 'check_in' | 'check_out' = hour < 12 ? 'check_in' : 'check_out';
+        
+        const studentData: StudentData = {
+          id: student.id,
+          firstName: student.first_name || '',
+          lastName: student.last_name || '',
+          firstNameAr: student.first_name_ar || student.first_name || '',
+          lastNameAr: student.last_name_ar || student.last_name || '',
+          grade: student.grade || '',
+          class: student.class || '',
+          profileImage: student.profile_image,
+          nfcId: student.nfc_id,
+          action
+        };
+        
+        setCurrentStudent(studentData);
+        setShowStudentModal(true);
+        
+        // Update counters
+        if (action === 'check_in') {
+          setTodayCount(prev => ({ ...prev, checkIn: prev.checkIn + 1 }));
+        } else {
+          setTodayCount(prev => ({ ...prev, checkOut: prev.checkOut + 1 }));
+        }
+        
+        // Auto-close modal after 3 seconds
+        setTimeout(() => {
+          setShowStudentModal(false);
+          setCurrentStudent(null);
+        }, 3000);
+        
+        // Send to backend
+        if (isOnline) {
+          await sendToBackend(studentData);
+        } else {
+          storeOffline(studentData);
+        }
+      } else {
+        toast({
+          title: language === 'en' ? "Unknown Card" : "بطاقة غير معروفة",
+          description: language === 'en' ? "This NFC card is not registered" : "هذه البطاقة غير مسجلة",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('NFC scan error:', error);
       toast({
-        title: language === 'en' ? "Unknown Card" : "بطاقة غير معروفة",
-        description: language === 'en' ? "This NFC card is not registered" : "هذه البطاقة غير مسجلة",
+        title: language === 'en' ? "Scan Error" : "خطأ في المسح",
+        description: language === 'en' ? "Please try again" : "يرجى المحاولة مرة أخرى",
         variant: "destructive"
       });
     }

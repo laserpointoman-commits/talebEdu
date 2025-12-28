@@ -133,7 +133,11 @@ function DashboardLayout({ children }: DashboardLayoutProps) {
                 <Menu className="h-6 w-6" />
               </Button>
             </SheetTrigger>
-            <SheetContent side={dir === 'rtl' ? 'right' : 'left'} className="p-0 w-[280px] max-w-[85vw]">
+            <SheetContent 
+              side={dir === 'rtl' ? 'right' : 'left'} 
+              className="p-0 w-[300px] max-w-[90vw] pt-0"
+              style={{ paddingTop: 'env(safe-area-inset-top)' }}
+            >
               <Sidebar onItemClick={() => setIsMobileSidebarOpen(false)} />
             </SheetContent>
           </Sheet>
@@ -265,10 +269,10 @@ function DashboardLayout({ children }: DashboardLayoutProps) {
           paddingTop: 'calc(4rem + env(safe-area-inset-top, 0px))',
         }}
       >
-        {/* Desktop Sidebar */}
+        {/* Desktop Sidebar - Wider for better readability */}
         <div className={cn(
           "hidden lg:block transition-all duration-300 overflow-hidden",
-          isSidebarOpen ? "w-64" : "w-0"
+          isSidebarOpen ? "w-72" : "w-0"
         )}>
           <div className="h-full overflow-y-auto">
             <Sidebar />
@@ -276,15 +280,15 @@ function DashboardLayout({ children }: DashboardLayoutProps) {
         </div>
         
         <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Main Content - iOS Safe Area Aware */}
+          {/* Main Content - iOS Safe Area Aware with proper bottom padding for nav */}
           <main 
             className="flex-1 overflow-y-auto bg-muted/10"
             style={{
-              paddingBottom: isMobile ? 'calc(5rem + env(safe-area-inset-bottom, 0px))' : 'env(safe-area-inset-bottom, 0px)'
+              paddingBottom: isMobile ? 'calc(6.5rem + env(safe-area-inset-bottom, 0px))' : 'env(safe-area-inset-bottom, 0px)'
             }}
           >
             <div className={cn(
-              "flex flex-col h-full",
+              "flex flex-col min-h-full",
               isMobile ? "px-3 py-4" : "px-6 py-6"
             )}>
               <div className="flex-1">
