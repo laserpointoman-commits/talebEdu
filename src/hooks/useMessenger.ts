@@ -792,6 +792,35 @@ export function useMessenger() {
     }
   }, [user, messages]);
 
+  // Get call history for a specific contact
+  const getCallHistoryForContact = useCallback((contactId: string): CallLog[] => {
+    return callLogs.filter(call => 
+      call.caller_id === contactId || call.recipient_id === contactId
+    );
+  }, [callLogs]);
+
+  // Toggle notifications for a chat (local state for now)
+  const toggleChatNotifications = useCallback(async (contactId: string, enabled: boolean) => {
+    // This would typically be stored in a chat_settings table
+    // For now, we return success
+    return true;
+  }, []);
+
+  // Block/unblock a user
+  const blockUser = useCallback(async (contactId: string): Promise<boolean> => {
+    if (!user) return false;
+    // This would typically insert into a blocked_users table
+    // For now, we just return success
+    console.log('Blocking user:', contactId);
+    return true;
+  }, [user]);
+
+  const unblockUser = useCallback(async (contactId: string): Promise<boolean> => {
+    if (!user) return false;
+    console.log('Unblocking user:', contactId);
+    return true;
+  }, [user]);
+
   return {
     conversations,
     groups,
@@ -817,6 +846,10 @@ export function useMessenger() {
     archiveChat,
     deleteChat,
     starMessage,
-    forwardMessage
+    forwardMessage,
+    getCallHistoryForContact,
+    toggleChatNotifications,
+    blockUser,
+    unblockUser
   };
 }

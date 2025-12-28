@@ -20,6 +20,7 @@ import { MessengerCalls } from '@/components/messenger/MessengerCalls';
 import { MessengerSearch } from '@/components/messenger/MessengerSearch';
 import { MessengerDesktopLayout } from '@/components/messenger/MessengerDesktopLayout';
 import { CallScreen } from '@/components/messenger/CallScreen';
+import { ContactInfoScreen } from '@/components/messenger/ContactInfoScreen';
 import { callService } from '@/services/callService';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -95,6 +96,9 @@ function MessengerContent() {
   
   // Starred messages
   const [starredMessages, setStarredMessages] = useState<Set<string>>(new Set());
+  
+  // Contact info screen
+  const [showContactInfo, setShowContactInfo] = useState(false);
   
   const handleStarMessage = (messageId: string) => {
     setStarredMessages(prev => {
@@ -492,6 +496,7 @@ function MessengerContent() {
         onBack={handleBackFromChat}
         onVoiceCall={handleVoiceCall}
         onVideoCall={handleVideoCall}
+        onViewContact={() => setShowContactInfo(true)}
         isArabic={isArabic}
         colors={colors}
       />
@@ -526,6 +531,8 @@ function MessengerContent() {
                   onDelete={(msgId, forEveryone) => deleteMessage(msgId, forEveryone)}
                   onReact={(msgId, emoji) => addReaction(msgId, emoji)}
                   onRemoveReaction={(msgId) => removeReaction(msgId)}
+                  onStar={(msgId) => handleStarMessage(msgId)}
+                  isStarred={starredMessages.has(msg.id)}
                   isArabic={isArabic}
                   colors={colors}
                 />
@@ -544,6 +551,22 @@ function MessengerContent() {
         onCancelReply={() => setReplyTo(null)}
         isArabic={isArabic}
       />
+
+      {/* Contact Info Screen */}
+      {showContactInfo && selectedConversation && (
+        <ContactInfoScreen
+          conversation={selectedConversation}
+          messages={messages}
+          callLogs={callLogs}
+          starredMessageIds={starredMessages}
+          onClose={() => setShowContactInfo(false)}
+          onVoiceCall={handleVoiceCall}
+          onVideoCall={handleVideoCall}
+          isArabic={isArabic}
+          colors={colors}
+          currentUserId={user?.id}
+        />
+      )}
     </motion.div>
   );
 
