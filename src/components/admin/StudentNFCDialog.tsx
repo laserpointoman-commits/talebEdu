@@ -74,15 +74,12 @@ export default function StudentNFCDialog({ student, open, onOpenChange }: Studen
     setWriteSuccess(false);
 
     try {
+      // Write minimal data to fit on NFC tag (most tags have 48-144 bytes)
+      // Just write the NFC ID - the app will look up full student info from database
       const success = await nfcService.writeTag({
         id: student.nfc_id,
         type: 'student',
-        name: studentName,
-        additionalData: {
-          studentId: student.id,
-          class: student.class,
-          student_id: student.student_id,
-        }
+        name: studentName.substring(0, 20), // Truncate name to save space
       });
 
       if (success) {
