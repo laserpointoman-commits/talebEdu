@@ -235,9 +235,13 @@ export function VoiceRecorder({ onSend, onCancel, isArabic = false, isDark = fal
 
     // Assign onstop BEFORE stopping (avoids race conditions on iOS)
     recorder.onstop = () => {
-      if (chunksRef.current.length > 0) {
-        const mimeType = recorder.mimeType || 'audio/webm';
-        const blob = new Blob(chunksRef.current, { type: mimeType });
+      (async () => {
+        // iOS/Safari can fire 'stop' before the final 'dataavailable' arrives.
+        // Wait briefly for the final chunk.
+        const waitUntil = Date.now() + 1200;
+        while (chunksRef.current.length === 0 && Date.now() < waitUntil) {
+          await new Promise((r) => setTimeout(r, 50));
+        }
 
         // Stop stream tracks
         if (streamRef.current) {
@@ -249,8 +253,15 @@ export function VoiceRecorder({ onSend, onCancel, isArabic = false, isDark = fal
           audioContextRef.current.close();
         }
 
+        if (chunksRef.current.length === 0) {
+          setError(t('Recording failed', 'فشل التسجيل'));
+          return;
+        }
+
+        const mimeType = recorder.mimeType || 'audio/webm';
+        const blob = new Blob(chunksRef.current, { type: mimeType });
         onSend(blob, finalDuration);
-      }
+      })();
     };
 
     try {
