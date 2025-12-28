@@ -159,12 +159,12 @@ export default function BusTracking() {
                           <BusInfoItem
                             icon={<MapPin className="h-4 w-4" />}
                             label={language === 'ar' ? 'المحطة الحالية' : 'Current Stop'}
-                            value={language === 'ar' ? 'جاري التحديد...' : 'Determining...'}
+                            value={language === 'ar' ? 'جاري التحميل...' : 'Loading...'}
                           />
                           <BusInfoItem
                             icon={<Clock className="h-4 w-4" />}
                             label={language === 'ar' ? 'الوقت المقدر للوصول' : 'Estimated Arrival'}
-                            value={language === 'ar' ? '15 دقيقة' : '15 minutes'}
+                            value={language === 'ar' ? 'جاري الحساب...' : 'Calculating...'}
                           />
                         </CardContent>
                       </Card>
