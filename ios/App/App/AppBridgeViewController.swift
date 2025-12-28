@@ -5,8 +5,8 @@ class AppBridgeViewController: CAPBridgeViewController {
     
     override func capacitorDidLoad() {
         super.capacitorDidLoad()
-        
-        // Register the custom NFC plugin
-        bridge?.registerPluginType(NfcPlugin.self)
+
+        // Register the custom NFC plugin (must match jsName used in registerPlugin())
+        bridge?.registerPluginInstance(NfcPlugin())
     }
 }
