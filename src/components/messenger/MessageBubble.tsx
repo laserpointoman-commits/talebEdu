@@ -1,0 +1,358 @@
+import { useState } from 'react';
+import { Check, CheckCheck, Clock, Reply, Forward, Trash2, Copy, Smile, MoreVertical, FileText, Download, Play, Pause, Mic } from 'lucide-react';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
+import { WHATSAPP_COLORS, QUICK_REACTIONS } from './WhatsAppTheme';
+import { Message } from '@/hooks/useMessenger';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+
+interface MessageBubbleProps {
+  message: Message;
+  isOwnMessage: boolean;
+  onReply?: (message: Message) => void;
+  onForward?: (message: Message) => void;
+  onDelete?: (messageId: string, forEveryone: boolean) => void;
+  onReact?: (messageId: string, emoji: string) => void;
+  onRemoveReaction?: (messageId: string) => void;
+  isArabic?: boolean;
+}
+
+export function MessageBubble({
+  message,
+  isOwnMessage,
+  onReply,
+  onForward,
+  onDelete,
+  onReact,
+  onRemoveReaction,
+  isArabic = false
+}: MessageBubbleProps) {
+  const [showActions, setShowActions] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  const t = (en: string, ar: string) => isArabic ? ar : en;
+
+  const formatTime = (dateStr: string) => format(new Date(dateStr), 'h:mm a');
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  };
+
+  const formatDuration = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const getStatusIcon = () => {
+    if (message.is_read) {
+      return <CheckCheck className="h-4 w-4" style={{ color: WHATSAPP_COLORS.checkBlue }} />;
+    } else if (message.is_delivered) {
+      return <CheckCheck className="h-4 w-4" style={{ color: WHATSAPP_COLORS.checkGray }} />;
+    } else {
+      return <Check className="h-4 w-4" style={{ color: WHATSAPP_COLORS.checkGray }} />;
+    }
+  };
+
+  // Handle deleted message
+  if (message.deleted_for_everyone) {
+    return (
+      <div className={cn("flex mb-1", isOwnMessage ? "justify-end" : "justify-start")}>
+        <div 
+          className="max-w-[75%] rounded-lg px-3 py-2 italic"
+          style={{ 
+            backgroundColor: isOwnMessage ? WHATSAPP_COLORS.messageSent : WHATSAPP_COLORS.messageReceived,
+            opacity: 0.7
+          }}
+        >
+          <p className="text-sm" style={{ color: WHATSAPP_COLORS.textMuted }}>
+            🚫 {t('This message was deleted', 'تم حذف هذه الرسالة')}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const userReaction = message.reactions?.find(r => r.user_id === message.sender_id);
+
+  return (
+    <div 
+      className={cn("flex mb-1 group relative", isOwnMessage ? "justify-end" : "justify-start")}
+      onMouseEnter={() => setShowActions(true)}
+      onMouseLeave={() => setShowActions(false)}
+    >
+      <div className="max-w-[75%] relative">
+        {/* Reply Preview */}
+        {message.reply_to && (
+          <div 
+            className="rounded-t-lg px-3 py-2 border-l-4"
+            style={{ 
+              backgroundColor: isOwnMessage ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.1)',
+              borderLeftColor: WHATSAPP_COLORS.accent
+            }}
+          >
+            <p className="text-xs font-medium" style={{ color: WHATSAPP_COLORS.accent }}>
+              {isOwnMessage ? t('You', 'أنت') : t('Reply', 'رد')}
+            </p>
+            <p className="text-xs truncate" style={{ color: WHATSAPP_COLORS.textMuted }}>
+              {message.reply_to.content || '📎 Attachment'}
+            </p>
+          </div>
+        )}
+
+        {/* Message Bubble */}
+        <div 
+          className={cn(
+            "rounded-lg px-3 py-1.5 relative",
+            message.reply_to && "rounded-t-none"
+          )}
+          style={{ 
+            backgroundColor: isOwnMessage ? WHATSAPP_COLORS.messageSent : WHATSAPP_COLORS.messageReceived 
+          }}
+        >
+          {/* Forwarded label */}
+          {message.forwarded_from_id && (
+            <div className="flex items-center gap-1 mb-1">
+              <Forward className="h-3 w-3" style={{ color: WHATSAPP_COLORS.textMuted }} />
+              <span className="text-xs italic" style={{ color: WHATSAPP_COLORS.textMuted }}>
+                {t('Forwarded', 'محول')}
+              </span>
+            </div>
+          )}
+
+          {/* Voice message */}
+          {message.message_type === 'voice' && message.voice_duration && (
+            <div className="flex items-center gap-3 min-w-[200px]">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-10 w-10 rounded-full"
+                style={{ backgroundColor: WHATSAPP_COLORS.accent }}
+                onClick={() => setIsPlaying(!isPlaying)}
+              >
+                {isPlaying ? (
+                  <Pause className="h-5 w-5 text-white" />
+                ) : (
+                  <Play className="h-5 w-5 text-white" />
+                )}
+              </Button>
+              <div className="flex-1">
+                <div className="h-1 rounded-full" style={{ backgroundColor: WHATSAPP_COLORS.textMuted }}>
+                  <div 
+                    className="h-full rounded-full transition-all"
+                    style={{ backgroundColor: WHATSAPP_COLORS.accent, width: isPlaying ? '60%' : '0%' }}
+                  />
+                </div>
+                <span className="text-xs" style={{ color: WHATSAPP_COLORS.textMuted }}>
+                  {formatDuration(message.voice_duration)}
+                </span>
+              </div>
+              <Mic className="h-4 w-4" style={{ color: WHATSAPP_COLORS.accent }} />
+            </div>
+          )}
+
+          {/* Text content */}
+          {message.content && message.message_type !== 'voice' && (
+            <p 
+              className="text-sm leading-relaxed break-words whitespace-pre-wrap"
+              style={{ color: WHATSAPP_COLORS.textPrimary }}
+            >
+              {message.content}
+            </p>
+          )}
+
+          {/* Attachments */}
+          {message.attachments && message.attachments.length > 0 && (
+            <div className="mt-1 space-y-1">
+              {message.attachments.map(attachment => (
+                <div key={attachment.id}>
+                  {attachment.file_type.startsWith('image/') ? (
+                    <img
+                      src={attachment.file_url}
+                      alt={attachment.file_name}
+                      className="rounded max-w-full cursor-pointer hover:opacity-90 transition-opacity"
+                      onClick={() => window.open(attachment.file_url, '_blank')}
+                    />
+                  ) : attachment.file_type.startsWith('video/') ? (
+                    <video
+                      src={attachment.file_url}
+                      controls
+                      className="rounded max-w-full"
+                    />
+                  ) : (
+                    <a
+                      href={attachment.file_url}
+                      download={attachment.file_name}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 text-xs rounded p-2"
+                      style={{ backgroundColor: WHATSAPP_COLORS.bgTertiary }}
+                    >
+                      <div 
+                        className="w-10 h-10 rounded flex items-center justify-center"
+                        style={{ backgroundColor: WHATSAPP_COLORS.missedCall }}
+                      >
+                        <FileText className="h-5 w-5 text-white" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <span className="truncate block" style={{ color: WHATSAPP_COLORS.textPrimary }}>
+                          {attachment.file_name}
+                        </span>
+                        <span style={{ color: WHATSAPP_COLORS.textMuted }}>
+                          {formatFileSize(attachment.file_size)} • {attachment.file_type.split('/')[1]?.toUpperCase()}
+                        </span>
+                      </div>
+                      <Download className="h-4 w-4" style={{ color: WHATSAPP_COLORS.textSecondary }} />
+                    </a>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Time and status */}
+          <div className="flex items-center justify-end gap-1 mt-0.5">
+            <span className="text-[10px]" style={{ color: WHATSAPP_COLORS.textMuted }}>
+              {formatTime(message.created_at)}
+            </span>
+            {isOwnMessage && getStatusIcon()}
+          </div>
+        </div>
+
+        {/* Reactions */}
+        {message.reactions && message.reactions.length > 0 && (
+          <div 
+            className={cn(
+              "absolute -bottom-2 px-1.5 py-0.5 rounded-full text-sm flex items-center gap-0.5",
+              isOwnMessage ? "left-2" : "right-2"
+            )}
+            style={{ backgroundColor: WHATSAPP_COLORS.bgTertiary }}
+          >
+            {[...new Set(message.reactions.map(r => r.emoji))].map(emoji => (
+              <span key={emoji}>{emoji}</span>
+            ))}
+            {message.reactions.length > 1 && (
+              <span className="text-xs ml-0.5" style={{ color: WHATSAPP_COLORS.textMuted }}>
+                {message.reactions.length}
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* Hover actions */}
+        {showActions && (
+          <div 
+            className={cn(
+              "absolute top-0 flex items-center gap-1 p-1 rounded-lg",
+              isOwnMessage ? "-left-24" : "-right-24"
+            )}
+            style={{ backgroundColor: WHATSAPP_COLORS.bgTertiary }}
+          >
+            {/* Quick reactions */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 hover:bg-white/10"
+                >
+                  <Smile className="h-4 w-4" style={{ color: WHATSAPP_COLORS.textSecondary }} />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent 
+                className="w-auto p-2 border-0"
+                style={{ backgroundColor: WHATSAPP_COLORS.bgTertiary }}
+              >
+                <div className="flex gap-1">
+                  {QUICK_REACTIONS.map(emoji => (
+                    <button
+                      key={emoji}
+                      className="text-xl hover:scale-125 transition-transform p-1"
+                      onClick={() => {
+                        if (userReaction?.emoji === emoji) {
+                          onRemoveReaction?.(message.id);
+                        } else {
+                          onReact?.(message.id, emoji);
+                        }
+                      }}
+                    >
+                      {emoji}
+                    </button>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
+
+            {/* More options */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 hover:bg-white/10"
+                >
+                  <MoreVertical className="h-4 w-4" style={{ color: WHATSAPP_COLORS.textSecondary }} />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent 
+                className="border-0"
+                style={{ backgroundColor: WHATSAPP_COLORS.bgTertiary }}
+              >
+                <DropdownMenuItem 
+                  onClick={() => onReply?.(message)}
+                  style={{ color: WHATSAPP_COLORS.textPrimary }}
+                >
+                  <Reply className="h-4 w-4 mr-2" />
+                  {t('Reply', 'رد')}
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={() => onForward?.(message)}
+                  style={{ color: WHATSAPP_COLORS.textPrimary }}
+                >
+                  <Forward className="h-4 w-4 mr-2" />
+                  {t('Forward', 'إعادة توجيه')}
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={() => navigator.clipboard.writeText(message.content || '')}
+                  style={{ color: WHATSAPP_COLORS.textPrimary }}
+                >
+                  <Copy className="h-4 w-4 mr-2" />
+                  {t('Copy', 'نسخ')}
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={() => onDelete?.(message.id, false)}
+                  style={{ color: WHATSAPP_COLORS.missedCall }}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  {t('Delete for me', 'حذف لي')}
+                </DropdownMenuItem>
+                {isOwnMessage && (
+                  <DropdownMenuItem 
+                    onClick={() => onDelete?.(message.id, true)}
+                    style={{ color: WHATSAPP_COLORS.missedCall }}
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    {t('Delete for everyone', 'حذف للجميع')}
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
