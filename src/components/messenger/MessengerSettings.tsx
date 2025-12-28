@@ -158,24 +158,24 @@ export function MessengerSettings({ profile, isArabic, onProfileUpdate }: Messen
         {/* Profile Section */}
         <div 
           className="flex items-center gap-4 p-4 cursor-pointer transition-colors hover:bg-white/5"
-          style={{ borderBottom: `1px solid ${WHATSAPP_COLORS.divider}` }}
+          style={{ borderBottom: `1px solid ${MESSENGER_COLORS.divider}` }}
           onClick={() => setActiveDialog('account')}
         >
           <Avatar className="h-16 w-16">
             <AvatarImage src={profile?.profile_image || profile?.avatar_url} />
-            <AvatarFallback style={{ backgroundColor: WHATSAPP_COLORS.accent }}>
+            <AvatarFallback style={{ backgroundColor: MESSENGER_COLORS.accent }}>
               {profile?.full_name?.charAt(0) || 'U'}
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
-            <p className="font-semibold text-lg truncate" style={{ color: WHATSAPP_COLORS.textPrimary }}>
+            <p className="font-semibold text-lg truncate" style={{ color: MESSENGER_COLORS.textPrimary }}>
               {profile?.full_name || (isArabic ? 'المستخدم' : 'User')}
             </p>
-            <p className="text-sm truncate" style={{ color: WHATSAPP_COLORS.textSecondary }}>
+            <p className="text-sm truncate" style={{ color: MESSENGER_COLORS.textSecondary }}>
               {profile?.bio || profile?.email || (isArabic ? 'أضف معلومات عنك' : 'Add your info')}
             </p>
           </div>
-          <QrCode className="h-6 w-6 shrink-0" style={{ color: WHATSAPP_COLORS.accent }} />
+          <QrCode className="h-6 w-6 shrink-0" style={{ color: MESSENGER_COLORS.accent }} />
         </div>
 
         {/* Settings List */}
@@ -188,31 +188,31 @@ export function MessengerSettings({ profile, isArabic, onProfileUpdate }: Messen
             >
               <div 
                 className="h-10 w-10 rounded-full flex items-center justify-center shrink-0"
-                style={{ backgroundColor: WHATSAPP_COLORS.bgTertiary }}
+                style={{ backgroundColor: MESSENGER_COLORS.bgTertiary }}
               >
-                <item.icon className="h-5 w-5" style={{ color: WHATSAPP_COLORS.textSecondary }} />
+                <item.icon className="h-5 w-5" style={{ color: MESSENGER_COLORS.textSecondary }} />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-medium" style={{ color: WHATSAPP_COLORS.textPrimary }}>
+                <p className="font-medium" style={{ color: MESSENGER_COLORS.textPrimary }}>
                   {item.label}
                 </p>
                 {item.description && (
-                  <p className="text-sm truncate" style={{ color: WHATSAPP_COLORS.textSecondary }}>
+                  <p className="text-sm truncate" style={{ color: MESSENGER_COLORS.textSecondary }}>
                     {item.description}
                   </p>
                 )}
               </div>
-              <ChevronRight className="h-5 w-5 shrink-0" style={{ color: WHATSAPP_COLORS.textMuted }} />
+              <ChevronRight className="h-5 w-5 shrink-0" style={{ color: MESSENGER_COLORS.textMuted }} />
             </div>
           ))}
         </div>
 
         {/* App Info */}
         <div className="flex flex-col items-center py-8">
-          <p className="text-sm" style={{ color: WHATSAPP_COLORS.textMuted }}>
+          <p className="text-sm" style={{ color: MESSENGER_COLORS.textMuted }}>
             {isArabic ? 'من' : 'from'}
           </p>
-          <p className="font-semibold text-lg" style={{ color: WHATSAPP_COLORS.textPrimary }}>
+          <p className="font-semibold text-lg" style={{ color: MESSENGER_COLORS.textPrimary }}>
             TalebEdu
           </p>
         </div>
@@ -220,9 +220,9 @@ export function MessengerSettings({ profile, isArabic, onProfileUpdate }: Messen
 
       {/* Account Dialog */}
       <Dialog open={activeDialog === 'account'} onOpenChange={(open) => !open && setActiveDialog(null)}>
-        <DialogContent className="max-w-md z-[200]" style={{ backgroundColor: WHATSAPP_COLORS.bg, border: `1px solid ${WHATSAPP_COLORS.divider}` }}>
+        <DialogContent className="max-w-md z-[200]" style={{ backgroundColor: MESSENGER_COLORS.bg, border: `1px solid ${MESSENGER_COLORS.divider}` }}>
           <DialogHeader>
-            <DialogTitle style={{ color: WHATSAPP_COLORS.textPrimary }}>
+            <DialogTitle style={{ color: MESSENGER_COLORS.textPrimary }}>
               {isArabic ? 'الحساب' : 'Account'}
             </DialogTitle>
           </DialogHeader>
@@ -230,29 +230,29 @@ export function MessengerSettings({ profile, isArabic, onProfileUpdate }: Messen
             <div className="flex justify-center">
               <Avatar className="h-24 w-24">
                 <AvatarImage src={profile?.profile_image || profile?.avatar_url} />
-                <AvatarFallback style={{ backgroundColor: WHATSAPP_COLORS.accent }} className="text-2xl">
+                <AvatarFallback style={{ backgroundColor: MESSENGER_COLORS.accent }} className="text-2xl">
                   {profile?.full_name?.charAt(0) || 'U'}
                 </AvatarFallback>
               </Avatar>
             </div>
             
             <div className="space-y-2">
-              <Label style={{ color: WHATSAPP_COLORS.textSecondary }}>
+              <Label style={{ color: MESSENGER_COLORS.textSecondary }}>
                 {isArabic ? 'الاسم' : 'Name'}
               </Label>
               <Input
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 style={{ 
-                  backgroundColor: WHATSAPP_COLORS.bgSecondary, 
-                  borderColor: WHATSAPP_COLORS.divider,
-                  color: WHATSAPP_COLORS.textPrimary 
+                  backgroundColor: MESSENGER_COLORS.bgSecondary, 
+                  borderColor: MESSENGER_COLORS.divider,
+                  color: MESSENGER_COLORS.textPrimary 
                 }}
               />
             </div>
             
             <div className="space-y-2">
-              <Label style={{ color: WHATSAPP_COLORS.textSecondary }}>
+              <Label style={{ color: MESSENGER_COLORS.textSecondary }}>
                 {isArabic ? 'نبذة عنك' : 'About'}
               </Label>
               <Textarea
@@ -260,24 +260,24 @@ export function MessengerSettings({ profile, isArabic, onProfileUpdate }: Messen
                 onChange={(e) => setBio(e.target.value)}
                 placeholder={isArabic ? 'أضف نبذة عنك...' : 'Add something about yourself...'}
                 style={{ 
-                  backgroundColor: WHATSAPP_COLORS.bgSecondary, 
-                  borderColor: WHATSAPP_COLORS.divider,
-                  color: WHATSAPP_COLORS.textPrimary 
+                  backgroundColor: MESSENGER_COLORS.bgSecondary, 
+                  borderColor: MESSENGER_COLORS.divider,
+                  color: MESSENGER_COLORS.textPrimary 
                 }}
               />
             </div>
 
             <div className="space-y-2">
-              <Label style={{ color: WHATSAPP_COLORS.textSecondary }}>
+              <Label style={{ color: MESSENGER_COLORS.textSecondary }}>
                 {isArabic ? 'البريد الإلكتروني' : 'Email'}
               </Label>
               <Input
                 value={profile?.email || ''}
                 disabled
                 style={{ 
-                  backgroundColor: WHATSAPP_COLORS.bgTertiary, 
-                  borderColor: WHATSAPP_COLORS.divider,
-                  color: WHATSAPP_COLORS.textMuted 
+                  backgroundColor: MESSENGER_COLORS.bgTertiary, 
+                  borderColor: MESSENGER_COLORS.divider,
+                  color: MESSENGER_COLORS.textMuted 
                 }}
               />
             </div>
@@ -286,7 +286,7 @@ export function MessengerSettings({ profile, isArabic, onProfileUpdate }: Messen
               onClick={handleSaveAccount} 
               disabled={saving}
               className="w-full"
-              style={{ backgroundColor: WHATSAPP_COLORS.accent }}
+              style={{ backgroundColor: MESSENGER_COLORS.accent }}
             >
               {saving ? (isArabic ? 'جاري الحفظ...' : 'Saving...') : (isArabic ? 'حفظ' : 'Save')}
             </Button>
@@ -296,21 +296,21 @@ export function MessengerSettings({ profile, isArabic, onProfileUpdate }: Messen
 
       {/* Privacy Dialog */}
       <Dialog open={activeDialog === 'privacy'} onOpenChange={(open) => !open && setActiveDialog(null)}>
-        <DialogContent className="max-w-md z-[200]" style={{ backgroundColor: WHATSAPP_COLORS.bg, border: `1px solid ${WHATSAPP_COLORS.divider}` }}>
+        <DialogContent className="max-w-md z-[200]" style={{ backgroundColor: MESSENGER_COLORS.bg, border: `1px solid ${MESSENGER_COLORS.divider}` }}>
           <DialogHeader>
-            <DialogTitle style={{ color: WHATSAPP_COLORS.textPrimary }}>
+            <DialogTitle style={{ color: MESSENGER_COLORS.textPrimary }}>
               {isArabic ? 'الخصوصية' : 'Privacy'}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <Clock className="h-5 w-5" style={{ color: WHATSAPP_COLORS.textSecondary }} />
+                <Clock className="h-5 w-5" style={{ color: MESSENGER_COLORS.textSecondary }} />
                 <div>
-                  <p style={{ color: WHATSAPP_COLORS.textPrimary }}>
+                  <p style={{ color: MESSENGER_COLORS.textPrimary }}>
                     {isArabic ? 'آخر ظهور' : 'Last seen'}
                   </p>
-                  <p className="text-sm" style={{ color: WHATSAPP_COLORS.textMuted }}>
+                  <p className="text-sm" style={{ color: MESSENGER_COLORS.textMuted }}>
                     {isArabic ? 'إظهار آخر ظهور للآخرين' : 'Show last seen to others'}
                   </p>
                 </div>
@@ -320,12 +320,12 @@ export function MessengerSettings({ profile, isArabic, onProfileUpdate }: Messen
 
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <Eye className="h-5 w-5" style={{ color: WHATSAPP_COLORS.textSecondary }} />
+                <Eye className="h-5 w-5" style={{ color: MESSENGER_COLORS.textSecondary }} />
                 <div>
-                  <p style={{ color: WHATSAPP_COLORS.textPrimary }}>
+                  <p style={{ color: MESSENGER_COLORS.textPrimary }}>
                     {isArabic ? 'الحالة' : 'Online status'}
                   </p>
-                  <p className="text-sm" style={{ color: WHATSAPP_COLORS.textMuted }}>
+                  <p className="text-sm" style={{ color: MESSENGER_COLORS.textMuted }}>
                     {isArabic ? 'إظهار حالة الاتصال' : 'Show when you are online'}
                   </p>
                 </div>
@@ -335,12 +335,12 @@ export function MessengerSettings({ profile, isArabic, onProfileUpdate }: Messen
 
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <User className="h-5 w-5" style={{ color: WHATSAPP_COLORS.textSecondary }} />
+                <User className="h-5 w-5" style={{ color: MESSENGER_COLORS.textSecondary }} />
                 <div>
-                  <p style={{ color: WHATSAPP_COLORS.textPrimary }}>
+                  <p style={{ color: MESSENGER_COLORS.textPrimary }}>
                     {isArabic ? 'صورة الملف الشخصي' : 'Profile photo'}
                   </p>
-                  <p className="text-sm" style={{ color: WHATSAPP_COLORS.textMuted }}>
+                  <p className="text-sm" style={{ color: MESSENGER_COLORS.textMuted }}>
                     {isArabic ? 'من يمكنه رؤية صورتك' : 'Who can see your photo'}
                   </p>
                 </div>
@@ -350,12 +350,12 @@ export function MessengerSettings({ profile, isArabic, onProfileUpdate }: Messen
 
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <Check className="h-5 w-5" style={{ color: WHATSAPP_COLORS.textSecondary }} />
+                <Check className="h-5 w-5" style={{ color: MESSENGER_COLORS.textSecondary }} />
                 <div>
-                  <p style={{ color: WHATSAPP_COLORS.textPrimary }}>
+                  <p style={{ color: MESSENGER_COLORS.textPrimary }}>
                     {isArabic ? 'إيصالات القراءة' : 'Read receipts'}
                   </p>
-                  <p className="text-sm" style={{ color: WHATSAPP_COLORS.textMuted }}>
+                  <p className="text-sm" style={{ color: MESSENGER_COLORS.textMuted }}>
                     {isArabic ? 'إظهار علامات القراءة' : 'Show read checkmarks'}
                   </p>
                 </div>
@@ -368,15 +368,15 @@ export function MessengerSettings({ profile, isArabic, onProfileUpdate }: Messen
 
       {/* Chats Dialog */}
       <Dialog open={activeDialog === 'chats'} onOpenChange={(open) => !open && setActiveDialog(null)}>
-        <DialogContent className="max-w-md z-[200]" style={{ backgroundColor: WHATSAPP_COLORS.bg, border: `1px solid ${WHATSAPP_COLORS.divider}` }}>
+        <DialogContent className="max-w-md z-[200]" style={{ backgroundColor: MESSENGER_COLORS.bg, border: `1px solid ${MESSENGER_COLORS.divider}` }}>
           <DialogHeader>
-            <DialogTitle style={{ color: WHATSAPP_COLORS.textPrimary }}>
+            <DialogTitle style={{ color: MESSENGER_COLORS.textPrimary }}>
               {isArabic ? 'الدردشات' : 'Chats'}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-3">
-              <Label style={{ color: WHATSAPP_COLORS.textSecondary }}>
+              <Label style={{ color: MESSENGER_COLORS.textSecondary }}>
                 {isArabic ? 'السمة' : 'Theme'}
               </Label>
               <div className="flex gap-2">
@@ -389,8 +389,8 @@ export function MessengerSettings({ profile, isArabic, onProfileUpdate }: Messen
                     onClick={() => setTheme(t.key as any)}
                     className="flex-1 flex items-center justify-center gap-2 p-3 rounded-lg transition-colors"
                     style={{ 
-                      backgroundColor: theme === t.key ? WHATSAPP_COLORS.accent : WHATSAPP_COLORS.bgSecondary,
-                      color: theme === t.key ? '#fff' : WHATSAPP_COLORS.textPrimary
+                      backgroundColor: theme === t.key ? MESSENGER_COLORS.accent : MESSENGER_COLORS.bgSecondary,
+                      color: theme === t.key ? '#fff' : MESSENGER_COLORS.textPrimary
                     }}
                   >
                     <t.icon className="h-4 w-4" />
@@ -401,7 +401,7 @@ export function MessengerSettings({ profile, isArabic, onProfileUpdate }: Messen
             </div>
 
             <div className="space-y-3">
-              <Label style={{ color: WHATSAPP_COLORS.textSecondary }}>
+              <Label style={{ color: MESSENGER_COLORS.textSecondary }}>
                 {isArabic ? 'حجم الخط' : 'Font size'}
               </Label>
               <div className="flex gap-2">
@@ -415,8 +415,8 @@ export function MessengerSettings({ profile, isArabic, onProfileUpdate }: Messen
                     onClick={() => setFontSize(s.key as any)}
                     className="flex-1 p-3 rounded-lg transition-colors text-sm"
                     style={{ 
-                      backgroundColor: fontSize === s.key ? WHATSAPP_COLORS.accent : WHATSAPP_COLORS.bgSecondary,
-                      color: fontSize === s.key ? '#fff' : WHATSAPP_COLORS.textPrimary
+                      backgroundColor: fontSize === s.key ? MESSENGER_COLORS.accent : MESSENGER_COLORS.bgSecondary,
+                      color: fontSize === s.key ? '#fff' : MESSENGER_COLORS.textPrimary
                     }}
                   >
                     {s.label}
@@ -427,10 +427,10 @@ export function MessengerSettings({ profile, isArabic, onProfileUpdate }: Messen
 
             <div className="flex items-center justify-between">
               <div>
-                <p style={{ color: WHATSAPP_COLORS.textPrimary }}>
+                <p style={{ color: MESSENGER_COLORS.textPrimary }}>
                   {isArabic ? 'Enter للإرسال' : 'Enter to send'}
                 </p>
-                <p className="text-sm" style={{ color: WHATSAPP_COLORS.textMuted }}>
+                <p className="text-sm" style={{ color: MESSENGER_COLORS.textMuted }}>
                   {isArabic ? 'اضغط Enter لإرسال الرسالة' : 'Press Enter to send message'}
                 </p>
               </div>
@@ -442,18 +442,18 @@ export function MessengerSettings({ profile, isArabic, onProfileUpdate }: Messen
 
       {/* Notifications Dialog */}
       <Dialog open={activeDialog === 'notifications'} onOpenChange={(open) => !open && setActiveDialog(null)}>
-        <DialogContent className="max-w-md z-[200]" style={{ backgroundColor: WHATSAPP_COLORS.bg, border: `1px solid ${WHATSAPP_COLORS.divider}` }}>
+        <DialogContent className="max-w-md z-[200]" style={{ backgroundColor: MESSENGER_COLORS.bg, border: `1px solid ${MESSENGER_COLORS.divider}` }}>
           <DialogHeader>
-            <DialogTitle style={{ color: WHATSAPP_COLORS.textPrimary }}>
+            <DialogTitle style={{ color: MESSENGER_COLORS.textPrimary }}>
               {isArabic ? 'الإشعارات' : 'Notifications'}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <MessageSquare className="h-5 w-5" style={{ color: WHATSAPP_COLORS.textSecondary }} />
+                <MessageSquare className="h-5 w-5" style={{ color: MESSENGER_COLORS.textSecondary }} />
                 <div>
-                  <p style={{ color: WHATSAPP_COLORS.textPrimary }}>
+                  <p style={{ color: MESSENGER_COLORS.textPrimary }}>
                     {isArabic ? 'إشعارات الرسائل' : 'Message notifications'}
                   </p>
                 </div>
@@ -463,9 +463,9 @@ export function MessengerSettings({ profile, isArabic, onProfileUpdate }: Messen
 
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <User className="h-5 w-5" style={{ color: WHATSAPP_COLORS.textSecondary }} />
+                <User className="h-5 w-5" style={{ color: MESSENGER_COLORS.textSecondary }} />
                 <div>
-                  <p style={{ color: WHATSAPP_COLORS.textPrimary }}>
+                  <p style={{ color: MESSENGER_COLORS.textPrimary }}>
                     {isArabic ? 'إشعارات المجموعات' : 'Group notifications'}
                   </p>
                 </div>
@@ -475,9 +475,9 @@ export function MessengerSettings({ profile, isArabic, onProfileUpdate }: Messen
 
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <Phone className="h-5 w-5" style={{ color: WHATSAPP_COLORS.textSecondary }} />
+                <Phone className="h-5 w-5" style={{ color: MESSENGER_COLORS.textSecondary }} />
                 <div>
-                  <p style={{ color: WHATSAPP_COLORS.textPrimary }}>
+                  <p style={{ color: MESSENGER_COLORS.textPrimary }}>
                     {isArabic ? 'إشعارات المكالمات' : 'Call notifications'}
                   </p>
                 </div>
@@ -485,17 +485,17 @@ export function MessengerSettings({ profile, isArabic, onProfileUpdate }: Messen
               <Switch checked={callNotifications} onCheckedChange={setCallNotifications} />
             </div>
 
-            <div className="h-px" style={{ backgroundColor: WHATSAPP_COLORS.divider }} />
+            <div className="h-px" style={{ backgroundColor: MESSENGER_COLORS.divider }} />
 
             <div className="flex items-center justify-between">
-              <p style={{ color: WHATSAPP_COLORS.textPrimary }}>
+              <p style={{ color: MESSENGER_COLORS.textPrimary }}>
                 {isArabic ? 'الاهتزاز' : 'Vibration'}
               </p>
               <Switch checked={vibration} onCheckedChange={setVibration} />
             </div>
 
             <div className="flex items-center justify-between">
-              <p style={{ color: WHATSAPP_COLORS.textPrimary }}>
+              <p style={{ color: MESSENGER_COLORS.textPrimary }}>
                 {isArabic ? 'الصوت' : 'Sound'}
               </p>
               <Switch checked={sound} onCheckedChange={setSound} />
@@ -506,21 +506,21 @@ export function MessengerSettings({ profile, isArabic, onProfileUpdate }: Messen
 
       {/* Storage Dialog */}
       <Dialog open={activeDialog === 'storage'} onOpenChange={(open) => !open && setActiveDialog(null)}>
-        <DialogContent className="max-w-md z-[200]" style={{ backgroundColor: WHATSAPP_COLORS.bg, border: `1px solid ${WHATSAPP_COLORS.divider}` }}>
+        <DialogContent className="max-w-md z-[200]" style={{ backgroundColor: MESSENGER_COLORS.bg, border: `1px solid ${MESSENGER_COLORS.divider}` }}>
           <DialogHeader>
-            <DialogTitle style={{ color: WHATSAPP_COLORS.textPrimary }}>
+            <DialogTitle style={{ color: MESSENGER_COLORS.textPrimary }}>
               {isArabic ? 'التخزين والبيانات' : 'Storage and data'}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
-            <div className="p-4 rounded-lg" style={{ backgroundColor: WHATSAPP_COLORS.bgSecondary }}>
+            <div className="p-4 rounded-lg" style={{ backgroundColor: MESSENGER_COLORS.bgSecondary }}>
               <div className="flex items-center gap-3 mb-3">
-                <Database className="h-5 w-5" style={{ color: WHATSAPP_COLORS.accent }} />
-                <p className="font-medium" style={{ color: WHATSAPP_COLORS.textPrimary }}>
+                <Database className="h-5 w-5" style={{ color: MESSENGER_COLORS.accent }} />
+                <p className="font-medium" style={{ color: MESSENGER_COLORS.textPrimary }}>
                   {isArabic ? 'استخدام التخزين' : 'Storage usage'}
                 </p>
               </div>
-              <div className="space-y-2 text-sm" style={{ color: WHATSAPP_COLORS.textSecondary }}>
+              <div className="space-y-2 text-sm" style={{ color: MESSENGER_COLORS.textSecondary }}>
                 <div className="flex justify-between">
                   <span>{isArabic ? 'الرسائل' : 'Messages'}</span>
                   <span>12 MB</span>
@@ -540,22 +540,22 @@ export function MessengerSettings({ profile, isArabic, onProfileUpdate }: Messen
               variant="outline" 
               className="w-full"
               onClick={handleClearCache}
-              style={{ borderColor: WHATSAPP_COLORS.divider, color: WHATSAPP_COLORS.textPrimary }}
+              style={{ borderColor: MESSENGER_COLORS.divider, color: MESSENGER_COLORS.textPrimary }}
             >
               <Trash2 className="h-4 w-4 mr-2" />
               {isArabic ? 'مسح ذاكرة التخزين المؤقت' : 'Clear cache'}
             </Button>
 
-            <div className="h-px" style={{ backgroundColor: WHATSAPP_COLORS.divider }} />
+            <div className="h-px" style={{ backgroundColor: MESSENGER_COLORS.divider }} />
 
             <div className="space-y-3">
-              <p className="font-medium" style={{ color: WHATSAPP_COLORS.textPrimary }}>
+              <p className="font-medium" style={{ color: MESSENGER_COLORS.textPrimary }}>
                 {isArabic ? 'التنزيل التلقائي للوسائط' : 'Media auto-download'}
               </p>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Wifi className="h-4 w-4" style={{ color: WHATSAPP_COLORS.textSecondary }} />
-                  <span style={{ color: WHATSAPP_COLORS.textSecondary }}>
+                  <Wifi className="h-4 w-4" style={{ color: MESSENGER_COLORS.textSecondary }} />
+                  <span style={{ color: MESSENGER_COLORS.textSecondary }}>
                     {isArabic ? 'عند الاتصال بـ Wi-Fi' : 'When on Wi-Fi'}
                   </span>
                 </div>
@@ -563,8 +563,8 @@ export function MessengerSettings({ profile, isArabic, onProfileUpdate }: Messen
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Download className="h-4 w-4" style={{ color: WHATSAPP_COLORS.textSecondary }} />
-                  <span style={{ color: WHATSAPP_COLORS.textSecondary }}>
+                  <Download className="h-4 w-4" style={{ color: MESSENGER_COLORS.textSecondary }} />
+                  <span style={{ color: MESSENGER_COLORS.textSecondary }}>
                     {isArabic ? 'عند استخدام البيانات' : 'When using mobile data'}
                   </span>
                 </div>
@@ -577,63 +577,63 @@ export function MessengerSettings({ profile, isArabic, onProfileUpdate }: Messen
 
       {/* Help Dialog */}
       <Dialog open={activeDialog === 'help'} onOpenChange={(open) => !open && setActiveDialog(null)}>
-        <DialogContent className="max-w-md z-[200]" style={{ backgroundColor: WHATSAPP_COLORS.bg, border: `1px solid ${WHATSAPP_COLORS.divider}` }}>
+        <DialogContent className="max-w-md z-[200]" style={{ backgroundColor: MESSENGER_COLORS.bg, border: `1px solid ${MESSENGER_COLORS.divider}` }}>
           <DialogHeader>
-            <DialogTitle style={{ color: WHATSAPP_COLORS.textPrimary }}>
+            <DialogTitle style={{ color: MESSENGER_COLORS.textPrimary }}>
               {isArabic ? 'المساعدة' : 'Help'}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div 
               className="flex items-center gap-3 p-3 rounded-lg cursor-pointer hover:bg-white/5 transition-colors"
-              style={{ backgroundColor: WHATSAPP_COLORS.bgSecondary }}
+              style={{ backgroundColor: MESSENGER_COLORS.bgSecondary }}
             >
-              <HelpCircle className="h-5 w-5" style={{ color: WHATSAPP_COLORS.accent }} />
+              <HelpCircle className="h-5 w-5" style={{ color: MESSENGER_COLORS.accent }} />
               <div>
-                <p style={{ color: WHATSAPP_COLORS.textPrimary }}>
+                <p style={{ color: MESSENGER_COLORS.textPrimary }}>
                   {isArabic ? 'الأسئلة الشائعة' : 'FAQ'}
                 </p>
-                <p className="text-sm" style={{ color: WHATSAPP_COLORS.textMuted }}>
+                <p className="text-sm" style={{ color: MESSENGER_COLORS.textMuted }}>
                   {isArabic ? 'الأسئلة الأكثر شيوعاً' : 'Frequently asked questions'}
                 </p>
               </div>
-              <ChevronRight className="h-5 w-5 ml-auto" style={{ color: WHATSAPP_COLORS.textMuted }} />
+              <ChevronRight className="h-5 w-5 ml-auto" style={{ color: MESSENGER_COLORS.textMuted }} />
             </div>
 
             <div 
               className="flex items-center gap-3 p-3 rounded-lg cursor-pointer hover:bg-white/5 transition-colors"
-              style={{ backgroundColor: WHATSAPP_COLORS.bgSecondary }}
+              style={{ backgroundColor: MESSENGER_COLORS.bgSecondary }}
             >
-              <Shield className="h-5 w-5" style={{ color: WHATSAPP_COLORS.accent }} />
+              <Shield className="h-5 w-5" style={{ color: MESSENGER_COLORS.accent }} />
               <div>
-                <p style={{ color: WHATSAPP_COLORS.textPrimary }}>
+                <p style={{ color: MESSENGER_COLORS.textPrimary }}>
                   {isArabic ? 'سياسة الخصوصية' : 'Privacy Policy'}
                 </p>
-                <p className="text-sm" style={{ color: WHATSAPP_COLORS.textMuted }}>
+                <p className="text-sm" style={{ color: MESSENGER_COLORS.textMuted }}>
                   {isArabic ? 'كيف نحمي بياناتك' : 'How we protect your data'}
                 </p>
               </div>
-              <ChevronRight className="h-5 w-5 ml-auto" style={{ color: WHATSAPP_COLORS.textMuted }} />
+              <ChevronRight className="h-5 w-5 ml-auto" style={{ color: MESSENGER_COLORS.textMuted }} />
             </div>
 
             <div 
               className="flex items-center gap-3 p-3 rounded-lg cursor-pointer hover:bg-white/5 transition-colors"
-              style={{ backgroundColor: WHATSAPP_COLORS.bgSecondary }}
+              style={{ backgroundColor: MESSENGER_COLORS.bgSecondary }}
             >
-              <Lock className="h-5 w-5" style={{ color: WHATSAPP_COLORS.accent }} />
+              <Lock className="h-5 w-5" style={{ color: MESSENGER_COLORS.accent }} />
               <div>
-                <p style={{ color: WHATSAPP_COLORS.textPrimary }}>
+                <p style={{ color: MESSENGER_COLORS.textPrimary }}>
                   {isArabic ? 'شروط الخدمة' : 'Terms of Service'}
                 </p>
-                <p className="text-sm" style={{ color: WHATSAPP_COLORS.textMuted }}>
+                <p className="text-sm" style={{ color: MESSENGER_COLORS.textMuted }}>
                   {isArabic ? 'شروط استخدام التطبيق' : 'App usage terms'}
                 </p>
               </div>
-              <ChevronRight className="h-5 w-5 ml-auto" style={{ color: WHATSAPP_COLORS.textMuted }} />
+              <ChevronRight className="h-5 w-5 ml-auto" style={{ color: MESSENGER_COLORS.textMuted }} />
             </div>
 
             <div className="pt-4 text-center">
-              <p className="text-sm" style={{ color: WHATSAPP_COLORS.textMuted }}>
+              <p className="text-sm" style={{ color: MESSENGER_COLORS.textMuted }}>
                 {isArabic ? 'الإصدار' : 'Version'} 1.0.0
               </p>
             </div>
