@@ -1,18 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
-  MessageCircle, 
-  Users, 
-  Phone, 
   Search, 
   MoreVertical,
   Camera,
-  Edit,
   Check,
   CheckCheck,
   Mic,
@@ -24,14 +19,9 @@ import {
   FileText,
   X,
   Plus,
-  UserPlus,
-  Settings,
-  Bell,
-  Lock,
-  HelpCircle,
-  Star,
-  Archive,
-  Trash2
+  Phone,
+  Video,
+  Lock
 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -42,7 +32,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
@@ -60,7 +49,6 @@ interface Conversation {
   last_message: string | null;
   last_message_time: string | null;
   unread_count: number;
-  is_online?: boolean;
 }
 
 interface Message {
@@ -89,7 +77,6 @@ interface UserSearchResult {
 export default function Messenger() {
   const { language } = useLanguage();
   const { user, profile } = useAuth();
-  const [activeTab, setActiveTab] = useState('chats');
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -182,8 +169,7 @@ export default function Messenger() {
             recipient_image: otherUser.profile_image,
             last_message: msg.content,
             last_message_time: msg.created_at,
-            unread_count: 0,
-            is_online: Math.random() > 0.5 // Simulated online status
+            unread_count: 0
           });
         }
         
@@ -321,7 +307,6 @@ export default function Messenger() {
         attachments: []
       };
 
-      // Upload files if any
       if (selectedFiles.length > 0) {
         const uploadedAttachments: any[] = [];
         for (const file of selectedFiles) {
@@ -427,86 +412,88 @@ export default function Messenger() {
 
   if (!user) return null;
 
-  // Chat View
+  // Chat View - WhatsApp Style
   if (selectedConversation) {
     const messageGroups = groupMessagesByDate(messages);
     
     return (
-      <div className="h-full w-full flex flex-col bg-[#0b141a]">
-        {/* WhatsApp-style Header */}
-        <div className="bg-[#1f2c34] px-2 py-2 flex items-center gap-2">
+      <div className="h-full w-full flex flex-col">
+        {/* WhatsApp Teal Header */}
+        <div className="bg-[#075E54] px-2 py-2 flex items-center gap-2 shadow-md">
           <Button
             variant="ghost"
             size="icon"
-            className="h-10 w-10 text-[#aebac1] hover:bg-[#2a3942]"
+            className="h-10 w-10 text-white hover:bg-white/10"
             onClick={() => setSelectedConversation(null)}
           >
             <ArrowLeft className="h-5 w-5" />
           </Button>
           
-          <Avatar className="h-10 w-10">
+          <Avatar className="h-10 w-10 border-2 border-white/20">
             <AvatarImage src={selectedConversation.recipient_image || undefined} />
-            <AvatarFallback className="bg-[#2a3942] text-[#aebac1]">
+            <AvatarFallback className="bg-[#128C7E] text-white">
               {selectedConversation.recipient_name.charAt(0).toUpperCase()}
             </AvatarFallback>
           </Avatar>
           
           <div className="flex-1 min-w-0">
-            <h2 className="text-[#e9edef] font-medium text-base truncate">
+            <h2 className="text-white font-medium text-base truncate">
               {selectedConversation.recipient_name}
             </h2>
-            <p className="text-[#8696a0] text-xs">
-              {selectedConversation.is_online ? t('online', 'متصل') : t('last seen today', 'آخر ظهور اليوم')}
+            <p className="text-white/70 text-xs">
+              {t('online', 'متصل')}
             </p>
           </div>
           
-          <div className="flex items-center gap-1">
-            <Button variant="ghost" size="icon" className="h-10 w-10 text-[#aebac1] hover:bg-[#2a3942]">
+          <div className="flex items-center gap-0">
+            <Button variant="ghost" size="icon" className="h-10 w-10 text-white hover:bg-white/10">
+              <Video className="h-5 w-5" />
+            </Button>
+            <Button variant="ghost" size="icon" className="h-10 w-10 text-white hover:bg-white/10">
               <Phone className="h-5 w-5" />
             </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-10 w-10 text-[#aebac1] hover:bg-[#2a3942]">
+                <Button variant="ghost" size="icon" className="h-10 w-10 text-white hover:bg-white/10">
                   <MoreVertical className="h-5 w-5" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="bg-[#233138] border-[#2a3942] text-[#e9edef]">
-                <DropdownMenuItem className="hover:bg-[#2a3942]">
-                  <Users className="h-4 w-4 mr-2" />
-                  {t('View contact', 'عرض جهة الاتصال')}
-                </DropdownMenuItem>
-                <DropdownMenuItem className="hover:bg-[#2a3942]">
-                  <Search className="h-4 w-4 mr-2" />
-                  {t('Search', 'بحث')}
-                </DropdownMenuItem>
-                <DropdownMenuItem className="hover:bg-[#2a3942]">
-                  <Bell className="h-4 w-4 mr-2" />
-                  {t('Mute notifications', 'كتم الإشعارات')}
-                </DropdownMenuItem>
-                <DropdownMenuSeparator className="bg-[#2a3942]" />
-                <DropdownMenuItem className="hover:bg-[#2a3942]">
-                  <Archive className="h-4 w-4 mr-2" />
-                  {t('Archive chat', 'أرشفة المحادثة')}
-                </DropdownMenuItem>
-                <DropdownMenuItem className="hover:bg-[#2a3942] text-red-400">
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  {t('Delete chat', 'حذف المحادثة')}
-                </DropdownMenuItem>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem>{t('View contact', 'عرض جهة الاتصال')}</DropdownMenuItem>
+                <DropdownMenuItem>{t('Media, links, docs', 'الوسائط والروابط')}</DropdownMenuItem>
+                <DropdownMenuItem>{t('Search', 'بحث')}</DropdownMenuItem>
+                <DropdownMenuItem>{t('Mute notifications', 'كتم الإشعارات')}</DropdownMenuItem>
+                <DropdownMenuItem>{t('Wallpaper', 'خلفية')}</DropdownMenuItem>
+                <DropdownMenuItem className="text-red-500">{t('Clear chat', 'مسح المحادثة')}</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
         </div>
 
-        {/* Messages Area with WhatsApp wallpaper pattern */}
-        <ScrollArea className="flex-1 bg-[#0b141a]" style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23182229' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-        }}>
-          <div className="p-3 space-y-1">
+        {/* Messages Area - WhatsApp tan/beige wallpaper */}
+        <div 
+          className="flex-1 overflow-y-auto"
+          style={{
+            backgroundColor: '#ECE5DD',
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23d4cdc4' fill-opacity='0.3'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z'/%3E%3C/g%3E%3C/svg%3E")`
+          }}
+        >
+          <div className="p-3 space-y-1 min-h-full">
+            {/* Encryption Notice */}
+            <div className="flex justify-center mb-4">
+              <div className="bg-[#FDF4C5] rounded-lg px-4 py-2 max-w-[85%] text-center shadow-sm">
+                <div className="flex items-center justify-center gap-1 text-[#54656F] text-xs">
+                  <Lock className="h-3 w-3" />
+                  <span>{t('Messages and calls are end-to-end encrypted. No one outside of this chat can read them.', 'الرسائل والمكالمات مشفرة. لا أحد خارج هذه المحادثة يمكنه قراءتها.')}</span>
+                </div>
+              </div>
+            </div>
+
             {messageGroups.map(group => (
               <div key={group.date}>
                 {/* Date Separator */}
                 <div className="flex justify-center my-3">
-                  <span className="bg-[#182229] text-[#8696a0] text-xs px-3 py-1.5 rounded-lg shadow">
+                  <span className="bg-[#E1F2FB] text-[#54656F] text-xs px-3 py-1.5 rounded-lg shadow-sm">
                     {getDateLabel(group.date)}
                   </span>
                 </div>
@@ -523,21 +510,31 @@ export default function Messenger() {
                       )}
                     >
                       <div className={cn(
-                        "max-w-[75%] rounded-lg px-3 py-1.5 shadow relative",
+                        "max-w-[75%] rounded-lg px-3 py-1.5 shadow-sm relative",
                         isOwnMessage 
-                          ? "bg-[#005c4b] text-[#e9edef]" 
-                          : "bg-[#1f2c34] text-[#e9edef]"
+                          ? "bg-[#DCF8C6]" // Light green for own messages
+                          : "bg-white" // White for received messages
                       )}>
                         {/* Message tail */}
-                        <div className={cn(
-                          "absolute top-0 w-3 h-3",
-                          isOwnMessage 
-                            ? "right-0 -mr-1.5 border-t-8 border-l-8 border-transparent border-t-[#005c4b]" 
-                            : "left-0 -ml-1.5 border-t-8 border-r-8 border-transparent border-t-[#1f2c34]"
-                        )} style={{ display: 'none' }} />
+                        <div 
+                          className={cn(
+                            "absolute top-0 w-0 h-0",
+                            isOwnMessage 
+                              ? "-right-2 border-l-8 border-l-[#DCF8C6] border-t-8 border-t-[#DCF8C6] border-r-8 border-r-transparent border-b-8 border-b-transparent" 
+                              : "-left-2 border-r-8 border-r-white border-t-8 border-t-white border-l-8 border-l-transparent border-b-8 border-b-transparent"
+                          )}
+                          style={{
+                            clipPath: isOwnMessage 
+                              ? 'polygon(0 0, 100% 0, 0 100%)' 
+                              : 'polygon(100% 0, 0 0, 100% 100%)',
+                            width: '12px',
+                            height: '12px',
+                            background: isOwnMessage ? '#DCF8C6' : 'white'
+                          }}
+                        />
                         
                         {message.content && (
-                          <p className="text-sm leading-relaxed break-words">{message.content}</p>
+                          <p className="text-sm text-[#303030] leading-relaxed break-words">{message.content}</p>
                         )}
                         
                         {message.attachments && message.attachments.length > 0 && (
@@ -554,10 +551,10 @@ export default function Messenger() {
                                   <a
                                     href={attachment.file_url}
                                     download={attachment.file_name}
-                                    className="flex items-center gap-2 text-xs bg-[#0b141a]/30 rounded p-2"
+                                    className="flex items-center gap-2 text-xs bg-black/5 rounded p-2"
                                   >
-                                    <FileText className="h-4 w-4" />
-                                    <span className="truncate">{attachment.file_name}</span>
+                                    <FileText className="h-4 w-4 text-[#54656F]" />
+                                    <span className="truncate text-[#54656F]">{attachment.file_name}</span>
                                   </a>
                                 )}
                               </div>
@@ -566,13 +563,13 @@ export default function Messenger() {
                         )}
                         
                         <div className="flex items-center justify-end gap-1 mt-0.5">
-                          <span className="text-[10px] text-[#8696a0]">
+                          <span className="text-[10px] text-[#667781]">
                             {formatChatTime(message.created_at)}
                           </span>
                           {isOwnMessage && (
                             message.is_read 
-                              ? <CheckCheck className="h-3.5 w-3.5 text-[#53bdeb]" />
-                              : <Check className="h-3.5 w-3.5 text-[#8696a0]" />
+                              ? <CheckCheck className="h-4 w-4 text-[#53BDEB]" />
+                              : <Check className="h-4 w-4 text-[#667781]" />
                           )}
                         </div>
                       </div>
@@ -583,20 +580,20 @@ export default function Messenger() {
             ))}
             <div ref={messagesEndRef} />
           </div>
-        </ScrollArea>
+        </div>
 
         {/* Selected Files Preview */}
         {selectedFiles.length > 0 && (
-          <div className="px-3 py-2 bg-[#1f2c34] border-t border-[#2a3942]">
+          <div className="px-3 py-2 bg-[#F0F2F5] border-t">
             <div className="flex flex-wrap gap-2">
               {selectedFiles.map((file, index) => (
-                <div key={index} className="flex items-center gap-1 bg-[#2a3942] rounded px-2 py-1">
-                  {file.type.startsWith('image/') ? <ImageIcon className="h-4 w-4 text-[#8696a0]" /> : <FileText className="h-4 w-4 text-[#8696a0]" />}
-                  <span className="text-xs text-[#e9edef] truncate max-w-[100px]">{file.name}</span>
+                <div key={index} className="flex items-center gap-1 bg-white rounded-full px-3 py-1 shadow-sm">
+                  {file.type.startsWith('image/') ? <ImageIcon className="h-4 w-4 text-[#54656F]" /> : <FileText className="h-4 w-4 text-[#54656F]" />}
+                  <span className="text-xs text-[#54656F] truncate max-w-[100px]">{file.name}</span>
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-4 w-4 text-[#8696a0] hover:text-[#e9edef]"
+                    className="h-4 w-4 text-[#54656F] hover:text-red-500 p-0"
                     onClick={() => setSelectedFiles(prev => prev.filter((_, i) => i !== index))}
                   >
                     <X className="h-3 w-3" />
@@ -607,12 +604,12 @@ export default function Messenger() {
           </div>
         )}
 
-        {/* WhatsApp-style Input */}
-        <div className="bg-[#1f2c34] px-2 py-2 flex items-center gap-2">
+        {/* WhatsApp Input Bar */}
+        <div className="bg-[#F0F2F5] px-2 py-2 flex items-center gap-2">
           <Button
             variant="ghost"
             size="icon"
-            className="h-10 w-10 text-[#8696a0] hover:bg-[#2a3942]"
+            className="h-10 w-10 text-[#54656F] hover:bg-[#E9EDEF] rounded-full"
           >
             <Smile className="h-6 w-6" />
           </Button>
@@ -620,7 +617,7 @@ export default function Messenger() {
           <Button
             variant="ghost"
             size="icon"
-            className="h-10 w-10 text-[#8696a0] hover:bg-[#2a3942]"
+            className="h-10 w-10 text-[#54656F] hover:bg-[#E9EDEF] rounded-full"
             onClick={() => fileInputRef.current?.click()}
           >
             <Paperclip className="h-6 w-6" />
@@ -632,26 +629,33 @@ export default function Messenger() {
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
-              className="bg-[#2a3942] border-0 text-[#e9edef] placeholder:text-[#8696a0] h-10 rounded-lg focus-visible:ring-0"
+              className="bg-white border-0 text-[#303030] placeholder:text-[#667781] h-10 rounded-full px-4 focus-visible:ring-0 shadow-sm"
             />
           </div>
+          
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-10 w-10 text-[#54656F] hover:bg-[#E9EDEF] rounded-full"
+          >
+            <Camera className="h-6 w-6" />
+          </Button>
           
           {newMessage.trim() || selectedFiles.length > 0 ? (
             <Button
               size="icon"
-              className="h-10 w-10 bg-[#00a884] hover:bg-[#00a884]/90 rounded-full"
+              className="h-12 w-12 bg-[#00A884] hover:bg-[#00A884]/90 rounded-full shadow-md"
               onClick={handleSendMessage}
               disabled={sending}
             >
-              <Send className="h-5 w-5 text-[#111b21]" />
+              <Send className="h-5 w-5 text-white" />
             </Button>
           ) : (
             <Button
-              variant="ghost"
               size="icon"
-              className="h-10 w-10 text-[#8696a0] hover:bg-[#2a3942]"
+              className="h-12 w-12 bg-[#00A884] hover:bg-[#00A884]/90 rounded-full shadow-md"
             >
-              <Mic className="h-6 w-6" />
+              <Mic className="h-5 w-5 text-white" />
             </Button>
           )}
           
@@ -668,275 +672,201 @@ export default function Messenger() {
     );
   }
 
-  // Main Chat List View
+  // Chat List View - WhatsApp Style
   return (
-    <div className="h-full w-full flex flex-col bg-[#111b21]">
-      {/* WhatsApp-style Header */}
-      <div className="bg-[#1f2c34] px-4 py-3 flex items-center justify-between">
-        <h1 className="text-[#e9edef] text-xl font-bold">
-          {t('Chats', 'الدردشات')}
+    <div className="h-full w-full flex flex-col bg-white">
+      {/* WhatsApp Header */}
+      <div className="bg-[#075E54] px-4 py-3 flex items-center justify-between shadow-md">
+        <h1 className="text-white text-xl font-bold">
+          WhatsApp
         </h1>
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" className="h-10 w-10 text-[#aebac1] hover:bg-[#2a3942]">
+        <div className="flex items-center gap-1">
+          <Button variant="ghost" size="icon" className="h-10 w-10 text-white hover:bg-white/10">
             <Camera className="h-5 w-5" />
+          </Button>
+          <Button variant="ghost" size="icon" className="h-10 w-10 text-white hover:bg-white/10">
+            <Search className="h-5 w-5" />
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-10 w-10 text-[#aebac1] hover:bg-[#2a3942]">
+              <Button variant="ghost" size="icon" className="h-10 w-10 text-white hover:bg-white/10">
                 <MoreVertical className="h-5 w-5" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="bg-[#233138] border-[#2a3942] text-[#e9edef] w-48">
-              <DropdownMenuItem className="hover:bg-[#2a3942]" onClick={() => setShowNewChatDialog(true)}>
-                <UserPlus className="h-4 w-4 mr-2" />
-                {t('New chat', 'محادثة جديدة')}
-              </DropdownMenuItem>
-              <DropdownMenuItem className="hover:bg-[#2a3942]">
-                <Users className="h-4 w-4 mr-2" />
-                {t('New group', 'مجموعة جديدة')}
-              </DropdownMenuItem>
-              <DropdownMenuItem className="hover:bg-[#2a3942]">
-                <Star className="h-4 w-4 mr-2" />
-                {t('Starred messages', 'الرسائل المميزة')}
-              </DropdownMenuItem>
-              <DropdownMenuSeparator className="bg-[#2a3942]" />
-              <DropdownMenuItem className="hover:bg-[#2a3942]">
-                <Settings className="h-4 w-4 mr-2" />
-                {t('Settings', 'الإعدادات')}
-              </DropdownMenuItem>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem onClick={() => setShowNewChatDialog(true)}>{t('New chat', 'محادثة جديدة')}</DropdownMenuItem>
+              <DropdownMenuItem>{t('New group', 'مجموعة جديدة')}</DropdownMenuItem>
+              <DropdownMenuItem>{t('Linked devices', 'الأجهزة المرتبطة')}</DropdownMenuItem>
+              <DropdownMenuItem>{t('Starred messages', 'الرسائل المميزة')}</DropdownMenuItem>
+              <DropdownMenuItem>{t('Settings', 'الإعدادات')}</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
       </div>
 
       {/* Search Bar */}
-      <div className="px-3 py-2 bg-[#111b21]">
+      <div className="px-3 py-2 bg-white border-b">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#8696a0]" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#54656F]" />
           <Input
             placeholder={t('Search or start new chat', 'ابحث أو ابدأ محادثة جديدة')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 bg-[#202c33] border-0 text-[#e9edef] placeholder:text-[#8696a0] h-9 rounded-lg focus-visible:ring-0"
+            className="pl-10 bg-[#F0F2F5] border-0 text-[#303030] placeholder:text-[#667781] h-9 rounded-lg focus-visible:ring-0"
           />
         </div>
       </div>
 
-      {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
-        <TabsList className="grid w-full grid-cols-3 h-12 bg-[#111b21] border-b border-[#222d34] rounded-none p-0">
-          <TabsTrigger 
-            value="chats" 
-            className="data-[state=active]:bg-transparent data-[state=active]:text-[#00a884] data-[state=active]:border-b-2 data-[state=active]:border-[#00a884] text-[#8696a0] rounded-none h-full"
-          >
-            {t('Chats', 'الدردشات')}
-            {totalUnread > 0 && (
-              <Badge className="ml-1 h-5 min-w-[20px] px-1.5 bg-[#00a884] text-[#111b21]">
-                {totalUnread}
-              </Badge>
-            )}
-          </TabsTrigger>
-          <TabsTrigger 
-            value="status" 
-            className="data-[state=active]:bg-transparent data-[state=active]:text-[#00a884] data-[state=active]:border-b-2 data-[state=active]:border-[#00a884] text-[#8696a0] rounded-none h-full"
-          >
-            {t('Status', 'الحالة')}
-          </TabsTrigger>
-          <TabsTrigger 
-            value="calls" 
-            className="data-[state=active]:bg-transparent data-[state=active]:text-[#00a884] data-[state=active]:border-b-2 data-[state=active]:border-[#00a884] text-[#8696a0] rounded-none h-full"
-          >
-            {t('Calls', 'المكالمات')}
-          </TabsTrigger>
-        </TabsList>
+      {/* Chat Filters */}
+      <div className="px-3 py-2 flex gap-2 border-b bg-white">
+        <Button variant="secondary" size="sm" className="rounded-full bg-[#E7FCE3] text-[#008069] hover:bg-[#D9F8D3] h-8 px-4 text-xs font-medium">
+          {t('All', 'الكل')}
+        </Button>
+        <Button variant="ghost" size="sm" className="rounded-full text-[#54656F] hover:bg-[#F0F2F5] h-8 px-4 text-xs font-medium">
+          {t('Unread', 'غير مقروءة')}
+        </Button>
+        <Button variant="ghost" size="sm" className="rounded-full text-[#54656F] hover:bg-[#F0F2F5] h-8 px-4 text-xs font-medium">
+          {t('Groups', 'المجموعات')}
+        </Button>
+      </div>
 
-        <TabsContent value="chats" className="flex-1 m-0 overflow-hidden">
-          <ScrollArea className="h-full">
-            {loading ? (
-              <div className="flex items-center justify-center h-32">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#00a884]"></div>
-              </div>
-            ) : searchQuery && searchResults.length > 0 ? (
-              <div>
-                {searchResults.map(user => (
-                  <button
-                    key={user.id}
-                    onClick={() => handleSelectUser(user)}
-                    className="w-full px-4 py-3 flex items-center gap-3 hover:bg-[#202c33] transition-colors"
-                  >
-                    <Avatar className="h-12 w-12">
-                      <AvatarImage src={user.profile_image || undefined} />
-                      <AvatarFallback className="bg-[#2a3942] text-[#aebac1]">
-                        {user.full_name.charAt(0).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 text-left">
-                      <p className="font-medium text-[#e9edef]">{user.full_name}</p>
-                      <p className="text-sm text-[#8696a0]">{user.role}</p>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            ) : conversations.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full p-8 text-center">
-                <MessageCircle className="h-16 w-16 text-[#2a3942] mb-4" />
-                <p className="text-[#8696a0]">
-                  {t('No conversations yet', 'لا توجد محادثات بعد')}
-                </p>
-                <p className="text-sm text-[#667781] mt-1">
-                  {t('Tap the menu to start a new chat', 'اضغط على القائمة لبدء محادثة جديدة')}
-                </p>
-              </div>
-            ) : (
-              <div>
-                {conversations.map(conv => (
-                  <button
-                    key={conv.id}
-                    onClick={() => handleSelectConversation(conv)}
-                    className="w-full px-4 py-3 flex items-center gap-3 hover:bg-[#202c33] transition-colors border-b border-[#222d34]"
-                  >
-                    <div className="relative">
-                      <Avatar className="h-12 w-12">
-                        <AvatarImage src={conv.recipient_image || undefined} />
-                        <AvatarFallback className="bg-[#2a3942] text-[#aebac1]">
-                          {conv.recipient_name.charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      {conv.is_online && (
-                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-[#00a884] rounded-full border-2 border-[#111b21]" />
+      {/* Conversations List */}
+      <ScrollArea className="flex-1">
+        {loading ? (
+          <div className="flex items-center justify-center h-32">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#00A884]"></div>
+          </div>
+        ) : searchQuery && searchResults.length > 0 ? (
+          <div>
+            {searchResults.map(userResult => (
+              <button
+                key={userResult.id}
+                onClick={() => handleSelectUser(userResult)}
+                className="w-full px-4 py-3 flex items-center gap-3 hover:bg-[#F5F6F6] transition-colors border-b border-[#E9EDEF]"
+              >
+                <Avatar className="h-12 w-12">
+                  <AvatarImage src={userResult.profile_image || undefined} />
+                  <AvatarFallback className="bg-[#DFE5E7] text-[#54656F]">
+                    {userResult.full_name.charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 text-left">
+                  <p className="font-medium text-[#111B21]">{userResult.full_name}</p>
+                  <p className="text-sm text-[#667781]">{userResult.role}</p>
+                </div>
+              </button>
+            ))}
+          </div>
+        ) : conversations.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full p-8 text-center">
+            <div className="w-32 h-32 rounded-full bg-[#00A884]/10 flex items-center justify-center mb-4">
+              <svg viewBox="0 0 212 212" className="w-20 h-20 text-[#00A884]">
+                <path fill="currentColor" d="M106.251.5C164.653.5 212 47.846 212 106.25S164.653 212 106.25 212C47.846 212 .5 164.654.5 106.25S47.846.5 106.251.5z"/>
+                <path fill="#fff" d="M173.561 171.615a62.767 62.767 0 0 0-2.065-2.955 67.7 67.7 0 0 0-2.608-3.299 70.112 70.112 0 0 0-3.184-3.527 71.097 71.097 0 0 0-5.924-5.47 72.458 72.458 0 0 0-10.204-7.026 75.2 75.2 0 0 0-5.98-3.055c-.062-.028-.118-.059-.18-.087-9.792-4.44-22.106-7.529-37.416-7.529s-27.624 3.089-37.416 7.529c-.338.153-.653.318-.985.474a75.37 75.37 0 0 0-6.229 3.298 72.589 72.589 0 0 0-9.15 6.395 71.243 71.243 0 0 0-5.924 5.47 70.064 70.064 0 0 0-3.184 3.527 67.142 67.142 0 0 0-2.609 3.299 63.292 63.292 0 0 0-2.065 2.955 56.33 56.33 0 0 0-1.447 2.324c-.033.056-.073.119-.104.174a47.92 47.92 0 0 0-1.07 1.926c-.559 1.068-.818 1.678-.818 1.678v.398c18.285 17.927 43.322 28.985 70.945 28.985 27.678 0 52.761-11.103 71.055-29.095v-.289s-.619-1.45-1.992-3.778a58.346 58.346 0 0 0-1.446-2.322zM106.002 125.5c2.645 0 5.212-.253 7.68-.737a38.272 38.272 0 0 0 3.624-.896 37.124 37.124 0 0 0 5.12-1.958 36.307 36.307 0 0 0 6.15-3.67 35.923 35.923 0 0 0 9.489-10.48 36.558 36.558 0 0 0 2.422-4.84 37.051 37.051 0 0 0 1.716-5.25c.299-1.208.542-2.443.725-3.701.275-1.887.417-3.827.417-5.811s-.142-3.925-.417-5.811a38.734 38.734 0 0 0-1.215-5.494 36.68 36.68 0 0 0-3.648-8.298 35.923 35.923 0 0 0-9.489-10.48 36.347 36.347 0 0 0-6.15-3.67 37.124 37.124 0 0 0-5.12-1.958 37.67 37.67 0 0 0-3.624-.896 39.875 39.875 0 0 0-7.68-.737c-21.162 0-37.345 16.183-37.345 37.345 0 21.159 16.183 37.342 37.345 37.342z"/>
+              </svg>
+            </div>
+            <p className="text-[#54656F] text-lg font-medium">
+              {t('No conversations yet', 'لا توجد محادثات بعد')}
+            </p>
+            <p className="text-sm text-[#667781] mt-1">
+              {t('Start chatting with your contacts', 'ابدأ الدردشة مع جهات اتصالك')}
+            </p>
+          </div>
+        ) : (
+          <div>
+            {conversations.map(conv => (
+              <button
+                key={conv.id}
+                onClick={() => handleSelectConversation(conv)}
+                className="w-full px-4 py-3 flex items-center gap-3 hover:bg-[#F5F6F6] transition-colors border-b border-[#E9EDEF]"
+              >
+                <Avatar className="h-12 w-12">
+                  <AvatarImage src={conv.recipient_image || undefined} />
+                  <AvatarFallback className="bg-[#DFE5E7] text-[#54656F]">
+                    {conv.recipient_name.charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between">
+                    <p className="font-medium text-[#111B21] truncate">{conv.recipient_name}</p>
+                    <span className={cn(
+                      "text-xs flex-shrink-0",
+                      conv.unread_count > 0 ? "text-[#00A884]" : "text-[#667781]"
+                    )}>
+                      {conv.last_message_time && formatMessageTime(conv.last_message_time)}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between mt-0.5">
+                    <p className="text-sm text-[#667781] truncate flex items-center gap-1">
+                      {conv.last_message ? (
+                        <>
+                          <CheckCheck className="h-4 w-4 text-[#53BDEB] flex-shrink-0" />
+                          <span className="truncate">{conv.last_message}</span>
+                        </>
+                      ) : (
+                        t('No messages yet', 'لا توجد رسائل بعد')
                       )}
-                    </div>
-                    <div className="flex-1 text-left min-w-0">
-                      <div className="flex items-center justify-between">
-                        <p className="font-medium text-[#e9edef] truncate">{conv.recipient_name}</p>
-                        <span className={cn(
-                          "text-xs",
-                          conv.unread_count > 0 ? "text-[#00a884]" : "text-[#8696a0]"
-                        )}>
-                          {conv.last_message_time && formatMessageTime(conv.last_message_time)}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between mt-0.5">
-                        <p className="text-sm text-[#8696a0] truncate">
-                          {conv.last_message || t('No messages yet', 'لا توجد رسائل بعد')}
-                        </p>
-                        {conv.unread_count > 0 && (
-                          <Badge className="h-5 min-w-[20px] px-1.5 bg-[#00a884] text-[#111b21] rounded-full">
-                            {conv.unread_count}
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
-          </ScrollArea>
-        </TabsContent>
-
-        <TabsContent value="status" className="flex-1 m-0">
-          <ScrollArea className="h-full">
-            <div className="p-4">
-              {/* My Status */}
-              <button className="w-full flex items-center gap-3 mb-6">
-                <div className="relative">
-                  <Avatar className="h-14 w-14">
-                    <AvatarImage src={(profile as any)?.profile_image || undefined} />
-                    <AvatarFallback className="bg-[#2a3942] text-[#aebac1]">
-                      {profile?.full_name?.charAt(0).toUpperCase() || 'M'}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="absolute bottom-0 right-0 w-5 h-5 bg-[#00a884] rounded-full border-2 border-[#111b21] flex items-center justify-center">
-                    <Plus className="h-3 w-3 text-[#111b21]" />
+                    </p>
+                    {conv.unread_count > 0 && (
+                      <Badge className="h-5 min-w-[20px] px-1.5 bg-[#25D366] text-white rounded-full text-xs">
+                        {conv.unread_count}
+                      </Badge>
+                    )}
                   </div>
                 </div>
-                <div className="flex-1 text-left">
-                  <p className="font-medium text-[#e9edef]">{t('My status', 'حالتي')}</p>
-                  <p className="text-sm text-[#8696a0]">{t('Tap to add status update', 'اضغط لإضافة تحديث الحالة')}</p>
-                </div>
               </button>
-              
-              <p className="text-[#8696a0] text-xs px-4 mb-3">{t('Recent updates', 'التحديثات الأخيرة')}</p>
-              
-              <div className="text-center py-8 text-[#8696a0]">
-                <p className="text-sm">{t('No status updates', 'لا توجد تحديثات للحالة')}</p>
-              </div>
-            </div>
-          </ScrollArea>
-        </TabsContent>
-
-        <TabsContent value="calls" className="flex-1 m-0">
-          <ScrollArea className="h-full">
-            <div className="p-4">
-              {/* Create call link */}
-              <button className="w-full flex items-center gap-3 mb-4 hover:bg-[#202c33] -mx-4 px-4 py-2 transition-colors">
-                <div className="h-12 w-12 bg-[#00a884] rounded-full flex items-center justify-center">
-                  <Phone className="h-5 w-5 text-[#111b21]" />
-                </div>
-                <div className="flex-1 text-left">
-                  <p className="font-medium text-[#e9edef]">{t('Create call link', 'إنشاء رابط مكالمة')}</p>
-                  <p className="text-sm text-[#8696a0]">{t('Share a link for your call', 'شارك رابط مكالمتك')}</p>
-                </div>
-              </button>
-              
-              <p className="text-[#8696a0] text-xs px-4 mb-3">{t('Recent', 'الأخيرة')}</p>
-              
-              <div className="text-center py-8 text-[#8696a0]">
-                <Phone className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                <p className="text-sm">{t('No recent calls', 'لا توجد مكالمات أخيرة')}</p>
-              </div>
-            </div>
-          </ScrollArea>
-        </TabsContent>
-      </Tabs>
+            ))}
+          </div>
+        )}
+      </ScrollArea>
 
       {/* Floating Action Button */}
       <Button
         onClick={() => setShowNewChatDialog(true)}
-        className="fixed bottom-20 right-4 h-14 w-14 rounded-full bg-[#00a884] hover:bg-[#00a884]/90 shadow-lg"
+        className="fixed bottom-20 right-4 h-14 w-14 rounded-full bg-[#00A884] hover:bg-[#00A884]/90 shadow-lg z-10"
       >
-        <Edit className="h-6 w-6 text-[#111b21]" />
+        <Plus className="h-6 w-6 text-white" />
       </Button>
 
       {/* New Chat Dialog */}
       <Dialog open={showNewChatDialog} onOpenChange={setShowNewChatDialog}>
-        <DialogContent className="bg-[#111b21] border-[#2a3942] text-[#e9edef] max-w-md">
+        <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>{t('New chat', 'محادثة جديدة')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#8696a0]" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#54656F]" />
               <Input
-                placeholder={t('Search name or email', 'ابحث بالاسم أو البريد')}
+                placeholder={t('Search contacts', 'ابحث في جهات الاتصال')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 bg-[#202c33] border-0 text-[#e9edef] placeholder:text-[#8696a0]"
+                className="pl-10"
               />
             </div>
             
             <ScrollArea className="h-64">
-              {searchResults.map(user => (
+              {searchResults.map(userResult => (
                 <button
-                  key={user.id}
-                  onClick={() => handleSelectUser(user)}
-                  className="w-full p-3 flex items-center gap-3 hover:bg-[#202c33] rounded-lg transition-colors"
+                  key={userResult.id}
+                  onClick={() => handleSelectUser(userResult)}
+                  className="w-full p-3 flex items-center gap-3 hover:bg-muted rounded-lg transition-colors"
                 >
                   <Avatar>
-                    <AvatarImage src={user.profile_image || undefined} />
-                    <AvatarFallback className="bg-[#2a3942] text-[#aebac1]">
-                      {user.full_name.charAt(0).toUpperCase()}
+                    <AvatarImage src={userResult.profile_image || undefined} />
+                    <AvatarFallback>
+                      {userResult.full_name.charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 text-left">
-                    <p className="font-medium">{user.full_name}</p>
-                    <p className="text-sm text-[#8696a0]">{user.role}</p>
+                    <p className="font-medium">{userResult.full_name}</p>
+                    <p className="text-sm text-muted-foreground">{userResult.role}</p>
                   </div>
                 </button>
               ))}
               {searchQuery && searchResults.length === 0 && (
-                <p className="text-center text-[#8696a0] py-4">
-                  {t('No users found', 'لم يتم العثور على مستخدمين')}
+                <p className="text-center text-muted-foreground py-4">
+                  {t('No contacts found', 'لم يتم العثور على جهات اتصال')}
                 </p>
               )}
             </ScrollArea>

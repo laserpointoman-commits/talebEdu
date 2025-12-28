@@ -6,15 +6,28 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Wifi, Tag, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { Wifi, Tag, CheckCircle, AlertCircle, Loader2, Trash2 } from 'lucide-react';
 import { nfcService, NFCData } from '@/services/nfcService';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 export default function NFCWriter() {
   const { language } = useLanguage();
   const [isWriting, setIsWriting] = useState(false);
+  const [isErasing, setIsErasing] = useState(false);
   const [writeSuccess, setWriteSuccess] = useState(false);
+  const [eraseSuccess, setEraseSuccess] = useState(false);
   const [isNFCSupported, setIsNFCSupported] = useState(false);
   const [checkingNfc, setCheckingNfc] = useState(true);
   const [nfcData, setNfcData] = useState<Partial<NFCData>>({
@@ -48,7 +61,6 @@ export default function NFCWriter() {
         setWriteSuccess(true);
         setTimeout(() => {
           setWriteSuccess(false);
-          // Reset form
           setNfcData({ type: 'student' });
         }, 3000);
       }
@@ -56,6 +68,26 @@ export default function NFCWriter() {
       console.error('Write error:', error);
     } finally {
       setIsWriting(false);
+    }
+  };
+
+  const handleErase = async () => {
+    setIsErasing(true);
+    setEraseSuccess(false);
+
+    try {
+      const success = await nfcService.eraseTag();
+      
+      if (success) {
+        setEraseSuccess(true);
+        setTimeout(() => {
+          setEraseSuccess(false);
+        }, 3000);
+      }
+    } catch (error) {
+      console.error('Erase error:', error);
+    } finally {
+      setIsErasing(false);
     }
   };
 
@@ -94,12 +126,6 @@ export default function NFCWriter() {
                     ? (language === 'ar' ? 'NFC متاح' : 'NFC Available')
                     : (language === 'ar' ? 'NFC غير متاح' : 'NFC Not Available')}
                 </p>
-                <p className="text-sm text-muted-foreground">
-                  {checkingNfc ? (language === 'ar' ? 'فحص دعم NFC' : 'Checking NFC support') :
-                   isNFCSupported 
-                    ? (language === 'ar' ? 'الجهاز يدعم NFC' : 'Device supports NFC')
-                    : (language === 'ar' ? 'يتطلب جهاز بميزة NFC' : 'Requires NFC-enabled device')}
-                </p>
               </div>
             </div>
           </div>
@@ -116,18 +142,10 @@ export default function NFCWriter() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="student">
-                    {language === 'ar' ? 'طالب' : 'Student'}
-                  </SelectItem>
-                  <SelectItem value="teacher">
-                    {language === 'ar' ? 'معلم' : 'Teacher'}
-                  </SelectItem>
-                  <SelectItem value="driver">
-                    {language === 'ar' ? 'سائق' : 'Driver'}
-                  </SelectItem>
-                  <SelectItem value="employee">
-                    {language === 'ar' ? 'موظف' : 'Employee'}
-                  </SelectItem>
+                  <SelectItem value="student">{language === 'ar' ? 'طالب' : 'Student'}</SelectItem>
+                  <SelectItem value="teacher">{language === 'ar' ? 'معلم' : 'Teacher'}</SelectItem>
+                  <SelectItem value="driver">{language === 'ar' ? 'سائق' : 'Driver'}</SelectItem>
+                  <SelectItem value="employee">{language === 'ar' ? 'موظف' : 'Employee'}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -154,9 +172,9 @@ export default function NFCWriter() {
             </div>
           </div>
 
-          {/* Write Animation */}
+          {/* Status Animations */}
           <AnimatePresence>
-            {isWriting && (
+            {(isWriting || isErasing) && (
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -164,14 +182,13 @@ export default function NFCWriter() {
                 className="p-8 bg-primary/5 rounded-lg border border-primary/20"
               >
                 <div className="text-center space-y-4">
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                  >
+                  <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: "linear" }}>
                     <Wifi className="h-16 w-16 text-primary mx-auto" />
                   </motion.div>
                   <p className="text-lg font-medium">
-                    {language === 'ar' ? 'جاري الكتابة...' : 'Writing to NFC tag...'}
+                    {isErasing 
+                      ? (language === 'ar' ? 'جاري مسح البطاقة...' : 'Erasing NFC tag...')
+                      : (language === 'ar' ? 'جاري الكتابة...' : 'Writing to NFC tag...')}
                   </p>
                   <p className="text-sm text-muted-foreground">
                     {language === 'ar' ? 'ضع البطاقة بالقرب من الجهاز' : 'Hold tag near device'}
@@ -180,7 +197,7 @@ export default function NFCWriter() {
               </motion.div>
             )}
 
-            {writeSuccess && !isWriting && (
+            {(writeSuccess || eraseSuccess) && !isWriting && !isErasing && (
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -188,77 +205,55 @@ export default function NFCWriter() {
                 className="p-8 bg-green-500/10 rounded-lg border border-green-500/20"
               >
                 <div className="text-center space-y-4">
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: "spring", stiffness: 200, damping: 15 }}
-                  >
-                    <CheckCircle className="h-16 w-16 text-green-600 mx-auto" />
-                  </motion.div>
+                  <CheckCircle className="h-16 w-16 text-green-600 mx-auto" />
                   <p className="text-lg font-medium text-green-600">
-                    {language === 'ar' ? 'تمت الكتابة بنجاح!' : 'Successfully Written!'}
+                    {eraseSuccess 
+                      ? (language === 'ar' ? 'تم مسح البطاقة بنجاح!' : 'Tag Erased Successfully!')
+                      : (language === 'ar' ? 'تمت الكتابة بنجاح!' : 'Successfully Written!')}
                   </p>
-                  <div className="space-y-1">
-                    <Badge variant="outline" className="text-sm">
-                      {nfcData.type?.toUpperCase()} - {nfcData.id}
-                    </Badge>
-                    <p className="text-sm text-muted-foreground">{nfcData.name}</p>
-                  </div>
                 </div>
               </motion.div>
             )}
           </AnimatePresence>
 
-          {/* Write Button */}
-          {!isWriting && !writeSuccess && (
-            <Button
-              onClick={handleWrite}
-              disabled={!isNFCSupported || isWriting}
-              className="w-full"
-              size="lg"
-            >
-              {isWriting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {language === 'ar' ? 'جاري الكتابة...' : 'Writing...'}
-                </>
-              ) : (
-                <>
-                  <Tag className="mr-2 h-4 w-4" />
-                  {language === 'ar' ? 'كتابة البطاقة' : 'Write Tag'}
-                </>
-              )}
-            </Button>
+          {/* Action Buttons */}
+          {!isWriting && !isErasing && !writeSuccess && !eraseSuccess && (
+            <div className="flex gap-3">
+              <Button onClick={handleWrite} disabled={!isNFCSupported} className="flex-1" size="lg">
+                <Tag className="mr-2 h-4 w-4" />
+                {language === 'ar' ? 'كتابة البطاقة' : 'Write Tag'}
+              </Button>
+              
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" disabled={!isNFCSupported} size="lg">
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    {language === 'ar' ? 'مسح' : 'Erase'}
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>
+                      {language === 'ar' ? 'تأكيد مسح البطاقة' : 'Confirm Erase NFC Card'}
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                      {language === 'ar' 
+                        ? 'هل أنت متأكد من مسح هذه البطاقة؟ سيتم حذف جميع البيانات المخزنة عليها ولا يمكن التراجع عن هذا الإجراء.'
+                        : 'Are you sure you want to erase this NFC card? All stored data will be permanently deleted and this action cannot be undone.'}
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>
+                      {language === 'ar' ? 'إلغاء' : 'Cancel'}
+                    </AlertDialogCancel>
+                    <AlertDialogAction onClick={handleErase} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                      {language === 'ar' ? 'نعم، امسح البطاقة' : 'Yes, Erase Card'}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
           )}
-
-          {/* Instructions */}
-          <div className="p-4 bg-muted/50 rounded-lg">
-            <h4 className="font-medium mb-2">
-              {language === 'ar' ? 'تعليمات:' : 'Instructions:'}
-            </h4>
-            <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
-              <li>
-                {language === 'ar' 
-                  ? 'املأ جميع الحقول المطلوبة'
-                  : 'Fill in all required fields'}
-              </li>
-              <li>
-                {language === 'ar' 
-                  ? 'اضغط على "كتابة البطاقة"'
-                  : 'Click "Write Tag" button'}
-              </li>
-              <li>
-                {language === 'ar' 
-                  ? 'ضع بطاقة NFC الفارغة بالقرب من الجهاز'
-                  : 'Hold blank NFC tag near device'}
-              </li>
-              <li>
-                {language === 'ar' 
-                  ? 'انتظر حتى تظهر رسالة النجاح'
-                  : 'Wait for success confirmation'}
-              </li>
-            </ul>
-          </div>
         </CardContent>
       </Card>
     </div>
