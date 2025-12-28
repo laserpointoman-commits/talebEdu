@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -9,9 +10,10 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { FileText, Calendar, Clock, Plus, CheckCircle, AlertCircle } from 'lucide-react';
+import { FileText, Calendar, Clock, Plus } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { z } from 'zod';
+import LogoLoader from '@/components/LogoLoader';
 
 const homeworkSchema = z.object({
   subject: z.string().min(1, 'Subject is required').max(100),
@@ -21,10 +23,24 @@ const homeworkSchema = z.object({
   class: z.string().min(1, 'Class is required'),
 });
 
+interface HomeworkItem {
+  id: string;
+  subject: string;
+  title: string;
+  description: string | null;
+  dueDate: string;
+  status: 'pending' | 'submitted' | 'overdue';
+  class: string;
+  teacher: string;
+}
+
 export default function Homework() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { t, language } = useLanguage();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [homework, setHomework] = useState<HomeworkItem[]>([]);
+  const [classes, setClasses] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
     subject: '',
     title: '',
@@ -33,53 +49,178 @@ export default function Homework() {
     class: '',
   });
 
-  const homework = [
-    {
-      id: '1',
-      subject: language === 'en' ? 'Mathematics' : 'الرياضيات',
-      title: language === 'en' ? 'Algebra Problem Set' : 'مجموعة مسائل الجبر',
-      description: language === 'en' ? 'Complete exercises 1-20 from Chapter 5' : 'أكمل التمارين 1-20 من الفصل 5',
-      dueDate: '2024-03-15',
-      status: 'pending',
-      class: '10-A',
-      teacher: language === 'en' ? 'Ahmed Hassan' : 'أحمد حسن',
-    },
-    {
-      id: '2',
-      subject: language === 'en' ? 'Physics' : 'الفيزياء',
-      title: language === 'en' ? 'Lab Report' : 'تقرير المختبر',
-      description: language === 'en' ? 'Write a detailed report on the pendulum experiment' : 'اكتب تقريرًا مفصلاً عن تجربة البندول',
-      dueDate: '2024-03-13',
-      status: 'submitted',
-      class: '10-A',
-      teacher: language === 'en' ? 'Ahmed Hassan' : 'أحمد حسن',
-    },
-    {
-      id: '3',
-      subject: language === 'en' ? 'English' : 'اللغة الإنجليزية',
-      title: language === 'en' ? 'Essay Writing' : 'كتابة مقال',
-      description: language === 'en' ? 'Write a 500-word essay on climate change' : 'اكتب مقالاً من 500 كلمة عن تغير المناخ',
-      dueDate: '2024-03-12',
-      status: 'overdue',
-      class: '10-A',
-      teacher: language === 'en' ? 'Fatima Al-Said' : 'فاطمة السعيد',
-    },
-  ];
+  useEffect(() => {
+    loadHomework();
+    loadClasses();
+  }, [user, profile]);
 
-  const handleAddHomework = () => {
+  const loadClasses = async () => {
+    const { data } = await supabase
+      .from('classes')
+      .select('id, name, grade, section')
+      .order('name');
+    setClasses(data || []);
+  };
+
+  const loadHomework = async () => {
+    if (!user || !profile) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      let query = supabase
+        .from('homework')
+        .select(`
+          id,
+          subject,
+          title,
+          description,
+          due_date,
+          classes (
+            name,
+            grade,
+            section
+          ),
+          teachers (
+            profiles (
+              full_name,
+              full_name_ar
+            )
+          )
+        `)
+        .order('due_date', { ascending: true });
+
+      // If user is a student, filter by their class
+      if (profile.role === 'student') {
+        const { data: studentData } = await supabase
+          .from('students')
+          .select('class')
+          .eq('profile_id', user.id)
+          .single();
+
+        if (studentData?.class) {
+          const { data: classData } = await supabase
+            .from('classes')
+            .select('id')
+            .eq('name', studentData.class)
+            .single();
+
+          if (classData) {
+            query = query.eq('class_id', classData.id);
+          }
+        }
+      }
+
+      // If user is a teacher, filter by their assignments
+      if (profile.role === 'teacher') {
+        const { data: teacherData } = await supabase
+          .from('teachers')
+          .select('id')
+          .eq('profile_id', user.id)
+          .single();
+
+        if (teacherData) {
+          query = query.eq('assigned_by', teacherData.id);
+        }
+      }
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const mapped: HomeworkItem[] = (data || []).map((item: any) => {
+        const dueDate = new Date(item.due_date);
+        dueDate.setHours(0, 0, 0, 0);
+        
+        let status: 'pending' | 'submitted' | 'overdue' = 'pending';
+        if (dueDate < today) {
+          status = 'overdue';
+        }
+        // In a real app, we'd check homework_submissions table for submitted status
+
+        return {
+          id: item.id,
+          subject: item.subject || 'Unknown',
+          title: item.title || 'Untitled',
+          description: item.description,
+          dueDate: item.due_date,
+          status,
+          class: item.classes 
+            ? `${item.classes.grade}-${item.classes.section}`
+            : '-',
+          teacher: language === 'ar'
+            ? (item.teachers?.profiles?.full_name_ar || item.teachers?.profiles?.full_name || '-')
+            : (item.teachers?.profiles?.full_name || '-')
+        };
+      });
+
+      setHomework(mapped);
+    } catch (error) {
+      console.error('Error loading homework:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddHomework = async () => {
     try {
       homeworkSchema.parse(formData);
+      
+      // Get teacher ID
+      const { data: teacherData } = await supabase
+        .from('teachers')
+        .select('id')
+        .eq('profile_id', user?.id)
+        .single();
+
+      if (!teacherData) {
+        toast({
+          title: language === 'en' ? 'Error' : 'خطأ',
+          description: language === 'en' ? 'Teacher record not found' : 'لم يتم العثور على سجل المعلم',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Get class ID from class name
+      const selectedClass = classes.find(c => `${c.grade}-${c.section}` === formData.class || c.name === formData.class);
+      
+      const { error } = await supabase
+        .from('homework')
+        .insert({
+          subject: formData.subject,
+          title: formData.title,
+          description: formData.description,
+          due_date: formData.dueDate,
+          class_id: selectedClass?.id,
+          assigned_by: teacherData.id
+        });
+
+      if (error) throw error;
+
       toast({
         title: language === 'en' ? 'Homework Added' : 'تم إضافة الواجب',
         description: language === 'en' ? 'Homework has been added successfully' : 'تم إضافة الواجب بنجاح',
       });
       setIsAddDialogOpen(false);
       setFormData({ subject: '', title: '', description: '', dueDate: '', class: '' });
+      loadHomework();
     } catch (error) {
       if (error instanceof z.ZodError) {
         toast({
           title: language === 'en' ? 'Validation Error' : 'خطأ في التحقق',
           description: error.errors[0].message,
+          variant: 'destructive',
+        });
+      } else {
+        console.error('Error adding homework:', error);
+        toast({
+          title: language === 'en' ? 'Error' : 'خطأ',
+          description: language === 'en' ? 'Failed to add homework' : 'فشل في إضافة الواجب',
           variant: 'destructive',
         });
       }
@@ -105,6 +246,10 @@ export default function Homework() {
     }
   };
 
+  if (loading) {
+    return <LogoLoader fullScreen />;
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -114,7 +259,7 @@ export default function Homework() {
             {language === 'en' ? 'Manage and track homework assignments' : 'إدارة وتتبع الواجبات المنزلية'}
           </p>
         </div>
-        {user?.role === 'teacher' && (
+        {profile?.role === 'teacher' && (
           <Button onClick={() => setIsAddDialogOpen(true)}>
             <Plus className="h-4 w-4 mr-2" />
             {language === 'en' ? 'Add Homework' : 'إضافة واجب'}
@@ -122,45 +267,54 @@ export default function Homework() {
         )}
       </div>
 
-      <div className="grid gap-4">
-        {homework.map((hw) => (
-          <Card key={hw.id}>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <FileText className="h-5 w-5 text-primary" />
-                  <div>
-                    <CardTitle className="text-lg">{hw.title}</CardTitle>
-                    <p className="text-sm text-muted-foreground">{hw.subject}</p>
+      {homework.length === 0 ? (
+        <Card>
+          <CardContent className="py-12 text-center text-muted-foreground">
+            <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
+            <p>{language === 'en' ? 'No homework assignments found' : 'لا توجد واجبات منزلية'}</p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-4">
+          {homework.map((hw) => (
+            <Card key={hw.id}>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <FileText className="h-5 w-5 text-primary" />
+                    <div>
+                      <CardTitle className="text-lg">{hw.title}</CardTitle>
+                      <p className="text-sm text-muted-foreground">{hw.subject}</p>
+                    </div>
                   </div>
+                  {getStatusBadge(hw.status)}
                 </div>
-                {getStatusBadge(hw.status)}
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm mb-3">{hw.description}</p>
-              <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                <span className="flex items-center gap-1">
-                  <Calendar className="h-3 w-3" />
-                  {language === 'en' ? 'Due' : 'موعد التسليم'}: {hw.dueDate}
-                </span>
-                <span className="flex items-center gap-1">
-                  <Clock className="h-3 w-3" />
-                  {hw.class}
-                </span>
-                {user?.role !== 'teacher' && (
-                  <span>{language === 'en' ? 'Teacher' : 'المدرس'}: {hw.teacher}</span>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm mb-3">{hw.description || (language === 'en' ? 'No description' : 'لا يوجد وصف')}</p>
+                <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    <Calendar className="h-3 w-3" />
+                    {language === 'en' ? 'Due' : 'موعد التسليم'}: {new Date(hw.dueDate).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US')}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Clock className="h-3 w-3" />
+                    {hw.class}
+                  </span>
+                  {profile?.role !== 'teacher' && (
+                    <span>{language === 'en' ? 'Teacher' : 'المدرس'}: {hw.teacher}</span>
+                  )}
+                </div>
+                {profile?.role === 'student' && hw.status === 'pending' && (
+                  <Button className="mt-3" size="sm">
+                    {language === 'en' ? 'Submit Homework' : 'تسليم الواجب'}
+                  </Button>
                 )}
-              </div>
-              {user?.role === 'student' && hw.status === 'pending' && (
-                <Button className="mt-3" size="sm">
-                  {language === 'en' ? 'Submit Homework' : 'تسليم الواجب'}
-                </Button>
-              )}
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
 
       {/* Add Homework Dialog */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
@@ -215,10 +369,11 @@ export default function Homework() {
                   <SelectValue placeholder={language === 'en' ? 'Select class' : 'اختر الصف'} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="10-A">10-A</SelectItem>
-                  <SelectItem value="10-B">10-B</SelectItem>
-                  <SelectItem value="11-A">11-A</SelectItem>
-                  <SelectItem value="11-B">11-B</SelectItem>
+                  {classes.map((cls) => (
+                    <SelectItem key={cls.id} value={`${cls.grade}-${cls.section}`}>
+                      {cls.name} ({cls.grade}-{cls.section})
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
