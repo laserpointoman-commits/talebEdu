@@ -39,7 +39,7 @@ export function CustomizeQuickActionsDialog() {
           {t('Customize')}
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="w-[95vw] max-w-lg sm:max-w-xl md:max-w-2xl max-h-[80vh] overflow-y-auto mx-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
             <span>{t('Customize Quick Actions')}</span>
