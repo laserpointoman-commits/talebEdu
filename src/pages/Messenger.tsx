@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useMessenger, Conversation, GroupChat } from '@/hooks/useMessenger';
+import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { MessengerThemeProvider, useMessengerTheme } from '@/contexts/MessengerThemeContext';
 import { getMessengerColors, MESSENGER_GRADIENTS } from '@/components/messenger/MessengerThemeColors';
@@ -69,7 +70,10 @@ function MessengerContent() {
     fetchConversations,
     fetchGroups,
     fetchCallLogs,
-    createGroup
+    createGroup,
+    archiveChat,
+    deleteChat,
+    forwardMessage: forwardMessageFn
   } = useMessenger();
 
   const [activeTab, setActiveTab] = useState<MessengerTab>('chats');
@@ -88,6 +92,23 @@ function MessengerContent() {
   // Select mode for chat list
   const [isSelectMode, setIsSelectMode] = useState(false);
   const [selectedChats, setSelectedChats] = useState<Set<string>>(new Set());
+  
+  // Starred messages
+  const [starredMessages, setStarredMessages] = useState<Set<string>>(new Set());
+  
+  const handleStarMessage = (messageId: string) => {
+    setStarredMessages(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(messageId)) {
+        newSet.delete(messageId);
+        toast.success(isArabic ? 'تم إلغاء التميز' : 'Message unstarred');
+      } else {
+        newSet.add(messageId);
+        toast.success(isArabic ? 'تم التميز' : 'Message starred');
+      }
+      return newSet;
+    });
+  };
 
   const isArabic = language === 'ar';
   const dir = isArabic ? 'rtl' : 'ltr';
@@ -246,19 +267,49 @@ function MessengerContent() {
     });
   };
 
-  const handleDeleteChat = (convId: string) => {
-    // Implement delete logic
-    console.log('Delete chat:', convId);
+  // Pinned chats state
+  const [pinnedChats, setPinnedChats] = useState<Set<string>>(new Set());
+
+  const handleDeleteChat = async (convId: string) => {
+    const success = await deleteChat(convId);
+    if (success) {
+      toast.success(isArabic ? 'تم حذف المحادثة' : 'Chat deleted');
+    } else {
+      toast.error(isArabic ? 'فشل حذف المحادثة' : 'Failed to delete chat');
+    }
   };
 
-  const handleArchiveChat = (convId: string) => {
-    // Implement archive logic
-    console.log('Archive chat:', convId);
+  const handleArchiveChat = async (convId: string) => {
+    const success = await archiveChat(convId);
+    if (success) {
+      toast.success(isArabic ? 'تم أرشفة المحادثة' : 'Chat archived');
+    } else {
+      toast.error(isArabic ? 'فشل أرشفة المحادثة' : 'Failed to archive chat');
+    }
   };
 
   const handlePinChat = (convId: string) => {
-    // Implement pin logic
-    console.log('Pin chat:', convId);
+    setPinnedChats(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(convId)) {
+        newSet.delete(convId);
+        toast.success(isArabic ? 'تم إلغاء التثبيت' : 'Chat unpinned');
+      } else {
+        newSet.add(convId);
+        toast.success(isArabic ? 'تم التثبيت' : 'Chat pinned');
+      }
+      return newSet;
+    });
+  };
+
+  const handleForwardMessage = async (messageId: string, recipientIds: string[]) => {
+    const success = await forwardMessageFn(messageId, recipientIds);
+    if (success) {
+      toast.success(isArabic ? 'تم إعادة التوجيه' : 'Message forwarded');
+      setForwardMessage(null);
+    } else {
+      toast.error(isArabic ? 'فشل إعادة التوجيه' : 'Failed to forward message');
+    }
   };
 
   const totalUnread = conversations.reduce((acc, c) => acc + (c.unread_count || 0), 0);
@@ -305,6 +356,12 @@ function MessengerContent() {
           onNewChat={() => setShowNewChat(true)}
           onNewGroup={() => setShowCreateGroup(true)}
           onBack={handleExitMessenger}
+          onDeleteChat={handleDeleteChat}
+          onArchiveChat={handleArchiveChat}
+          onPinChat={handlePinChat}
+          onMarkAllRead={handleMarkAllRead}
+          pinnedChats={pinnedChats}
+          canPin={canPin}
           isArabic={isArabic}
         />
 
@@ -402,7 +459,11 @@ function MessengerContent() {
         <ForwardDialog
           open={!!forwardMessage}
           onClose={() => setForwardMessage(null)}
-          onForward={() => setForwardMessage(null)}
+          onForward={(recipientIds) => {
+            if (forwardMessage?.id) {
+              handleForwardMessage(forwardMessage.id, recipientIds);
+            }
+          }}
           conversations={conversations}
           groups={groups}
           messagePreview={forwardMessage?.content || ''}

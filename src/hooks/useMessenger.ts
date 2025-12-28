@@ -709,6 +709,89 @@ export function useMessenger() {
     };
   }, [user, fetchConversations, markAsDelivered, updatePresence]);
 
+  // Archive chat
+  const archiveChat = useCallback(async (recipientId: string) => {
+    if (!user) return;
+    
+    try {
+      await supabase
+        .from('archived_chats')
+        .upsert({
+          user_id: user.id,
+          contact_id: recipientId
+        }, { onConflict: 'user_id,contact_id' });
+      
+      setConversations(prev => prev.filter(c => c.recipient_id !== recipientId));
+      return true;
+    } catch (error) {
+      console.error('Error archiving chat:', error);
+      return false;
+    }
+  }, [user]);
+
+  // Delete chat (soft delete - marks messages as deleted for user)
+  const deleteChat = useCallback(async (recipientId: string) => {
+    if (!user) return;
+    
+    try {
+      // Mark all messages in this conversation as deleted for the current user
+      await supabase
+        .from('direct_messages')
+        .update({ is_deleted_for_sender: true })
+        .eq('sender_id', user.id)
+        .eq('recipient_id', recipientId);
+      
+      await supabase
+        .from('direct_messages')
+        .update({ is_deleted_for_recipient: true })
+        .eq('sender_id', recipientId)
+        .eq('recipient_id', user.id);
+      
+      setConversations(prev => prev.filter(c => c.recipient_id !== recipientId));
+      return true;
+    } catch (error) {
+      console.error('Error deleting chat:', error);
+      return false;
+    }
+  }, [user]);
+
+  // Star message (stored locally for now - can be extended to DB)
+  const starMessage = useCallback(async (messageId: string): Promise<boolean> => {
+    // For now, we'll manage starred messages in local state
+    // This could be extended to store in a starred_messages table
+    return true;
+  }, []);
+
+  // Forward message
+  const forwardMessage = useCallback(async (
+    messageId: string,
+    recipientIds: string[]
+  ): Promise<boolean> => {
+    if (!user) return false;
+    
+    try {
+      const originalMessage = messages.find(m => m.id === messageId);
+      if (!originalMessage) return false;
+      
+      for (const recipientId of recipientIds) {
+        await supabase
+          .from('direct_messages')
+          .insert({
+            sender_id: user.id,
+            recipient_id: recipientId,
+            content: originalMessage.content,
+            forwarded_from_id: messageId,
+            message_type: originalMessage.message_type
+          });
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Error forwarding message:', error);
+      return false;
+    }
+  }, [user, messages]);
+
   return {
     conversations,
     groups,
@@ -730,6 +813,10 @@ export function useMessenger() {
     fetchGroups,
     createGroup,
     fetchCallLogs,
-    setMessages
+    setMessages,
+    archiveChat,
+    deleteChat,
+    starMessage,
+    forwardMessage
   };
 }
