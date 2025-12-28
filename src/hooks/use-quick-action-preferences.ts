@@ -142,7 +142,7 @@ export function useQuickActionPreferences() {
     }
   });
 
-  const visibleActions = actions.filter(a => a.is_visible).slice(0, 12);
+  const visibleActions = actions.filter(a => a.is_visible);
 
   return {
     allActions: actions,
