@@ -28,7 +28,13 @@ export default function NFCScanner({
   const [recentScans, setRecentScans] = useState<Array<{name: string, time: string}>>([]);
 
   useEffect(() => {
-    setIsNFCSupported(nfcService.isSupported());
+    let mounted = true;
+    nfcService.isSupportedAsync().then((supported) => {
+      if (mounted) setIsNFCSupported(supported);
+    });
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const startScanning = async () => {

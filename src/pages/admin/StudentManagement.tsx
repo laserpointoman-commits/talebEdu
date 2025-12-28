@@ -41,8 +41,8 @@ export default function StudentManagement() {
   const checkNfcSupport = async () => {
     setCheckingNfc(true);
     // Give the native plugin time to initialize
-    await new Promise(resolve => setTimeout(resolve, 500));
-    const supported = nfcService.isSupported();
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    const supported = await nfcService.isSupportedAsync();
     setNfcSupported(supported);
     setCheckingNfc(false);
   };

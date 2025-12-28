@@ -42,8 +42,8 @@ export default function StudentNFCDialog({ student, open, onOpenChange }: Studen
     if (open) {
       const checkSupport = async () => {
         setCheckingNfc(true);
-        await new Promise(resolve => setTimeout(resolve, 300));
-        const supported = nfcService.isSupported();
+        await new Promise((resolve) => setTimeout(resolve, 300));
+        const supported = await nfcService.isSupportedAsync();
         setIsNFCSupported(supported);
         setCheckingNfc(false);
       };
