@@ -1,4 +1,5 @@
 // Dynamic theme colors for Messenger - supports both light and dark modes
+// FIXED CONTRASTING BUBBLE COLORS for maximum visibility of time/date and checkmarks
 
 export const getMessengerColors = (isDark: boolean) => {
   if (isDark) {
@@ -26,22 +27,24 @@ export const getMessengerColors = (isDark: boolean) => {
       divider: '#1E3A5F',
       border: '#1A3A5C',
       
-      // Message bubbles - Blue theme
-      messageSent: '#0369A1',
-      messageReceived: '#132F4C',
+      // FIXED Message bubbles - HIGH CONTRAST for visibility
+      // Sent bubble: Deep blue that ensures white/light text is visible
+      messageSent: '#1E40AF',
+      // Received bubble: Darker background for contrast
+      messageReceived: '#1E293B',
       
-      // Time text inside bubbles - Enhanced visibility
-      timeTextSent: '#93C5FD',
-      timeTextReceived: '#94A3B8',
+      // Time text inside bubbles - MAXIMUM visibility with fixed contrasting colors
+      timeTextSent: '#93C5FD',     // Light blue on dark blue sent bubble
+      timeTextReceived: '#94A3B8', // Gray on dark received bubble
       
       // Status colors
       unreadBadge: '#38BDF8',
       missedCall: '#F43F5E',
       
-      // Checkmarks - Blue themed with distinct visibility
-      checkGray: '#64748B',
-      checkBlue: '#38BDF8',
-      checkDelivered: '#94A3B8',
+      // Checkmarks - DISTINCT and VISIBLE on bubble backgrounds
+      checkGray: '#6B7280',        // Single check (sent)
+      checkDelivered: '#9CA3AF',   // Double check gray (delivered)
+      checkBlue: '#60A5FA',        // Double check blue (read) - bright and visible
       
       // Task-specific colors
       taskAccept: '#22C55E',
@@ -58,7 +61,7 @@ export const getMessengerColors = (isDark: boolean) => {
     };
   }
   
-  // Light theme
+  // Light theme with FIXED CONTRASTING bubble colors
   return {
     // Backgrounds
     bg: '#F8FAFC',
@@ -83,22 +86,24 @@ export const getMessengerColors = (isDark: boolean) => {
     divider: '#E2E8F0',
     border: '#CBD5E1',
     
-    // Message bubbles
-    messageSent: '#DBEAFE',
+    // FIXED Message bubbles - HIGH CONTRAST for visibility
+    // Sent bubble: Soft blue that works well with dark text
+    messageSent: '#BFDBFE',
+    // Received bubble: Pure white for maximum contrast
     messageReceived: '#FFFFFF',
     
-    // Time text inside bubbles - Enhanced visibility
-    timeTextSent: '#1E40AF',
-    timeTextReceived: '#475569',
+    // Time text inside bubbles - MAXIMUM visibility with fixed contrasting colors
+    timeTextSent: '#1E40AF',      // Dark blue on light blue sent bubble
+    timeTextReceived: '#64748B',   // Medium gray on white received bubble
     
     // Status colors
     unreadBadge: '#0284C7',
     missedCall: '#EF4444',
     
-    // Checkmarks - Distinct visibility
-    checkGray: '#94A3B8',
-    checkBlue: '#0284C7',
-    checkDelivered: '#64748B',
+    // Checkmarks - DISTINCT and VISIBLE on bubble backgrounds
+    checkGray: '#9CA3AF',         // Single check (sent)
+    checkDelivered: '#6B7280',    // Double check gray (delivered)
+    checkBlue: '#2563EB',         // Double check blue (read) - visible on light bubbles
     
     // Task-specific colors
     taskAccept: '#22C55E',
