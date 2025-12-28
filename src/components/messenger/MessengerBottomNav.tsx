@@ -34,8 +34,8 @@ export function MessengerBottomNav({
       }}
       aria-label={isArabic ? 'تنقل المراسلة' : 'Messenger navigation'}
     >
-      {/* Glass background */}
-      <div className="absolute inset-0 bg-background/80 backdrop-blur-xl border-t border-border/40" />
+      {/* Dark messenger background */}
+      <div className="absolute inset-0 bg-gradient-to-t from-[#0a1014] via-[#0f1a20]/95 to-[#0f1a20]/85 backdrop-blur-xl" />
 
       {/* Top border glow */}
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
