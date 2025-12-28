@@ -4,47 +4,53 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useMessenger, Conversation, GroupChat } from '@/hooks/useMessenger';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { WHATSAPP_COLORS } from '@/components/messenger/WhatsAppTheme';
-import { MessageBubble } from '@/components/messenger/MessageBubble';
-import { ChatHeader } from '@/components/messenger/ChatHeader';
+import { MessengerThemeProvider, useMessengerTheme } from '@/contexts/MessengerThemeContext';
+import { getMessengerColors, MESSENGER_GRADIENTS } from '@/components/messenger/MessengerThemeColors';
+import { EnhancedMessageBubble } from '@/components/messenger/EnhancedMessageBubble';
+import { SimplifiedChatHeader } from '@/components/messenger/SimplifiedChatHeader';
+import { ChatListMenu } from '@/components/messenger/ChatListMenu';
+import { SwipeableChatItem } from '@/components/messenger/SwipeableChatItem';
 import { ChatInput } from '@/components/messenger/ChatInput';
 import { ForwardDialog } from '@/components/messenger/ForwardDialog';
 import { CreateGroupDialog } from '@/components/messenger/CreateGroupDialog';
-import { MessengerChatList } from '@/components/messenger/MessengerChatList';
 import { MessengerBottomNav } from '@/components/messenger/MessengerBottomNav';
 import { MessengerUpdates } from '@/components/messenger/MessengerUpdates';
 import { MessengerCalls } from '@/components/messenger/MessengerCalls';
 import { MessengerSearch } from '@/components/messenger/MessengerSearch';
-import { MessengerSettings } from '@/components/messenger/MessengerSettings';
 import { MessengerDesktopLayout } from '@/components/messenger/MessengerDesktopLayout';
 import { CallScreen } from '@/components/messenger/CallScreen';
 import { callService } from '@/services/callService';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { 
   ArrowLeft,
   Search, 
   MessageCircle, 
   Users,
-  MoreVertical,
-  Camera,
   Loader2,
-  X
+  X,
+  CheckCheck,
+  Archive,
+  Pin
 } from 'lucide-react';
-import { format, isToday, isYesterday } from 'date-fns';
+import { format, isToday, isYesterday, isThisWeek } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
+import { MessengerSettingsWithTheme } from '@/components/messenger/MessengerSettingsWithTheme';
 
 type MessengerTab = 'chats' | 'groups' | 'calls' | 'search' | 'settings';
 
-export default function Messenger() {
+function MessengerContent() {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
   const { language } = useLanguage();
   const isMobile = useIsMobile();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { isDark, effectiveTheme } = useMessengerTheme();
+  const colors = getMessengerColors(isDark);
   
   const {
     conversations,
@@ -78,11 +84,17 @@ export default function Messenger() {
   const [newChatSearchQuery, setNewChatSearchQuery] = useState('');
   const [newChatSearchResults, setNewChatSearchResults] = useState<any[]>([]);
   const [newChatSearching, setNewChatSearching] = useState(false);
+  
+  // Select mode for chat list
+  const [isSelectMode, setIsSelectMode] = useState(false);
+  const [selectedChats, setSelectedChats] = useState<Set<string>>(new Set());
 
   const isArabic = language === 'ar';
   const dir = isArabic ? 'rtl' : 'ltr';
+  
+  // Check if user can pin (Admin, Teacher, Supervisor)
+  const canPin = ['admin', 'teacher', 'supervisor'].includes(profile?.role || '');
 
-  // Initialize call service and fetch all data on mount
   useEffect(() => {
     if (user?.id) {
       callService.initialize(user.id);
@@ -92,12 +104,10 @@ export default function Messenger() {
     }
   }, [user?.id, fetchConversations, fetchGroups, fetchCallLogs]);
 
-  // Scroll to bottom on new messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Fetch messages when conversation is selected
   useEffect(() => {
     if (selectedConversation) {
       fetchMessages(selectedConversation.recipient_id);
@@ -105,7 +115,6 @@ export default function Messenger() {
     }
   }, [selectedConversation, fetchMessages, markAsRead]);
 
-  // Handle new chat search
   const handleNewChatSearch = async (query: string) => {
     setNewChatSearchQuery(query);
     if (query.trim().length < 2) {
@@ -118,7 +127,6 @@ export default function Messenger() {
     setNewChatSearching(false);
   };
 
-  // Start new conversation with a user
   const startNewConversation = (userData: any) => {
     const newConv: Conversation = {
       id: userData.id,
@@ -137,7 +145,6 @@ export default function Messenger() {
     setNewChatSearchResults([]);
   };
 
-  // Group messages by date
   const groupMessagesByDate = (msgs: any[]) => {
     const grouped: { [key: string]: any[] } = {};
     msgs.forEach(msg => {
@@ -156,47 +163,59 @@ export default function Messenger() {
     return grouped;
   };
 
-  // Handle send message
+  const formatChatTime = (timestamp: string | null) => {
+    if (!timestamp) return '';
+    const date = new Date(timestamp);
+    if (isToday(date)) return format(date, 'HH:mm');
+    if (isYesterday(date)) return isArabic ? 'أمس' : 'Yesterday';
+    if (isThisWeek(date)) return format(date, 'EEEE');
+    return format(date, 'dd/MM/yyyy');
+  };
+
   const handleSendMessage = (content: string, files: File[], replyToMsg?: any) => {
     if (!selectedConversation) return;
     sendMessage(selectedConversation.recipient_id, content, files, replyToMsg?.id);
     setReplyTo(null);
   };
 
-  // Handle voice send
   const handleVoiceSend = (audioBlob: Blob, duration: number) => {
     if (!selectedConversation) return;
     const file = new File([audioBlob], 'voice_message.webm', { type: 'audio/webm' });
     sendMessage(selectedConversation.recipient_id, '', [file], undefined, undefined, 'voice', duration);
   };
 
-  // Handle conversation select
   const handleSelectConversation = (conv: Conversation) => {
+    if (isSelectMode) {
+      const newSelected = new Set(selectedChats);
+      if (newSelected.has(conv.recipient_id)) {
+        newSelected.delete(conv.recipient_id);
+      } else {
+        newSelected.add(conv.recipient_id);
+      }
+      setSelectedChats(newSelected);
+      return;
+    }
     setSelectedConversation(conv);
     setSelectedGroup(null);
     setShowChatView(true);
   };
 
-  // Handle group select
   const handleSelectGroup = (group: GroupChat) => {
     setSelectedGroup(group);
     setSelectedConversation(null);
     setShowChatView(true);
   };
 
-  // Handle back from chat
   const handleBackFromChat = () => {
     setShowChatView(false);
     setSelectedConversation(null);
     setSelectedGroup(null);
   };
 
-  // Exit messenger completely
   const handleExitMessenger = () => {
     navigate('/dashboard');
   };
 
-  // Handle voice call
   const handleVoiceCall = () => {
     if (selectedConversation) {
       callService.startCall(
@@ -208,7 +227,6 @@ export default function Messenger() {
     }
   };
 
-  // Handle video call
   const handleVideoCall = () => {
     if (selectedConversation) {
       callService.startCall(
@@ -220,21 +238,48 @@ export default function Messenger() {
     }
   };
 
-  // Total unread count
+  const handleMarkAllRead = () => {
+    conversations.forEach(conv => {
+      if (conv.unread_count > 0) {
+        markAsRead(conv.recipient_id);
+      }
+    });
+  };
+
+  const handleDeleteChat = (convId: string) => {
+    // Implement delete logic
+    console.log('Delete chat:', convId);
+  };
+
+  const handleArchiveChat = (convId: string) => {
+    // Implement archive logic
+    console.log('Archive chat:', convId);
+  };
+
+  const handlePinChat = (convId: string) => {
+    // Implement pin logic
+    console.log('Pin chat:', convId);
+  };
+
   const totalUnread = conversations.reduce((acc, c) => acc + (c.unread_count || 0), 0);
+
+  const filteredConversations = conversations.filter(conv =>
+    conv.recipient_name?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const filteredGroups = groups.filter(group =>
+    group.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   if (loading) {
     return (
-      <div 
-        className="fixed inset-0 flex items-center justify-center z-[100]" 
-        style={{ backgroundColor: WHATSAPP_COLORS.bg }}
-      >
-        <Loader2 className="h-10 w-10 animate-spin" style={{ color: WHATSAPP_COLORS.accent }} />
+      <div className="fixed inset-0 flex items-center justify-center z-[100]" style={{ backgroundColor: colors.bg }}>
+        <Loader2 className="h-10 w-10 animate-spin" style={{ color: colors.accent }} />
       </div>
     );
   }
 
-  // Desktop/Tablet Layout - WhatsApp Web Style
+  // Desktop/Tablet Layout
   if (!isMobile) {
     return (
       <>
@@ -263,7 +308,6 @@ export default function Messenger() {
           isArabic={isArabic}
         />
 
-        {/* New Chat Dialog */}
         <Dialog open={showNewChat} onOpenChange={(open) => {
           setShowNewChat(open);
           if (!open) {
@@ -271,413 +315,30 @@ export default function Messenger() {
             setNewChatSearchResults([]);
           }
         }}>
-          <DialogContent 
-            className="max-w-md border-0 p-0 overflow-hidden z-[200]" 
-            style={{ backgroundColor: WHATSAPP_COLORS.bgSecondary }}
-          >
-            <div className="p-4 flex items-center gap-3" style={{ backgroundColor: WHATSAPP_COLORS.headerBg }}>
+          <DialogContent className="max-w-md border-0 p-0 overflow-hidden z-[200]" style={{ backgroundColor: colors.bgSecondary }}>
+            <div className="p-4 flex items-center gap-3" style={{ backgroundColor: colors.headerBg }}>
               <Button variant="ghost" size="icon" className="rounded-full" onClick={() => setShowNewChat(false)}>
-                <X className="h-5 w-5" style={{ color: WHATSAPP_COLORS.textPrimary }} />
+                <X className="h-5 w-5" style={{ color: colors.textPrimary }} />
               </Button>
-              <h2 className="text-lg font-semibold" style={{ color: WHATSAPP_COLORS.textPrimary }}>
+              <h2 className="text-lg font-semibold" style={{ color: colors.textPrimary }}>
                 {isArabic ? 'محادثة جديدة' : 'New Chat'}
               </h2>
             </div>
-            
             <div className="p-4 space-y-3">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: WHATSAPP_COLORS.textMuted }} />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: colors.textMuted }} />
                 <Input
                   placeholder={isArabic ? 'البحث عن جهات الاتصال...' : 'Search contacts...'}
                   value={newChatSearchQuery}
                   onChange={(e) => handleNewChatSearch(e.target.value)}
                   className="pl-10 border-0 rounded-lg"
-                  style={{ backgroundColor: WHATSAPP_COLORS.inputBg, color: WHATSAPP_COLORS.textPrimary }}
+                  style={{ backgroundColor: colors.inputBg, color: colors.textPrimary }}
                 />
               </div>
-              
-              <div 
-                className="flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors hover:bg-white/5"
-                onClick={() => {
-                  setShowNewChat(false);
-                  setShowCreateGroup(true);
-                }}
-              >
-                <div className="h-12 w-12 rounded-full flex items-center justify-center" style={{ backgroundColor: WHATSAPP_COLORS.accent }}>
-                  <Users className="h-6 w-6 text-white" />
-                </div>
-                <span className="font-medium" style={{ color: WHATSAPP_COLORS.textPrimary }}>
-                  {isArabic ? 'مجموعة جديدة' : 'New group'}
-                </span>
-              </div>
-
-              <div className="pt-2">
-                <p className="text-xs font-medium mb-2 px-1" style={{ color: WHATSAPP_COLORS.textMuted }}>
-                  {newChatSearchQuery.trim().length > 0 
-                    ? (isArabic ? 'نتائج البحث' : 'Search results')
-                    : (isArabic ? 'المحادثات الأخيرة' : 'Recent chats')}
-                </p>
-                <ScrollArea className="h-64">
-                  {newChatSearching ? (
-                    <div className="flex items-center justify-center py-8">
-                      <Loader2 className="h-6 w-6 animate-spin" style={{ color: WHATSAPP_COLORS.accent }} />
-                    </div>
-                  ) : newChatSearchQuery.trim().length > 0 ? (
-                    newChatSearchResults.length > 0 ? (
-                      newChatSearchResults.map((userResult) => (
-                        <div
-                          key={userResult.id}
-                          className="flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors hover:bg-white/5"
-                          onClick={() => startNewConversation(userResult)}
-                        >
-                          <Avatar className="h-12 w-12">
-                            <AvatarImage src={userResult.profile_image || undefined} />
-                            <AvatarFallback style={{ backgroundColor: WHATSAPP_COLORS.accent }}>
-                              {userResult.full_name?.charAt(0) || '?'}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <p className="font-medium" style={{ color: WHATSAPP_COLORS.textPrimary }}>
-                              {userResult.full_name}
-                            </p>
-                            <p className="text-xs capitalize" style={{ color: WHATSAPP_COLORS.textMuted }}>
-                              {userResult.role}
-                            </p>
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-center py-8" style={{ color: WHATSAPP_COLORS.textMuted }}>
-                        {isArabic ? 'لم يتم العثور على مستخدمين' : 'No users found'}
-                      </p>
-                    )
-                  ) : (
-                    conversations.map((conv) => (
-                      <div
-                        key={conv.recipient_id}
-                        className="flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors hover:bg-white/5"
-                        onClick={() => {
-                          handleSelectConversation(conv);
-                          setShowNewChat(false);
-                        }}
-                      >
-                        <Avatar className="h-12 w-12">
-                          <AvatarImage src={conv.recipient_image || undefined} />
-                          <AvatarFallback style={{ backgroundColor: WHATSAPP_COLORS.accent }}>
-                            {conv.recipient_name?.charAt(0) || '?'}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p className="font-medium" style={{ color: WHATSAPP_COLORS.textPrimary }}>
-                            {conv.recipient_name}
-                          </p>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </ScrollArea>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
-
-        {/* Create Group Dialog */}
-        <CreateGroupDialog
-          open={showCreateGroup}
-          onClose={() => setShowCreateGroup(false)}
-          onCreate={async (name, description, memberIds) => {
-            await createGroup(name, description, memberIds);
-            setShowCreateGroup(false);
-          }}
-          searchUsers={searchUsers}
-          isArabic={isArabic}
-        />
-
-        {/* Forward Dialog */}
-        <ForwardDialog
-          open={!!forwardMessage}
-          onClose={() => setForwardMessage(null)}
-          onForward={(recipientIds) => {
-            setForwardMessage(null);
-          }}
-          conversations={conversations}
-          groups={groups}
-          messagePreview={forwardMessage?.content || ''}
-          isArabic={isArabic}
-        />
-
-        {/* Call Screen Overlay */}
-        <CallScreen isArabic={isArabic} />
-      </>
-    );
-  }
-
-  // Mobile Layout - Original Full Screen Approach
-  // Chat View (Full Screen)
-  const renderChatView = () => (
-    <motion.div
-      initial={{ x: '100%' }}
-      animate={{ x: 0 }}
-      exit={{ x: '100%' }}
-      transition={{ type: 'tween', duration: 0.2 }}
-      className="fixed inset-0 flex flex-col z-[100]"
-      style={{ backgroundColor: WHATSAPP_COLORS.bg }}
-      dir={dir}
-    >
-      {/* Chat Header */}
-      <ChatHeader
-        conversation={selectedConversation}
-        group={selectedGroup}
-        onBack={handleBackFromChat}
-        onVoiceCall={handleVoiceCall}
-        onVideoCall={handleVideoCall}
-        isArabic={isArabic}
-      />
-
-      {/* Messages Area */}
-      <ScrollArea 
-        className="flex-1 px-3 py-2"
-        style={{ 
-          backgroundColor: WHATSAPP_COLORS.light.chatBg,
-          backgroundImage: 'url("data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%239C92AC" fill-opacity="0.05"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")'
-        }}
-      >
-        <div className="max-w-3xl mx-auto space-y-1">
-          {Object.entries(groupMessagesByDate(messages)).map(([date, dateMessages]) => (
-            <div key={date}>
-              <div className="flex justify-center my-3">
-                <span 
-                  className="px-3 py-1 rounded-lg text-xs font-medium shadow-sm"
-                  style={{ 
-                    backgroundColor: 'rgba(255,255,255,0.95)', 
-                    color: WHATSAPP_COLORS.light.textSecondary 
-                  }}
-                >
-                  {date}
-                </span>
-              </div>
-              {(dateMessages as any[]).map((msg) => (
-                <MessageBubble
-                  key={msg.id}
-                  message={msg}
-                  isOwnMessage={msg.sender_id === user?.id}
-                  onReply={(m) => setReplyTo(m)}
-                  onForward={(m) => setForwardMessage(m)}
-                  onDelete={(msgId, forEveryone) => deleteMessage(msgId, forEveryone)}
-                  onReact={(msgId, emoji) => addReaction(msgId, emoji)}
-                  onRemoveReaction={(msgId) => removeReaction(msgId)}
-                  isArabic={isArabic}
-                />
-              ))}
-            </div>
-          ))}
-          <div ref={messagesEndRef} />
-        </div>
-      </ScrollArea>
-
-      {/* Chat Input */}
-      <ChatInput
-        onSend={handleSendMessage}
-        onVoiceSend={handleVoiceSend}
-        onTyping={(typing) => setTyping(selectedConversation?.recipient_id || '', typing)}
-        replyingTo={replyTo}
-        onCancelReply={() => setReplyTo(null)}
-        isArabic={isArabic}
-      />
-    </motion.div>
-  );
-
-  // Main Messenger View (Mobile)
-  const renderMessengerMain = () => (
-    <div 
-      className="fixed inset-0 flex flex-col z-[100]" 
-      style={{ backgroundColor: WHATSAPP_COLORS.bg }}
-      dir={dir}
-    >
-      {/* Header */}
-      <div 
-        className="flex items-center justify-between px-4 py-3 shrink-0"
-        style={{ 
-          backgroundColor: WHATSAPP_COLORS.headerBg,
-          paddingTop: 'max(env(safe-area-inset-top), 12px)'
-        }}
-      >
-        <div className="flex items-center gap-3">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="rounded-full hover:bg-white/10"
-            onClick={handleExitMessenger}
-          >
-            <ArrowLeft className="h-5 w-5" style={{ color: WHATSAPP_COLORS.textPrimary }} />
-          </Button>
-          <h1 className="text-xl font-bold" style={{ color: WHATSAPP_COLORS.textPrimary }}>
-            {activeTab === 'chats' ? (isArabic ? 'المحادثات' : 'Chats') :
-             activeTab === 'groups' ? (isArabic ? 'المجموعات' : 'Groups') :
-             activeTab === 'calls' ? (isArabic ? 'المكالمات' : 'Calls') :
-             activeTab === 'search' ? (isArabic ? 'البحث' : 'Search') :
-             (isArabic ? 'الإعدادات' : 'Settings')}
-          </h1>
-        </div>
-        <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/10">
-            <Camera className="h-5 w-5" style={{ color: WHATSAPP_COLORS.textSecondary }} />
-          </Button>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="rounded-full hover:bg-white/10"
-            onClick={() => setActiveTab('search')}
-          >
-            <Search className="h-5 w-5" style={{ color: WHATSAPP_COLORS.textSecondary }} />
-          </Button>
-          <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/10">
-            <MoreVertical className="h-5 w-5" style={{ color: WHATSAPP_COLORS.textSecondary }} />
-          </Button>
-        </div>
-      </div>
-
-      {/* Tab Content */}
-      <div className="flex-1 overflow-hidden">
-        {activeTab === 'chats' && (
-          <MessengerChatList
-            conversations={conversations}
-            groups={groups}
-            searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
-            onSelectConversation={handleSelectConversation}
-            onSelectGroup={handleSelectGroup}
-            onNewChat={() => setShowNewChat(true)}
-            isArabic={isArabic}
-          />
-        )}
-
-        {activeTab === 'groups' && (
-          <MessengerChatList
-            conversations={[]}
-            groups={groups}
-            searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
-            onSelectConversation={handleSelectConversation}
-            onSelectGroup={handleSelectGroup}
-            onNewChat={() => setShowCreateGroup(true)}
-            showGroupsOnly
-            isArabic={isArabic}
-          />
-        )}
-
-        {activeTab === 'calls' && (
-          <MessengerCalls callLogs={callLogs} isArabic={isArabic} />
-        )}
-
-        {activeTab === 'search' && (
-          <MessengerSearch
-            conversations={conversations}
-            groups={groups}
-            onSelectConversation={handleSelectConversation}
-            onSelectGroup={handleSelectGroup}
-            searchUsers={searchUsers}
-            isArabic={isArabic}
-          />
-        )}
-
-        {activeTab === 'settings' && (
-          <MessengerSettings profile={profile} isArabic={isArabic} />
-        )}
-      </div>
-
-      {/* FAB for new chat/group */}
-      {(activeTab === 'chats' || activeTab === 'groups') && (
-        <Button
-          className="fixed right-5 shadow-lg h-14 w-14 rounded-full"
-          style={{ 
-            backgroundColor: WHATSAPP_COLORS.accent,
-            bottom: 'calc(80px + env(safe-area-inset-bottom, 0px))'
-          }}
-          onClick={() => activeTab === 'groups' ? setShowCreateGroup(true) : setShowNewChat(true)}
-        >
-          {activeTab === 'groups' ? (
-            <Users className="h-6 w-6 text-white" />
-          ) : (
-            <MessageCircle className="h-6 w-6 text-white" />
-          )}
-        </Button>
-      )}
-
-      {/* Bottom Navigation */}
-      <MessengerBottomNav
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        unreadCount={totalUnread}
-        isArabic={isArabic}
-      />
-    </div>
-  );
-
-  return (
-    <>
-      <AnimatePresence mode="wait">
-        {showChatView ? renderChatView() : renderMessengerMain()}
-      </AnimatePresence>
-
-      {/* New Chat Dialog */}
-      <Dialog open={showNewChat} onOpenChange={(open) => {
-        setShowNewChat(open);
-        if (!open) {
-          setNewChatSearchQuery('');
-          setNewChatSearchResults([]);
-        }
-      }}>
-        <DialogContent 
-          className="max-w-md border-0 p-0 overflow-hidden z-[200]" 
-          style={{ backgroundColor: WHATSAPP_COLORS.bgSecondary }}
-        >
-          <div className="p-4 flex items-center gap-3" style={{ backgroundColor: WHATSAPP_COLORS.headerBg }}>
-            <Button variant="ghost" size="icon" className="rounded-full" onClick={() => setShowNewChat(false)}>
-              <X className="h-5 w-5" style={{ color: WHATSAPP_COLORS.textPrimary }} />
-            </Button>
-            <h2 className="text-lg font-semibold" style={{ color: WHATSAPP_COLORS.textPrimary }}>
-              {isArabic ? 'محادثة جديدة' : 'New Chat'}
-            </h2>
-          </div>
-          
-          <div className="p-4 space-y-3">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: WHATSAPP_COLORS.textMuted }} />
-              <Input
-                placeholder={isArabic ? 'البحث عن جهات الاتصال...' : 'Search contacts...'}
-                value={newChatSearchQuery}
-                onChange={(e) => handleNewChatSearch(e.target.value)}
-                className="pl-10 border-0 rounded-lg"
-                style={{ backgroundColor: WHATSAPP_COLORS.inputBg, color: WHATSAPP_COLORS.textPrimary }}
-              />
-            </div>
-            
-            <div 
-              className="flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors hover:bg-white/5"
-              onClick={() => {
-                setShowNewChat(false);
-                setShowCreateGroup(true);
-              }}
-            >
-              <div className="h-12 w-12 rounded-full flex items-center justify-center" style={{ backgroundColor: WHATSAPP_COLORS.accent }}>
-                <Users className="h-6 w-6 text-white" />
-              </div>
-              <span className="font-medium" style={{ color: WHATSAPP_COLORS.textPrimary }}>
-                {isArabic ? 'مجموعة جديدة' : 'New group'}
-              </span>
-            </div>
-
-            <div className="pt-2">
-              <p className="text-xs font-medium mb-2 px-1" style={{ color: WHATSAPP_COLORS.textMuted }}>
-                {newChatSearchQuery.trim().length > 0 
-                  ? (isArabic ? 'نتائج البحث' : 'Search results')
-                  : (isArabic ? 'المحادثات الأخيرة' : 'Recent chats')}
-              </p>
               <ScrollArea className="h-64">
                 {newChatSearching ? (
                   <div className="flex items-center justify-center py-8">
-                    <Loader2 className="h-6 w-6 animate-spin" style={{ color: WHATSAPP_COLORS.accent }} />
+                    <Loader2 className="h-6 w-6 animate-spin" style={{ color: colors.accent }} />
                   </div>
                 ) : newChatSearchQuery.trim().length > 0 ? (
                   newChatSearchResults.length > 0 ? (
@@ -689,22 +350,18 @@ export default function Messenger() {
                       >
                         <Avatar className="h-12 w-12">
                           <AvatarImage src={userResult.profile_image || undefined} />
-                          <AvatarFallback style={{ backgroundColor: WHATSAPP_COLORS.accent }}>
+                          <AvatarFallback style={{ backgroundColor: colors.accent }}>
                             {userResult.full_name?.charAt(0) || '?'}
                           </AvatarFallback>
                         </Avatar>
                         <div>
-                          <p className="font-medium" style={{ color: WHATSAPP_COLORS.textPrimary }}>
-                            {userResult.full_name}
-                          </p>
-                          <p className="text-xs capitalize" style={{ color: WHATSAPP_COLORS.textMuted }}>
-                            {userResult.role}
-                          </p>
+                          <p className="font-medium" style={{ color: colors.textPrimary }}>{userResult.full_name}</p>
+                          <p className="text-xs capitalize" style={{ color: colors.textMuted }}>{userResult.role}</p>
                         </div>
                       </div>
                     ))
                   ) : (
-                    <p className="text-center py-8" style={{ color: WHATSAPP_COLORS.textMuted }}>
+                    <p className="text-center py-8" style={{ color: colors.textMuted }}>
                       {isArabic ? 'لم يتم العثور على مستخدمين' : 'No users found'}
                     </p>
                   )
@@ -720,51 +377,422 @@ export default function Messenger() {
                     >
                       <Avatar className="h-12 w-12">
                         <AvatarImage src={conv.recipient_image || undefined} />
-                        <AvatarFallback style={{ backgroundColor: WHATSAPP_COLORS.accent }}>
-                          {conv.recipient_name?.charAt(0) || '?'}
-                        </AvatarFallback>
+                        <AvatarFallback style={{ backgroundColor: colors.accent }}>{conv.recipient_name?.charAt(0) || '?'}</AvatarFallback>
                       </Avatar>
-                      <div>
-                        <p className="font-medium" style={{ color: WHATSAPP_COLORS.textPrimary }}>
-                          {conv.recipient_name}
-                        </p>
-                      </div>
+                      <p className="font-medium" style={{ color: colors.textPrimary }}>{conv.recipient_name}</p>
                     </div>
                   ))
                 )}
               </ScrollArea>
             </div>
+          </DialogContent>
+        </Dialog>
+
+        <CreateGroupDialog
+          open={showCreateGroup}
+          onClose={() => setShowCreateGroup(false)}
+          onCreate={async (name, description, memberIds) => {
+            await createGroup(name, description, memberIds);
+            setShowCreateGroup(false);
+          }}
+          searchUsers={searchUsers}
+          isArabic={isArabic}
+        />
+
+        <ForwardDialog
+          open={!!forwardMessage}
+          onClose={() => setForwardMessage(null)}
+          onForward={() => setForwardMessage(null)}
+          conversations={conversations}
+          groups={groups}
+          messagePreview={forwardMessage?.content || ''}
+          isArabic={isArabic}
+        />
+
+        <CallScreen isArabic={isArabic} />
+      </>
+    );
+  }
+
+  // Mobile Chat View
+  const renderChatView = () => (
+    <motion.div
+      initial={{ x: '100%' }}
+      animate={{ x: 0 }}
+      exit={{ x: '100%' }}
+      transition={{ type: 'tween', duration: 0.2 }}
+      className="fixed inset-0 flex flex-col z-[100]"
+      style={{ backgroundColor: colors.bg }}
+      dir={dir}
+    >
+      <SimplifiedChatHeader
+        conversation={selectedConversation}
+        group={selectedGroup}
+        onBack={handleBackFromChat}
+        onVoiceCall={handleVoiceCall}
+        onVideoCall={handleVideoCall}
+        isArabic={isArabic}
+        colors={colors}
+      />
+
+      <ScrollArea 
+        className="flex-1 px-3 py-2"
+        style={{ 
+          backgroundColor: colors.chatBg,
+          backgroundImage: isDark 
+            ? 'url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%239C92AC\' fill-opacity=\'0.03\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")'
+            : 'url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%239C92AC\' fill-opacity=\'0.05\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")'
+        }}
+      >
+        <div className="max-w-3xl mx-auto space-y-1">
+          {Object.entries(groupMessagesByDate(messages)).map(([date, dateMessages]) => (
+            <div key={date}>
+              <div className="flex justify-center my-3">
+                <span 
+                  className="px-3 py-1 rounded-lg text-xs font-medium shadow-sm"
+                  style={{ backgroundColor: isDark ? colors.bgTertiary : 'rgba(255,255,255,0.95)', color: colors.textSecondary }}
+                >
+                  {date}
+                </span>
+              </div>
+              {(dateMessages as any[]).map((msg) => (
+                <EnhancedMessageBubble
+                  key={msg.id}
+                  message={msg}
+                  isOwnMessage={msg.sender_id === user?.id}
+                  onReply={(m) => setReplyTo(m)}
+                  onForward={(m) => setForwardMessage(m)}
+                  onDelete={(msgId, forEveryone) => deleteMessage(msgId, forEveryone)}
+                  onReact={(msgId, emoji) => addReaction(msgId, emoji)}
+                  onRemoveReaction={(msgId) => removeReaction(msgId)}
+                  isArabic={isArabic}
+                  colors={colors}
+                />
+              ))}
+            </div>
+          ))}
+          <div ref={messagesEndRef} />
+        </div>
+      </ScrollArea>
+
+      <ChatInput
+        onSend={handleSendMessage}
+        onVoiceSend={handleVoiceSend}
+        onTyping={(typing) => setTyping(selectedConversation?.recipient_id || '', typing)}
+        replyingTo={replyTo}
+        onCancelReply={() => setReplyTo(null)}
+        isArabic={isArabic}
+      />
+    </motion.div>
+  );
+
+  // Mobile Main View with Swipeable Chat List
+  const renderMessengerMain = () => (
+    <div className="fixed inset-0 flex flex-col z-[100]" style={{ backgroundColor: colors.bg }} dir={dir}>
+      {/* Simplified Header - No three-dot menu, no search, no camera buttons */}
+      <div 
+        className="flex items-center justify-between px-4 py-3 shrink-0"
+        style={{ backgroundColor: colors.headerBg, paddingTop: 'max(env(safe-area-inset-top), 12px)' }}
+      >
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/10" onClick={handleExitMessenger}>
+            <ArrowLeft className="h-5 w-5" style={{ color: colors.textPrimary }} />
+          </Button>
+          <h1 className="text-xl font-bold" style={{ color: colors.textPrimary }}>
+            {activeTab === 'chats' ? (isArabic ? 'المحادثات' : 'Chats') :
+             activeTab === 'groups' ? (isArabic ? 'المجموعات' : 'Groups') :
+             activeTab === 'calls' ? (isArabic ? 'المكالمات' : 'Calls') :
+             activeTab === 'search' ? (isArabic ? 'البحث' : 'Search') :
+             (isArabic ? 'الإعدادات' : 'Settings')}
+          </h1>
+        </div>
+        
+        {/* Three-dot menu with Select chats and Mark all as read */}
+        {(activeTab === 'chats' || activeTab === 'groups') && (
+          <ChatListMenu
+            onSelectChats={() => setIsSelectMode(true)}
+            onMarkAllRead={handleMarkAllRead}
+            isSelectMode={isSelectMode}
+            onCancelSelect={() => { setIsSelectMode(false); setSelectedChats(new Set()); }}
+            selectedCount={selectedChats.size}
+            isArabic={isArabic}
+            colors={colors}
+          />
+        )}
+      </div>
+
+      {/* Search Bar */}
+      {(activeTab === 'chats' || activeTab === 'groups') && (
+        <div className="px-4 py-2 shrink-0" style={{ backgroundColor: colors.bgSecondary }}>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: colors.textMuted }} />
+            <Input
+              placeholder={isArabic ? 'ابحث أو ابدأ محادثة جديدة' : 'Search or start new chat'}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 border-0 rounded-xl h-10"
+              style={{ backgroundColor: colors.inputBg, color: colors.textPrimary }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Tab Content */}
+      <div className="flex-1 overflow-hidden">
+        {activeTab === 'chats' && (
+          <ScrollArea className="h-full">
+            {/* Archived section */}
+            <div 
+              className="flex items-center gap-4 px-4 py-3 cursor-pointer transition-colors hover:bg-white/5"
+              style={{ borderBottom: `1px solid ${colors.divider}` }}
+            >
+              <div className="h-12 w-12 rounded-full flex items-center justify-center" style={{ backgroundColor: colors.bgTertiary }}>
+                <Archive className="h-5 w-5" style={{ color: colors.accent }} />
+              </div>
+              <span className="font-medium" style={{ color: colors.textPrimary }}>
+                {isArabic ? 'مؤرشف' : 'Archived'}
+              </span>
+            </div>
+
+            {/* Chat List with Swipe Actions */}
+            {filteredConversations.map((conv) => (
+              <SwipeableChatItem
+                key={conv.recipient_id}
+                onDelete={() => handleDeleteChat(conv.recipient_id)}
+                onArchive={() => handleArchiveChat(conv.recipient_id)}
+                onPin={() => handlePinChat(conv.recipient_id)}
+                canPin={canPin}
+                isArabic={isArabic}
+              >
+                <div
+                  className="flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors active:bg-white/10 hover:bg-white/5"
+                  style={{ backgroundColor: colors.bg, borderBottom: `1px solid ${colors.divider}` }}
+                  onClick={() => handleSelectConversation(conv)}
+                >
+                  {isSelectMode && (
+                    <div 
+                      className="h-5 w-5 rounded-full border-2 flex items-center justify-center shrink-0"
+                      style={{ 
+                        borderColor: colors.accent,
+                        backgroundColor: selectedChats.has(conv.recipient_id) ? colors.accent : 'transparent'
+                      }}
+                    >
+                      {selectedChats.has(conv.recipient_id) && (
+                        <CheckCheck className="h-3 w-3 text-white" />
+                      )}
+                    </div>
+                  )}
+                  <div className="relative">
+                    <Avatar className="h-14 w-14">
+                      <AvatarImage src={conv.recipient_image || undefined} />
+                      <AvatarFallback style={{ backgroundColor: colors.accent }}>{conv.recipient_name?.charAt(0) || '?'}</AvatarFallback>
+                    </Avatar>
+                    {conv.is_online && (
+                      <div className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2" style={{ backgroundColor: colors.accentLight, borderColor: colors.bg }} />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium truncate" style={{ color: colors.textPrimary }}>{conv.recipient_name}</span>
+                      <span className="text-xs" style={{ color: conv.unread_count > 0 ? colors.accentLight : colors.textMuted }}>
+                        {conv.last_message_time && formatChatTime(conv.last_message_time)}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-1 flex-1 min-w-0">
+                        <CheckCheck className="h-4 w-4 shrink-0" style={{ color: colors.checkBlue }} />
+                        <p className="text-sm truncate" style={{ color: colors.textSecondary }}>
+                          {conv.last_message || (isArabic ? 'لا توجد رسائل بعد' : 'No messages yet')}
+                        </p>
+                      </div>
+                      {conv.unread_count > 0 && (
+                        <Badge className="h-5 min-w-5 rounded-full flex items-center justify-center text-xs shrink-0" style={{ backgroundColor: colors.accentLight }}>
+                          {conv.unread_count}
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </SwipeableChatItem>
+            ))}
+
+            {/* Groups */}
+            {filteredGroups.map((group) => (
+              <SwipeableChatItem
+                key={group.id}
+                onDelete={() => handleDeleteChat(group.id)}
+                onArchive={() => handleArchiveChat(group.id)}
+                onPin={() => handlePinChat(group.id)}
+                canPin={canPin}
+                isArabic={isArabic}
+              >
+                <div
+                  className="flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors active:bg-white/10 hover:bg-white/5"
+                  style={{ backgroundColor: colors.bg, borderBottom: `1px solid ${colors.divider}` }}
+                  onClick={() => handleSelectGroup(group)}
+                >
+                  <Avatar className="h-14 w-14">
+                    <AvatarImage src={group.image_url || undefined} />
+                    <AvatarFallback style={{ backgroundColor: colors.accent }}><Users className="h-6 w-6 text-white" /></AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium truncate" style={{ color: colors.textPrimary }}>{group.name}</span>
+                      {group.last_message_time && (
+                        <span className="text-xs" style={{ color: colors.textMuted }}>{formatChatTime(group.last_message_time)}</span>
+                      )}
+                    </div>
+                    <p className="text-sm truncate" style={{ color: colors.textSecondary }}>
+                      {group.description || (isArabic ? 'محادثة جماعية' : 'Group chat')}
+                    </p>
+                  </div>
+                  {group.unread_count > 0 && (
+                    <Badge className="h-5 min-w-5 rounded-full flex items-center justify-center text-xs" style={{ backgroundColor: colors.accentLight }}>
+                      {group.unread_count}
+                    </Badge>
+                  )}
+                </div>
+              </SwipeableChatItem>
+            ))}
+
+            {filteredConversations.length === 0 && filteredGroups.length === 0 && (
+              <div className="flex flex-col items-center justify-center py-16 px-6">
+                <div className="h-20 w-20 rounded-full flex items-center justify-center mb-4" style={{ backgroundColor: colors.bgTertiary }}>
+                  <Search className="h-10 w-10" style={{ color: colors.textMuted }} />
+                </div>
+                <p className="text-center" style={{ color: colors.textSecondary }}>
+                  {isArabic ? 'لا توجد محادثات' : 'No conversations'}
+                </p>
+              </div>
+            )}
+          </ScrollArea>
+        )}
+
+        {activeTab === 'groups' && (
+          <ScrollArea className="h-full">
+            {filteredGroups.map((group) => (
+              <SwipeableChatItem
+                key={group.id}
+                onDelete={() => handleDeleteChat(group.id)}
+                onArchive={() => handleArchiveChat(group.id)}
+                onPin={() => handlePinChat(group.id)}
+                canPin={canPin}
+                isArabic={isArabic}
+              >
+                <div
+                  className="flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors active:bg-white/10 hover:bg-white/5"
+                  style={{ backgroundColor: colors.bg, borderBottom: `1px solid ${colors.divider}` }}
+                  onClick={() => handleSelectGroup(group)}
+                >
+                  <Avatar className="h-14 w-14">
+                    <AvatarImage src={group.image_url || undefined} />
+                    <AvatarFallback style={{ backgroundColor: colors.accent }}><Users className="h-6 w-6 text-white" /></AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium truncate" style={{ color: colors.textPrimary }}>{group.name}</span>
+                      {group.last_message_time && (
+                        <span className="text-xs" style={{ color: colors.textMuted }}>{formatChatTime(group.last_message_time)}</span>
+                      )}
+                    </div>
+                    <p className="text-sm truncate" style={{ color: colors.textSecondary }}>
+                      {group.description || (isArabic ? 'محادثة جماعية' : 'Group chat')}
+                    </p>
+                  </div>
+                </div>
+              </SwipeableChatItem>
+            ))}
+          </ScrollArea>
+        )}
+
+        {activeTab === 'calls' && <MessengerCalls callLogs={callLogs} isArabic={isArabic} />}
+        {activeTab === 'search' && (
+          <MessengerSearch
+            conversations={conversations}
+            groups={groups}
+            onSelectConversation={handleSelectConversation}
+            onSelectGroup={handleSelectGroup}
+            searchUsers={searchUsers}
+            isArabic={isArabic}
+          />
+        )}
+        {activeTab === 'settings' && <MessengerSettingsWithTheme profile={profile} isArabic={isArabic} />}
+      </div>
+
+      {/* FAB */}
+      {(activeTab === 'chats' || activeTab === 'groups') && !isSelectMode && (
+        <Button
+          className="fixed right-5 shadow-lg h-14 w-14 rounded-full"
+          style={{ backgroundColor: colors.accent, bottom: 'calc(80px + env(safe-area-inset-bottom, 0px))' }}
+          onClick={() => activeTab === 'groups' ? setShowCreateGroup(true) : setShowNewChat(true)}
+        >
+          {activeTab === 'groups' ? <Users className="h-6 w-6 text-white" /> : <MessageCircle className="h-6 w-6 text-white" />}
+        </Button>
+      )}
+
+      <MessengerBottomNav activeTab={activeTab} onTabChange={setActiveTab} unreadCount={totalUnread} isArabic={isArabic} />
+    </div>
+  );
+
+  return (
+    <>
+      <AnimatePresence mode="wait">
+        {showChatView ? renderChatView() : renderMessengerMain()}
+      </AnimatePresence>
+
+      <Dialog open={showNewChat} onOpenChange={(open) => { setShowNewChat(open); if (!open) { setNewChatSearchQuery(''); setNewChatSearchResults([]); } }}>
+        <DialogContent className="max-w-md border-0 p-0 overflow-hidden z-[200]" style={{ backgroundColor: colors.bgSecondary }}>
+          <div className="p-4 flex items-center gap-3" style={{ backgroundColor: colors.headerBg }}>
+            <Button variant="ghost" size="icon" className="rounded-full" onClick={() => setShowNewChat(false)}>
+              <X className="h-5 w-5" style={{ color: colors.textPrimary }} />
+            </Button>
+            <h2 className="text-lg font-semibold" style={{ color: colors.textPrimary }}>{isArabic ? 'محادثة جديدة' : 'New Chat'}</h2>
+          </div>
+          <div className="p-4 space-y-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: colors.textMuted }} />
+              <Input placeholder={isArabic ? 'البحث عن جهات الاتصال...' : 'Search contacts...'} value={newChatSearchQuery} onChange={(e) => handleNewChatSearch(e.target.value)} className="pl-10 border-0 rounded-lg" style={{ backgroundColor: colors.inputBg, color: colors.textPrimary }} />
+            </div>
+            <div className="flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors hover:bg-white/5" onClick={() => { setShowNewChat(false); setShowCreateGroup(true); }}>
+              <div className="h-12 w-12 rounded-full flex items-center justify-center" style={{ backgroundColor: colors.accent }}><Users className="h-6 w-6 text-white" /></div>
+              <span className="font-medium" style={{ color: colors.textPrimary }}>{isArabic ? 'مجموعة جديدة' : 'New group'}</span>
+            </div>
+            <ScrollArea className="h-64">
+              {newChatSearching ? (
+                <div className="flex items-center justify-center py-8"><Loader2 className="h-6 w-6 animate-spin" style={{ color: colors.accent }} /></div>
+              ) : newChatSearchQuery.trim().length > 0 ? (
+                newChatSearchResults.length > 0 ? (
+                  newChatSearchResults.map((userResult) => (
+                    <div key={userResult.id} className="flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors hover:bg-white/5" onClick={() => startNewConversation(userResult)}>
+                      <Avatar className="h-12 w-12"><AvatarImage src={userResult.profile_image || undefined} /><AvatarFallback style={{ backgroundColor: colors.accent }}>{userResult.full_name?.charAt(0) || '?'}</AvatarFallback></Avatar>
+                      <div><p className="font-medium" style={{ color: colors.textPrimary }}>{userResult.full_name}</p><p className="text-xs capitalize" style={{ color: colors.textMuted }}>{userResult.role}</p></div>
+                    </div>
+                  ))
+                ) : <p className="text-center py-8" style={{ color: colors.textMuted }}>{isArabic ? 'لم يتم العثور على مستخدمين' : 'No users found'}</p>
+              ) : (
+                conversations.map((conv) => (
+                  <div key={conv.recipient_id} className="flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors hover:bg-white/5" onClick={() => { handleSelectConversation(conv); setShowNewChat(false); }}>
+                    <Avatar className="h-12 w-12"><AvatarImage src={conv.recipient_image || undefined} /><AvatarFallback style={{ backgroundColor: colors.accent }}>{conv.recipient_name?.charAt(0) || '?'}</AvatarFallback></Avatar>
+                    <p className="font-medium" style={{ color: colors.textPrimary }}>{conv.recipient_name}</p>
+                  </div>
+                ))
+              )}
+            </ScrollArea>
           </div>
         </DialogContent>
       </Dialog>
 
-      {/* Create Group Dialog */}
-      <CreateGroupDialog
-        open={showCreateGroup}
-        onClose={() => setShowCreateGroup(false)}
-        onCreate={async (name, description, memberIds) => {
-          await createGroup(name, description, memberIds);
-          setShowCreateGroup(false);
-        }}
-        searchUsers={searchUsers}
-        isArabic={isArabic}
-      />
-
-      {/* Forward Dialog */}
-      <ForwardDialog
-        open={!!forwardMessage}
-        onClose={() => setForwardMessage(null)}
-        onForward={(recipientIds) => {
-          setForwardMessage(null);
-        }}
-        conversations={conversations}
-        groups={groups}
-        messagePreview={forwardMessage?.content || ''}
-        isArabic={isArabic}
-      />
-
-      {/* Call Screen Overlay */}
+      <CreateGroupDialog open={showCreateGroup} onClose={() => setShowCreateGroup(false)} onCreate={async (name, description, memberIds) => { await createGroup(name, description, memberIds); setShowCreateGroup(false); }} searchUsers={searchUsers} isArabic={isArabic} />
+      <ForwardDialog open={!!forwardMessage} onClose={() => setForwardMessage(null)} onForward={() => setForwardMessage(null)} conversations={conversations} groups={groups} messagePreview={forwardMessage?.content || ''} isArabic={isArabic} />
       <CallScreen isArabic={isArabic} />
     </>
+  );
+}
+
+export default function Messenger() {
+  return (
+    <MessengerThemeProvider>
+      <MessengerContent />
+    </MessengerThemeProvider>
   );
 }
