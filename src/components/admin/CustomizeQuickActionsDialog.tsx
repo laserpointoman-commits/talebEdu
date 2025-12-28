@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -39,7 +39,7 @@ export function CustomizeQuickActionsDialog() {
           {t('Customize')}
         </Button>
       </DialogTrigger>
-      <DialogContent className="w-[95vw] max-w-lg sm:max-w-xl md:max-w-2xl max-h-[80vh] overflow-y-auto mx-auto">
+      <DialogContent className="w-[95vw] max-w-lg sm:max-w-xl md:max-w-2xl max-h-[80vh] overflow-y-auto overflow-x-hidden mx-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
             <span>{t('Customize Quick Actions')}</span>
@@ -53,6 +53,9 @@ export function CustomizeQuickActionsDialog() {
               {t('Reset to Defaults')}
             </Button>
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            {t('Choose which quick action buttons appear on your dashboard.')}
+          </DialogDescription>
         </DialogHeader>
         
         <div className="space-y-3 mt-4">
@@ -74,13 +77,13 @@ export function CustomizeQuickActionsDialog() {
                 >
                   <GripVertical className="h-5 w-5 text-muted-foreground opacity-50" />
                   
-                  <div className="flex items-center gap-3 flex-1">
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
                     <div className="p-2 rounded-lg bg-primary/10 text-primary">
                       <Icon className="h-5 w-5" />
                     </div>
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                       <p className="font-medium">{t(action.title)}</p>
-                      <p className="text-sm text-muted-foreground">{action.href}</p>
+                      <p className="text-sm text-muted-foreground truncate">{action.href}</p>
                     </div>
                   </div>
 
