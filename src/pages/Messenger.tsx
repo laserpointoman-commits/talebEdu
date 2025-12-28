@@ -16,6 +16,8 @@ import { MessengerUpdates } from '@/components/messenger/MessengerUpdates';
 import { MessengerCalls } from '@/components/messenger/MessengerCalls';
 import { MessengerSearch } from '@/components/messenger/MessengerSearch';
 import { MessengerSettings } from '@/components/messenger/MessengerSettings';
+import { CallScreen } from '@/components/messenger/CallScreen';
+import { callService } from '@/services/callService';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -72,6 +74,13 @@ export default function Messenger() {
 
   const isArabic = language === 'ar';
   const dir = isArabic ? 'rtl' : 'ltr';
+
+  // Initialize call service
+  useEffect(() => {
+    if (user?.id) {
+      callService.initialize(user.id);
+    }
+  }, [user?.id]);
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -145,6 +154,30 @@ export default function Messenger() {
     navigate('/dashboard');
   };
 
+  // Handle voice call
+  const handleVoiceCall = () => {
+    if (selectedConversation) {
+      callService.startCall(
+        selectedConversation.recipient_id,
+        selectedConversation.recipient_name || 'Unknown',
+        selectedConversation.recipient_image || null,
+        'voice'
+      );
+    }
+  };
+
+  // Handle video call
+  const handleVideoCall = () => {
+    if (selectedConversation) {
+      callService.startCall(
+        selectedConversation.recipient_id,
+        selectedConversation.recipient_name || 'Unknown',
+        selectedConversation.recipient_image || null,
+        'video'
+      );
+    }
+  };
+
   // Total unread count
   const totalUnread = conversations.reduce((acc, c) => acc + (c.unread_count || 0), 0);
 
@@ -175,8 +208,8 @@ export default function Messenger() {
         conversation={selectedConversation}
         group={selectedGroup}
         onBack={handleBackFromChat}
-        onVoiceCall={() => {}}
-        onVideoCall={() => {}}
+        onVoiceCall={handleVoiceCall}
+        onVideoCall={handleVideoCall}
         isArabic={isArabic}
       />
 
@@ -470,6 +503,9 @@ export default function Messenger() {
         messagePreview={forwardMessage?.content || ''}
         isArabic={isArabic}
       />
+
+      {/* Call Screen Overlay */}
+      <CallScreen isArabic={isArabic} />
     </>
   );
 }
