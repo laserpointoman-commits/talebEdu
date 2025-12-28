@@ -141,7 +141,7 @@ export function useQuickActionPreferences() {
     }
   });
 
-  const visibleActions = actions.filter(a => a.is_visible).slice(0, 8);
+  const visibleActions = actions.filter(a => a.is_visible).slice(0, 12);
 
   return {
     allActions: actions,
