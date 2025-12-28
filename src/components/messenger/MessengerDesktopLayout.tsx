@@ -10,7 +10,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { MessageBubble } from './MessageBubble';
 import { ChatInput } from './ChatInput';
 import { MessengerSettings } from './MessengerSettings';
-import { WHATSAPP_COLORS } from './WhatsAppTheme';
+import { MESSENGER_COLORS, MESSENGER_GRADIENTS } from './MessengerTheme';
 import { format, isToday, isYesterday, isThisWeek } from 'date-fns';
 import { 
   Search, 
@@ -143,18 +143,18 @@ export function MessengerDesktopLayout({
   return (
     <div 
       className="fixed inset-0 flex z-[100]" 
-      style={{ backgroundColor: WHATSAPP_COLORS.bg }}
+      style={{ backgroundColor: MESSENGER_COLORS.bg }}
       dir={dir}
     >
       {/* Left Sidebar */}
       <div 
         className="w-[400px] xl:w-[420px] flex flex-col border-r shrink-0"
-        style={{ borderColor: WHATSAPP_COLORS.divider, backgroundColor: WHATSAPP_COLORS.bgSecondary }}
+        style={{ borderColor: MESSENGER_COLORS.divider, backgroundColor: MESSENGER_COLORS.bgSecondary }}
       >
         {/* Sidebar Header */}
         <div 
           className="flex items-center justify-between px-4 py-3 shrink-0"
-          style={{ backgroundColor: WHATSAPP_COLORS.headerBg }}
+          style={{ backgroundColor: MESSENGER_COLORS.headerBg }}
         >
           <div className="flex items-center gap-3">
             <Button 
@@ -163,15 +163,15 @@ export function MessengerDesktopLayout({
               className="rounded-full hover:bg-white/10 shrink-0"
               onClick={onBack}
             >
-              <ArrowLeft className="h-5 w-5" style={{ color: WHATSAPP_COLORS.textPrimary }} />
+              <ArrowLeft className="h-5 w-5" style={{ color: MESSENGER_COLORS.textPrimary }} />
             </Button>
             <Avatar className="h-10 w-10 cursor-pointer" onClick={() => setActiveTab('settings')}>
               <AvatarImage src={profile?.profile_image || profile?.avatar_url} />
-              <AvatarFallback style={{ backgroundColor: WHATSAPP_COLORS.accent }}>
+              <AvatarFallback style={{ backgroundColor: MESSENGER_COLORS.accent }}>
                 {profile?.full_name?.charAt(0) || 'U'}
               </AvatarFallback>
             </Avatar>
-            <span className="font-semibold" style={{ color: WHATSAPP_COLORS.textPrimary }}>
+            <span className="font-semibold" style={{ color: MESSENGER_COLORS.textPrimary }}>
               {isArabic ? 'المحادثات' : 'Messenger'}
             </span>
           </div>
@@ -185,7 +185,7 @@ export function MessengerDesktopLayout({
                     className="rounded-full hover:bg-white/10"
                     onClick={activeTab === 'groups' ? onNewGroup : onNewChat}
                   >
-                    <Plus className="h-5 w-5" style={{ color: WHATSAPP_COLORS.textSecondary }} />
+                    <Plus className="h-5 w-5" style={{ color: MESSENGER_COLORS.textSecondary }} />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
@@ -196,31 +196,31 @@ export function MessengerDesktopLayout({
               </Tooltip>
             </TooltipProvider>
             <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/10">
-              <MoreVertical className="h-5 w-5" style={{ color: WHATSAPP_COLORS.textSecondary }} />
+              <MoreVertical className="h-5 w-5" style={{ color: MESSENGER_COLORS.textSecondary }} />
             </Button>
           </div>
         </div>
 
         {/* Search Bar */}
-        <div className="px-3 py-2 shrink-0" style={{ backgroundColor: WHATSAPP_COLORS.bgSecondary }}>
+        <div className="px-3 py-2 shrink-0" style={{ backgroundColor: MESSENGER_COLORS.bgSecondary }}>
           <div className="relative">
             <Search 
               className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" 
-              style={{ color: WHATSAPP_COLORS.textMuted }} 
+              style={{ color: MESSENGER_COLORS.textMuted }} 
             />
             <Input
               placeholder={isArabic ? 'ابحث أو ابدأ محادثة جديدة' : 'Search or start new chat'}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10 border-0 rounded-lg h-9"
-              style={{ backgroundColor: WHATSAPP_COLORS.inputBg, color: WHATSAPP_COLORS.textPrimary }}
+              style={{ backgroundColor: MESSENGER_COLORS.inputBg, color: MESSENGER_COLORS.textPrimary }}
             />
             <Button 
               variant="ghost" 
               size="icon" 
               className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 rounded-full hover:bg-white/10"
             >
-              <Filter className="h-4 w-4" style={{ color: WHATSAPP_COLORS.textMuted }} />
+              <Filter className="h-4 w-4" style={{ color: MESSENGER_COLORS.textMuted }} />
             </Button>
           </div>
         </div>
@@ -229,44 +229,44 @@ export function MessengerDesktopLayout({
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as SidebarTab)} className="shrink-0">
           <TabsList 
             className="w-full justify-start gap-0 h-12 rounded-none border-b p-0"
-            style={{ backgroundColor: WHATSAPP_COLORS.bgSecondary, borderColor: WHATSAPP_COLORS.divider }}
+            style={{ backgroundColor: MESSENGER_COLORS.bgSecondary, borderColor: MESSENGER_COLORS.divider }}
           >
             <TabsTrigger 
               value="chats" 
-              className="flex-1 h-full rounded-none border-b-2 data-[state=active]:border-b-2 data-[state=active]:shadow-none"
+              className="flex-1 h-full rounded-none border-b-2 data-[state=active]:border-b-2 data-[state=active]:shadow-none transition-colors"
               style={{ 
-                borderColor: 'transparent',
-                color: WHATSAPP_COLORS.textSecondary 
+                borderColor: activeTab === 'chats' ? MESSENGER_COLORS.accent : 'transparent',
+                color: activeTab === 'chats' ? MESSENGER_COLORS.accent : MESSENGER_COLORS.textSecondary 
               }}
             >
               <MessageCircle className="h-5 w-5" />
             </TabsTrigger>
             <TabsTrigger 
               value="groups" 
-              className="flex-1 h-full rounded-none border-b-2 data-[state=active]:border-b-2 data-[state=active]:shadow-none"
+              className="flex-1 h-full rounded-none border-b-2 data-[state=active]:border-b-2 data-[state=active]:shadow-none transition-colors"
               style={{ 
-                borderColor: 'transparent',
-                color: WHATSAPP_COLORS.textSecondary 
+                borderColor: activeTab === 'groups' ? MESSENGER_COLORS.accent : 'transparent',
+                color: activeTab === 'groups' ? MESSENGER_COLORS.accent : MESSENGER_COLORS.textSecondary 
               }}
             >
               <Users className="h-5 w-5" />
             </TabsTrigger>
             <TabsTrigger 
               value="calls" 
-              className="flex-1 h-full rounded-none border-b-2 data-[state=active]:border-b-2 data-[state=active]:shadow-none"
+              className="flex-1 h-full rounded-none border-b-2 data-[state=active]:border-b-2 data-[state=active]:shadow-none transition-colors"
               style={{ 
-                borderColor: 'transparent',
-                color: WHATSAPP_COLORS.textSecondary 
+                borderColor: activeTab === 'calls' ? MESSENGER_COLORS.accent : 'transparent',
+                color: activeTab === 'calls' ? MESSENGER_COLORS.accent : MESSENGER_COLORS.textSecondary 
               }}
             >
               <PhoneCall className="h-5 w-5" />
             </TabsTrigger>
             <TabsTrigger 
               value="settings" 
-              className="flex-1 h-full rounded-none border-b-2 data-[state=active]:border-b-2 data-[state=active]:shadow-none"
+              className="flex-1 h-full rounded-none border-b-2 data-[state=active]:border-b-2 data-[state=active]:shadow-none transition-colors"
               style={{ 
-                borderColor: 'transparent',
-                color: WHATSAPP_COLORS.textSecondary 
+                borderColor: activeTab === 'settings' ? MESSENGER_COLORS.accent : 'transparent',
+                color: activeTab === 'settings' ? MESSENGER_COLORS.accent : MESSENGER_COLORS.textSecondary 
               }}
             >
               <Settings className="h-5 w-5" />
@@ -284,11 +284,11 @@ export function MessengerDesktopLayout({
                 <div className="flex flex-col items-center justify-center py-16 px-6">
                   <div 
                     className="h-20 w-20 rounded-full flex items-center justify-center mb-4"
-                    style={{ backgroundColor: WHATSAPP_COLORS.bgTertiary }}
+                    style={{ backgroundColor: MESSENGER_COLORS.bgTertiary }}
                   >
-                    <PhoneCall className="h-10 w-10" style={{ color: WHATSAPP_COLORS.textMuted }} />
+                    <PhoneCall className="h-10 w-10" style={{ color: MESSENGER_COLORS.textMuted }} />
                   </div>
-                  <p className="text-center" style={{ color: WHATSAPP_COLORS.textSecondary }}>
+                  <p className="text-center" style={{ color: MESSENGER_COLORS.textSecondary }}>
                     {isArabic ? 'لا توجد مكالمات' : 'No calls yet'}
                   </p>
                 </div>
@@ -297,24 +297,24 @@ export function MessengerDesktopLayout({
                   <div
                     key={call.id}
                     className="flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors hover:bg-white/5"
-                    style={{ borderBottom: `1px solid ${WHATSAPP_COLORS.divider}` }}
+                    style={{ borderBottom: `1px solid ${MESSENGER_COLORS.divider}` }}
                   >
                     <Avatar className="h-12 w-12">
-                      <AvatarFallback style={{ backgroundColor: WHATSAPP_COLORS.accent }}>
+                      <AvatarFallback style={{ backgroundColor: MESSENGER_COLORS.accent }}>
                         {call.caller_name?.charAt(0) || '?'}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1">
-                      <p style={{ color: WHATSAPP_COLORS.textPrimary }}>{call.caller_name}</p>
-                      <p className="text-xs" style={{ color: WHATSAPP_COLORS.textMuted }}>
+                      <p style={{ color: MESSENGER_COLORS.textPrimary }}>{call.caller_name}</p>
+                      <p className="text-xs" style={{ color: MESSENGER_COLORS.textMuted }}>
                         {call.call_type} • {format(new Date(call.started_at), 'MMM d, HH:mm')}
                       </p>
                     </div>
                     <Button variant="ghost" size="icon" className="rounded-full">
                       {call.call_type === 'video' ? (
-                        <Video className="h-5 w-5" style={{ color: WHATSAPP_COLORS.accent }} />
+                        <Video className="h-5 w-5" style={{ color: MESSENGER_COLORS.accent }} />
                       ) : (
-                        <Phone className="h-5 w-5" style={{ color: WHATSAPP_COLORS.accent }} />
+                        <Phone className="h-5 w-5" style={{ color: MESSENGER_COLORS.accent }} />
                       )}
                     </Button>
                   </div>
@@ -327,15 +327,15 @@ export function MessengerDesktopLayout({
               {activeTab === 'chats' && (
                 <div 
                   className="flex items-center gap-4 px-4 py-3 cursor-pointer transition-colors hover:bg-white/5"
-                  style={{ borderBottom: `1px solid ${WHATSAPP_COLORS.divider}` }}
+                  style={{ borderBottom: `1px solid ${MESSENGER_COLORS.divider}` }}
                 >
                   <div 
                     className="h-12 w-12 rounded-full flex items-center justify-center" 
-                    style={{ backgroundColor: WHATSAPP_COLORS.bgTertiary }}
+                    style={{ backgroundColor: MESSENGER_COLORS.bgTertiary }}
                   >
-                    <Archive className="h-5 w-5" style={{ color: WHATSAPP_COLORS.accent }} />
+                    <Archive className="h-5 w-5" style={{ color: MESSENGER_COLORS.accent }} />
                   </div>
-                  <span className="font-medium" style={{ color: WHATSAPP_COLORS.textPrimary }}>
+                  <span className="font-medium" style={{ color: MESSENGER_COLORS.textPrimary }}>
                     {isArabic ? 'مؤرشف' : 'Archived'}
                   </span>
                 </div>
@@ -349,34 +349,34 @@ export function MessengerDesktopLayout({
                     className={`flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors hover:bg-white/5 ${
                       selectedGroup?.id === group.id ? 'bg-white/10' : ''
                     }`}
-                    style={{ borderBottom: `1px solid ${WHATSAPP_COLORS.divider}` }}
+                    style={{ borderBottom: `1px solid ${MESSENGER_COLORS.divider}` }}
                     onClick={() => onSelectGroup(group)}
                   >
                     <Avatar className="h-12 w-12">
                       <AvatarImage src={group.image_url || undefined} />
-                      <AvatarFallback style={{ backgroundColor: WHATSAPP_COLORS.accent }}>
+                      <AvatarFallback style={{ backgroundColor: MESSENGER_COLORS.accent }}>
                         <Users className="h-5 w-5 text-white" />
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
-                        <span className="font-medium truncate" style={{ color: WHATSAPP_COLORS.textPrimary }}>
+                        <span className="font-medium truncate" style={{ color: MESSENGER_COLORS.textPrimary }}>
                           {group.name}
                         </span>
                         {group.last_message_time && (
-                          <span className="text-xs shrink-0 ml-2" style={{ color: WHATSAPP_COLORS.textMuted }}>
+                          <span className="text-xs shrink-0 ml-2" style={{ color: MESSENGER_COLORS.textMuted }}>
                             {formatChatTime(group.last_message_time)}
                           </span>
                         )}
                       </div>
-                      <p className="text-sm truncate" style={{ color: WHATSAPP_COLORS.textSecondary }}>
+                      <p className="text-sm truncate" style={{ color: MESSENGER_COLORS.textSecondary }}>
                         {group.description || (isArabic ? 'محادثة جماعية' : 'Group chat')}
                       </p>
                     </div>
                     {group.unread_count > 0 && (
                       <Badge 
                         className="h-5 min-w-5 rounded-full flex items-center justify-center text-xs shrink-0"
-                        style={{ backgroundColor: WHATSAPP_COLORS.accentLight }}
+                        style={{ backgroundColor: MESSENGER_COLORS.accentLight }}
                       >
                         {group.unread_count}
                       </Badge>
@@ -391,44 +391,44 @@ export function MessengerDesktopLayout({
                   className={`flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors hover:bg-white/5 ${
                     selectedConversation?.recipient_id === conv.recipient_id ? 'bg-white/10' : ''
                   }`}
-                  style={{ borderBottom: `1px solid ${WHATSAPP_COLORS.divider}` }}
+                  style={{ borderBottom: `1px solid ${MESSENGER_COLORS.divider}` }}
                   onClick={() => onSelectConversation(conv)}
                 >
                   <div className="relative shrink-0">
                     <Avatar className="h-12 w-12">
                       <AvatarImage src={conv.recipient_image || undefined} />
-                      <AvatarFallback style={{ backgroundColor: WHATSAPP_COLORS.accent }}>
+                      <AvatarFallback style={{ backgroundColor: MESSENGER_COLORS.accent }}>
                         {conv.recipient_name?.charAt(0) || '?'}
                       </AvatarFallback>
                     </Avatar>
                     {conv.is_online && (
                       <div 
                         className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2"
-                        style={{ backgroundColor: WHATSAPP_COLORS.accentLight, borderColor: WHATSAPP_COLORS.bgSecondary }}
+                        style={{ backgroundColor: MESSENGER_COLORS.accentLight, borderColor: MESSENGER_COLORS.bgSecondary }}
                       />
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
-                      <span className="font-medium truncate" style={{ color: WHATSAPP_COLORS.textPrimary }}>
+                      <span className="font-medium truncate" style={{ color: MESSENGER_COLORS.textPrimary }}>
                         {conv.recipient_name}
                       </span>
                       <span 
                         className="text-xs shrink-0 ml-2" 
-                        style={{ color: conv.unread_count > 0 ? WHATSAPP_COLORS.accentLight : WHATSAPP_COLORS.textMuted }}
+                        style={{ color: conv.unread_count > 0 ? MESSENGER_COLORS.accentLight : MESSENGER_COLORS.textMuted }}
                       >
                         {conv.last_message_time && formatChatTime(conv.last_message_time)}
                       </span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <CheckCheck className="h-4 w-4 shrink-0" style={{ color: WHATSAPP_COLORS.checkBlue }} />
-                      <p className="text-sm truncate" style={{ color: WHATSAPP_COLORS.textSecondary }}>
+                      <CheckCheck className="h-4 w-4 shrink-0" style={{ color: MESSENGER_COLORS.checkBlue }} />
+                      <p className="text-sm truncate" style={{ color: MESSENGER_COLORS.textSecondary }}>
                         {conv.last_message || (isArabic ? 'لا توجد رسائل بعد' : 'No messages yet')}
                       </p>
                       {conv.unread_count > 0 && (
                         <Badge 
                           className="h-5 min-w-5 rounded-full flex items-center justify-center text-xs shrink-0 ml-auto"
-                          style={{ backgroundColor: WHATSAPP_COLORS.accentLight }}
+                          style={{ backgroundColor: MESSENGER_COLORS.accentLight }}
                         >
                           {conv.unread_count}
                         </Badge>
@@ -444,15 +444,15 @@ export function MessengerDesktopLayout({
                 <div className="flex flex-col items-center justify-center py-16 px-6">
                   <div 
                     className="h-20 w-20 rounded-full flex items-center justify-center mb-4"
-                    style={{ backgroundColor: WHATSAPP_COLORS.bgTertiary }}
+                    style={{ backgroundColor: MESSENGER_COLORS.bgTertiary }}
                   >
                     {activeTab === 'groups' ? (
-                      <Users className="h-10 w-10" style={{ color: WHATSAPP_COLORS.textMuted }} />
+                      <Users className="h-10 w-10" style={{ color: MESSENGER_COLORS.textMuted }} />
                     ) : (
-                      <MessageCircle className="h-10 w-10" style={{ color: WHATSAPP_COLORS.textMuted }} />
+                      <MessageCircle className="h-10 w-10" style={{ color: MESSENGER_COLORS.textMuted }} />
                     )}
                   </div>
-                  <p className="text-center" style={{ color: WHATSAPP_COLORS.textSecondary }}>
+                  <p className="text-center" style={{ color: MESSENGER_COLORS.textSecondary }}>
                     {activeTab === 'groups' 
                       ? (isArabic ? 'لا توجد مجموعات بعد' : 'No groups yet')
                       : (isArabic ? 'لا توجد محادثات' : 'No conversations')}
@@ -465,34 +465,34 @@ export function MessengerDesktopLayout({
       </div>
 
       {/* Right Panel - Chat Area */}
-      <div className="flex-1 flex flex-col" style={{ backgroundColor: WHATSAPP_COLORS.bg }}>
+      <div className="flex-1 flex flex-col" style={{ backgroundColor: MESSENGER_COLORS.bg }}>
         {currentChat ? (
           <>
             {/* Chat Header */}
             <div 
               className="flex items-center justify-between px-4 py-2 shrink-0 border-b"
-              style={{ backgroundColor: WHATSAPP_COLORS.headerBg, borderColor: WHATSAPP_COLORS.divider }}
+              style={{ backgroundColor: MESSENGER_COLORS.headerBg, borderColor: MESSENGER_COLORS.divider }}
             >
               <div className="flex items-center gap-3">
                 <div className="relative">
                   <Avatar className="h-10 w-10">
                     <AvatarImage src={chatImage || undefined} />
-                    <AvatarFallback style={{ backgroundColor: WHATSAPP_COLORS.accent }}>
+                    <AvatarFallback style={{ backgroundColor: MESSENGER_COLORS.accent }}>
                       {selectedGroup ? <Users className="h-5 w-5 text-white" /> : chatName.charAt(0)}
                     </AvatarFallback>
                   </Avatar>
                   {isOnline && (
                     <div 
                       className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2"
-                      style={{ backgroundColor: WHATSAPP_COLORS.accentLight, borderColor: WHATSAPP_COLORS.headerBg }}
+                      style={{ backgroundColor: MESSENGER_COLORS.accentLight, borderColor: MESSENGER_COLORS.headerBg }}
                     />
                   )}
                 </div>
                 <div>
-                  <p className="font-medium" style={{ color: WHATSAPP_COLORS.textPrimary }}>
+                  <p className="font-medium" style={{ color: MESSENGER_COLORS.textPrimary }}>
                     {chatName}
                   </p>
-                <p className="text-xs" style={{ color: WHATSAPP_COLORS.textSecondary }}>
+                <p className="text-xs" style={{ color: isOnline ? MESSENGER_COLORS.accentLight : MESSENGER_COLORS.textSecondary }}>
                     {selectedGroup 
                       ? (isArabic ? 'محادثة جماعية' : 'Group chat')
                       : isOnline 
@@ -511,7 +511,7 @@ export function MessengerDesktopLayout({
                         className="rounded-full hover:bg-white/10"
                         onClick={onVideoCall}
                       >
-                        <Video className="h-5 w-5" style={{ color: WHATSAPP_COLORS.textSecondary }} />
+                        <Video className="h-5 w-5" style={{ color: MESSENGER_COLORS.textSecondary }} />
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>{isArabic ? 'مكالمة فيديو' : 'Video call'}</TooltipContent>
@@ -526,7 +526,7 @@ export function MessengerDesktopLayout({
                         className="rounded-full hover:bg-white/10"
                         onClick={onVoiceCall}
                       >
-                        <Phone className="h-5 w-5" style={{ color: WHATSAPP_COLORS.textSecondary }} />
+                        <Phone className="h-5 w-5" style={{ color: MESSENGER_COLORS.textSecondary }} />
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>{isArabic ? 'مكالمة صوتية' : 'Voice call'}</TooltipContent>
@@ -536,14 +536,14 @@ export function MessengerDesktopLayout({
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/10">
-                        <Search className="h-5 w-5" style={{ color: WHATSAPP_COLORS.textSecondary }} />
+                        <Search className="h-5 w-5" style={{ color: MESSENGER_COLORS.textSecondary }} />
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>{isArabic ? 'بحث' : 'Search'}</TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
                 <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/10">
-                  <MoreVertical className="h-5 w-5" style={{ color: WHATSAPP_COLORS.textSecondary }} />
+                  <MoreVertical className="h-5 w-5" style={{ color: MESSENGER_COLORS.textSecondary }} />
                 </Button>
               </div>
             </div>
@@ -552,8 +552,8 @@ export function MessengerDesktopLayout({
             <ScrollArea 
               className="flex-1 px-4 lg:px-16 py-4"
               style={{ 
-                backgroundColor: '#0B141A',
-                backgroundImage: 'url("data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.02"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")'
+                backgroundColor: MESSENGER_COLORS.bg,
+                backgroundImage: 'url("data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%2338BDF8" fill-opacity="0.03"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")'
               }}
             >
               <div className="max-w-4xl mx-auto space-y-1">
@@ -563,8 +563,8 @@ export function MessengerDesktopLayout({
                       <span 
                         className="px-3 py-1.5 rounded-lg text-xs font-medium shadow-sm"
                         style={{ 
-                          backgroundColor: WHATSAPP_COLORS.bgTertiary, 
-                          color: WHATSAPP_COLORS.textSecondary 
+                          backgroundColor: MESSENGER_COLORS.bgTertiary, 
+                          color: MESSENGER_COLORS.textSecondary 
                         }}
                       >
                         {date}
@@ -601,17 +601,17 @@ export function MessengerDesktopLayout({
           </>
         ) : (
           // Empty state - No chat selected
-          <div className="flex-1 flex flex-col items-center justify-center" style={{ backgroundColor: WHATSAPP_COLORS.bg }}>
+          <div className="flex-1 flex flex-col items-center justify-center" style={{ backgroundColor: MESSENGER_COLORS.bg }}>
             <div 
               className="h-32 w-32 rounded-full flex items-center justify-center mb-6"
-              style={{ backgroundColor: WHATSAPP_COLORS.bgTertiary }}
+              style={{ background: MESSENGER_GRADIENTS.accent }}
             >
-              <MessageCircle className="h-16 w-16" style={{ color: WHATSAPP_COLORS.textMuted }} />
+              <MessageCircle className="h-16 w-16 text-white" />
             </div>
-            <h2 className="text-2xl font-light mb-2" style={{ color: WHATSAPP_COLORS.textPrimary }}>
+            <h2 className="text-2xl font-light mb-2" style={{ color: MESSENGER_COLORS.textPrimary }}>
               {isArabic ? 'مرحباً في المحادثات' : 'Welcome to Messenger'}
             </h2>
-            <p className="text-center max-w-md" style={{ color: WHATSAPP_COLORS.textSecondary }}>
+            <p className="text-center max-w-md" style={{ color: MESSENGER_COLORS.textSecondary }}>
               {isArabic 
                 ? 'اختر محادثة من القائمة للبدء في المراسلة'
                 : 'Select a chat from the list to start messaging'}
