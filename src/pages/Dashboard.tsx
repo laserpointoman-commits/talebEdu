@@ -11,7 +11,7 @@ import DeveloperDashboard from '@/components/dashboards/DeveloperDashboard';
 import CanteenDashboard from '@/pages/dashboards/CanteenDashboard';
 import SchoolAttendanceDashboard from '@/pages/dashboards/SchoolAttendanceDashboard';
 import BusAttendanceDashboard from '@/pages/dashboards/BusAttendanceDashboard';
-import Messages from './Messages';
+import Messenger from './Messenger';
 import Grades from './Grades';
 import Exams from './Exams';
 import Homework from './Homework';
@@ -111,7 +111,7 @@ export default function Dashboard() {
         <Route path="store" element={<Store />} />
         <Route path="kitchen" element={<SchoolKitchen />} />
         <Route path="canteen" element={<Canteen />} />
-        <Route path="messages" element={<Messages />} />
+        <Route path="messages" element={<Messenger />} />
         <Route path="reports" element={<Reports />} />
         <Route path="admin/users" element={<UserManagement />} />
         <Route path="admin/buses" element={<BusesManagement />} />
