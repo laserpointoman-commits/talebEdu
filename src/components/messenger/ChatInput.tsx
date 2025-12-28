@@ -280,7 +280,10 @@ export function ChatInput({
             size="icon"
             className="h-10 w-10 rounded-full hover:bg-white/10"
             style={{ color: colors.textSecondary }}
-            onClick={() => setIsRecording(true)}
+            onClick={() => {
+              void haptic(ImpactStyle.Medium);
+              setIsRecording(true);
+            }}
           >
             <Mic className="h-6 w-6" />
           </Button>

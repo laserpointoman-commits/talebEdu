@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Play, Pause, Mic } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
+import { supabase } from '@/integrations/supabase/client';
 
 interface VoiceMessageBubbleProps {
   audioUrl: string;
@@ -26,23 +27,119 @@ export function VoiceMessageBubble({
   const [playbackRate, setPlaybackRate] = useState(1);
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const progressInterval = useRef<number | null>(null);
-  const recoveredObjectUrlRef = useRef<string | null>(null);
-  const recoveryAttemptedRef = useRef(false);
+  const blobUrlRef = useRef<string | null>(null);
 
-  // Create audio element on mount
-  useEffect(() => {
-    const audio = new Audio();
-    audio.preload = 'auto';
-    // Helps with certain cross-origin media behaviors (range requests, etc.)
-    audio.crossOrigin = 'anonymous';
-    audioRef.current = audio;
+  // Extract file path from URL for refreshing signed URLs
+  const extractFilePath = (url: string): string | null => {
+    try {
+      // Match patterns like /message-attachments/user-id/filename.mp4
+      const match = url.match(/message-attachments\/([^?]+)/);
+      return match ? match[1] : null;
+    } catch {
+      return null;
+    }
+  };
 
-    const handleLoadedMetadata = () => {
+  // Fetch audio as blob for reliable iOS playback
+  const loadAudioBlob = useCallback(async () => {
+    setIsLoading(true);
+    setError(false);
+    
+    try {
+      let urlToFetch = audioUrl;
+      
+      // If URL looks expired or is a storage URL, try to get fresh signed URL
+      const filePath = extractFilePath(audioUrl);
+      if (filePath) {
+        const { data: signedData } = await supabase.storage
+          .from('message-attachments')
+          .createSignedUrl(filePath, 3600);
+        
+        if (signedData?.signedUrl) {
+          urlToFetch = signedData.signedUrl;
+        }
+      }
+
+      // Fetch audio as blob for iOS compatibility
+      const response = await fetch(urlToFetch);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      
+      const blob = await response.blob();
+      
+      // Revoke old blob URL if exists
+      if (blobUrlRef.current) {
+        URL.revokeObjectURL(blobUrlRef.current);
+      }
+      
+      // Create new blob URL
+      const blobUrl = URL.createObjectURL(blob);
+      blobUrlRef.current = blobUrl;
+      
+      // Create and configure audio element
+      if (!audioRef.current) {
+        audioRef.current = new Audio();
+      }
+      
+      const audio = audioRef.current;
+      audio.src = blobUrl;
+      audio.preload = 'auto';
+      audio.playbackRate = playbackRate;
+      
+      // Wait for audio to be ready
+      await new Promise<void>((resolve, reject) => {
+        const onLoaded = () => {
+          audio.removeEventListener('canplaythrough', onLoaded);
+          audio.removeEventListener('error', onError);
+          resolve();
+        };
+        const onError = () => {
+          audio.removeEventListener('canplaythrough', onLoaded);
+          audio.removeEventListener('error', onError);
+          reject(new Error('Audio load failed'));
+        };
+        audio.addEventListener('canplaythrough', onLoaded);
+        audio.addEventListener('error', onError);
+        audio.load();
+      });
+      
       setIsLoaded(true);
-    };
+      setIsLoading(false);
+      
+    } catch (err) {
+      console.error('Failed to load audio:', err);
+      setError(true);
+      setIsLoading(false);
+    }
+  }, [audioUrl, playbackRate]);
 
+  // Setup audio event listeners
+  useEffect(() => {
+    loadAudioBlob();
+    
+    return () => {
+      // Cleanup
+      if (progressInterval.current) {
+        cancelAnimationFrame(progressInterval.current);
+      }
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.src = '';
+      }
+      if (blobUrlRef.current) {
+        URL.revokeObjectURL(blobUrlRef.current);
+        blobUrlRef.current = null;
+      }
+    };
+  }, [loadAudioBlob]);
+
+  // Handle audio end
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    
     const handleEnded = () => {
       setIsPlaying(false);
       setCurrentTime(0);
@@ -50,69 +147,10 @@ export function VoiceMessageBubble({
         cancelAnimationFrame(progressInterval.current);
       }
     };
-
-    const attemptRecovery = async () => {
-      if (recoveryAttemptedRef.current) {
-        setError(true);
-        return;
-      }
-      recoveryAttemptedRef.current = true;
-
-      try {
-        const res = await fetch(audioUrl, { cache: 'no-store' });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const buffer = await res.arrayBuffer();
-
-        const inferredType =
-          audioUrl.includes('.mp4') || audioUrl.includes('.m4a')
-            ? 'audio/mp4'
-            : 'audio/webm';
-
-        const blob = new Blob([buffer], { type: inferredType });
-        const objUrl = URL.createObjectURL(blob);
-        recoveredObjectUrlRef.current = objUrl;
-
-        audio.src = objUrl;
-        audio.load();
-      } catch (err) {
-        console.error('Audio recovery failed:', err);
-        setError(true);
-      }
-    };
-
-    const handleError = (e: any) => {
-      console.error('Audio load error:', e);
-      void attemptRecovery();
-    };
-
-    audio.addEventListener('loadedmetadata', handleLoadedMetadata);
+    
     audio.addEventListener('ended', handleEnded);
-    audio.addEventListener('error', handleError);
-
-    // Set source
-    setError(false);
-    setIsLoaded(false);
-    recoveryAttemptedRef.current = false;
-    audio.src = audioUrl;
-    audio.load();
-
-    return () => {
-      audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
-      audio.removeEventListener('ended', handleEnded);
-      audio.removeEventListener('error', handleError);
-
-      if (progressInterval.current) {
-        cancelAnimationFrame(progressInterval.current);
-      }
-      audio.pause();
-      audio.src = '';
-
-      if (recoveredObjectUrlRef.current) {
-        URL.revokeObjectURL(recoveredObjectUrlRef.current);
-        recoveredObjectUrlRef.current = null;
-      }
-    };
-  }, [audioUrl]);
+    return () => audio.removeEventListener('ended', handleEnded);
+  }, [isLoaded]);
 
   // Update progress during playback
   const updateProgress = useCallback(() => {
@@ -137,7 +175,7 @@ export function VoiceMessageBubble({
   }, [isPlaying, updateProgress]);
 
   const togglePlayback = async () => {
-    if (!audioRef.current) return;
+    if (!audioRef.current || !isLoaded) return;
     
     try {
       if (isPlaying) {
@@ -149,7 +187,9 @@ export function VoiceMessageBubble({
       }
     } catch (err) {
       console.error('Playback error:', err);
-      setError(true);
+      // Try reloading the audio
+      setIsLoaded(false);
+      await loadAudioBlob();
     }
   };
 
@@ -205,9 +245,11 @@ export function VoiceMessageBubble({
         className="h-11 w-11 rounded-full flex-shrink-0 transition-transform active:scale-95"
         style={{ backgroundColor: colors.accent }}
         onClick={togglePlayback}
-        disabled={!isLoaded && !error}
+        disabled={isLoading}
       >
-        {isPlaying ? (
+        {isLoading ? (
+          <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+        ) : isPlaying ? (
           <Pause className="h-5 w-5 text-white" fill="white" />
         ) : (
           <Play className="h-5 w-5 text-white ml-0.5" fill="white" />

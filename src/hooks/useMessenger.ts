@@ -293,16 +293,19 @@ export function useMessenger() {
           .upload(fileName, file);
 
         if (!uploadError) {
-          const { data: { publicUrl } } = supabase.storage
+          // Use signed URL for private bucket (valid for 1 hour, will be refreshed on playback)
+          const { data: signedData } = await supabase.storage
             .from('message-attachments')
-            .getPublicUrl(fileName);
+            .createSignedUrl(fileName, 3600);
+          
+          const fileUrl = signedData?.signedUrl || '';
 
           const { data: attachmentData } = await supabase
             .from('message_attachments')
             .insert({
               message_id: messageData.id,
-              file_name: file.name,
-              file_url: publicUrl,
+              file_name: fileName, // Store the path, not the signed URL
+              file_url: fileUrl, // This is now a signed URL
               file_type: file.type,
               file_size: file.size
             })
