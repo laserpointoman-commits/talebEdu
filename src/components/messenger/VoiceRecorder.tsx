@@ -213,34 +213,35 @@ export function VoiceRecorder({ onSend, onCancel, isArabic = false, isDark = fal
 
   return (
     <div 
-      className="flex items-center gap-3 px-3 py-2 rounded-full"
+      className="flex items-center gap-2 px-3 py-3 rounded-2xl"
       style={{ backgroundColor: colors.inputBg }}
     >
       {/* Delete button */}
       <Button
         variant="ghost"
         size="icon"
-        className="h-10 w-10 rounded-full hover:bg-white/10"
+        className="h-12 w-12 rounded-full hover:bg-white/10 flex-shrink-0"
         onClick={handleDelete}
       >
-        <Trash2 className="h-5 w-5" style={{ color: colors.missedCall }} />
+        <Trash2 className="h-6 w-6" style={{ color: colors.missedCall }} />
       </Button>
 
-      {/* Recording indicator */}
-      <div className="flex-1 flex items-center gap-3">
+      {/* Recording indicator and waveform */}
+      <div className="flex-1 flex items-center gap-3 min-w-0">
+        {/* Recording indicator */}
         {isRecording && !isPaused && (
-          <div className="h-3 w-3 rounded-full bg-red-500 animate-pulse" />
+          <div className="h-4 w-4 rounded-full bg-red-500 animate-pulse flex-shrink-0" />
         )}
         {isPaused && (
-          <div className="h-3 w-3 rounded-full bg-yellow-500" />
+          <div className="h-4 w-4 rounded-full bg-yellow-500 flex-shrink-0" />
         )}
         
         {/* Waveform visualization */}
-        <div className="flex-1 flex items-center gap-0.5 h-8 overflow-hidden">
-          {Array.from({ length: 30 }).map((_, i) => (
+        <div className="flex-1 flex items-center gap-0.5 h-10 overflow-hidden">
+          {Array.from({ length: 25 }).map((_, i) => (
             <div
               key={i}
-              className="w-1 rounded-full transition-all duration-150"
+              className="w-1.5 rounded-full transition-all duration-150"
               style={{ 
                 backgroundColor: colors.accent,
                 height: isRecording && !isPaused 
@@ -253,7 +254,7 @@ export function VoiceRecorder({ onSend, onCancel, isArabic = false, isDark = fal
         </div>
 
         {/* Duration */}
-        <span className="text-sm font-medium min-w-[50px] text-center" style={{ color: colors.textPrimary }}>
+        <span className="text-base font-semibold min-w-[55px] text-center flex-shrink-0" style={{ color: colors.textPrimary }}>
           {formatDuration(duration)}
         </span>
       </div>
@@ -263,26 +264,26 @@ export function VoiceRecorder({ onSend, onCancel, isArabic = false, isDark = fal
         <Button
           variant="ghost"
           size="icon"
-          className="h-10 w-10 rounded-full hover:bg-white/10"
+          className="h-12 w-12 rounded-full hover:bg-white/10 flex-shrink-0"
           onClick={handlePauseResume}
         >
           {isPaused ? (
-            <Mic className="h-5 w-5" style={{ color: colors.accent }} />
+            <Mic className="h-6 w-6" style={{ color: colors.accent }} />
           ) : (
-            <Pause className="h-5 w-5" style={{ color: colors.textSecondary }} />
+            <Pause className="h-6 w-6" style={{ color: colors.textSecondary }} />
           )}
         </Button>
       )}
 
-      {/* Send button */}
+      {/* Send button - Large and prominent like WhatsApp */}
       <Button
         size="icon"
-        className="h-10 w-10 rounded-full"
+        className="h-14 w-14 rounded-full flex-shrink-0 shadow-lg transition-transform active:scale-95"
         style={{ backgroundColor: colors.accent }}
         onClick={handleSend}
         disabled={duration === 0}
       >
-        <Send className="h-5 w-5 text-white" />
+        <Send className="h-7 w-7 text-white" />
       </Button>
     </div>
   );
