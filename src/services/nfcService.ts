@@ -140,6 +140,50 @@ class NFCService {
     }
   }
 
+  async eraseTag(): Promise<boolean> {
+    if (!this.supported) {
+      toast.error("NFC is not supported on this device");
+      return false;
+    }
+
+    try {
+      console.log("Erasing NFC tag...");
+
+      // Write an empty/reset payload to the tag
+      const emptyData = JSON.stringify({ erased: true, timestamp: new Date().toISOString() });
+
+      if (!Capacitor.isNativePlatform()) {
+        // Web NFC API
+        if ('NDEFReader' in window) {
+          const ndef = new (window as unknown as { NDEFReader: new () => NDEFReader }).NDEFReader();
+          await ndef.write({
+            records: [{ recordType: 'text', data: emptyData }]
+          });
+          toast.success("NFC tag erased successfully");
+          return true;
+        }
+        toast.error("Web NFC not available");
+        return false;
+      }
+
+      if (NfcPlugin) {
+        const result = await NfcPlugin.write({ message: emptyData });
+        if (result.success) {
+          toast.success("NFC tag erased successfully");
+        }
+        return result.success;
+      }
+
+      // Native platform without plugin
+      toast.error("NFC erase requires native plugin setup");
+      return false;
+    } catch (error) {
+      console.error('Error erasing NFC tag:', error);
+      toast.error("Failed to erase NFC tag");
+      return false;
+    }
+  }
+
   async readTag(): Promise<NFCData | null> {
     if (!this.supported) {
       toast.error("NFC is not supported on this device");
