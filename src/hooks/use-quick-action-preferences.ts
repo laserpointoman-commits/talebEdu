@@ -115,7 +115,7 @@ export function useQuickActionPreferences() {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['quick-actions-with-preferences'] });
+      queryClient.invalidateQueries({ queryKey: ['quick-actions-with-preferences', userRole, profile?.id] });
       toast.success('Quick action preference updated');
     },
     onError: (error) => {
@@ -136,7 +136,7 @@ export function useQuickActionPreferences() {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['quick-actions-with-preferences'] });
+      queryClient.invalidateQueries({ queryKey: ['quick-actions-with-preferences', userRole, profile?.id] });
       toast.success('Quick actions reset to defaults');
     }
   });
