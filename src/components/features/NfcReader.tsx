@@ -58,7 +58,7 @@ export default function NfcReader({ showFullProfile = true, driverMode = false }
   }, []);
 
   const checkNfcSupport = async () => {
-    const supported = await nfcService.isSupported();
+    const supported = await nfcService.isSupportedAsync();
     setNfcSupported(supported);
   };
 

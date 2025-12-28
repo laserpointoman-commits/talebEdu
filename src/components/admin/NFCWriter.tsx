@@ -24,8 +24,8 @@ export default function NFCWriter() {
   useEffect(() => {
     const checkSupport = async () => {
       setCheckingNfc(true);
-      await new Promise(resolve => setTimeout(resolve, 500));
-      const supported = nfcService.isSupported();
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      const supported = await nfcService.isSupportedAsync();
       setIsNFCSupported(supported);
       setCheckingNfc(false);
     };
