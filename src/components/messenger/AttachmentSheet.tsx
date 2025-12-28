@@ -17,11 +17,13 @@ import {
   X
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { LocationShareSheet } from './LocationShareSheet';
 
 interface AttachmentSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onFilesSelected: (files: File[]) => void;
+  onLocationShare?: (latitude: number, longitude: number, address?: string) => void;
   isArabic?: boolean;
   colors: {
     bg: string;
@@ -38,6 +40,7 @@ export function AttachmentSheet({
   open,
   onOpenChange,
   onFilesSelected,
+  onLocationShare,
   isArabic = false,
   colors
 }: AttachmentSheetProps) {
@@ -46,6 +49,7 @@ export function AttachmentSheet({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showLocationSheet, setShowLocationSheet] = useState(false);
 
   const t = (en: string, ar: string) => isArabic ? ar : en;
 
@@ -76,43 +80,26 @@ export function AttachmentSheet({
     e.target.value = '';
   };
 
-  const handleLocationShare = async () => {
-    setIsProcessing(true);
-    try {
-      if (!navigator.geolocation) {
-        toast.error(t('Location not supported', 'الموقع غير مدعوم'), {
-          description: t('Your browser does not support location sharing', 'متصفحك لا يدعم مشاركة الموقع')
-        });
-        return;
-      }
+  const handleLocationClick = () => {
+    onOpenChange(false);
+    // Small delay to let the drawer close before opening location sheet
+    setTimeout(() => {
+      setShowLocationSheet(true);
+    }, 200);
+  };
 
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          const locationUrl = `https://maps.google.com/maps?q=${latitude},${longitude}`;
-          
-          // Create a text file with location info
-          const locationText = `📍 ${t('My Location', 'موقعي')}\n${locationUrl}\nLat: ${latitude}\nLng: ${longitude}`;
-          const blob = new Blob([locationText], { type: 'text/plain' });
-          const file = new File([blob], 'location.txt', { type: 'text/plain' });
-          
-          onFilesSelected([file]);
-          toast.success(t('Location attached', 'تم إرفاق الموقع'), {
-            description: t('Your location is ready to send', 'موقعك جاهز للإرسال')
-          });
-          onOpenChange(false);
-        },
-        (error) => {
-          console.error('Geolocation error:', error);
-          toast.error(t('Location access denied', 'تم رفض الوصول للموقع'), {
-            description: t('Please enable location access in your browser settings', 'يرجى تفعيل الوصول للموقع في إعدادات المتصفح')
-          });
-        },
-        { enableHighAccuracy: true, timeout: 10000 }
-      );
-    } finally {
-      setIsProcessing(false);
+  const handleLocationSelect = (latitude: number, longitude: number, address?: string) => {
+    if (onLocationShare) {
+      onLocationShare(latitude, longitude, address);
+    } else {
+      // Fallback: Create a location message as a file
+      const locationUrl = `https://maps.google.com/maps?q=${latitude},${longitude}`;
+      const locationText = `📍 ${t('My Location', 'موقعي')}\n${locationUrl}\nLat: ${latitude}\nLng: ${longitude}`;
+      const blob = new Blob([locationText], { type: 'text/plain' });
+      const file = new File([blob], 'location.txt', { type: 'text/plain' });
+      onFilesSelected([file]);
     }
+    toast.success(t('Location shared', 'تم مشاركة الموقع'));
   };
 
   const handleContactShare = async () => {
@@ -186,7 +173,7 @@ END:VCARD`;
       icon: MapPin,
       label: t('Location', 'موقع'),
       color: '#4CAF50',
-      onClick: handleLocationShare
+      onClick: handleLocationClick
     },
     {
       icon: User,
@@ -275,6 +262,15 @@ END:VCARD`;
         capture="environment"
         onChange={handleFileChange}
         className="hidden"
+      />
+
+      {/* Location Share Sheet */}
+      <LocationShareSheet
+        open={showLocationSheet}
+        onOpenChange={setShowLocationSheet}
+        onLocationSelect={handleLocationSelect}
+        isArabic={isArabic}
+        colors={colors}
       />
     </>
   );

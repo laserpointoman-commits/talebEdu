@@ -203,10 +203,17 @@ function MessengerContent() {
     setReplyTo(null);
   };
 
-  const handleVoiceSend = (audioBlob: Blob, duration: number) => {
+  const handleVoiceSend = async (audioBlob: Blob, duration: number) => {
     if (!selectedConversation) return;
     const file = new File([audioBlob], 'voice_message.webm', { type: 'audio/webm' });
-    sendMessage(selectedConversation.recipient_id, '', [file], undefined, undefined, 'voice', duration);
+    const message = await sendMessage(selectedConversation.recipient_id, '', [file], undefined, undefined, 'voice', duration);
+    if (message) {
+      // Refresh messages to show the new voice message immediately
+      await fetchMessages(selectedConversation.recipient_id);
+      toast.success(isArabic ? 'تم إرسال الرسالة الصوتية' : 'Voice message sent');
+    } else {
+      toast.error(isArabic ? 'فشل إرسال الرسالة الصوتية' : 'Failed to send voice message');
+    }
   };
 
   const handleSelectConversation = (conv: Conversation) => {
