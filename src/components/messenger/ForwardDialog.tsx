@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Search, Check, Send } from 'lucide-react';
-import { WHATSAPP_COLORS } from './WhatsAppTheme';
+import { useMessengerTheme } from '@/contexts/MessengerThemeContext';
+import { getMessengerColors } from './MessengerThemeColors';
 import { Conversation, GroupChat } from '@/hooks/useMessenger';
 import { cn } from '@/lib/utils';
 
@@ -28,6 +29,8 @@ export function ForwardDialog({
   messagePreview,
   isArabic = false
 }: ForwardDialogProps) {
+  const { isDark } = useMessengerTheme();
+  const colors = getMessengerColors(isDark);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
@@ -68,24 +71,24 @@ export function ForwardDialog({
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent 
-        className="max-w-md p-0 border-0 overflow-hidden"
-        style={{ backgroundColor: WHATSAPP_COLORS.bg }}
+        className="max-w-md p-0 border-0 overflow-hidden z-[250]"
+        style={{ backgroundColor: colors.bg }}
       >
         <DialogHeader 
           className="p-4 border-b"
-          style={{ borderColor: WHATSAPP_COLORS.divider, backgroundColor: WHATSAPP_COLORS.headerBg }}
+          style={{ borderColor: colors.divider, backgroundColor: colors.headerBg }}
         >
-          <DialogTitle style={{ color: WHATSAPP_COLORS.textPrimary }}>
+          <DialogTitle style={{ color: colors.textPrimary }}>
             {t('Forward to...', 'إعادة توجيه إلى...')}
           </DialogTitle>
         </DialogHeader>
 
         {/* Search */}
-        <div className="p-3 border-b" style={{ borderColor: WHATSAPP_COLORS.divider }}>
+        <div className="p-3 border-b" style={{ borderColor: colors.divider }}>
           <div className="relative">
             <Search 
               className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" 
-              style={{ color: WHATSAPP_COLORS.textMuted }} 
+              style={{ color: colors.textMuted }} 
             />
             <Input
               placeholder={t('Search contacts and groups', 'البحث في جهات الاتصال والمجموعات')}
@@ -93,8 +96,8 @@ export function ForwardDialog({
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10 border-0"
               style={{ 
-                backgroundColor: WHATSAPP_COLORS.inputBg, 
-                color: WHATSAPP_COLORS.textPrimary 
+                backgroundColor: colors.inputBg, 
+                color: colors.textPrimary 
               }}
             />
           </div>
@@ -104,7 +107,7 @@ export function ForwardDialog({
         {selectedIds.length > 0 && (
           <div 
             className="px-3 py-2 flex flex-wrap gap-2 border-b"
-            style={{ borderColor: WHATSAPP_COLORS.divider }}
+            style={{ borderColor: colors.divider }}
           >
             {selectedIds.map(id => {
               const conv = conversations.find(c => c.recipient_id === id);
@@ -115,7 +118,7 @@ export function ForwardDialog({
                 <div 
                   key={id}
                   className="flex items-center gap-1 px-2 py-1 rounded-full text-sm"
-                  style={{ backgroundColor: WHATSAPP_COLORS.accent }}
+                  style={{ backgroundColor: colors.accent }}
                 >
                   <span className="text-white">{name}</span>
                   <button 
@@ -134,11 +137,11 @@ export function ForwardDialog({
         <div 
           className="mx-3 mt-3 p-2 rounded-lg border-l-4"
           style={{ 
-            backgroundColor: WHATSAPP_COLORS.bgTertiary,
-            borderLeftColor: WHATSAPP_COLORS.accent
+            backgroundColor: colors.bgTertiary,
+            borderLeftColor: colors.accent
           }}
         >
-          <p className="text-xs truncate" style={{ color: WHATSAPP_COLORS.textSecondary }}>
+          <p className="text-xs truncate" style={{ color: colors.textSecondary }}>
             {messagePreview}
           </p>
         </div>
@@ -151,7 +154,7 @@ export function ForwardDialog({
               <>
                 <p 
                   className="text-xs font-medium px-3 py-2"
-                  style={{ color: WHATSAPP_COLORS.accent }}
+                  style={{ color: colors.accent }}
                 >
                   {t('Groups', 'المجموعات')}
                 </p>
@@ -162,23 +165,23 @@ export function ForwardDialog({
                     className="w-full flex items-center gap-3 px-3 py-2 hover:opacity-80 rounded-lg"
                     style={{ 
                       backgroundColor: selectedIds.includes(group.id) 
-                        ? WHATSAPP_COLORS.bgTertiary 
+                        ? colors.bgTertiary 
                         : 'transparent'
                     }}
                   >
                     <Avatar className="h-10 w-10">
                       <AvatarImage src={group.image_url || undefined} />
-                      <AvatarFallback style={{ backgroundColor: WHATSAPP_COLORS.accent }}>
+                      <AvatarFallback style={{ backgroundColor: colors.accent }}>
                         {group.name.charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
-                    <span className="flex-1 text-left" style={{ color: WHATSAPP_COLORS.textPrimary }}>
+                    <span className="flex-1 text-left" style={{ color: colors.textPrimary }}>
                       {group.name}
                     </span>
                     {selectedIds.includes(group.id) && (
                       <div 
                         className="h-5 w-5 rounded-full flex items-center justify-center"
-                        style={{ backgroundColor: WHATSAPP_COLORS.accent }}
+                        style={{ backgroundColor: colors.accent }}
                       >
                         <Check className="h-3 w-3 text-white" />
                       </div>
@@ -193,7 +196,7 @@ export function ForwardDialog({
               <>
                 <p 
                   className="text-xs font-medium px-3 py-2 mt-2"
-                  style={{ color: WHATSAPP_COLORS.accent }}
+                  style={{ color: colors.accent }}
                 >
                   {t('Contacts', 'جهات الاتصال')}
                 </p>
@@ -204,23 +207,23 @@ export function ForwardDialog({
                     className="w-full flex items-center gap-3 px-3 py-2 hover:opacity-80 rounded-lg"
                     style={{ 
                       backgroundColor: selectedIds.includes(conv.recipient_id) 
-                        ? WHATSAPP_COLORS.bgTertiary 
+                        ? colors.bgTertiary 
                         : 'transparent'
                     }}
                   >
                     <Avatar className="h-10 w-10">
                       <AvatarImage src={conv.recipient_image || undefined} />
-                      <AvatarFallback style={{ backgroundColor: WHATSAPP_COLORS.accent }}>
+                      <AvatarFallback style={{ backgroundColor: colors.accent }}>
                         {conv.recipient_name.charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
-                    <span className="flex-1 text-left" style={{ color: WHATSAPP_COLORS.textPrimary }}>
+                    <span className="flex-1 text-left" style={{ color: colors.textPrimary }}>
                       {conv.recipient_name}
                     </span>
                     {selectedIds.includes(conv.recipient_id) && (
                       <div 
                         className="h-5 w-5 rounded-full flex items-center justify-center"
-                        style={{ backgroundColor: WHATSAPP_COLORS.accent }}
+                        style={{ backgroundColor: colors.accent }}
                       >
                         <Check className="h-3 w-3 text-white" />
                       </div>
@@ -237,7 +240,7 @@ export function ForwardDialog({
           <div className="p-3 flex justify-end">
             <Button
               className="rounded-full px-6"
-              style={{ backgroundColor: WHATSAPP_COLORS.accent }}
+              style={{ backgroundColor: colors.accent }}
               onClick={handleForward}
             >
               <Send className="h-4 w-4 mr-2" />
