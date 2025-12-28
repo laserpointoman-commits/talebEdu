@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   Search, 
-  MoreVertical,
+  MoreHorizontal,
   Camera,
   Check,
   CheckCheck,
@@ -21,7 +21,19 @@ import {
   Plus,
   Phone,
   Video,
-  Lock
+  Archive,
+  Users,
+  UserPlus,
+  Megaphone,
+  Settings,
+  Heart,
+  Grid3X3,
+  Calendar,
+  Info,
+  Edit3,
+  PhoneOutgoing,
+  PhoneMissed,
+  MessageCircle
 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -29,17 +41,29 @@ import { supabase } from '@/integrations/supabase/client';
 import { format, isToday, isYesterday } from 'date-fns';
 import { cn } from '@/lib/utils';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
 } from '@/components/ui/dialog';
+
+// WhatsApp Dark Theme Colors
+const COLORS = {
+  bg: '#0B141A',
+  bgSecondary: '#111B21',
+  bgTertiary: '#1F2C34',
+  headerBg: '#1F2C34',
+  inputBg: '#2A3942',
+  accent: '#00A884',
+  accentLight: '#25D366',
+  textPrimary: '#E9EDEF',
+  textSecondary: '#8696A0',
+  textMuted: '#667781',
+  divider: '#222D34',
+  messageSent: '#005C4B',
+  messageReceived: '#1F2C34',
+  unreadBadge: '#25D366',
+  missedCall: '#F15C6D',
+  blue: '#53BDEB',
+};
 
 interface Conversation {
   id: string;
@@ -49,6 +73,7 @@ interface Conversation {
   last_message: string | null;
   last_message_time: string | null;
   unread_count: number;
+  is_group?: boolean;
 }
 
 interface Message {
@@ -58,6 +83,7 @@ interface Message {
   recipient_id: string;
   created_at: string;
   is_read: boolean;
+  is_forwarded?: boolean;
   attachments?: Array<{
     id: string;
     file_name: string;
@@ -74,6 +100,8 @@ interface UserSearchResult {
   role: string;
 }
 
+type TabType = 'updates' | 'calls' | 'tools' | 'chats' | 'settings';
+
 export default function Messenger() {
   const { language } = useLanguage();
   const { user, profile } = useAuth();
@@ -82,12 +110,16 @@ export default function Messenger() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [dialogSearchQuery, setDialogSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<UserSearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [showNewChatDialog, setShowNewChatDialog] = useState(false);
   const [totalUnread, setTotalUnread] = useState(0);
+  const [activeTab, setActiveTab] = useState<TabType>('chats');
+  const [chatFilter, setChatFilter] = useState<'all' | 'unread' | 'favorites' | 'groups'>('all');
+  const [archivedCount] = useState(2);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const isArabic = language === 'ar';
@@ -119,12 +151,12 @@ export default function Messenger() {
   }, [conversations]);
 
   useEffect(() => {
-    if (searchQuery.trim().length > 0) {
-      searchUsers();
+    if (dialogSearchQuery.trim().length > 0) {
+      searchUsers(dialogSearchQuery);
     } else {
       setSearchResults([]);
     }
-  }, [searchQuery]);
+  }, [dialogSearchQuery]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -253,13 +285,13 @@ export default function Messenger() {
     };
   };
 
-  const searchUsers = async () => {
+  const searchUsers = async (query: string) => {
     const { data, error } = await supabase
       .from('profiles')
       .select('id, full_name, profile_image, role')
-      .ilike('full_name', `%${searchQuery}%`)
+      .ilike('full_name', `%${query}%`)
       .neq('id', user?.id)
-      .limit(10);
+      .limit(20);
 
     if (!error && data) {
       setSearchResults(data as UserSearchResult[]);
@@ -369,7 +401,7 @@ export default function Messenger() {
     };
     setSelectedConversation(newConversation);
     setShowNewChatDialog(false);
-    setSearchQuery('');
+    setDialogSearchQuery('');
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -381,7 +413,7 @@ export default function Messenger() {
     const date = new Date(dateStr);
     if (isToday(date)) return format(date, 'h:mm a');
     if (isYesterday(date)) return t('Yesterday', 'أمس');
-    return format(date, 'MM/dd/yy');
+    return format(date, 'dd/MM/yyyy');
   };
 
   const formatChatTime = (dateStr: string) => format(new Date(dateStr), 'h:mm a');
@@ -410,90 +442,74 @@ export default function Messenger() {
     return format(date, 'MMMM d, yyyy');
   };
 
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  };
+
   if (!user) return null;
 
-  // Chat View - WhatsApp Style
+  // Chat View - WhatsApp Dark Theme
   if (selectedConversation) {
     const messageGroups = groupMessagesByDate(messages);
     
     return (
-      <div className="h-full w-full flex flex-col">
-        {/* WhatsApp Teal Header */}
-        <div className="bg-[#075E54] px-2 py-2 flex items-center gap-2 shadow-md">
+      <div className="h-full w-full flex flex-col" style={{ backgroundColor: COLORS.bg }}>
+        {/* Header */}
+        <div className="px-2 py-2 flex items-center gap-2" style={{ backgroundColor: COLORS.headerBg }}>
           <Button
             variant="ghost"
             size="icon"
-            className="h-10 w-10 text-white hover:bg-white/10"
+            className="h-10 w-10 hover:bg-white/10"
+            style={{ color: COLORS.textPrimary }}
             onClick={() => setSelectedConversation(null)}
           >
             <ArrowLeft className="h-5 w-5" />
+            {totalUnread > 0 && (
+              <span className="absolute -top-1 -left-1 text-xs font-bold" style={{ color: COLORS.textPrimary }}>
+                {totalUnread}
+              </span>
+            )}
           </Button>
           
-          <Avatar className="h-10 w-10 border-2 border-white/20">
+          <Avatar className="h-10 w-10 border-2" style={{ borderColor: COLORS.divider }}>
             <AvatarImage src={selectedConversation.recipient_image || undefined} />
-            <AvatarFallback className="bg-[#128C7E] text-white">
+            <AvatarFallback style={{ backgroundColor: COLORS.accent, color: 'white' }}>
               {selectedConversation.recipient_name.charAt(0).toUpperCase()}
             </AvatarFallback>
           </Avatar>
           
           <div className="flex-1 min-w-0">
-            <h2 className="text-white font-medium text-base truncate">
+            <h2 className="font-medium text-base truncate" style={{ color: COLORS.textPrimary }}>
               {selectedConversation.recipient_name}
             </h2>
-            <p className="text-white/70 text-xs">
-              {t('online', 'متصل')}
-            </p>
           </div>
           
           <div className="flex items-center gap-0">
-            <Button variant="ghost" size="icon" className="h-10 w-10 text-white hover:bg-white/10">
+            <Button variant="ghost" size="icon" className="h-10 w-10 hover:bg-white/10" style={{ color: COLORS.textPrimary }}>
               <Video className="h-5 w-5" />
             </Button>
-            <Button variant="ghost" size="icon" className="h-10 w-10 text-white hover:bg-white/10">
+            <Button variant="ghost" size="icon" className="h-10 w-10 hover:bg-white/10" style={{ color: COLORS.textPrimary }}>
               <Phone className="h-5 w-5" />
             </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-10 w-10 text-white hover:bg-white/10">
-                  <MoreVertical className="h-5 w-5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem>{t('View contact', 'عرض جهة الاتصال')}</DropdownMenuItem>
-                <DropdownMenuItem>{t('Media, links, docs', 'الوسائط والروابط')}</DropdownMenuItem>
-                <DropdownMenuItem>{t('Search', 'بحث')}</DropdownMenuItem>
-                <DropdownMenuItem>{t('Mute notifications', 'كتم الإشعارات')}</DropdownMenuItem>
-                <DropdownMenuItem>{t('Wallpaper', 'خلفية')}</DropdownMenuItem>
-                <DropdownMenuItem className="text-red-500">{t('Clear chat', 'مسح المحادثة')}</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
           </div>
         </div>
 
-        {/* Messages Area - WhatsApp tan/beige wallpaper */}
+        {/* Messages Area */}
         <div 
           className="flex-1 overflow-y-auto"
-          style={{
-            backgroundColor: '#ECE5DD',
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23d4cdc4' fill-opacity='0.3'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z'/%3E%3C/g%3E%3C/svg%3E")`
-          }}
+          style={{ backgroundColor: COLORS.bg }}
         >
           <div className="p-3 space-y-1 min-h-full">
-            {/* Encryption Notice */}
-            <div className="flex justify-center mb-4">
-              <div className="bg-[#FDF4C5] rounded-lg px-4 py-2 max-w-[85%] text-center shadow-sm">
-                <div className="flex items-center justify-center gap-1 text-[#54656F] text-xs">
-                  <Lock className="h-3 w-3" />
-                  <span>{t('Messages and calls are end-to-end encrypted. No one outside of this chat can read them.', 'الرسائل والمكالمات مشفرة. لا أحد خارج هذه المحادثة يمكنه قراءتها.')}</span>
-                </div>
-              </div>
-            </div>
-
             {messageGroups.map(group => (
               <div key={group.date}>
                 {/* Date Separator */}
                 <div className="flex justify-center my-3">
-                  <span className="bg-[#E1F2FB] text-[#54656F] text-xs px-3 py-1.5 rounded-lg shadow-sm">
+                  <span 
+                    className="text-xs px-3 py-1.5 rounded-lg"
+                    style={{ backgroundColor: COLORS.bgTertiary, color: COLORS.textSecondary }}
+                  >
                     {getDateLabel(group.date)}
                   </span>
                 </div>
@@ -509,32 +525,24 @@ export default function Messenger() {
                         isOwnMessage ? "justify-end" : "justify-start"
                       )}
                     >
-                      <div className={cn(
-                        "max-w-[75%] rounded-lg px-3 py-1.5 shadow-sm relative",
-                        isOwnMessage 
-                          ? "bg-[#DCF8C6]" // Light green for own messages
-                          : "bg-white" // White for received messages
-                      )}>
-                        {/* Message tail */}
-                        <div 
-                          className={cn(
-                            "absolute top-0 w-0 h-0",
-                            isOwnMessage 
-                              ? "-right-2 border-l-8 border-l-[#DCF8C6] border-t-8 border-t-[#DCF8C6] border-r-8 border-r-transparent border-b-8 border-b-transparent" 
-                              : "-left-2 border-r-8 border-r-white border-t-8 border-t-white border-l-8 border-l-transparent border-b-8 border-b-transparent"
-                          )}
-                          style={{
-                            clipPath: isOwnMessage 
-                              ? 'polygon(0 0, 100% 0, 0 100%)' 
-                              : 'polygon(100% 0, 0 0, 100% 100%)',
-                            width: '12px',
-                            height: '12px',
-                            background: isOwnMessage ? '#DCF8C6' : 'white'
-                          }}
-                        />
+                      <div 
+                        className="max-w-[75%] rounded-lg px-3 py-1.5 relative"
+                        style={{ 
+                          backgroundColor: isOwnMessage ? COLORS.messageSent : COLORS.messageReceived 
+                        }}
+                      >
+                        {message.is_forwarded && (
+                          <div className="flex items-center gap-1 mb-1">
+                            <span className="text-xs italic" style={{ color: COLORS.textMuted }}>
+                              ↗ {t('Forwarded', 'محول')}
+                            </span>
+                          </div>
+                        )}
                         
                         {message.content && (
-                          <p className="text-sm text-[#303030] leading-relaxed break-words">{message.content}</p>
+                          <p className="text-sm leading-relaxed break-words" style={{ color: COLORS.textPrimary }}>
+                            {message.content}
+                          </p>
                         )}
                         
                         {message.attachments && message.attachments.length > 0 && (
@@ -551,10 +559,23 @@ export default function Messenger() {
                                   <a
                                     href={attachment.file_url}
                                     download={attachment.file_name}
-                                    className="flex items-center gap-2 text-xs bg-black/5 rounded p-2"
+                                    className="flex items-center gap-2 text-xs rounded p-2"
+                                    style={{ backgroundColor: COLORS.bgTertiary }}
                                   >
-                                    <FileText className="h-4 w-4 text-[#54656F]" />
-                                    <span className="truncate text-[#54656F]">{attachment.file_name}</span>
+                                    <div 
+                                      className="w-10 h-10 rounded flex items-center justify-center"
+                                      style={{ backgroundColor: COLORS.missedCall }}
+                                    >
+                                      <FileText className="h-5 w-5 text-white" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <span className="truncate block" style={{ color: COLORS.textPrimary }}>
+                                        {attachment.file_name}
+                                      </span>
+                                      <span style={{ color: COLORS.textMuted }}>
+                                        {formatFileSize(attachment.file_size)} • {attachment.file_type.split('/')[1]?.toUpperCase()}
+                                      </span>
+                                    </div>
                                   </a>
                                 )}
                               </div>
@@ -563,13 +584,13 @@ export default function Messenger() {
                         )}
                         
                         <div className="flex items-center justify-end gap-1 mt-0.5">
-                          <span className="text-[10px] text-[#667781]">
+                          <span className="text-[10px]" style={{ color: COLORS.textMuted }}>
                             {formatChatTime(message.created_at)}
                           </span>
                           {isOwnMessage && (
                             message.is_read 
-                              ? <CheckCheck className="h-4 w-4 text-[#53BDEB]" />
-                              : <Check className="h-4 w-4 text-[#667781]" />
+                              ? <CheckCheck className="h-4 w-4" style={{ color: COLORS.blue }} />
+                              : <Check className="h-4 w-4" style={{ color: COLORS.textMuted }} />
                           )}
                         </div>
                       </div>
@@ -584,16 +605,21 @@ export default function Messenger() {
 
         {/* Selected Files Preview */}
         {selectedFiles.length > 0 && (
-          <div className="px-3 py-2 bg-[#F0F2F5] border-t">
+          <div className="px-3 py-2" style={{ backgroundColor: COLORS.bgSecondary, borderTopColor: COLORS.divider, borderTopWidth: 1 }}>
             <div className="flex flex-wrap gap-2">
               {selectedFiles.map((file, index) => (
-                <div key={index} className="flex items-center gap-1 bg-white rounded-full px-3 py-1 shadow-sm">
-                  {file.type.startsWith('image/') ? <ImageIcon className="h-4 w-4 text-[#54656F]" /> : <FileText className="h-4 w-4 text-[#54656F]" />}
-                  <span className="text-xs text-[#54656F] truncate max-w-[100px]">{file.name}</span>
+                <div 
+                  key={index} 
+                  className="flex items-center gap-1 rounded-full px-3 py-1"
+                  style={{ backgroundColor: COLORS.bgTertiary }}
+                >
+                  {file.type.startsWith('image/') ? <ImageIcon className="h-4 w-4" style={{ color: COLORS.textSecondary }} /> : <FileText className="h-4 w-4" style={{ color: COLORS.textSecondary }} />}
+                  <span className="text-xs truncate max-w-[100px]" style={{ color: COLORS.textSecondary }}>{file.name}</span>
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-4 w-4 text-[#54656F] hover:text-red-500 p-0"
+                    className="h-4 w-4 p-0 hover:text-red-500"
+                    style={{ color: COLORS.textSecondary }}
                     onClick={() => setSelectedFiles(prev => prev.filter((_, i) => i !== index))}
                   >
                     <X className="h-3 w-3" />
@@ -604,39 +630,37 @@ export default function Messenger() {
           </div>
         )}
 
-        {/* WhatsApp Input Bar */}
-        <div className="bg-[#F0F2F5] px-2 py-2 flex items-center gap-2">
+        {/* Input Bar */}
+        <div className="px-2 py-2 flex items-center gap-2" style={{ backgroundColor: COLORS.bg }}>
           <Button
             variant="ghost"
             size="icon"
-            className="h-10 w-10 text-[#54656F] hover:bg-[#E9EDEF] rounded-full"
-          >
-            <Smile className="h-6 w-6" />
-          </Button>
-          
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-10 w-10 text-[#54656F] hover:bg-[#E9EDEF] rounded-full"
+            className="h-10 w-10 rounded-full hover:bg-white/10"
+            style={{ color: COLORS.textSecondary }}
             onClick={() => fileInputRef.current?.click()}
           >
-            <Paperclip className="h-6 w-6" />
+            <Plus className="h-6 w-6" />
           </Button>
           
-          <div className="flex-1">
+          <div className="flex-1 flex items-center gap-2 rounded-full px-4 py-2" style={{ backgroundColor: COLORS.inputBg }}>
             <Input
-              placeholder={t('Type a message', 'اكتب رسالة')}
+              placeholder={t('Message', 'رسالة')}
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
-              className="bg-white border-0 text-[#303030] placeholder:text-[#667781] h-10 rounded-full px-4 focus-visible:ring-0 shadow-sm"
+              className="flex-1 bg-transparent border-0 text-sm focus-visible:ring-0 p-0 h-auto"
+              style={{ color: COLORS.textPrimary }}
             />
+            <Button variant="ghost" size="icon" className="h-6 w-6 p-0" style={{ color: COLORS.textSecondary }}>
+              <Smile className="h-5 w-5" />
+            </Button>
           </div>
           
           <Button
             variant="ghost"
             size="icon"
-            className="h-10 w-10 text-[#54656F] hover:bg-[#E9EDEF] rounded-full"
+            className="h-10 w-10 rounded-full hover:bg-white/10"
+            style={{ color: COLORS.textSecondary }}
           >
             <Camera className="h-6 w-6" />
           </Button>
@@ -644,7 +668,8 @@ export default function Messenger() {
           {newMessage.trim() || selectedFiles.length > 0 ? (
             <Button
               size="icon"
-              className="h-12 w-12 bg-[#00A884] hover:bg-[#00A884]/90 rounded-full shadow-md"
+              className="h-10 w-10 rounded-full"
+              style={{ backgroundColor: COLORS.accent }}
               onClick={handleSendMessage}
               disabled={sending}
             >
@@ -653,9 +678,10 @@ export default function Messenger() {
           ) : (
             <Button
               size="icon"
-              className="h-12 w-12 bg-[#00A884] hover:bg-[#00A884]/90 rounded-full shadow-md"
+              className="h-10 w-10 rounded-full hover:bg-white/10"
+              style={{ color: COLORS.textSecondary }}
             >
-              <Mic className="h-5 w-5 text-white" />
+              <Mic className="h-6 w-6" />
             </Button>
           )}
           
@@ -665,208 +691,588 @@ export default function Messenger() {
             multiple
             onChange={handleFileSelect}
             className="hidden"
-            accept="image/*,.pdf,.doc,.docx,.txt"
+            accept="image/*,.pdf,.doc,.docx,.txt,video/*"
           />
         </div>
       </div>
     );
   }
 
-  // Chat List View - WhatsApp Style
+  // Main View with Bottom Tabs
   return (
-    <div className="h-full w-full flex flex-col bg-white">
-      {/* WhatsApp Header */}
-      <div className="bg-[#075E54] px-4 py-3 flex items-center justify-between shadow-md">
-        <h1 className="text-white text-xl font-bold">
-          WhatsApp
-        </h1>
-        <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon" className="h-10 w-10 text-white hover:bg-white/10">
-            <Camera className="h-5 w-5" />
-          </Button>
-          <Button variant="ghost" size="icon" className="h-10 w-10 text-white hover:bg-white/10">
-            <Search className="h-5 w-5" />
-          </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-10 w-10 text-white hover:bg-white/10">
-                <MoreVertical className="h-5 w-5" />
+    <div className="h-full w-full flex flex-col" style={{ backgroundColor: COLORS.bg }}>
+      {/* Tab Content */}
+      {activeTab === 'chats' && (
+        <>
+          {/* Header */}
+          <div className="px-4 py-3 flex items-center justify-between" style={{ backgroundColor: COLORS.bg }}>
+            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" style={{ backgroundColor: COLORS.bgTertiary, color: COLORS.textSecondary }}>
+              <MoreHorizontal className="h-5 w-5" />
+            </Button>
+            <h1 className="text-2xl font-bold" style={{ color: COLORS.textPrimary }}>
+              {t('Chats', 'الدردشات')}
+            </h1>
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" style={{ backgroundColor: COLORS.bgTertiary, color: COLORS.textSecondary }}>
+                <Camera className="h-5 w-5" />
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem onClick={() => setShowNewChatDialog(true)}>{t('New chat', 'محادثة جديدة')}</DropdownMenuItem>
-              <DropdownMenuItem>{t('New group', 'مجموعة جديدة')}</DropdownMenuItem>
-              <DropdownMenuItem>{t('Linked devices', 'الأجهزة المرتبطة')}</DropdownMenuItem>
-              <DropdownMenuItem>{t('Starred messages', 'الرسائل المميزة')}</DropdownMenuItem>
-              <DropdownMenuItem>{t('Settings', 'الإعدادات')}</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </div>
-
-      {/* Search Bar */}
-      <div className="px-3 py-2 bg-white border-b">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#54656F]" />
-          <Input
-            placeholder={t('Search or start new chat', 'ابحث أو ابدأ محادثة جديدة')}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 bg-[#F0F2F5] border-0 text-[#303030] placeholder:text-[#667781] h-9 rounded-lg focus-visible:ring-0"
-          />
-        </div>
-      </div>
-
-      {/* Chat Filters */}
-      <div className="px-3 py-2 flex gap-2 border-b bg-white">
-        <Button variant="secondary" size="sm" className="rounded-full bg-[#E7FCE3] text-[#008069] hover:bg-[#D9F8D3] h-8 px-4 text-xs font-medium">
-          {t('All', 'الكل')}
-        </Button>
-        <Button variant="ghost" size="sm" className="rounded-full text-[#54656F] hover:bg-[#F0F2F5] h-8 px-4 text-xs font-medium">
-          {t('Unread', 'غير مقروءة')}
-        </Button>
-        <Button variant="ghost" size="sm" className="rounded-full text-[#54656F] hover:bg-[#F0F2F5] h-8 px-4 text-xs font-medium">
-          {t('Groups', 'المجموعات')}
-        </Button>
-      </div>
-
-      {/* Conversations List */}
-      <ScrollArea className="flex-1">
-        {loading ? (
-          <div className="flex items-center justify-center h-32">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#00A884]"></div>
-          </div>
-        ) : searchQuery && searchResults.length > 0 ? (
-          <div>
-            {searchResults.map(userResult => (
-              <button
-                key={userResult.id}
-                onClick={() => handleSelectUser(userResult)}
-                className="w-full px-4 py-3 flex items-center gap-3 hover:bg-[#F5F6F6] transition-colors border-b border-[#E9EDEF]"
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-9 w-9 rounded-full"
+                style={{ backgroundColor: COLORS.bgTertiary, color: COLORS.textSecondary }}
+                onClick={() => setShowNewChatDialog(true)}
               >
-                <Avatar className="h-12 w-12">
-                  <AvatarImage src={userResult.profile_image || undefined} />
-                  <AvatarFallback className="bg-[#DFE5E7] text-[#54656F]">
-                    {userResult.full_name.charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1 text-left">
-                  <p className="font-medium text-[#111B21]">{userResult.full_name}</p>
-                  <p className="text-sm text-[#667781]">{userResult.role}</p>
-                </div>
-              </button>
-            ))}
-          </div>
-        ) : conversations.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full p-8 text-center">
-            <div className="w-32 h-32 rounded-full bg-[#00A884]/10 flex items-center justify-center mb-4">
-              <svg viewBox="0 0 212 212" className="w-20 h-20 text-[#00A884]">
-                <path fill="currentColor" d="M106.251.5C164.653.5 212 47.846 212 106.25S164.653 212 106.25 212C47.846 212 .5 164.654.5 106.25S47.846.5 106.251.5z"/>
-                <path fill="#fff" d="M173.561 171.615a62.767 62.767 0 0 0-2.065-2.955 67.7 67.7 0 0 0-2.608-3.299 70.112 70.112 0 0 0-3.184-3.527 71.097 71.097 0 0 0-5.924-5.47 72.458 72.458 0 0 0-10.204-7.026 75.2 75.2 0 0 0-5.98-3.055c-.062-.028-.118-.059-.18-.087-9.792-4.44-22.106-7.529-37.416-7.529s-27.624 3.089-37.416 7.529c-.338.153-.653.318-.985.474a75.37 75.37 0 0 0-6.229 3.298 72.589 72.589 0 0 0-9.15 6.395 71.243 71.243 0 0 0-5.924 5.47 70.064 70.064 0 0 0-3.184 3.527 67.142 67.142 0 0 0-2.609 3.299 63.292 63.292 0 0 0-2.065 2.955 56.33 56.33 0 0 0-1.447 2.324c-.033.056-.073.119-.104.174a47.92 47.92 0 0 0-1.07 1.926c-.559 1.068-.818 1.678-.818 1.678v.398c18.285 17.927 43.322 28.985 70.945 28.985 27.678 0 52.761-11.103 71.055-29.095v-.289s-.619-1.45-1.992-3.778a58.346 58.346 0 0 0-1.446-2.322zM106.002 125.5c2.645 0 5.212-.253 7.68-.737a38.272 38.272 0 0 0 3.624-.896 37.124 37.124 0 0 0 5.12-1.958 36.307 36.307 0 0 0 6.15-3.67 35.923 35.923 0 0 0 9.489-10.48 36.558 36.558 0 0 0 2.422-4.84 37.051 37.051 0 0 0 1.716-5.25c.299-1.208.542-2.443.725-3.701.275-1.887.417-3.827.417-5.811s-.142-3.925-.417-5.811a38.734 38.734 0 0 0-1.215-5.494 36.68 36.68 0 0 0-3.648-8.298 35.923 35.923 0 0 0-9.489-10.48 36.347 36.347 0 0 0-6.15-3.67 37.124 37.124 0 0 0-5.12-1.958 37.67 37.67 0 0 0-3.624-.896 39.875 39.875 0 0 0-7.68-.737c-21.162 0-37.345 16.183-37.345 37.345 0 21.159 16.183 37.342 37.345 37.342z"/>
-              </svg>
+                <Plus className="h-5 w-5" />
+              </Button>
             </div>
-            <p className="text-[#54656F] text-lg font-medium">
-              {t('No conversations yet', 'لا توجد محادثات بعد')}
-            </p>
-            <p className="text-sm text-[#667781] mt-1">
-              {t('Start chatting with your contacts', 'ابدأ الدردشة مع جهات اتصالك')}
-            </p>
           </div>
-        ) : (
-          <div>
-            {conversations.map(conv => (
-              <button
-                key={conv.id}
-                onClick={() => handleSelectConversation(conv)}
-                className="w-full px-4 py-3 flex items-center gap-3 hover:bg-[#F5F6F6] transition-colors border-b border-[#E9EDEF]"
+
+          {/* Search Bar */}
+          <div className="px-4 py-2">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: COLORS.textMuted }} />
+              <Input
+                placeholder={t('Search', 'بحث')}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 h-9 rounded-lg border-0 text-sm"
+                style={{ backgroundColor: COLORS.inputBg, color: COLORS.textPrimary }}
+              />
+            </div>
+          </div>
+
+          {/* Chat Filters */}
+          <div className="px-4 py-2 flex gap-2 overflow-x-auto">
+            {(['all', 'unread', 'favorites', 'groups'] as const).map((filter) => (
+              <Button
+                key={filter}
+                variant="ghost"
+                size="sm"
+                className={cn(
+                  "rounded-full h-8 px-4 text-sm font-medium whitespace-nowrap",
+                  chatFilter === filter ? "bg-opacity-100" : "bg-opacity-0"
+                )}
+                style={{ 
+                  backgroundColor: chatFilter === filter ? COLORS.bgTertiary : 'transparent',
+                  color: COLORS.textPrimary
+                }}
+                onClick={() => setChatFilter(filter)}
               >
-                <Avatar className="h-12 w-12">
-                  <AvatarImage src={conv.recipient_image || undefined} />
-                  <AvatarFallback className="bg-[#DFE5E7] text-[#54656F]">
-                    {conv.recipient_name.charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between">
-                    <p className="font-medium text-[#111B21] truncate">{conv.recipient_name}</p>
-                    <span className={cn(
-                      "text-xs flex-shrink-0",
-                      conv.unread_count > 0 ? "text-[#00A884]" : "text-[#667781]"
-                    )}>
-                      {conv.last_message_time && formatMessageTime(conv.last_message_time)}
-                    </span>
+                {filter === 'all' && t('All', 'الكل')}
+                {filter === 'unread' && t('Unread', 'غير مقروءة')}
+                {filter === 'favorites' && t('Favorites', 'المفضلة')}
+                {filter === 'groups' && t('Groups', 'المجموعات')}
+              </Button>
+            ))}
+          </div>
+
+          {/* Archived Section */}
+          {archivedCount > 0 && (
+            <button 
+              className="w-full px-4 py-3 flex items-center gap-4 hover:opacity-80 transition-opacity"
+              style={{ borderBottomWidth: 1, borderColor: COLORS.divider }}
+            >
+              <div 
+                className="h-12 w-12 rounded-full flex items-center justify-center"
+                style={{ backgroundColor: COLORS.bgTertiary }}
+              >
+                <Archive className="h-5 w-5" style={{ color: COLORS.textSecondary }} />
+              </div>
+              <span className="font-medium" style={{ color: COLORS.textPrimary }}>
+                {t('Archived', 'الأرشيف')}
+              </span>
+              <span className="ml-auto" style={{ color: COLORS.accent }}>
+                {archivedCount}
+              </span>
+            </button>
+          )}
+
+          {/* Conversations List */}
+          <ScrollArea className="flex-1">
+            {loading ? (
+              <div className="flex items-center justify-center h-32">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: COLORS.accent }}></div>
+              </div>
+            ) : conversations.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full p-8 text-center">
+                <div 
+                  className="w-20 h-20 rounded-full flex items-center justify-center mb-4"
+                  style={{ backgroundColor: COLORS.bgTertiary }}
+                >
+                  <MessageCircle className="w-10 h-10" style={{ color: COLORS.accent }} />
+                </div>
+                <p className="text-lg font-medium" style={{ color: COLORS.textPrimary }}>
+                  {t('No conversations yet', 'لا توجد محادثات بعد')}
+                </p>
+                <p className="text-sm mt-1" style={{ color: COLORS.textSecondary }}>
+                  {t('Start chatting with your contacts', 'ابدأ الدردشة مع جهات اتصالك')}
+                </p>
+              </div>
+            ) : (
+              <div>
+                {conversations.map(conv => (
+                  <button
+                    key={conv.id}
+                    onClick={() => handleSelectConversation(conv)}
+                    className="w-full px-4 py-3 flex items-center gap-3 hover:opacity-80 transition-opacity"
+                    style={{ borderBottomWidth: 1, borderColor: COLORS.divider }}
+                  >
+                    <Avatar className="h-12 w-12">
+                      <AvatarImage src={conv.recipient_image || undefined} />
+                      <AvatarFallback style={{ backgroundColor: COLORS.accent, color: 'white' }}>
+                        {conv.recipient_name.charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0 text-left">
+                      <div className="flex items-center justify-between">
+                        <p className="font-medium truncate" style={{ color: COLORS.textPrimary }}>
+                          {conv.recipient_name}
+                        </p>
+                        <span 
+                          className="text-xs flex-shrink-0"
+                          style={{ color: conv.unread_count > 0 ? COLORS.accent : COLORS.textMuted }}
+                        >
+                          {conv.last_message_time && formatMessageTime(conv.last_message_time)}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between mt-0.5">
+                        <p className="text-sm truncate flex items-center gap-1" style={{ color: COLORS.textSecondary }}>
+                          {conv.last_message ? (
+                            <>
+                              <CheckCheck className="h-4 w-4 flex-shrink-0" style={{ color: COLORS.blue }} />
+                              <span className="truncate">{conv.last_message}</span>
+                            </>
+                          ) : (
+                            t('No messages yet', 'لا توجد رسائل بعد')
+                          )}
+                        </p>
+                        {conv.unread_count > 0 && (
+                          <Badge 
+                            className="h-5 min-w-[20px] px-1.5 rounded-full text-xs text-white"
+                            style={{ backgroundColor: COLORS.unreadBadge }}
+                          >
+                            {conv.unread_count}
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </ScrollArea>
+        </>
+      )}
+
+      {activeTab === 'updates' && (
+        <>
+          {/* Header */}
+          <div className="px-4 py-3 flex items-center justify-between" style={{ backgroundColor: COLORS.bg }}>
+            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" style={{ backgroundColor: COLORS.bgTertiary, color: COLORS.textSecondary }}>
+              <MoreHorizontal className="h-5 w-5" />
+            </Button>
+            <h1 className="text-2xl font-bold" style={{ color: COLORS.textPrimary }}>
+              {t('Updates', 'التحديثات')}
+            </h1>
+            <div className="h-9 w-9" />
+          </div>
+
+          {/* Search Bar */}
+          <div className="px-4 py-2">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: COLORS.textMuted }} />
+              <Input
+                placeholder={t('Search', 'بحث')}
+                className="pl-10 h-9 rounded-lg border-0 text-sm"
+                style={{ backgroundColor: COLORS.inputBg, color: COLORS.textPrimary }}
+              />
+            </div>
+          </div>
+
+          <ScrollArea className="flex-1">
+            {/* Status Section */}
+            <div className="p-4">
+              <h2 className="text-lg font-bold mb-4" style={{ color: COLORS.textPrimary }}>
+                {t('Status', 'الحالة')}
+              </h2>
+              
+              {/* Add Status */}
+              <div className="flex items-center gap-3 mb-4">
+                <div className="relative">
+                  <div 
+                    className="h-14 w-14 rounded-full flex items-center justify-center"
+                    style={{ backgroundColor: '#5E3C58' }}
+                  >
+                    <Users className="h-7 w-7" style={{ color: '#E966A0' }} />
                   </div>
-                  <div className="flex items-center justify-between mt-0.5">
-                    <p className="text-sm text-[#667781] truncate flex items-center gap-1">
-                      {conv.last_message ? (
-                        <>
-                          <CheckCheck className="h-4 w-4 text-[#53BDEB] flex-shrink-0" />
-                          <span className="truncate">{conv.last_message}</span>
-                        </>
-                      ) : (
-                        t('No messages yet', 'لا توجد رسائل بعد')
-                      )}
-                    </p>
-                    {conv.unread_count > 0 && (
-                      <Badge className="h-5 min-w-[20px] px-1.5 bg-[#25D366] text-white rounded-full text-xs">
-                        {conv.unread_count}
-                      </Badge>
-                    )}
+                  <div 
+                    className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full flex items-center justify-center"
+                    style={{ backgroundColor: COLORS.accent }}
+                  >
+                    <Plus className="h-3 w-3 text-white" />
                   </div>
                 </div>
+                <div className="flex-1">
+                  <p className="font-medium" style={{ color: COLORS.textPrimary }}>
+                    {t('Add status', 'أضف حالة')}
+                  </p>
+                  <p className="text-sm" style={{ color: COLORS.textSecondary }}>
+                    {t('Disappears after 24 hours', 'تختفي بعد 24 ساعة')}
+                  </p>
+                </div>
+                <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full" style={{ backgroundColor: COLORS.bgTertiary, color: COLORS.textSecondary }}>
+                  <Camera className="h-5 w-5" />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full" style={{ backgroundColor: COLORS.bgTertiary, color: COLORS.textSecondary }}>
+                  <Edit3 className="h-5 w-5" />
+                </Button>
+              </div>
+
+              {/* Recent Updates */}
+              <p className="text-sm mb-3" style={{ color: COLORS.accent }}>
+                {t('Recent updates', 'التحديثات الأخيرة')}
+              </p>
+              
+              {[1, 2].map((_, i) => (
+                <div key={i} className="flex items-center gap-3 py-2">
+                  <div 
+                    className="h-14 w-14 rounded-full p-0.5"
+                    style={{ background: `linear-gradient(45deg, ${COLORS.accent}, ${COLORS.accentLight})` }}
+                  >
+                    <Avatar className="h-full w-full border-2" style={{ borderColor: COLORS.bg }}>
+                      <AvatarFallback style={{ backgroundColor: COLORS.bgTertiary, color: COLORS.textPrimary }}>
+                        {String.fromCharCode(65 + i)}
+                      </AvatarFallback>
+                    </Avatar>
+                  </div>
+                  <div>
+                    <p className="font-medium" style={{ color: COLORS.textPrimary }}>
+                      {t('Contact', 'جهة اتصال')} {i + 1}
+                    </p>
+                    <p className="text-sm" style={{ color: COLORS.textSecondary }}>
+                      {21 + i}h ago
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Channels Section */}
+            <div className="p-4 mt-4">
+              <h2 className="text-lg font-bold mb-2" style={{ color: COLORS.textPrimary }}>
+                {t('Channels', 'القنوات')}
+              </h2>
+              <p className="text-sm mb-4" style={{ color: COLORS.textSecondary }}>
+                {t('Stay updated on topics that matter to you. Find channels to follow below.', 'ابق على اطلاع بالمواضيع التي تهمك.')}
+              </p>
+              
+              <button className="flex items-center justify-between w-full py-2">
+                <span style={{ color: COLORS.accent }}>
+                  {t('Find channels to follow', 'اعثر على قنوات للمتابعة')}
+                </span>
+                <span style={{ color: COLORS.textSecondary }}>^</span>
+              </button>
+            </div>
+          </ScrollArea>
+        </>
+      )}
+
+      {activeTab === 'calls' && (
+        <>
+          {/* Header */}
+          <div className="px-4 py-3 flex items-center justify-between" style={{ backgroundColor: COLORS.bg }}>
+            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" style={{ backgroundColor: COLORS.bgTertiary, color: COLORS.textSecondary }}>
+              <MoreHorizontal className="h-5 w-5" />
+            </Button>
+            <h1 className="text-2xl font-bold" style={{ color: COLORS.textPrimary }}>
+              {t('Calls', 'المكالمات')}
+            </h1>
+            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" style={{ backgroundColor: COLORS.bgTertiary, color: COLORS.textSecondary }}>
+              <Plus className="h-5 w-5" />
+            </Button>
+          </div>
+
+          {/* Search Bar */}
+          <div className="px-4 py-2">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: COLORS.textMuted }} />
+              <Input
+                placeholder={t('Search', 'بحث')}
+                className="pl-10 h-9 rounded-lg border-0 text-sm"
+                style={{ backgroundColor: COLORS.inputBg, color: COLORS.textPrimary }}
+              />
+            </div>
+          </div>
+
+          {/* Quick Actions */}
+          <div className="px-4 py-4 flex justify-around">
+            {[
+              { icon: Phone, label: t('Call', 'اتصال') },
+              { icon: Calendar, label: t('Schedule', 'جدولة') },
+              { icon: Grid3X3, label: t('Keypad', 'لوحة') },
+              { icon: Heart, label: t('Favorites', 'المفضلة') }
+            ].map((item, i) => (
+              <button key={i} className="flex flex-col items-center gap-2">
+                <div 
+                  className="h-14 w-14 rounded-full flex items-center justify-center"
+                  style={{ backgroundColor: COLORS.bgTertiary }}
+                >
+                  <item.icon className="h-6 w-6" style={{ color: COLORS.textSecondary }} />
+                </div>
+                <span className="text-xs" style={{ color: COLORS.textSecondary }}>
+                  {item.label}
+                </span>
               </button>
             ))}
           </div>
-        )}
-      </ScrollArea>
 
-      {/* Floating Action Button */}
-      <Button
-        onClick={() => setShowNewChatDialog(true)}
-        className="fixed bottom-20 right-4 h-14 w-14 rounded-full bg-[#00A884] hover:bg-[#00A884]/90 shadow-lg z-10"
+          {/* Recent Calls */}
+          <ScrollArea className="flex-1">
+            <div className="px-4">
+              <h3 className="font-bold mb-3" style={{ color: COLORS.textPrimary }}>
+                {t('Recent', 'الأخيرة')}
+              </h3>
+              
+              {[
+                { name: 'Contact 1', type: 'missed', date: 'Yesterday' },
+                { name: 'Contact 2', type: 'outgoing', date: '21/12/2025' },
+                { name: 'Contact 3', type: 'missed', date: '18/12/2025' },
+              ].map((call, i) => (
+                <div 
+                  key={i} 
+                  className="flex items-center gap-3 py-3"
+                  style={{ borderBottomWidth: 1, borderColor: COLORS.divider }}
+                >
+                  <Avatar className="h-12 w-12">
+                    <AvatarFallback style={{ backgroundColor: COLORS.accent, color: 'white' }}>
+                      {call.name.charAt(0)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1">
+                    <p 
+                      className="font-medium"
+                      style={{ color: call.type === 'missed' ? COLORS.missedCall : COLORS.textPrimary }}
+                    >
+                      {call.name}
+                    </p>
+                    <div className="flex items-center gap-1">
+                      {call.type === 'missed' ? (
+                        <PhoneMissed className="h-4 w-4" style={{ color: COLORS.missedCall }} />
+                      ) : (
+                        <PhoneOutgoing className="h-4 w-4" style={{ color: COLORS.textSecondary }} />
+                      )}
+                      <span className="text-sm" style={{ color: COLORS.textSecondary }}>
+                        {call.type === 'missed' ? t('Missed', 'فائتة') : t('Outgoing', 'صادرة')}
+                      </span>
+                    </div>
+                  </div>
+                  <span className="text-sm" style={{ color: COLORS.textSecondary }}>
+                    {call.date}
+                  </span>
+                  <Button variant="ghost" size="icon" className="h-8 w-8" style={{ color: COLORS.textSecondary }}>
+                    <Info className="h-5 w-5" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
+        </>
+      )}
+
+      {activeTab === 'tools' && (
+        <>
+          {/* Header */}
+          <div className="px-4 py-3 flex items-center justify-between" style={{ backgroundColor: COLORS.bg }}>
+            <div className="h-9 w-9" />
+            <h1 className="text-2xl font-bold" style={{ color: COLORS.textPrimary }}>
+              {t('Tools', 'الأدوات')}
+            </h1>
+            <div className="h-9 w-9" />
+          </div>
+
+          <ScrollArea className="flex-1 p-4">
+            <p className="text-center" style={{ color: COLORS.textSecondary }}>
+              {t('Tools coming soon', 'الأدوات قريباً')}
+            </p>
+          </ScrollArea>
+        </>
+      )}
+
+      {activeTab === 'settings' && (
+        <>
+          {/* Header */}
+          <div className="px-4 py-3 flex items-center justify-between" style={{ backgroundColor: COLORS.bg }}>
+            <div className="h-9 w-9" />
+            <h1 className="text-2xl font-bold" style={{ color: COLORS.textPrimary }}>
+              {t('Settings', 'الإعدادات')}
+            </h1>
+            <div className="h-9 w-9" />
+          </div>
+
+          <ScrollArea className="flex-1">
+            {/* Profile */}
+            <div className="px-4 py-4 flex items-center gap-4" style={{ borderBottomWidth: 1, borderColor: COLORS.divider }}>
+              <Avatar className="h-16 w-16">
+                <AvatarImage src={(profile as any)?.profile_image || undefined} />
+                <AvatarFallback style={{ backgroundColor: COLORS.accent, color: 'white' }}>
+                  {(profile as any)?.full_name?.charAt(0).toUpperCase() || 'U'}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1">
+                <p className="font-medium text-lg" style={{ color: COLORS.textPrimary }}>
+                  {(profile as any)?.full_name || t('User', 'مستخدم')}
+                </p>
+                <p className="text-sm" style={{ color: COLORS.textSecondary }}>
+                  {user?.email}
+                </p>
+              </div>
+            </div>
+
+            {/* Settings Options */}
+            {[
+              { icon: Users, label: t('Account', 'الحساب') },
+              { icon: MessageCircle, label: t('Chats', 'الدردشات') },
+              { icon: Archive, label: t('Storage', 'التخزين') },
+            ].map((item, i) => (
+              <button
+                key={i}
+                className="w-full px-4 py-4 flex items-center gap-4"
+                style={{ borderBottomWidth: 1, borderColor: COLORS.divider }}
+              >
+                <item.icon className="h-6 w-6" style={{ color: COLORS.textSecondary }} />
+                <span style={{ color: COLORS.textPrimary }}>{item.label}</span>
+              </button>
+            ))}
+          </ScrollArea>
+        </>
+      )}
+
+      {/* Bottom Navigation */}
+      <div 
+        className="flex items-center justify-around py-2 border-t"
+        style={{ backgroundColor: COLORS.bg, borderColor: COLORS.divider }}
       >
-        <Plus className="h-6 w-6 text-white" />
-      </Button>
+        {[
+          { id: 'updates' as TabType, icon: MessageCircle, label: t('Updates', 'التحديثات'), badge: 0 },
+          { id: 'calls' as TabType, icon: Phone, label: t('Calls', 'المكالمات'), badge: 0 },
+          { id: 'tools' as TabType, icon: Calendar, label: t('Tools', 'الأدوات'), badge: 0 },
+          { id: 'chats' as TabType, icon: MessageCircle, label: t('Chats', 'الدردشات'), badge: totalUnread },
+          { id: 'settings' as TabType, icon: Settings, label: t('Settings', 'الإعدادات'), badge: 1 }
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className="flex flex-col items-center gap-1 py-1 px-3 relative"
+          >
+            <div className="relative">
+              <tab.icon 
+                className="h-6 w-6" 
+                style={{ color: activeTab === tab.id ? COLORS.textPrimary : COLORS.textSecondary }} 
+              />
+              {tab.badge > 0 && (
+                <Badge 
+                  className="absolute -top-2 -right-2 h-4 min-w-[16px] px-1 text-[10px] rounded-full text-white border-0"
+                  style={{ backgroundColor: COLORS.accent }}
+                >
+                  {tab.badge}
+                </Badge>
+              )}
+            </div>
+            <span 
+              className="text-[10px]"
+              style={{ color: activeTab === tab.id ? COLORS.textPrimary : COLORS.textSecondary }}
+            >
+              {tab.label}
+            </span>
+          </button>
+        ))}
+      </div>
 
       {/* New Chat Dialog */}
       <Dialog open={showNewChatDialog} onOpenChange={setShowNewChatDialog}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>{t('New chat', 'محادثة جديدة')}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#54656F]" />
-              <Input
-                placeholder={t('Search contacts', 'ابحث في جهات الاتصال')}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
+        <DialogContent 
+          className="max-w-full h-[80vh] p-0 border-0"
+          style={{ backgroundColor: COLORS.bgSecondary }}
+        >
+          <div className="flex flex-col h-full">
+            {/* Dialog Header */}
+            <div className="px-4 py-3 flex items-center justify-between" style={{ borderBottomWidth: 1, borderColor: COLORS.divider }}>
+              <h2 className="text-lg font-medium" style={{ color: COLORS.textPrimary }}>
+                {t('New chat', 'محادثة جديدة')}
+              </h2>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-8 w-8"
+                style={{ color: COLORS.textSecondary }}
+                onClick={() => setShowNewChatDialog(false)}
+              >
+                <X className="h-5 w-5" />
+              </Button>
             </div>
-            
-            <ScrollArea className="h-64">
-              {searchResults.map(userResult => (
+
+            {/* Search */}
+            <div className="px-4 py-2">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: COLORS.textMuted }} />
+                <Input
+                  placeholder={t('Search name or number', 'ابحث عن الاسم أو الرقم')}
+                  value={dialogSearchQuery}
+                  onChange={(e) => setDialogSearchQuery(e.target.value)}
+                  className="pl-10 h-10 rounded-lg border-0"
+                  style={{ backgroundColor: COLORS.inputBg, color: COLORS.textPrimary }}
+                />
+              </div>
+            </div>
+
+            {/* Options */}
+            <div style={{ borderBottomWidth: 1, borderColor: COLORS.divider }}>
+              {[
+                { icon: Users, label: t('New group', 'مجموعة جديدة') },
+                { icon: UserPlus, label: t('New contact', 'جهة اتصال جديدة') },
+                { icon: Megaphone, label: t('New broadcast', 'بث جديد') }
+              ].map((item, i) => (
                 <button
-                  key={userResult.id}
-                  onClick={() => handleSelectUser(userResult)}
-                  className="w-full p-3 flex items-center gap-3 hover:bg-muted rounded-lg transition-colors"
+                  key={i}
+                  className="w-full px-4 py-3 flex items-center gap-4 hover:opacity-80"
                 >
-                  <Avatar>
-                    <AvatarImage src={userResult.profile_image || undefined} />
-                    <AvatarFallback>
-                      {userResult.full_name.charAt(0).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 text-left">
-                    <p className="font-medium">{userResult.full_name}</p>
-                    <p className="text-sm text-muted-foreground">{userResult.role}</p>
-                  </div>
+                  <item.icon className="h-5 w-5" style={{ color: COLORS.textSecondary }} />
+                  <span style={{ color: COLORS.textPrimary }}>{item.label}</span>
                 </button>
               ))}
-              {searchQuery && searchResults.length === 0 && (
-                <p className="text-center text-muted-foreground py-4">
-                  {t('No contacts found', 'لم يتم العثور على جهات اتصال')}
+            </div>
+
+            {/* Contacts List */}
+            <ScrollArea className="flex-1">
+              {searchResults.length > 0 ? (
+                <>
+                  <p className="px-4 py-2 text-sm" style={{ color: COLORS.accent }}>
+                    {t('Search results', 'نتائج البحث')}
+                  </p>
+                  {searchResults.map(userResult => (
+                    <button
+                      key={userResult.id}
+                      onClick={() => handleSelectUser(userResult)}
+                      className="w-full px-4 py-3 flex items-center gap-3 hover:opacity-80"
+                      style={{ borderBottomWidth: 1, borderColor: COLORS.divider }}
+                    >
+                      <Avatar className="h-12 w-12">
+                        <AvatarImage src={userResult.profile_image || undefined} />
+                        <AvatarFallback style={{ backgroundColor: COLORS.accent, color: 'white' }}>
+                          {userResult.full_name.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 text-left">
+                        <p className="font-medium" style={{ color: COLORS.textPrimary }}>{userResult.full_name}</p>
+                        <p className="text-sm" style={{ color: COLORS.textSecondary }}>{userResult.role}</p>
+                      </div>
+                    </button>
+                  ))}
+                </>
+              ) : (
+                <p className="px-4 py-4 text-sm text-center" style={{ color: COLORS.textSecondary }}>
+                  {dialogSearchQuery ? t('No contacts found', 'لا توجد جهات اتصال') : t('Search for contacts', 'ابحث عن جهات اتصال')}
                 </p>
               )}
             </ScrollArea>
