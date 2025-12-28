@@ -167,7 +167,7 @@ const navItems: NavItem[] = [
     title: 'dashboard.userManagement',
     href: '/dashboard/admin/users',
     icon: Users,
-    roles: ['developer'], // Hidden from admin, only visible to developer
+    roles: ['admin', 'developer'], // Visible to admin and developer
   },
   {
     title: 'dashboard.nfcManagement',

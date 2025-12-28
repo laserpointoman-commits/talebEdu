@@ -238,12 +238,17 @@ export function useMessenger() {
     if (!user) return null;
     
     try {
+      // For voice messages, set a placeholder content since the actual audio is in attachments
+      const messageContent = messageType === 'voice' 
+        ? `🎤 Voice message (${voiceDuration || 0}s)` 
+        : (content || '');
+      
       const { data: messageData, error: messageError } = await supabase
         .from('direct_messages')
         .insert({
           sender_id: user.id,
           recipient_id: recipientId,
-          content: content || null,
+          content: messageContent,
           reply_to_id: replyToId || null,
           forwarded_from_id: forwardedFromId || null,
           message_type: messageType,
