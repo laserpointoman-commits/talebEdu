@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { Mic, Send, Pause, Play, Trash2 } from 'lucide-react';
+import { Mic, Send, Pause, Trash2 } from 'lucide-react';
+import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { getMessengerColors } from './MessengerThemeColors';
 
 interface VoiceRecorderProps {
@@ -29,6 +30,14 @@ export function VoiceRecorder({ onSend, onCancel, isArabic = false, isDark = fal
   const animationRef = useRef<number | null>(null);
 
   const t = (en: string, ar: string) => isArabic ? ar : en;
+
+  const haptic = async (style: ImpactStyle) => {
+    try {
+      await Haptics.impact({ style });
+    } catch {
+      // Haptics not available on web
+    }
+  };
 
   useEffect(() => {
     startRecording();
@@ -109,6 +118,7 @@ export function VoiceRecorder({ onSend, onCancel, isArabic = false, isDark = fal
     try {
       setError(null);
       chunksRef.current = [];
+      void haptic(ImpactStyle.Medium); // Haptic when recording starts
       
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
@@ -176,6 +186,7 @@ export function VoiceRecorder({ onSend, onCancel, isArabic = false, isDark = fal
 
   const handlePauseResume = () => {
     if (!mediaRecorderRef.current || mediaRecorderRef.current.state === 'inactive') return;
+    void haptic(ImpactStyle.Light); // Haptic on pause/resume
     
     if (isPaused) {
       // Resume
@@ -236,6 +247,7 @@ export function VoiceRecorder({ onSend, onCancel, isArabic = false, isDark = fal
   }, [duration, onSend, onCancel]);
 
   const handleDelete = () => {
+    void haptic(ImpactStyle.Light); // Haptic on delete
     cleanup();
     onCancel();
   };
