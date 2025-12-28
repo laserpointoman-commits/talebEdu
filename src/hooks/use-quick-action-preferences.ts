@@ -114,8 +114,9 @@ export function useQuickActionPreferences() {
         if (error) throw error;
       }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['quick-actions-with-preferences', userRole, profile?.id] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['quick-actions-with-preferences', userRole, profile?.id] });
+      await queryClient.refetchQueries({ queryKey: ['quick-actions-with-preferences', userRole, profile?.id] });
       toast.success('Quick action preference updated');
     },
     onError: (error) => {

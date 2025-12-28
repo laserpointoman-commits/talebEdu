@@ -30,7 +30,7 @@ const getNavItemsForRole = (role: string): { items: NavItem[], homeIndex: number
   const roleSpecificItems: Record<string, NavItem[]> = {
     admin: [
       { title: 'Students', titleAr: 'الطلاب', href: '/dashboard/students', icon: GraduationCap },
-      { title: 'Messenger', titleAr: 'المراسلة', href: '/dashboard/messenger', icon: MessageSquare },
+      { title: 'Messenger', titleAr: 'المراسلة', href: '/dashboard/messages', icon: MessageSquare },
       { title: 'Finance', titleAr: 'المالية', href: '/dashboard/finance', icon: DollarSign },
     ],
     teacher: [
