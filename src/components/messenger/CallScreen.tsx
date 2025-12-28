@@ -65,30 +65,36 @@ export function CallScreen({ isArabic }: CallScreenProps) {
   };
 
   const handleToggleMute = () => {
+    console.log('[CallScreen] toggle mute');
     const muted = callService.toggleMute();
     setIsMuted(muted);
   };
 
   const handleToggleVideo = () => {
+    console.log('[CallScreen] toggle video');
     const videoOff = callService.toggleVideo();
     setIsVideoOff(videoOff);
   };
 
   const handleToggleSpeaker = () => {
+    console.log('[CallScreen] toggle speaker');
     callService.toggleSpeaker();
     setIsSpeakerOn(!isSpeakerOn);
   };
 
   const handleAccept = () => {
-    callService.acceptCall();
+    console.log('[CallScreen] accept');
+    callService.acceptCall().catch((e) => console.error('[CallScreen] acceptCall failed', e));
   };
 
   const handleReject = () => {
-    callService.rejectCall();
+    console.log('[CallScreen] reject');
+    callService.rejectCall().catch((e) => console.error('[CallScreen] rejectCall failed', e));
   };
 
   const handleEndCall = () => {
-    callService.endCall();
+    console.log('[CallScreen] end call');
+    callService.endCall().catch((e) => console.error('[CallScreen] endCall failed', e));
   };
 
   const getStatusText = () => {
@@ -131,21 +137,21 @@ export function CallScreen({ isArabic }: CallScreenProps) {
               ref={remoteVideoRef}
               autoPlay
               playsInline
-              className="absolute inset-0 w-full h-full object-cover"
+              className="absolute inset-0 z-0 h-full w-full object-cover pointer-events-none"
             />
             
             {/* Local Video (Picture-in-Picture) */}
             <motion.div
               drag
               dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
-              className="absolute top-20 right-4 w-32 h-44 rounded-2xl overflow-hidden shadow-lg border-2 border-white/30"
+              className="absolute top-20 right-4 z-20 h-44 w-32 overflow-hidden rounded-2xl border-2 border-white/30 shadow-lg"
             >
               <video
                 ref={localVideoRef}
                 autoPlay
                 playsInline
                 muted
-                className="w-full h-full object-cover"
+                className="h-full w-full object-cover"
                 style={{ transform: 'scaleX(-1)' }}
               />
             </motion.div>
@@ -153,7 +159,7 @@ export function CallScreen({ isArabic }: CallScreenProps) {
         )}
 
         {/* Voice Call UI / Video Call Overlay */}
-        <div className={`flex-1 flex flex-col items-center justify-center relative ${isVideoCall ? 'bg-black/40' : ''}`}>
+        <div className={`relative z-10 flex flex-1 flex-col items-center justify-center ${isVideoCall ? 'bg-black/40' : ''}`}>
           {/* Close button for ringing state */}
           {callState.status === 'ringing' && !callState.isIncoming && (
             <Button
@@ -236,7 +242,7 @@ export function CallScreen({ isArabic }: CallScreenProps) {
 
         {/* Call Controls */}
         <div 
-          className="pb-12 pt-6 px-6"
+          className="relative z-30 pb-12 pt-6 px-6"
           style={{ paddingBottom: 'max(3rem, env(safe-area-inset-bottom))' }}
         >
           {/* Incoming call: Accept/Reject */}
