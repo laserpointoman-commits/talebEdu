@@ -110,19 +110,19 @@ const navItems: NavItem[] = [
     roles: ['admin', 'parent', 'finance', 'developer'],
   },
   {
-    title: 'Fee Management',
+    title: 'dashboard.feeManagement',
     href: '/dashboard/admin/fees',
     icon: Receipt,
     roles: ['admin', 'finance', 'developer'],
   },
   {
-    title: 'Parent Finance',
+    title: 'dashboard.parentFinance',
     href: '/dashboard/parent-finance',
     icon: CreditCard,
     roles: ['parent', 'developer'],
   },
   {
-    title: 'Payroll',
+    title: 'dashboard.payroll',
     href: '/dashboard/payroll',
     icon: DollarSign,
     roles: ['admin', 'teacher', 'finance', 'developer'],
@@ -164,13 +164,13 @@ const navItems: NavItem[] = [
     roles: ['admin', 'driver', 'finance', 'developer'],
   },
   {
-    title: 'User Management',
+    title: 'dashboard.userManagement',
     href: '/dashboard/admin/users',
     icon: Users,
     roles: ['developer'], // Hidden from admin, only visible to developer
   },
   {
-    title: 'NFC Management',
+    title: 'dashboard.nfcManagement',
     href: '/dashboard/admin/nfc',
     icon: Code,
     roles: ['admin', 'developer'],
@@ -254,28 +254,28 @@ export default function Sidebar({ onItemClick }: SidebarProps = {}) {
   };
 
   return (
-    <aside className="w-full bg-card border-r border-border/40 flex flex-col h-full overflow-hidden">
+    <aside className="w-full bg-card border-r border-border/40 flex flex-col h-full overflow-hidden pt-[env(safe-area-inset-top)]">
       {/* Developer Controls - Show only when developer is viewing as another role */}
       {profile?.role === 'developer' && sessionStorage.getItem('developerViewRole') && (
-        <div className="p-3 md:p-4 border-b bg-primary/5">
+        <div className="p-4 border-b bg-primary/5">
           <Button
             onClick={handleReturnToDeveloperDashboard}
             variant="outline"
-            className="w-full gap-1 md:gap-2 border-primary/20 hover:bg-primary/10 h-8 md:h-10 text-xs md:text-sm"
+            className="w-full gap-2 border-primary/20 hover:bg-primary/10 h-10 text-sm"
           >
-            <ArrowLeft className="h-3 w-3 md:h-4 md:w-4" />
-            <span className="text-xs md:text-sm">
+            <ArrowLeft className="h-4 w-4" />
+            <span className="text-sm">
               {t('returnToDeveloper') || 'Return to Developer Dashboard'}
             </span>
           </Button>
-          <div className="mt-2 px-2 py-1 rounded-md bg-primary/10 text-[10px] md:text-xs text-center">
-            <Code className="inline h-2.5 w-2.5 md:h-3 md:w-3 mr-1" />
+          <div className="mt-2 px-2 py-1 rounded-md bg-primary/10 text-xs text-center">
+            <Code className="inline h-3 w-3 mr-1" />
             Viewing as: {sessionStorage.getItem('developerViewRole')}
           </div>
         </div>
       )}
       
-      <nav className="flex-1 p-3 md:p-4 space-y-1 overflow-y-auto">
+      <nav className="flex-1 p-4 space-y-1.5 overflow-y-auto">
         {filteredNavItems.map((item) => (
           <NavLink
             key={item.href}
@@ -283,15 +283,15 @@ export default function Sidebar({ onItemClick }: SidebarProps = {}) {
             onClick={onItemClick}
             className={({ isActive }) =>
               cn(
-                "flex items-center gap-2 md:gap-3 px-2 md:px-3 py-2 rounded-lg text-xs md:text-sm font-medium transition-all duration-200",
+                "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200",
                 isActive
                   ? "bg-gradient-primary text-white shadow-md"
                   : "text-muted-foreground hover:bg-muted hover:text-foreground"
               )
             }
           >
-            <item.icon className="h-4 w-4 md:h-5 md:w-5 flex-shrink-0" />
-            <span>{t(item.title)}</span>
+            <item.icon className="h-5 w-5 flex-shrink-0" />
+            <span className="text-base">{t(item.title)}</span>
           </NavLink>
         ))}
       </nav>
