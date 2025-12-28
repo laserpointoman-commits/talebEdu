@@ -129,17 +129,9 @@ export function VoiceRecorder({ onSend, onCancel, isArabic = false, isDark = fal
       analyserRef.current.fftSize = 256;
       source.connect(analyserRef.current);
       
-      // Determine best supported format with lower bitrate for smaller files
-      let mimeType = 'audio/webm;codecs=opus';
-      if (!MediaRecorder.isTypeSupported(mimeType)) {
-        mimeType = 'audio/webm';
-        if (!MediaRecorder.isTypeSupported(mimeType)) {
-          mimeType = 'audio/mp4';
-          if (!MediaRecorder.isTypeSupported(mimeType)) {
-            mimeType = '';
-          }
-        }
-      }
+      // Prefer MP4 for iOS/Safari compatibility, fallback to WebM/Opus
+      const preferredTypes = ['audio/mp4', 'audio/webm;codecs=opus', 'audio/webm'];
+      const mimeType = preferredTypes.find((t) => MediaRecorder.isTypeSupported(t)) || '';
       
       // Use lower bitrate for smaller file sizes (32kbps for voice is sufficient)
       const options: MediaRecorderOptions = {

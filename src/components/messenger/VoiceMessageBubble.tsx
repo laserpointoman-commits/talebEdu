@@ -28,40 +28,89 @@ export function VoiceMessageBubble({
   const [error, setError] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const progressInterval = useRef<number | null>(null);
+  const recoveredObjectUrlRef = useRef<string | null>(null);
+  const recoveryAttemptedRef = useRef(false);
 
   // Create audio element on mount
   useEffect(() => {
     const audio = new Audio();
-    audio.preload = 'metadata';
+    audio.preload = 'auto';
+    // Helps with certain cross-origin media behaviors (range requests, etc.)
+    audio.crossOrigin = 'anonymous';
     audioRef.current = audio;
-    
-    audio.addEventListener('loadedmetadata', () => {
+
+    const handleLoadedMetadata = () => {
       setIsLoaded(true);
-    });
-    
-    audio.addEventListener('ended', () => {
+    };
+
+    const handleEnded = () => {
       setIsPlaying(false);
       setCurrentTime(0);
       if (progressInterval.current) {
         cancelAnimationFrame(progressInterval.current);
       }
-    });
-    
-    audio.addEventListener('error', (e) => {
+    };
+
+    const attemptRecovery = async () => {
+      if (recoveryAttemptedRef.current) {
+        setError(true);
+        return;
+      }
+      recoveryAttemptedRef.current = true;
+
+      try {
+        const res = await fetch(audioUrl, { cache: 'no-store' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const buffer = await res.arrayBuffer();
+
+        const inferredType =
+          audioUrl.includes('.mp4') || audioUrl.includes('.m4a')
+            ? 'audio/mp4'
+            : 'audio/webm';
+
+        const blob = new Blob([buffer], { type: inferredType });
+        const objUrl = URL.createObjectURL(blob);
+        recoveredObjectUrlRef.current = objUrl;
+
+        audio.src = objUrl;
+        audio.load();
+      } catch (err) {
+        console.error('Audio recovery failed:', err);
+        setError(true);
+      }
+    };
+
+    const handleError = (e: any) => {
       console.error('Audio load error:', e);
-      setError(true);
-    });
-    
+      void attemptRecovery();
+    };
+
+    audio.addEventListener('loadedmetadata', handleLoadedMetadata);
+    audio.addEventListener('ended', handleEnded);
+    audio.addEventListener('error', handleError);
+
     // Set source
+    setError(false);
+    setIsLoaded(false);
+    recoveryAttemptedRef.current = false;
     audio.src = audioUrl;
     audio.load();
-    
+
     return () => {
+      audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      audio.removeEventListener('ended', handleEnded);
+      audio.removeEventListener('error', handleError);
+
       if (progressInterval.current) {
         cancelAnimationFrame(progressInterval.current);
       }
       audio.pause();
       audio.src = '';
+
+      if (recoveredObjectUrlRef.current) {
+        URL.revokeObjectURL(recoveredObjectUrlRef.current);
+        recoveredObjectUrlRef.current = null;
+      }
     };
   }, [audioUrl]);
 

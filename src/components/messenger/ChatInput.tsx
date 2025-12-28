@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Plus, Smile, Camera, Mic, Send, X, Image as ImageIcon, FileText, Video } from 'lucide-react';
+import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { useMessengerTheme } from '@/contexts/MessengerThemeContext';
 import { getMessengerColors } from './MessengerThemeColors';
 import { EmojiPicker } from './EmojiPicker';
@@ -40,6 +41,14 @@ export function ChatInput({
 
   const t = (en: string, ar: string) => isArabic ? ar : en;
 
+  const haptic = async (style: ImpactStyle) => {
+    try {
+      await Haptics.impact({ style });
+    } catch {
+      // Haptics not available on web
+    }
+  };
+
   useEffect(() => {
     return () => {
       if (typingTimeoutRef.current) {
@@ -65,7 +74,8 @@ export function ChatInput({
 
   const handleSend = () => {
     if (!message.trim() && selectedFiles.length === 0) return;
-    
+
+    void haptic(ImpactStyle.Light);
     onSend(message.trim(), selectedFiles, replyingTo || undefined);
     setMessage('');
     setSelectedFiles([]);
@@ -104,6 +114,7 @@ export function ChatInput({
   };
 
   const handleVoiceSend = (audioBlob: Blob, duration: number) => {
+    void haptic(ImpactStyle.Medium);
     onVoiceSend(audioBlob, duration);
     setIsRecording(false);
   };

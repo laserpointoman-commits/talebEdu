@@ -259,6 +259,29 @@ export function useMessenger() {
 
       if (messageError) throw messageError;
 
+      // Optimistically append the message so it appears instantly (WhatsApp-like)
+      const localObjectUrls: string[] = [];
+      const optimisticAttachments: MessageAttachment[] = files.map((file, index) => {
+        const url = URL.createObjectURL(file);
+        localObjectUrls.push(url);
+        return {
+          id: `local-${messageData.id}-${index}`,
+          file_name: file.name,
+          file_url: url,
+          file_type: file.type || 'application/octet-stream',
+          file_size: file.size,
+        };
+      });
+
+      const optimisticMessage = {
+        ...messageData,
+        attachments: optimisticAttachments,
+        reactions: [],
+        reply_to: null,
+      } as Message;
+
+      setMessages((prev) => (prev.some((m) => m.id === messageData.id) ? prev : [...prev, optimisticMessage]));
+
       const uploadedAttachments: MessageAttachment[] = [];
       
       for (const file of files) {
@@ -292,9 +315,17 @@ export function useMessenger() {
         }
       }
 
+      if (uploadedAttachments.length > 0) {
+        setMessages((prev) =>
+          prev.map((m) => (m.id === messageData.id ? { ...m, attachments: uploadedAttachments } : m))
+        );
+        // Replace local object URLs with remote URLs (avoid leaks)
+        localObjectUrls.forEach((u) => URL.revokeObjectURL(u));
+      }
+
       return {
         ...messageData,
-        attachments: uploadedAttachments,
+        attachments: uploadedAttachments.length > 0 ? uploadedAttachments : optimisticAttachments,
         reactions: [],
         reply_to: null
       } as Message;
