@@ -34,6 +34,7 @@ export function ChatListMenu({
   isArabic = false,
   colors
 }: ChatListMenuProps) {
+  const [isOpen, setIsOpen] = useState(false);
   const t = (en: string, ar: string) => isArabic ? ar : en;
 
   if (isSelectMode) {
@@ -58,7 +59,7 @@ export function ChatListMenu({
   }
 
   return (
-    <DropdownMenu>
+    <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
         <Button 
           variant="ghost" 
@@ -70,12 +71,15 @@ export function ChatListMenu({
       </DropdownMenuTrigger>
       <DropdownMenuContent 
         align="end"
-        className="min-w-[180px] border-0"
+        className="min-w-[200px] border-0 shadow-xl"
         style={{ backgroundColor: colors.bgTertiary }}
       >
         <DropdownMenuItem 
-          onClick={onSelectChats}
-          className="flex items-center gap-3 py-3 cursor-pointer"
+          onClick={() => {
+            setIsOpen(false);
+            onSelectChats();
+          }}
+          className="flex items-center gap-3 py-3 cursor-pointer hover:bg-white/5"
           style={{ color: colors.textPrimary }}
         >
           <CheckSquare className="h-5 w-5" style={{ color: colors.accent }} />
@@ -83,8 +87,11 @@ export function ChatListMenu({
         </DropdownMenuItem>
         <DropdownMenuSeparator style={{ backgroundColor: colors.divider }} />
         <DropdownMenuItem 
-          onClick={onMarkAllRead}
-          className="flex items-center gap-3 py-3 cursor-pointer"
+          onClick={() => {
+            setIsOpen(false);
+            onMarkAllRead();
+          }}
+          className="flex items-center gap-3 py-3 cursor-pointer hover:bg-white/5"
           style={{ color: colors.textPrimary }}
         >
           <CheckCheck className="h-5 w-5" style={{ color: colors.accent }} />

@@ -1,21 +1,25 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Mic, X, Send, Pause, Play, Trash2 } from 'lucide-react';
-import { WHATSAPP_COLORS } from './WhatsAppTheme';
+import { getMessengerColors } from './MessengerThemeColors';
 
 interface VoiceRecorderProps {
   onSend: (audioBlob: Blob, duration: number) => void;
   onCancel: () => void;
   isArabic?: boolean;
+  isDark?: boolean;
 }
 
-export function VoiceRecorder({ onSend, onCancel, isArabic = false }: VoiceRecorderProps) {
-  const [isRecording, setIsRecording] = useState(true);
+export function VoiceRecorder({ onSend, onCancel, isArabic = false, isDark = false }: VoiceRecorderProps) {
+  const colors = getMessengerColors(isDark);
+  const [isRecording, setIsRecording] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [duration, setDuration] = useState(0);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -23,22 +27,53 @@ export function VoiceRecorder({ onSend, onCancel, isArabic = false }: VoiceRecor
   const t = (en: string, ar: string) => isArabic ? ar : en;
 
   useEffect(() => {
+    // Start recording immediately when component mounts
     startRecording();
+    
     return () => {
-      stopTimer();
-      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-        mediaRecorderRef.current.stop();
-      }
-      if (audioUrl) {
-        URL.revokeObjectURL(audioUrl);
-      }
+      cleanup();
     };
   }, []);
 
+  const cleanup = () => {
+    stopTimer();
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      try {
+        mediaRecorderRef.current.stop();
+      } catch (e) {
+        console.error('Error stopping recorder:', e);
+      }
+    }
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
+    if (audioUrl) {
+      URL.revokeObjectURL(audioUrl);
+    }
+  };
+
   const startRecording = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
+      setError(null);
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        } 
+      });
+      
+      streamRef.current = stream;
+      
+      // Check for supported mime types
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') 
+        ? 'audio/webm;codecs=opus'
+        : MediaRecorder.isTypeSupported('audio/webm')
+        ? 'audio/webm'
+        : 'audio/mp4';
+      
+      const mediaRecorder = new MediaRecorder(stream, { mimeType });
       mediaRecorderRef.current = mediaRecorder;
       chunksRef.current = [];
 
@@ -49,18 +84,30 @@ export function VoiceRecorder({ onSend, onCancel, isArabic = false }: VoiceRecor
       };
 
       mediaRecorder.onstop = () => {
-        const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
-        setAudioBlob(blob);
-        setAudioUrl(URL.createObjectURL(blob));
-        stream.getTracks().forEach(track => track.stop());
+        if (chunksRef.current.length > 0) {
+          const blob = new Blob(chunksRef.current, { type: mimeType });
+          setAudioBlob(blob);
+          setAudioUrl(URL.createObjectURL(blob));
+        }
+        // Don't stop tracks here - they're managed by cleanup
       };
 
-      mediaRecorder.start();
+      mediaRecorder.onerror = (e) => {
+        console.error('MediaRecorder error:', e);
+        setError(t('Recording failed', 'فشل التسجيل'));
+        cleanup();
+      };
+
+      mediaRecorder.start(100); // Collect data every 100ms for better quality
       setIsRecording(true);
       startTimer();
-    } catch (error) {
-      console.error('Error accessing microphone:', error);
-      onCancel();
+    } catch (err: any) {
+      console.error('Error accessing microphone:', err);
+      setError(
+        err.name === 'NotAllowedError' 
+          ? t('Microphone access denied', 'تم رفض الوصول للميكروفون')
+          : t('Could not access microphone', 'لم نتمكن من الوصول للميكروفون')
+      );
     }
   };
 
@@ -78,7 +125,7 @@ export function VoiceRecorder({ onSend, onCancel, isArabic = false }: VoiceRecor
   };
 
   const handlePauseResume = () => {
-    if (!mediaRecorderRef.current) return;
+    if (!mediaRecorderRef.current || mediaRecorderRef.current.state === 'inactive') return;
     
     if (isPaused) {
       mediaRecorderRef.current.resume();
@@ -90,33 +137,52 @@ export function VoiceRecorder({ onSend, onCancel, isArabic = false }: VoiceRecor
     setIsPaused(!isPaused);
   };
 
-  const handleStop = () => {
+  const handleStop = useCallback(() => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
       stopTimer();
     }
-  };
+  }, []);
 
-  const handleSend = () => {
-    if (isRecording) {
-      handleStop();
-      // Wait a bit for the blob to be created
-      setTimeout(() => {
-        if (audioBlob) {
-          onSend(audioBlob, duration);
-        }
-      }, 100);
-    } else if (audioBlob) {
+  const handleSend = useCallback(() => {
+    if (isRecording && mediaRecorderRef.current?.state !== 'inactive') {
+      // Stop recording first
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      stopTimer();
+      
+      // Wait for onstop to create the blob, then send
+      const checkAndSend = () => {
+        setTimeout(() => {
+          const currentBlob = chunksRef.current.length > 0 
+            ? new Blob(chunksRef.current, { type: 'audio/webm' })
+            : audioBlob;
+          
+          if (currentBlob && duration > 0) {
+            // Stop stream tracks
+            if (streamRef.current) {
+              streamRef.current.getTracks().forEach(track => track.stop());
+            }
+            onSend(currentBlob, duration);
+          } else if (duration > 0) {
+            // Retry after a short delay
+            setTimeout(checkAndSend, 100);
+          }
+        }, 100);
+      };
+      checkAndSend();
+    } else if (audioBlob && duration > 0) {
+      // Stop stream tracks
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+      }
       onSend(audioBlob, duration);
     }
-  };
+  }, [isRecording, audioBlob, duration, onSend]);
 
   const handleDelete = () => {
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-      mediaRecorderRef.current.stop();
-    }
-    stopTimer();
+    cleanup();
     onCancel();
   };
 
@@ -126,10 +192,29 @@ export function VoiceRecorder({ onSend, onCancel, isArabic = false }: VoiceRecor
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  if (error) {
+    return (
+      <div 
+        className="flex items-center gap-3 px-3 py-2 rounded-full"
+        style={{ backgroundColor: colors.inputBg }}
+      >
+        <span className="flex-1 text-sm" style={{ color: colors.missedCall }}>{error}</span>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onCancel}
+          style={{ color: colors.textPrimary }}
+        >
+          {t('Close', 'إغلاق')}
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <div 
       className="flex items-center gap-3 px-3 py-2 rounded-full"
-      style={{ backgroundColor: WHATSAPP_COLORS.inputBg }}
+      style={{ backgroundColor: colors.inputBg }}
     >
       {/* Delete button */}
       <Button
@@ -138,24 +223,29 @@ export function VoiceRecorder({ onSend, onCancel, isArabic = false }: VoiceRecor
         className="h-10 w-10 rounded-full hover:bg-white/10"
         onClick={handleDelete}
       >
-        <Trash2 className="h-5 w-5" style={{ color: WHATSAPP_COLORS.missedCall }} />
+        <Trash2 className="h-5 w-5" style={{ color: colors.missedCall }} />
       </Button>
 
       {/* Recording indicator */}
       <div className="flex-1 flex items-center gap-3">
-        {isRecording && (
+        {isRecording && !isPaused && (
           <div className="h-3 w-3 rounded-full bg-red-500 animate-pulse" />
         )}
+        {isPaused && (
+          <div className="h-3 w-3 rounded-full bg-yellow-500" />
+        )}
         
-        {/* Waveform visualization placeholder */}
-        <div className="flex-1 flex items-center gap-0.5 h-8">
+        {/* Waveform visualization */}
+        <div className="flex-1 flex items-center gap-0.5 h-8 overflow-hidden">
           {Array.from({ length: 30 }).map((_, i) => (
             <div
               key={i}
-              className="w-1 rounded-full transition-all"
+              className="w-1 rounded-full transition-all duration-150"
               style={{ 
-                backgroundColor: WHATSAPP_COLORS.accent,
-                height: `${Math.random() * 100}%`,
+                backgroundColor: colors.accent,
+                height: isRecording && !isPaused 
+                  ? `${20 + Math.sin((Date.now() / 100) + i) * 30 + Math.random() * 30}%`
+                  : '20%',
                 opacity: isRecording && !isPaused ? 1 : 0.5
               }}
             />
@@ -163,7 +253,7 @@ export function VoiceRecorder({ onSend, onCancel, isArabic = false }: VoiceRecor
         </div>
 
         {/* Duration */}
-        <span className="text-sm font-medium min-w-[40px]" style={{ color: WHATSAPP_COLORS.textPrimary }}>
+        <span className="text-sm font-medium min-w-[50px] text-center" style={{ color: colors.textPrimary }}>
           {formatDuration(duration)}
         </span>
       </div>
@@ -177,9 +267,9 @@ export function VoiceRecorder({ onSend, onCancel, isArabic = false }: VoiceRecor
           onClick={handlePauseResume}
         >
           {isPaused ? (
-            <Mic className="h-5 w-5" style={{ color: WHATSAPP_COLORS.accent }} />
+            <Mic className="h-5 w-5" style={{ color: colors.accent }} />
           ) : (
-            <Pause className="h-5 w-5" style={{ color: WHATSAPP_COLORS.textSecondary }} />
+            <Pause className="h-5 w-5" style={{ color: colors.textSecondary }} />
           )}
         </Button>
       )}
@@ -188,8 +278,9 @@ export function VoiceRecorder({ onSend, onCancel, isArabic = false }: VoiceRecor
       <Button
         size="icon"
         className="h-10 w-10 rounded-full"
-        style={{ backgroundColor: WHATSAPP_COLORS.accent }}
+        style={{ backgroundColor: colors.accent }}
         onClick={handleSend}
+        disabled={duration === 0}
       >
         <Send className="h-5 w-5 text-white" />
       </Button>

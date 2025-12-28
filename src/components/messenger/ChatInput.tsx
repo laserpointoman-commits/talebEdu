@@ -111,6 +111,7 @@ export function ChatInput({
           onSend={handleVoiceSend}
           onCancel={() => setIsRecording(false)}
           isArabic={isArabic}
+          isDark={false}
         />
       </div>
     );
