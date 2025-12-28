@@ -17,6 +17,7 @@ export default function BusTracking() {
   const [loading, setLoading] = useState(true);
   const [children, setChildren] = useState<any[]>([]);
   const [studentData, setStudentData] = useState<any>(null);
+  const [buses, setBuses] = useState<any[]>([]);
 
   // Support developer role testing
   const effectiveRole = profile?.role === 'developer'
@@ -34,7 +35,20 @@ export default function BusTracking() {
     }
 
     try {
-      if (effectiveRole === 'parent') {
+      // Admin/driver/developer view - load all buses
+      if (effectiveRole === 'admin' || effectiveRole === 'driver' || effectiveRole === 'developer') {
+        const { data, error } = await supabase
+          .from('buses')
+          .select(`
+            *,
+            drivers:driver_id(id, profile_id, profiles:profile_id(full_name)),
+            bus_routes!bus_routes_bus_id_fkey(id, route_name, route_name_ar)
+          `)
+          .order('bus_number');
+
+        if (error) throw error;
+        setBuses(data || []);
+      } else if (effectiveRole === 'parent') {
         const { data, error } = await supabase
           .from('students')
           .select('*')
@@ -63,29 +77,8 @@ export default function BusTracking() {
     return <LogoLoader fullScreen />;
   }
 
-  if (effectiveRole !== 'parent' && effectiveRole !== 'student') {
-    return (
-      <div className="p-6">
-        <Card className="border-orange-500/50 bg-orange-500/5">
-          <CardContent className="pt-6">
-            <div className="flex items-start gap-3">
-              <AlertCircle className="h-5 w-5 text-orange-500 mt-0.5" />
-              <div>
-                <p className="font-medium mb-1">
-                  {language === 'ar' ? 'غير متاح' : 'Not Available'}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  {language === 'ar' 
-                    ? 'تتبع الحافلة متاح فقط للطلاب وأولياء الأمور'
-                    : 'Bus tracking is only available for students and parents'}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  // Admin and driver roles can view all buses
+  const isAdminView = effectiveRole === 'admin' || effectiveRole === 'driver' || effectiveRole === 'developer';
 
   return (
     <div className="space-y-6 p-4 md:p-6">
@@ -98,6 +91,76 @@ export default function BusTracking() {
           {language === 'ar' ? 'تتبع موقع الحافلة ونشاط الطلاب مباشرة' : 'Track bus location and student activity in real-time'}
         </p>
       </div>
+
+      {/* Admin/Driver/Developer View - All Buses */}
+      {isAdminView && (
+        <>
+          {buses.length > 0 ? (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {buses.map((bus) => (
+                <motion.div
+                  key={bus.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                >
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center justify-between">
+                        <span className="flex items-center gap-2">
+                          <Bus className="h-5 w-5 text-primary" />
+                          {language === 'ar' ? 'الحافلة' : 'Bus'} {bus.bus_number}
+                        </span>
+                        <Badge 
+                          variant={bus.status === 'active' ? 'default' : 'secondary'}
+                          className="capitalize"
+                        >
+                          {bus.status || 'inactive'}
+                        </Badge>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="h-48 rounded-lg overflow-hidden">
+                        <BusMap busId={bus.id} />
+                      </div>
+                      <div className="space-y-2">
+                        <BusInfoItem
+                          icon={<Bus className="h-4 w-4" />}
+                          label={language === 'ar' ? 'الموديل' : 'Model'}
+                          value={bus.model || 'N/A'}
+                        />
+                        <BusInfoItem
+                          icon={<MapPin className="h-4 w-4" />}
+                          label={language === 'ar' ? 'المسار' : 'Route'}
+                          value={
+                            bus.bus_routes?.[0]
+                              ? (language === 'ar' 
+                                  ? bus.bus_routes[0].route_name_ar 
+                                  : bus.bus_routes[0].route_name)
+                              : (language === 'ar' ? 'غير محدد' : 'Not assigned')
+                          }
+                        />
+                        <BusInfoItem
+                          icon={<Clock className="h-4 w-4" />}
+                          label={language === 'ar' ? 'السعة' : 'Capacity'}
+                          value={`${bus.capacity} ${language === 'ar' ? 'مقعد' : 'seats'}`}
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
+          ) : (
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-center text-muted-foreground">
+                  {language === 'ar' ? 'لا توجد حافلات مسجلة' : 'No buses registered'}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </>
+      )}
 
       {effectiveRole === 'parent' && (
         <>
