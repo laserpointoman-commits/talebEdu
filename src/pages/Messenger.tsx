@@ -28,7 +28,6 @@ import {
   Search, 
   MessageCircle, 
   Users,
-  UserPlus,
   MoreVertical,
   Camera,
   Loader2,
@@ -59,7 +58,11 @@ export default function Messenger() {
     addReaction,
     removeReaction,
     setTyping,
-    searchUsers
+    searchUsers,
+    fetchConversations,
+    fetchGroups,
+    fetchCallLogs,
+    createGroup
   } = useMessenger();
 
   const [activeTab, setActiveTab] = useState<MessengerTab>('chats');
@@ -71,16 +74,22 @@ export default function Messenger() {
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [selectedGroup, setSelectedGroup] = useState<GroupChat | null>(null);
   const [showChatView, setShowChatView] = useState(false);
+  const [newChatSearchQuery, setNewChatSearchQuery] = useState('');
+  const [newChatSearchResults, setNewChatSearchResults] = useState<any[]>([]);
+  const [newChatSearching, setNewChatSearching] = useState(false);
 
   const isArabic = language === 'ar';
   const dir = isArabic ? 'rtl' : 'ltr';
 
-  // Initialize call service
+  // Initialize call service and fetch all data on mount
   useEffect(() => {
     if (user?.id) {
       callService.initialize(user.id);
+      fetchConversations();
+      fetchGroups();
+      fetchCallLogs();
     }
-  }, [user?.id]);
+  }, [user?.id, fetchConversations, fetchGroups, fetchCallLogs]);
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -93,7 +102,39 @@ export default function Messenger() {
       fetchMessages(selectedConversation.recipient_id);
       markAsRead(selectedConversation.recipient_id);
     }
-  }, [selectedConversation]);
+  }, [selectedConversation, fetchMessages, markAsRead]);
+
+  // Handle new chat search
+  const handleNewChatSearch = async (query: string) => {
+    setNewChatSearchQuery(query);
+    if (query.trim().length < 2) {
+      setNewChatSearchResults([]);
+      return;
+    }
+    setNewChatSearching(true);
+    const results = await searchUsers(query);
+    setNewChatSearchResults(results);
+    setNewChatSearching(false);
+  };
+
+  // Start new conversation with a user
+  const startNewConversation = (userData: any) => {
+    const newConv: Conversation = {
+      id: userData.id,
+      recipient_id: userData.id,
+      recipient_name: userData.full_name,
+      recipient_image: userData.profile_image,
+      last_message: null,
+      last_message_time: null,
+      unread_count: 0,
+      is_group: false,
+      is_online: false
+    };
+    handleSelectConversation(newConv);
+    setShowNewChat(false);
+    setNewChatSearchQuery('');
+    setNewChatSearchResults([]);
+  };
 
   // Group messages by date
   const groupMessagesByDate = (msgs: any[]) => {
@@ -355,6 +396,7 @@ export default function Messenger() {
             groups={groups}
             onSelectConversation={handleSelectConversation}
             onSelectGroup={handleSelectGroup}
+            searchUsers={searchUsers}
             isArabic={isArabic}
           />
         )}
@@ -399,7 +441,13 @@ export default function Messenger() {
       </AnimatePresence>
 
       {/* New Chat Dialog */}
-      <Dialog open={showNewChat} onOpenChange={setShowNewChat}>
+      <Dialog open={showNewChat} onOpenChange={(open) => {
+        setShowNewChat(open);
+        if (!open) {
+          setNewChatSearchQuery('');
+          setNewChatSearchResults([]);
+        }
+      }}>
         <DialogContent 
           className="max-w-md border-0 p-0 overflow-hidden" 
           style={{ backgroundColor: WHATSAPP_COLORS.bgSecondary }}
@@ -418,6 +466,8 @@ export default function Messenger() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: WHATSAPP_COLORS.textMuted }} />
               <Input
                 placeholder={isArabic ? 'البحث عن جهات الاتصال...' : 'Search contacts...'}
+                value={newChatSearchQuery}
+                onChange={(e) => handleNewChatSearch(e.target.value)}
                 className="pl-10 border-0 rounded-lg"
                 style={{ backgroundColor: WHATSAPP_COLORS.inputBg, color: WHATSAPP_COLORS.textPrimary }}
               />
@@ -438,42 +488,70 @@ export default function Messenger() {
               </span>
             </div>
 
-            <div className="flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors hover:bg-white/5">
-              <div className="h-12 w-12 rounded-full flex items-center justify-center" style={{ backgroundColor: WHATSAPP_COLORS.accent }}>
-                <UserPlus className="h-6 w-6 text-white" />
-              </div>
-              <span className="font-medium" style={{ color: WHATSAPP_COLORS.textPrimary }}>
-                {isArabic ? 'جهة اتصال جديدة' : 'New contact'}
-              </span>
-            </div>
-
             <div className="pt-2">
               <p className="text-xs font-medium mb-2 px-1" style={{ color: WHATSAPP_COLORS.textMuted }}>
-                {isArabic ? 'المحادثات الأخيرة' : 'Recent chats'}
+                {newChatSearchQuery.trim().length > 0 
+                  ? (isArabic ? 'نتائج البحث' : 'Search results')
+                  : (isArabic ? 'المحادثات الأخيرة' : 'Recent chats')}
               </p>
               <ScrollArea className="h-64">
-                {conversations.map((conv) => (
-                  <div
-                    key={conv.recipient_id}
-                    className="flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors hover:bg-white/5"
-                    onClick={() => {
-                      handleSelectConversation(conv);
-                      setShowNewChat(false);
-                    }}
-                  >
-                    <Avatar className="h-12 w-12">
-                      <AvatarImage src={conv.recipient_image || undefined} />
-                      <AvatarFallback style={{ backgroundColor: WHATSAPP_COLORS.accent }}>
-                        {conv.recipient_name?.charAt(0) || '?'}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <p className="font-medium" style={{ color: WHATSAPP_COLORS.textPrimary }}>
-                        {conv.recipient_name}
-                      </p>
-                    </div>
+                {newChatSearching ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin" style={{ color: WHATSAPP_COLORS.accent }} />
                   </div>
-                ))}
+                ) : newChatSearchQuery.trim().length > 0 ? (
+                  newChatSearchResults.length > 0 ? (
+                    newChatSearchResults.map((userResult) => (
+                      <div
+                        key={userResult.id}
+                        className="flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors hover:bg-white/5"
+                        onClick={() => startNewConversation(userResult)}
+                      >
+                        <Avatar className="h-12 w-12">
+                          <AvatarImage src={userResult.profile_image || undefined} />
+                          <AvatarFallback style={{ backgroundColor: WHATSAPP_COLORS.accent }}>
+                            {userResult.full_name?.charAt(0) || '?'}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-medium" style={{ color: WHATSAPP_COLORS.textPrimary }}>
+                            {userResult.full_name}
+                          </p>
+                          <p className="text-xs capitalize" style={{ color: WHATSAPP_COLORS.textMuted }}>
+                            {userResult.role}
+                          </p>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-center py-8" style={{ color: WHATSAPP_COLORS.textMuted }}>
+                      {isArabic ? 'لم يتم العثور على مستخدمين' : 'No users found'}
+                    </p>
+                  )
+                ) : (
+                  conversations.map((conv) => (
+                    <div
+                      key={conv.recipient_id}
+                      className="flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors hover:bg-white/5"
+                      onClick={() => {
+                        handleSelectConversation(conv);
+                        setShowNewChat(false);
+                      }}
+                    >
+                      <Avatar className="h-12 w-12">
+                        <AvatarImage src={conv.recipient_image || undefined} />
+                        <AvatarFallback style={{ backgroundColor: WHATSAPP_COLORS.accent }}>
+                          {conv.recipient_name?.charAt(0) || '?'}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="font-medium" style={{ color: WHATSAPP_COLORS.textPrimary }}>
+                          {conv.recipient_name}
+                        </p>
+                      </div>
+                    </div>
+                  ))
+                )}
               </ScrollArea>
             </div>
           </div>
@@ -484,7 +562,8 @@ export default function Messenger() {
       <CreateGroupDialog
         open={showCreateGroup}
         onClose={() => setShowCreateGroup(false)}
-        onCreate={(name, description, memberIds) => {
+        onCreate={async (name, description, memberIds) => {
+          await createGroup(name, description, memberIds);
           setShowCreateGroup(false);
         }}
         searchUsers={searchUsers}
