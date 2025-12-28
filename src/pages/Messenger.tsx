@@ -16,6 +16,7 @@ import { MessengerUpdates } from '@/components/messenger/MessengerUpdates';
 import { MessengerCalls } from '@/components/messenger/MessengerCalls';
 import { MessengerSearch } from '@/components/messenger/MessengerSearch';
 import { MessengerSettings } from '@/components/messenger/MessengerSettings';
+import { MessengerDesktopLayout } from '@/components/messenger/MessengerDesktopLayout';
 import { CallScreen } from '@/components/messenger/CallScreen';
 import { callService } from '@/services/callService';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -233,12 +234,191 @@ export default function Messenger() {
     );
   }
 
+  // Desktop/Tablet Layout - WhatsApp Web Style
+  if (!isMobile) {
+    return (
+      <>
+        <MessengerDesktopLayout
+          profile={profile}
+          user={user}
+          conversations={conversations}
+          groups={groups}
+          messages={messages}
+          callLogs={callLogs}
+          selectedConversation={selectedConversation}
+          selectedGroup={selectedGroup}
+          onSelectConversation={handleSelectConversation}
+          onSelectGroup={handleSelectGroup}
+          onSendMessage={handleSendMessage}
+          onVoiceSend={handleVoiceSend}
+          onTyping={setTyping}
+          onVoiceCall={handleVoiceCall}
+          onVideoCall={handleVideoCall}
+          onDeleteMessage={deleteMessage}
+          onReact={addReaction}
+          onRemoveReaction={removeReaction}
+          onNewChat={() => setShowNewChat(true)}
+          onNewGroup={() => setShowCreateGroup(true)}
+          onBack={handleExitMessenger}
+          isArabic={isArabic}
+        />
+
+        {/* New Chat Dialog */}
+        <Dialog open={showNewChat} onOpenChange={(open) => {
+          setShowNewChat(open);
+          if (!open) {
+            setNewChatSearchQuery('');
+            setNewChatSearchResults([]);
+          }
+        }}>
+          <DialogContent 
+            className="max-w-md border-0 p-0 overflow-hidden z-[200]" 
+            style={{ backgroundColor: WHATSAPP_COLORS.bgSecondary }}
+          >
+            <div className="p-4 flex items-center gap-3" style={{ backgroundColor: WHATSAPP_COLORS.headerBg }}>
+              <Button variant="ghost" size="icon" className="rounded-full" onClick={() => setShowNewChat(false)}>
+                <X className="h-5 w-5" style={{ color: WHATSAPP_COLORS.textPrimary }} />
+              </Button>
+              <h2 className="text-lg font-semibold" style={{ color: WHATSAPP_COLORS.textPrimary }}>
+                {isArabic ? 'محادثة جديدة' : 'New Chat'}
+              </h2>
+            </div>
+            
+            <div className="p-4 space-y-3">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: WHATSAPP_COLORS.textMuted }} />
+                <Input
+                  placeholder={isArabic ? 'البحث عن جهات الاتصال...' : 'Search contacts...'}
+                  value={newChatSearchQuery}
+                  onChange={(e) => handleNewChatSearch(e.target.value)}
+                  className="pl-10 border-0 rounded-lg"
+                  style={{ backgroundColor: WHATSAPP_COLORS.inputBg, color: WHATSAPP_COLORS.textPrimary }}
+                />
+              </div>
+              
+              <div 
+                className="flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors hover:bg-white/5"
+                onClick={() => {
+                  setShowNewChat(false);
+                  setShowCreateGroup(true);
+                }}
+              >
+                <div className="h-12 w-12 rounded-full flex items-center justify-center" style={{ backgroundColor: WHATSAPP_COLORS.accent }}>
+                  <Users className="h-6 w-6 text-white" />
+                </div>
+                <span className="font-medium" style={{ color: WHATSAPP_COLORS.textPrimary }}>
+                  {isArabic ? 'مجموعة جديدة' : 'New group'}
+                </span>
+              </div>
+
+              <div className="pt-2">
+                <p className="text-xs font-medium mb-2 px-1" style={{ color: WHATSAPP_COLORS.textMuted }}>
+                  {newChatSearchQuery.trim().length > 0 
+                    ? (isArabic ? 'نتائج البحث' : 'Search results')
+                    : (isArabic ? 'المحادثات الأخيرة' : 'Recent chats')}
+                </p>
+                <ScrollArea className="h-64">
+                  {newChatSearching ? (
+                    <div className="flex items-center justify-center py-8">
+                      <Loader2 className="h-6 w-6 animate-spin" style={{ color: WHATSAPP_COLORS.accent }} />
+                    </div>
+                  ) : newChatSearchQuery.trim().length > 0 ? (
+                    newChatSearchResults.length > 0 ? (
+                      newChatSearchResults.map((userResult) => (
+                        <div
+                          key={userResult.id}
+                          className="flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors hover:bg-white/5"
+                          onClick={() => startNewConversation(userResult)}
+                        >
+                          <Avatar className="h-12 w-12">
+                            <AvatarImage src={userResult.profile_image || undefined} />
+                            <AvatarFallback style={{ backgroundColor: WHATSAPP_COLORS.accent }}>
+                              {userResult.full_name?.charAt(0) || '?'}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="font-medium" style={{ color: WHATSAPP_COLORS.textPrimary }}>
+                              {userResult.full_name}
+                            </p>
+                            <p className="text-xs capitalize" style={{ color: WHATSAPP_COLORS.textMuted }}>
+                              {userResult.role}
+                            </p>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-center py-8" style={{ color: WHATSAPP_COLORS.textMuted }}>
+                        {isArabic ? 'لم يتم العثور على مستخدمين' : 'No users found'}
+                      </p>
+                    )
+                  ) : (
+                    conversations.map((conv) => (
+                      <div
+                        key={conv.recipient_id}
+                        className="flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors hover:bg-white/5"
+                        onClick={() => {
+                          handleSelectConversation(conv);
+                          setShowNewChat(false);
+                        }}
+                      >
+                        <Avatar className="h-12 w-12">
+                          <AvatarImage src={conv.recipient_image || undefined} />
+                          <AvatarFallback style={{ backgroundColor: WHATSAPP_COLORS.accent }}>
+                            {conv.recipient_name?.charAt(0) || '?'}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-medium" style={{ color: WHATSAPP_COLORS.textPrimary }}>
+                            {conv.recipient_name}
+                          </p>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </ScrollArea>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Create Group Dialog */}
+        <CreateGroupDialog
+          open={showCreateGroup}
+          onClose={() => setShowCreateGroup(false)}
+          onCreate={async (name, description, memberIds) => {
+            await createGroup(name, description, memberIds);
+            setShowCreateGroup(false);
+          }}
+          searchUsers={searchUsers}
+          isArabic={isArabic}
+        />
+
+        {/* Forward Dialog */}
+        <ForwardDialog
+          open={!!forwardMessage}
+          onClose={() => setForwardMessage(null)}
+          onForward={(recipientIds) => {
+            setForwardMessage(null);
+          }}
+          conversations={conversations}
+          groups={groups}
+          messagePreview={forwardMessage?.content || ''}
+          isArabic={isArabic}
+        />
+
+        {/* Call Screen Overlay */}
+        <CallScreen isArabic={isArabic} />
+      </>
+    );
+  }
+
+  // Mobile Layout - Original Full Screen Approach
   // Chat View (Full Screen)
   const renderChatView = () => (
     <motion.div
-      initial={{ x: isMobile ? '100%' : 0, opacity: isMobile ? 1 : 0 }}
-      animate={{ x: 0, opacity: 1 }}
-      exit={{ x: isMobile ? '100%' : 0, opacity: isMobile ? 1 : 0 }}
+      initial={{ x: '100%' }}
+      animate={{ x: 0 }}
+      exit={{ x: '100%' }}
       transition={{ type: 'tween', duration: 0.2 }}
       className="fixed inset-0 flex flex-col z-[100]"
       style={{ backgroundColor: WHATSAPP_COLORS.bg }}
@@ -307,7 +487,7 @@ export default function Messenger() {
     </motion.div>
   );
 
-  // Main Messenger View
+  // Main Messenger View (Mobile)
   const renderMessengerMain = () => (
     <div 
       className="fixed inset-0 flex flex-col z-[100]" 
@@ -449,7 +629,7 @@ export default function Messenger() {
         }
       }}>
         <DialogContent 
-          className="max-w-md border-0 p-0 overflow-hidden" 
+          className="max-w-md border-0 p-0 overflow-hidden z-[200]" 
           style={{ backgroundColor: WHATSAPP_COLORS.bgSecondary }}
         >
           <div className="p-4 flex items-center gap-3" style={{ backgroundColor: WHATSAPP_COLORS.headerBg }}>
