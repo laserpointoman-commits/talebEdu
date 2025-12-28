@@ -24,21 +24,14 @@ interface NavItem {
   icon: React.ElementType;
 }
 
-const getNavItemsForRole = (role: string): NavItem[] => {
-  const baseItems: NavItem[] = [
-    {
-      title: 'Home',
-      titleAr: 'الرئيسية',
-      href: '/dashboard',
-      icon: LayoutDashboard,
-    },
-  ];
+import { Home } from 'lucide-react';
 
+const getNavItemsForRole = (role: string): { items: NavItem[], homeIndex: number } => {
   const roleSpecificItems: Record<string, NavItem[]> = {
     admin: [
       { title: 'Students', titleAr: 'الطلاب', href: '/dashboard/students', icon: GraduationCap },
+      { title: 'Tracking', titleAr: 'التتبع', href: '/dashboard/bus-tracking', icon: MapPin },
       { title: 'Finance', titleAr: 'المالية', href: '/dashboard/finance', icon: DollarSign },
-      { title: 'Messages', titleAr: 'الرسائل', href: '/dashboard/messages', icon: MessageSquare },
     ],
     teacher: [
       { title: 'Classes', titleAr: 'الفصول', href: '/dashboard/classes', icon: Users },
@@ -72,6 +65,13 @@ const getNavItemsForRole = (role: string): NavItem[] => {
     ],
   };
 
+  const homeItem: NavItem = {
+    title: 'Home',
+    titleAr: 'الرئيسية',
+    href: '/dashboard',
+    icon: Home,
+  };
+
   const profileItem: NavItem = {
     title: 'Profile',
     titleAr: 'الملف',
@@ -79,7 +79,16 @@ const getNavItemsForRole = (role: string): NavItem[] => {
     icon: User,
   };
 
-  return [...baseItems, ...(roleSpecificItems[role] || roleSpecificItems.student), profileItem];
+  const sideItems = roleSpecificItems[role] || roleSpecificItems.student;
+  
+  // Split items: first half before home, second half after home
+  const firstHalf = sideItems.slice(0, Math.ceil(sideItems.length / 2));
+  const secondHalf = sideItems.slice(Math.ceil(sideItems.length / 2));
+  
+  const items = [...firstHalf, homeItem, ...secondHalf, profileItem];
+  const homeIndex = firstHalf.length;
+  
+  return { items, homeIndex };
 };
 
 export default function BottomNavigation() {
@@ -91,7 +100,7 @@ export default function BottomNavigation() {
     ? sessionStorage.getItem('developerViewRole') || 'developer'
     : profile?.role || 'student';
 
-  const navItems = getNavItemsForRole(effectiveRole);
+  const { items: navItems, homeIndex } = getNavItemsForRole(effectiveRole);
 
   const isActive = (href: string) => {
     if (href === '/dashboard') {
@@ -111,9 +120,55 @@ export default function BottomNavigation() {
       
       {/* Navigation container */}
       <nav className="relative flex items-center justify-around px-2 py-2">
-        {navItems.map((item) => {
+        {navItems.map((item, index) => {
           const active = isActive(item.href);
           const Icon = item.icon;
+          const isHomeButton = index === homeIndex;
+          
+          if (isHomeButton) {
+            // Special home button in the middle
+            return (
+              <NavLink
+                key={item.href}
+                to={item.href}
+                className="flex-1 flex justify-center"
+              >
+                <motion.div
+                  className="relative flex flex-col items-center justify-center"
+                  whileTap={{ scale: 0.9 }}
+                >
+                  {/* Elevated home button */}
+                  <motion.div
+                    className={cn(
+                      "relative -mt-6 flex items-center justify-center w-14 h-14 rounded-full shadow-lg transition-all duration-300",
+                      active 
+                        ? "bg-gradient-to-br from-primary to-primary/80 shadow-primary/30" 
+                        : "bg-gradient-to-br from-primary/90 to-primary/70 shadow-primary/20"
+                    )}
+                    whileHover={{ scale: 1.05 }}
+                    animate={active ? { boxShadow: '0 0 20px rgba(var(--primary), 0.4)' } : {}}
+                  >
+                    <Icon 
+                      className="h-7 w-7 text-primary-foreground" 
+                      strokeWidth={2.5}
+                    />
+                  </motion.div>
+                  
+                  {/* Label */}
+                  <span
+                    className={cn(
+                      "text-[10px] mt-1 font-semibold transition-colors duration-200",
+                      active 
+                        ? "text-primary" 
+                        : "text-muted-foreground"
+                    )}
+                  >
+                    {language === 'ar' ? item.titleAr : item.title}
+                  </span>
+                </motion.div>
+              </NavLink>
+            );
+          }
           
           return (
             <NavLink

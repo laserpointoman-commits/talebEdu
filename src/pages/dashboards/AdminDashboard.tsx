@@ -46,8 +46,7 @@ export default function AdminDashboard() {
 
       const { count: busesCount } = await supabase
         .from('buses')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'active');
+        .select('*', { count: 'exact', head: true });
 
       const { data: walletsData } = await supabase
         .from('wallet_balances')
