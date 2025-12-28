@@ -1,10 +1,11 @@
 import { useState, useRef, useCallback } from 'react';
-import { Check, CheckCheck, Clock, Reply, Forward, Trash2, Copy, Smile, MoreVertical, FileText, Download, Play, Pause, Mic, Star } from 'lucide-react';
+import { Check, CheckCheck, Clock, Reply, Forward, Trash2, Copy, Smile, MoreVertical, FileText, Download, Star } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { QUICK_REACTIONS, STAR_COLOR, TASK_STATUS_COLORS } from './MessengerThemeColors';
 import { Message } from '@/hooks/useMessenger';
 import { Button } from '@/components/ui/button';
+import { VoiceMessageBubble } from './VoiceMessageBubble';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -64,10 +65,8 @@ export function EnhancedMessageBubble({
 }: EnhancedMessageBubbleProps) {
   const [showActions, setShowActions] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [playbackSpeed, setPlaybackSpeed] = useState(1);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const t = (en: string, ar: string) => isArabic ? ar : en;
 
@@ -96,11 +95,12 @@ export function EnhancedMessageBubble({
     }
   };
 
-  const cyclePlaybackSpeed = () => {
-    const speeds = [1, 1.5, 2, 0.5];
-    const currentIndex = speeds.indexOf(playbackSpeed);
-    const nextIndex = (currentIndex + 1) % speeds.length;
-    setPlaybackSpeed(speeds[nextIndex]);
+  // Get audio URL from attachments for voice messages
+  const getVoiceAudioUrl = (): string | null => {
+    if (message.message_type === 'voice' && message.attachments && message.attachments.length > 0) {
+      return message.attachments[0].file_url;
+    }
+    return null;
   };
 
   const isTaskMessage = message.message_type === 'task';
@@ -265,7 +265,7 @@ export function EnhancedMessageBubble({
       <div 
         className={cn("flex mb-1 group relative", isOwnMessage ? "justify-end" : "justify-start")}
         onMouseEnter={() => setShowActions(true)}
-        onMouseLeave={() => setShowActions(false)}
+        onMouseLeave={() => !dropdownOpen && setShowActions(false)}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
         onTouchCancel={handleTouchEnd}
@@ -321,45 +321,24 @@ export function EnhancedMessageBubble({
 
             {/* Voice message */}
             {message.message_type === 'voice' && message.voice_duration && (
-              <div className="flex items-center gap-3 min-w-[200px]">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-10 w-10 rounded-full"
-                  style={{ backgroundColor: colors.accent }}
-                  onClick={() => setIsPlaying(!isPlaying)}
-                >
-                  {isPlaying ? (
-                    <Pause className="h-5 w-5 text-white" />
-                  ) : (
-                    <Play className="h-5 w-5 text-white" />
-                  )}
-                </Button>
-                <div className="flex-1">
-                  <div className="h-1 rounded-full" style={{ backgroundColor: colors.textMuted }}>
-                    <div 
-                      className="h-full rounded-full transition-all"
-                      style={{ backgroundColor: colors.accent, width: isPlaying ? '60%' : '0%' }}
+              (() => {
+                const audioUrl = getVoiceAudioUrl();
+                if (audioUrl) {
+                  return (
+                    <VoiceMessageBubble
+                      audioUrl={audioUrl}
+                      duration={message.voice_duration}
+                      isOwnMessage={isOwnMessage}
+                      colors={colors}
                     />
+                  );
+                }
+                return (
+                  <div className="flex items-center gap-2 text-sm" style={{ color: colors.textMuted }}>
+                    <span>🎤 Voice message ({message.voice_duration}s)</span>
                   </div>
-                  <div className="flex items-center justify-between mt-1">
-                    <span className="text-xs" style={{ color: colors.textMuted }}>
-                      {formatDuration(message.voice_duration)}
-                    </span>
-                    <button 
-                      onClick={cyclePlaybackSpeed}
-                      className="text-xs px-1 rounded"
-                      style={{ 
-                        backgroundColor: colors.bgTertiary,
-                        color: colors.textSecondary 
-                      }}
-                    >
-                      {playbackSpeed}x
-                    </button>
-                  </div>
-                </div>
-                <Mic className="h-4 w-4" style={{ color: colors.accent }} />
-              </div>
+                );
+              })()
             )}
 
             {/* Task message */}
@@ -516,7 +495,7 @@ export function EnhancedMessageBubble({
           )}
 
           {/* Hover actions for desktop/tablet */}
-          {showActions && (
+          {(showActions || dropdownOpen) && (
             <div 
               className={cn(
                 "absolute top-0 flex items-center gap-1 p-1 rounded-lg",
@@ -553,8 +532,16 @@ export function EnhancedMessageBubble({
                 </PopoverContent>
               </Popover>
 
-              {/* More options dropdown */}
-              <DropdownMenu>
+              <DropdownMenu 
+                open={dropdownOpen} 
+                onOpenChange={(open) => {
+                  setDropdownOpen(open);
+                  if (!open) {
+                    // Delay hiding actions to prevent flicker
+                    setTimeout(() => setShowActions(false), 100);
+                  }
+                }}
+              >
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="ghost"
@@ -565,8 +552,9 @@ export function EnhancedMessageBubble({
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent 
-                  className="border-0 min-w-[180px]"
+                  className="border-0 min-w-[180px] z-[300]"
                   style={{ backgroundColor: colors.bgTertiary }}
+                  onPointerDownOutside={() => setDropdownOpen(false)}
                 >
                   <DropdownMenuItem onClick={handleReply} className="cursor-pointer" style={{ color: colors.textPrimary }}>
                     <Reply className="h-4 w-4 mr-2" /> {t('Reply', 'رد')}

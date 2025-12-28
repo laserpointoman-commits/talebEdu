@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { Mic, X, Send, Pause, Play, Trash2 } from 'lucide-react';
+import { Mic, Send, Pause, Play, Trash2 } from 'lucide-react';
 import { getMessengerColors } from './MessengerThemeColors';
 
 interface VoiceRecorderProps {
@@ -15,19 +15,22 @@ export function VoiceRecorder({ onSend, onCancel, isArabic = false, isDark = fal
   const [isRecording, setIsRecording] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [duration, setDuration] = useState(0);
-  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
-  const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [waveformBars, setWaveformBars] = useState<number[]>(Array(30).fill(20));
+  
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const chunksRef = useRef<Blob[]>([]);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const timerRef = useRef<number | null>(null);
+  const startTimeRef = useRef<number>(0);
+  const pausedDurationRef = useRef<number>(0);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const animationRef = useRef<number | null>(null);
 
   const t = (en: string, ar: string) => isArabic ? ar : en;
 
   useEffect(() => {
-    // Start recording immediately when component mounts
     startRecording();
     
     return () => {
@@ -35,8 +38,20 @@ export function VoiceRecorder({ onSend, onCancel, isArabic = false, isDark = fal
     };
   }, []);
 
-  const cleanup = () => {
-    stopTimer();
+  const cleanup = useCallback(() => {
+    // Stop timer
+    if (timerRef.current) {
+      cancelAnimationFrame(timerRef.current);
+      timerRef.current = null;
+    }
+    
+    // Stop animation
+    if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current);
+      animationRef.current = null;
+    }
+    
+    // Stop media recorder
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
       try {
         mediaRecorderRef.current.stop();
@@ -44,52 +59,96 @@ export function VoiceRecorder({ onSend, onCancel, isArabic = false, isDark = fal
         console.error('Error stopping recorder:', e);
       }
     }
+    
+    // Stop audio context
+    if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
+      audioContextRef.current.close();
+      audioContextRef.current = null;
+    }
+    
+    // Stop stream tracks
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop());
       streamRef.current = null;
     }
-    if (audioUrl) {
-      URL.revokeObjectURL(audioUrl);
+  }, []);
+
+  const updateTimer = useCallback(() => {
+    if (isPaused) return;
+    
+    const now = performance.now();
+    const elapsed = Math.floor((now - startTimeRef.current + pausedDurationRef.current) / 1000);
+    setDuration(elapsed);
+    
+    timerRef.current = requestAnimationFrame(updateTimer);
+  }, [isPaused]);
+
+  const updateWaveform = useCallback(() => {
+    if (!analyserRef.current || isPaused) {
+      animationRef.current = requestAnimationFrame(updateWaveform);
+      return;
     }
-  };
+    
+    const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
+    analyserRef.current.getByteFrequencyData(dataArray);
+    
+    // Sample 30 bars from the frequency data
+    const bars: number[] = [];
+    const step = Math.floor(dataArray.length / 30);
+    for (let i = 0; i < 30; i++) {
+      const value = dataArray[i * step];
+      // Normalize to 20-100 range for visual appeal
+      bars.push(20 + (value / 255) * 80);
+    }
+    
+    setWaveformBars(bars);
+    animationRef.current = requestAnimationFrame(updateWaveform);
+  }, [isPaused]);
 
   const startRecording = async () => {
     try {
       setError(null);
+      chunksRef.current = [];
+      
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
-          autoGainControl: true
+          autoGainControl: true,
+          sampleRate: 44100,
+          channelCount: 1
         } 
       });
       
       streamRef.current = stream;
       
-      // Check for supported mime types
-      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') 
-        ? 'audio/webm;codecs=opus'
-        : MediaRecorder.isTypeSupported('audio/webm')
-        ? 'audio/webm'
-        : 'audio/mp4';
+      // Set up audio analysis for waveform
+      audioContextRef.current = new AudioContext();
+      const source = audioContextRef.current.createMediaStreamSource(stream);
+      analyserRef.current = audioContextRef.current.createAnalyser();
+      analyserRef.current.fftSize = 256;
+      source.connect(analyserRef.current);
       
-      const mediaRecorder = new MediaRecorder(stream, { mimeType });
+      // Determine best supported format
+      let mimeType = 'audio/webm;codecs=opus';
+      if (!MediaRecorder.isTypeSupported(mimeType)) {
+        mimeType = 'audio/webm';
+        if (!MediaRecorder.isTypeSupported(mimeType)) {
+          mimeType = 'audio/mp4';
+          if (!MediaRecorder.isTypeSupported(mimeType)) {
+            mimeType = '';
+          }
+        }
+      }
+      
+      const options: MediaRecorderOptions = mimeType ? { mimeType } : {};
+      const mediaRecorder = new MediaRecorder(stream, options);
       mediaRecorderRef.current = mediaRecorder;
-      chunksRef.current = [];
 
       mediaRecorder.ondataavailable = (e) => {
         if (e.data.size > 0) {
           chunksRef.current.push(e.data);
         }
-      };
-
-      mediaRecorder.onstop = () => {
-        if (chunksRef.current.length > 0) {
-          const blob = new Blob(chunksRef.current, { type: mimeType });
-          setAudioBlob(blob);
-          setAudioUrl(URL.createObjectURL(blob));
-        }
-        // Don't stop tracks here - they're managed by cleanup
       };
 
       mediaRecorder.onerror = (e) => {
@@ -98,9 +157,17 @@ export function VoiceRecorder({ onSend, onCancel, isArabic = false, isDark = fal
         cleanup();
       };
 
-      mediaRecorder.start(100); // Collect data every 100ms for better quality
+      mediaRecorder.start(100);
       setIsRecording(true);
-      startTimer();
+      
+      // Start timer using requestAnimationFrame for accurate timing
+      startTimeRef.current = performance.now();
+      pausedDurationRef.current = 0;
+      timerRef.current = requestAnimationFrame(updateTimer);
+      
+      // Start waveform animation
+      animationRef.current = requestAnimationFrame(updateWaveform);
+      
     } catch (err: any) {
       console.error('Error accessing microphone:', err);
       setError(
@@ -111,75 +178,66 @@ export function VoiceRecorder({ onSend, onCancel, isArabic = false, isDark = fal
     }
   };
 
-  const startTimer = () => {
-    timerRef.current = setInterval(() => {
-      setDuration(prev => prev + 1);
-    }, 1000);
-  };
-
-  const stopTimer = () => {
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
-  };
-
   const handlePauseResume = () => {
     if (!mediaRecorderRef.current || mediaRecorderRef.current.state === 'inactive') return;
     
     if (isPaused) {
+      // Resume
       mediaRecorderRef.current.resume();
-      startTimer();
+      startTimeRef.current = performance.now();
+      timerRef.current = requestAnimationFrame(updateTimer);
+      setIsPaused(false);
     } else {
+      // Pause
       mediaRecorderRef.current.pause();
-      stopTimer();
+      if (timerRef.current) {
+        cancelAnimationFrame(timerRef.current);
+      }
+      // Store accumulated duration
+      pausedDurationRef.current += performance.now() - startTimeRef.current;
+      setIsPaused(true);
     }
-    setIsPaused(!isPaused);
   };
 
-  const handleStop = useCallback(() => {
+  const handleSend = useCallback(() => {
+    const finalDuration = duration;
+    
+    if (finalDuration === 0) {
+      onCancel();
+      return;
+    }
+    
+    // Stop recording first if still active
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
-      stopTimer();
-    }
-  }, []);
-
-  const handleSend = useCallback(() => {
-    if (isRecording && mediaRecorderRef.current?.state !== 'inactive') {
-      // Stop recording first
-      mediaRecorderRef.current.stop();
-      setIsRecording(false);
-      stopTimer();
       
-      // Wait for onstop to create the blob, then send
-      const checkAndSend = () => {
-        setTimeout(() => {
-          const currentBlob = chunksRef.current.length > 0 
-            ? new Blob(chunksRef.current, { type: 'audio/webm' })
-            : audioBlob;
-          
-          if (currentBlob && duration > 0) {
-            // Stop stream tracks
-            if (streamRef.current) {
-              streamRef.current.getTracks().forEach(track => track.stop());
-            }
-            onSend(currentBlob, duration);
-          } else if (duration > 0) {
-            // Retry after a short delay
-            setTimeout(checkAndSend, 100);
-          }
-        }, 100);
-      };
-      checkAndSend();
-    } else if (audioBlob && duration > 0) {
-      // Stop stream tracks
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop());
+      // Stop timer
+      if (timerRef.current) {
+        cancelAnimationFrame(timerRef.current);
       }
-      onSend(audioBlob, duration);
+      
+      // Wait for final data and send
+      mediaRecorderRef.current.onstop = () => {
+        if (chunksRef.current.length > 0) {
+          const mimeType = mediaRecorderRef.current?.mimeType || 'audio/webm';
+          const blob = new Blob(chunksRef.current, { type: mimeType });
+          
+          // Stop stream tracks
+          if (streamRef.current) {
+            streamRef.current.getTracks().forEach(track => track.stop());
+          }
+          
+          // Stop audio context
+          if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
+            audioContextRef.current.close();
+          }
+          
+          onSend(blob, finalDuration);
+        }
+      };
     }
-  }, [isRecording, audioBlob, duration, onSend]);
+  }, [duration, onSend, onCancel]);
 
   const handleDelete = () => {
     cleanup();
@@ -230,31 +288,29 @@ export function VoiceRecorder({ onSend, onCancel, isArabic = false, isDark = fal
       <div className="flex-1 flex items-center gap-3 min-w-0">
         {/* Recording indicator */}
         {isRecording && !isPaused && (
-          <div className="h-4 w-4 rounded-full bg-red-500 animate-pulse flex-shrink-0" />
+          <div className="h-3 w-3 rounded-full bg-red-500 animate-pulse flex-shrink-0" />
         )}
         {isPaused && (
-          <div className="h-4 w-4 rounded-full bg-yellow-500 flex-shrink-0" />
+          <div className="h-3 w-3 rounded-full bg-yellow-500 flex-shrink-0" />
         )}
         
         {/* Waveform visualization */}
-        <div className="flex-1 flex items-center gap-0.5 h-10 overflow-hidden">
-          {Array.from({ length: 25 }).map((_, i) => (
+        <div className="flex-1 flex items-center justify-center gap-[2px] h-10 overflow-hidden">
+          {waveformBars.map((height, i) => (
             <div
               key={i}
-              className="w-1.5 rounded-full transition-all duration-150"
+              className="w-1 rounded-full transition-all duration-75"
               style={{ 
                 backgroundColor: colors.accent,
-                height: isRecording && !isPaused 
-                  ? `${20 + Math.sin((Date.now() / 100) + i) * 30 + Math.random() * 30}%`
-                  : '20%',
-                opacity: isRecording && !isPaused ? 1 : 0.5
+                height: `${isPaused ? 20 : height}%`,
+                opacity: isPaused ? 0.5 : 1
               }}
             />
           ))}
         </div>
 
         {/* Duration */}
-        <span className="text-base font-semibold min-w-[55px] text-center flex-shrink-0" style={{ color: colors.textPrimary }}>
+        <span className="text-base font-mono font-semibold min-w-[50px] text-right flex-shrink-0" style={{ color: colors.textPrimary }}>
           {formatDuration(duration)}
         </span>
       </div>
@@ -275,7 +331,7 @@ export function VoiceRecorder({ onSend, onCancel, isArabic = false, isDark = fal
         </Button>
       )}
 
-      {/* Send button - Large and prominent like WhatsApp */}
+      {/* Send button */}
       <Button
         size="icon"
         className="h-14 w-14 rounded-full flex-shrink-0 shadow-lg transition-transform active:scale-95"
