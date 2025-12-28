@@ -205,15 +205,11 @@ function MessengerContent() {
 
   const handleVoiceSend = async (audioBlob: Blob, duration: number) => {
     if (!selectedConversation) return;
-    const file = new File([audioBlob], 'voice_message.webm', { type: 'audio/webm' });
-    const message = await sendMessage(selectedConversation.recipient_id, '', [file], undefined, undefined, 'voice', duration);
-    if (message) {
-      // Refresh messages to show the new voice message immediately
-      await fetchMessages(selectedConversation.recipient_id);
-      toast.success(isArabic ? 'تم إرسال الرسالة الصوتية' : 'Voice message sent');
-    } else {
-      toast.error(isArabic ? 'فشل إرسال الرسالة الصوتية' : 'Failed to send voice message');
-    }
+    // Use the blob's actual MIME type for proper playback
+    const mimeType = audioBlob.type || 'audio/webm';
+    const extension = mimeType.includes('mp4') ? 'mp4' : 'webm';
+    const file = new File([audioBlob], `voice_message.${extension}`, { type: mimeType });
+    await sendMessage(selectedConversation.recipient_id, '', [file], undefined, undefined, 'voice', duration);
   };
 
   const handleSelectConversation = (conv: Conversation) => {
