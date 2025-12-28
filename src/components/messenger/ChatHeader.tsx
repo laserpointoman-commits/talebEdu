@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ArrowLeft, Phone, Video, MoreVertical, Search } from 'lucide-react';
-import { WHATSAPP_COLORS } from './WhatsAppTheme';
+import { ArrowLeft, Phone, Video, MoreVertical, Search, Users } from 'lucide-react';
+import { MESSENGER_COLORS } from './MessengerTheme';
 import { Conversation, GroupChat } from '@/hooks/useMessenger';
 import {
   DropdownMenu,
@@ -62,30 +62,30 @@ export function ChatHeader({
   return (
     <div 
       className="px-2 py-2 flex items-center gap-2"
-      style={{ backgroundColor: WHATSAPP_COLORS.headerBg }}
+      style={{ backgroundColor: MESSENGER_COLORS.headerBg }}
     >
       <Button
         variant="ghost"
         size="icon"
         className="h-10 w-10 hover:bg-white/10 relative"
-        style={{ color: WHATSAPP_COLORS.textPrimary }}
+        style={{ color: MESSENGER_COLORS.textPrimary }}
         onClick={onBack}
       >
         <ArrowLeft className="h-5 w-5" />
         {unreadCount > 0 && (
           <span 
             className="absolute -top-1 -left-1 text-xs font-bold min-w-[18px] h-[18px] flex items-center justify-center rounded-full"
-            style={{ backgroundColor: WHATSAPP_COLORS.unreadBadge, color: 'white' }}
+            style={{ backgroundColor: MESSENGER_COLORS.unreadBadge, color: 'white' }}
           >
             {unreadCount}
           </span>
         )}
       </Button>
       
-      <Avatar className="h-10 w-10 border-2" style={{ borderColor: WHATSAPP_COLORS.divider }}>
+      <Avatar className="h-10 w-10 border-2" style={{ borderColor: MESSENGER_COLORS.divider }}>
         <AvatarImage src={image || undefined} />
-        <AvatarFallback style={{ backgroundColor: WHATSAPP_COLORS.accent, color: 'white' }}>
-          {name.charAt(0).toUpperCase()}
+        <AvatarFallback style={{ backgroundColor: MESSENGER_COLORS.accent, color: 'white' }}>
+          {group ? <Users className="h-5 w-5" /> : name.charAt(0).toUpperCase()}
         </AvatarFallback>
       </Avatar>
       
@@ -95,14 +95,14 @@ export function ChatHeader({
       >
         <h2 
           className="font-medium text-base truncate" 
-          style={{ color: WHATSAPP_COLORS.textPrimary }}
+          style={{ color: MESSENGER_COLORS.textPrimary }}
         >
           {name}
         </h2>
         <p 
           className="text-xs truncate"
           style={{ 
-            color: isTyping ? WHATSAPP_COLORS.accent : WHATSAPP_COLORS.textSecondary 
+            color: isTyping ? MESSENGER_COLORS.accent : (isOnline ? MESSENGER_COLORS.accentLight : MESSENGER_COLORS.textSecondary)
           }}
         >
           {getStatusText()}
@@ -114,7 +114,7 @@ export function ChatHeader({
           variant="ghost" 
           size="icon" 
           className="h-10 w-10 hover:bg-white/10" 
-          style={{ color: WHATSAPP_COLORS.textPrimary }}
+          style={{ color: MESSENGER_COLORS.textPrimary }}
           onClick={onVideoCall}
         >
           <Video className="h-5 w-5" />
@@ -123,7 +123,7 @@ export function ChatHeader({
           variant="ghost" 
           size="icon" 
           className="h-10 w-10 hover:bg-white/10" 
-          style={{ color: WHATSAPP_COLORS.textPrimary }}
+          style={{ color: MESSENGER_COLORS.textPrimary }}
           onClick={onVoiceCall}
         >
           <Phone className="h-5 w-5" />
@@ -134,7 +134,7 @@ export function ChatHeader({
               variant="ghost" 
               size="icon" 
               className="h-10 w-10 hover:bg-white/10" 
-              style={{ color: WHATSAPP_COLORS.textPrimary }}
+              style={{ color: MESSENGER_COLORS.textPrimary }}
             >
               <MoreVertical className="h-5 w-5" />
             </Button>
@@ -142,30 +142,30 @@ export function ChatHeader({
           <DropdownMenuContent 
             align="end"
             className="border-0"
-            style={{ backgroundColor: WHATSAPP_COLORS.bgTertiary }}
+            style={{ backgroundColor: MESSENGER_COLORS.bgTertiary }}
           >
             <DropdownMenuItem 
               onClick={onViewContact}
-              style={{ color: WHATSAPP_COLORS.textPrimary }}
+              style={{ color: MESSENGER_COLORS.textPrimary }}
             >
               {group ? t('Group info', 'معلومات المجموعة') : t('View contact', 'عرض جهة الاتصال')}
             </DropdownMenuItem>
             <DropdownMenuItem 
               onClick={onSearch}
-              style={{ color: WHATSAPP_COLORS.textPrimary }}
+              style={{ color: MESSENGER_COLORS.textPrimary }}
             >
               {t('Search', 'بحث')}
             </DropdownMenuItem>
             <DropdownMenuItem 
               onClick={onMuteNotifications}
-              style={{ color: WHATSAPP_COLORS.textPrimary }}
+              style={{ color: MESSENGER_COLORS.textPrimary }}
             >
               {t('Mute notifications', 'كتم الإشعارات')}
             </DropdownMenuItem>
-            <DropdownMenuSeparator style={{ backgroundColor: WHATSAPP_COLORS.divider }} />
+            <DropdownMenuSeparator style={{ backgroundColor: MESSENGER_COLORS.divider }} />
             <DropdownMenuItem 
               onClick={onClearChat}
-              style={{ color: WHATSAPP_COLORS.missedCall }}
+              style={{ color: MESSENGER_COLORS.missedCall }}
             >
               {t('Clear chat', 'مسح المحادثة')}
             </DropdownMenuItem>

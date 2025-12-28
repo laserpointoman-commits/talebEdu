@@ -34,7 +34,7 @@ import {
   Phone,
   Video
 } from 'lucide-react';
-import { WHATSAPP_COLORS } from './WhatsAppTheme';
+import { MESSENGER_COLORS } from './MessengerTheme';
 
 interface MessengerSettingsProps {
   profile: any;
