@@ -404,10 +404,18 @@ export function EnhancedMessageBubble({
               </p>
             )}
 
-            {/* Attachments */}
+            {/* Attachments - Skip audio attachments for voice messages (handled by VoiceMessageBubble) */}
             {message.attachments && message.attachments.length > 0 && (
               <div className="mt-1 space-y-1">
-                {message.attachments.map(attachment => (
+                {message.attachments
+                  .filter(attachment => {
+                    // Skip audio attachments for voice messages - they're rendered by VoiceMessageBubble
+                    if (message.message_type === 'voice' && attachment.file_type.startsWith('audio/')) {
+                      return false;
+                    }
+                    return true;
+                  })
+                  .map(attachment => (
                   <div key={attachment.id}>
                     {attachment.file_type.startsWith('image/') ? (
                       <img

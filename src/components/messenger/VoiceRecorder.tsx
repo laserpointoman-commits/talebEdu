@@ -129,7 +129,7 @@ export function VoiceRecorder({ onSend, onCancel, isArabic = false, isDark = fal
       analyserRef.current.fftSize = 256;
       source.connect(analyserRef.current);
       
-      // Determine best supported format
+      // Determine best supported format with lower bitrate for smaller files
       let mimeType = 'audio/webm;codecs=opus';
       if (!MediaRecorder.isTypeSupported(mimeType)) {
         mimeType = 'audio/webm';
@@ -141,7 +141,11 @@ export function VoiceRecorder({ onSend, onCancel, isArabic = false, isDark = fal
         }
       }
       
-      const options: MediaRecorderOptions = mimeType ? { mimeType } : {};
+      // Use lower bitrate for smaller file sizes (32kbps for voice is sufficient)
+      const options: MediaRecorderOptions = {
+        ...(mimeType ? { mimeType } : {}),
+        audioBitsPerSecond: 32000
+      };
       const mediaRecorder = new MediaRecorder(stream, options);
       mediaRecorderRef.current = mediaRecorder;
 
