@@ -120,14 +120,12 @@ export function VoiceRecorder({ onSend, onCancel, isArabic = false, isDark = fal
       chunksRef.current = [];
       void haptic(ImpactStyle.Medium); // Haptic when recording starts
       
-      const stream = await navigator.mediaDevices.getUserMedia({ 
+      const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
           autoGainControl: true,
-          sampleRate: 44100,
-          channelCount: 1
-        } 
+        },
       });
       
       streamRef.current = stream;
@@ -143,10 +141,11 @@ export function VoiceRecorder({ onSend, onCancel, isArabic = false, isDark = fal
       const preferredTypes = ['audio/mp4', 'audio/webm;codecs=opus', 'audio/webm'];
       const mimeType = preferredTypes.find((t) => MediaRecorder.isTypeSupported(t)) || '';
       
-      // Use lower bitrate for smaller file sizes (32kbps for voice is sufficient)
+      // Safari can produce silent audio when forcing audioBitsPerSecond for MP4.
+      // Only set bitrate for WebM where it's reliably honored.
       const options: MediaRecorderOptions = {
         ...(mimeType ? { mimeType } : {}),
-        audioBitsPerSecond: 32000
+        ...(mimeType.includes('mp4') ? {} : { audioBitsPerSecond: 32000 }),
       };
       const mediaRecorder = new MediaRecorder(stream, options);
       mediaRecorderRef.current = mediaRecorder;

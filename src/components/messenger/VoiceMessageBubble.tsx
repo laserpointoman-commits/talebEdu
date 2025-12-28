@@ -64,10 +64,18 @@ export function VoiceMessageBubble({
       }
 
       // Fetch audio as blob for iOS compatibility
-      const response = await fetch(urlToFetch);
+      const response = await fetch(urlToFetch, { cache: 'no-store' });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      
-      const blob = await response.blob();
+
+      const buffer = await response.arrayBuffer();
+      const inferredType = (() => {
+        const hint = (filePath || urlToFetch).toLowerCase();
+        if (hint.includes('.m4a') || hint.includes('.mp4')) return 'audio/mp4';
+        if (hint.includes('.webm')) return 'audio/webm';
+        return response.headers.get('content-type') || 'audio/mp4';
+      })();
+
+      const blob = new Blob([buffer], { type: inferredType });
       
       // Revoke old blob URL if exists
       if (blobUrlRef.current) {
@@ -87,6 +95,8 @@ export function VoiceMessageBubble({
       audio.src = blobUrl;
       audio.preload = 'auto';
       audio.playbackRate = playbackRate;
+      audio.muted = false;
+      audio.volume = 1;
       
       // Wait for audio to be ready
       await new Promise<void>((resolve, reject) => {
