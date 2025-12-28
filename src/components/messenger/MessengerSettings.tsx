@@ -220,7 +220,7 @@ export function MessengerSettings({ profile, isArabic, onProfileUpdate }: Messen
 
       {/* Account Dialog */}
       <Dialog open={activeDialog === 'account'} onOpenChange={(open) => !open && setActiveDialog(null)}>
-        <DialogContent className="max-w-md" style={{ backgroundColor: WHATSAPP_COLORS.bg, border: `1px solid ${WHATSAPP_COLORS.divider}` }}>
+        <DialogContent className="max-w-md z-[200]" style={{ backgroundColor: WHATSAPP_COLORS.bg, border: `1px solid ${WHATSAPP_COLORS.divider}` }}>
           <DialogHeader>
             <DialogTitle style={{ color: WHATSAPP_COLORS.textPrimary }}>
               {isArabic ? 'الحساب' : 'Account'}
@@ -296,7 +296,7 @@ export function MessengerSettings({ profile, isArabic, onProfileUpdate }: Messen
 
       {/* Privacy Dialog */}
       <Dialog open={activeDialog === 'privacy'} onOpenChange={(open) => !open && setActiveDialog(null)}>
-        <DialogContent className="max-w-md" style={{ backgroundColor: WHATSAPP_COLORS.bg, border: `1px solid ${WHATSAPP_COLORS.divider}` }}>
+        <DialogContent className="max-w-md z-[200]" style={{ backgroundColor: WHATSAPP_COLORS.bg, border: `1px solid ${WHATSAPP_COLORS.divider}` }}>
           <DialogHeader>
             <DialogTitle style={{ color: WHATSAPP_COLORS.textPrimary }}>
               {isArabic ? 'الخصوصية' : 'Privacy'}
@@ -368,7 +368,7 @@ export function MessengerSettings({ profile, isArabic, onProfileUpdate }: Messen
 
       {/* Chats Dialog */}
       <Dialog open={activeDialog === 'chats'} onOpenChange={(open) => !open && setActiveDialog(null)}>
-        <DialogContent className="max-w-md" style={{ backgroundColor: WHATSAPP_COLORS.bg, border: `1px solid ${WHATSAPP_COLORS.divider}` }}>
+        <DialogContent className="max-w-md z-[200]" style={{ backgroundColor: WHATSAPP_COLORS.bg, border: `1px solid ${WHATSAPP_COLORS.divider}` }}>
           <DialogHeader>
             <DialogTitle style={{ color: WHATSAPP_COLORS.textPrimary }}>
               {isArabic ? 'الدردشات' : 'Chats'}
@@ -442,7 +442,7 @@ export function MessengerSettings({ profile, isArabic, onProfileUpdate }: Messen
 
       {/* Notifications Dialog */}
       <Dialog open={activeDialog === 'notifications'} onOpenChange={(open) => !open && setActiveDialog(null)}>
-        <DialogContent className="max-w-md" style={{ backgroundColor: WHATSAPP_COLORS.bg, border: `1px solid ${WHATSAPP_COLORS.divider}` }}>
+        <DialogContent className="max-w-md z-[200]" style={{ backgroundColor: WHATSAPP_COLORS.bg, border: `1px solid ${WHATSAPP_COLORS.divider}` }}>
           <DialogHeader>
             <DialogTitle style={{ color: WHATSAPP_COLORS.textPrimary }}>
               {isArabic ? 'الإشعارات' : 'Notifications'}
@@ -506,7 +506,7 @@ export function MessengerSettings({ profile, isArabic, onProfileUpdate }: Messen
 
       {/* Storage Dialog */}
       <Dialog open={activeDialog === 'storage'} onOpenChange={(open) => !open && setActiveDialog(null)}>
-        <DialogContent className="max-w-md" style={{ backgroundColor: WHATSAPP_COLORS.bg, border: `1px solid ${WHATSAPP_COLORS.divider}` }}>
+        <DialogContent className="max-w-md z-[200]" style={{ backgroundColor: WHATSAPP_COLORS.bg, border: `1px solid ${WHATSAPP_COLORS.divider}` }}>
           <DialogHeader>
             <DialogTitle style={{ color: WHATSAPP_COLORS.textPrimary }}>
               {isArabic ? 'التخزين والبيانات' : 'Storage and data'}
@@ -577,7 +577,7 @@ export function MessengerSettings({ profile, isArabic, onProfileUpdate }: Messen
 
       {/* Help Dialog */}
       <Dialog open={activeDialog === 'help'} onOpenChange={(open) => !open && setActiveDialog(null)}>
-        <DialogContent className="max-w-md" style={{ backgroundColor: WHATSAPP_COLORS.bg, border: `1px solid ${WHATSAPP_COLORS.divider}` }}>
+        <DialogContent className="max-w-md z-[200]" style={{ backgroundColor: WHATSAPP_COLORS.bg, border: `1px solid ${WHATSAPP_COLORS.divider}` }}>
           <DialogHeader>
             <DialogTitle style={{ color: WHATSAPP_COLORS.textPrimary }}>
               {isArabic ? 'المساعدة' : 'Help'}
