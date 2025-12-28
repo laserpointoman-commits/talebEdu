@@ -140,7 +140,12 @@ export function VoiceRecorder({ onSend, onCancel, isArabic = false, isDark = fal
       // Prefer MP4 for iOS/Safari compatibility, fallback to WebM/Opus
       const preferredTypes = ['audio/mp4', 'audio/webm;codecs=opus', 'audio/webm'];
       const mimeType = preferredTypes.find((t) => MediaRecorder.isTypeSupported(t)) || '';
-      
+
+      // Safari/iOS MediaRecorder (MP4) can break when using timeslice; it may emit fragmented chunks
+      // that don't concatenate into a valid file (often plays as ~1s / no audio). For MP4, record
+      // as a single blob (no timeslice). For WebM, timeslice is fine.
+      const useTimeslice = !mimeType.includes('mp4');
+
       // Safari can produce silent audio when forcing audioBitsPerSecond for MP4.
       // Only set bitrate for WebM where it's reliably honored.
       const options: MediaRecorderOptions = {
@@ -162,17 +167,22 @@ export function VoiceRecorder({ onSend, onCancel, isArabic = false, isDark = fal
         cleanup();
       };
 
-      mediaRecorder.start(100);
+      if (useTimeslice) {
+        mediaRecorder.start(250);
+      } else {
+        mediaRecorder.start();
+      }
+
       setIsRecording(true);
-      
+
       // Start timer using requestAnimationFrame for accurate timing
       startTimeRef.current = performance.now();
       pausedDurationRef.current = 0;
       timerRef.current = requestAnimationFrame(updateTimer);
-      
+
       // Start waveform animation
       animationRef.current = requestAnimationFrame(updateWaveform);
-      
+
     } catch (err: any) {
       console.error('Error accessing microphone:', err);
       setError(
@@ -207,41 +217,54 @@ export function VoiceRecorder({ onSend, onCancel, isArabic = false, isDark = fal
 
   const handleSend = useCallback(() => {
     const finalDuration = duration;
-    
+
     if (finalDuration === 0) {
       onCancel();
       return;
     }
-    
-    // Stop recording first if still active
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-      mediaRecorderRef.current.stop();
-      setIsRecording(false);
-      
-      // Stop timer
-      if (timerRef.current) {
-        cancelAnimationFrame(timerRef.current);
-      }
-      
-      // Wait for final data and send
-      mediaRecorderRef.current.onstop = () => {
-        if (chunksRef.current.length > 0) {
-          const mimeType = mediaRecorderRef.current?.mimeType || 'audio/webm';
-          const blob = new Blob(chunksRef.current, { type: mimeType });
-          
-          // Stop stream tracks
-          if (streamRef.current) {
-            streamRef.current.getTracks().forEach(track => track.stop());
-          }
-          
-          // Stop audio context
-          if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
-            audioContextRef.current.close();
-          }
-          
-          onSend(blob, finalDuration);
+
+    const recorder = mediaRecorderRef.current;
+    if (!recorder || recorder.state === 'inactive') return;
+
+    setIsRecording(false);
+
+    // Stop timer
+    if (timerRef.current) {
+      cancelAnimationFrame(timerRef.current);
+    }
+
+    // Assign onstop BEFORE stopping (avoids race conditions on iOS)
+    recorder.onstop = () => {
+      if (chunksRef.current.length > 0) {
+        const mimeType = recorder.mimeType || 'audio/webm';
+        const blob = new Blob(chunksRef.current, { type: mimeType });
+
+        // Stop stream tracks
+        if (streamRef.current) {
+          streamRef.current.getTracks().forEach((track) => track.stop());
         }
-      };
+
+        // Stop audio context
+        if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
+          audioContextRef.current.close();
+        }
+
+        onSend(blob, finalDuration);
+      }
+    };
+
+    try {
+      // Make sure final buffer is flushed (especially helpful on iOS)
+      if (recorder.state === 'recording') recorder.requestData();
+    } catch {
+      // ignore
+    }
+
+    try {
+      recorder.stop();
+    } catch (e) {
+      console.error('Error stopping recorder:', e);
+      onCancel();
     }
   }, [duration, onSend, onCancel]);
 

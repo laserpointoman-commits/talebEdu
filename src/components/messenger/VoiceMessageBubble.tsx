@@ -70,6 +70,7 @@ export function VoiceMessageBubble({
       const buffer = await response.arrayBuffer();
       const inferredType = (() => {
         const hint = (filePath || urlToFetch).toLowerCase();
+        if (hint.includes('.wav')) return 'audio/wav';
         if (hint.includes('.m4a') || hint.includes('.mp4')) return 'audio/mp4';
         if (hint.includes('.webm')) return 'audio/webm';
         return response.headers.get('content-type') || 'audio/mp4';
@@ -98,19 +99,19 @@ export function VoiceMessageBubble({
       audio.muted = false;
       audio.volume = 1;
       
-      // Wait for audio to be ready
+      // Wait for audio to be ready (canplay is more reliable than canplaythrough on iOS)
       await new Promise<void>((resolve, reject) => {
-        const onLoaded = () => {
-          audio.removeEventListener('canplaythrough', onLoaded);
+        const onCanPlay = () => {
+          audio.removeEventListener('canplay', onCanPlay);
           audio.removeEventListener('error', onError);
           resolve();
         };
         const onError = () => {
-          audio.removeEventListener('canplaythrough', onLoaded);
+          audio.removeEventListener('canplay', onCanPlay);
           audio.removeEventListener('error', onError);
           reject(new Error('Audio load failed'));
         };
-        audio.addEventListener('canplaythrough', onLoaded);
+        audio.addEventListener('canplay', onCanPlay);
         audio.addEventListener('error', onError);
         audio.load();
       });
@@ -226,8 +227,15 @@ export function VoiceMessageBubble({
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Calculate actual duration from audio or use provided
-  const actualDuration = audioRef.current?.duration || duration;
+  // Prefer the stored duration (voice_duration) if the browser reports a shorter duration
+  const browserDuration = audioRef.current?.duration;
+  const actualDuration = (() => {
+    const bd = typeof browserDuration === 'number' && Number.isFinite(browserDuration) ? browserDuration : 0;
+    if (duration && duration > 0) {
+      return bd > 0 && bd + 1 >= duration ? bd : duration;
+    }
+    return bd;
+  })();
   const progress = actualDuration > 0 ? (currentTime / actualDuration) * 100 : 0;
 
   if (error) {
