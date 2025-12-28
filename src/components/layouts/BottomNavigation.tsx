@@ -2,7 +2,7 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   LayoutDashboard,
   MessageSquare,
@@ -102,85 +102,74 @@ export default function BottomNavigation() {
 
   return (
     <div 
-      className="fixed bottom-0 left-0 right-0 z-50 lg:hidden flex justify-center pointer-events-none"
-      style={{ paddingBottom: 'env(safe-area-inset-bottom, 8px)' }}
+      className="fixed bottom-0 left-0 right-0 z-50 lg:hidden"
+      style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
       dir={dir}
     >
-      {/* Floating Navigation Pill */}
-      <motion.nav 
-        initial={{ y: 100, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ type: 'spring', stiffness: 260, damping: 20, delay: 0.1 }}
-        className="pointer-events-auto mx-4 mb-2"
-      >
-        {/* Outer glow */}
-        <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full scale-110 opacity-50" />
-        
-        {/* Main container */}
-        <div className="relative flex items-center gap-1 px-3 py-2 rounded-[28px] bg-card/95 backdrop-blur-2xl border border-border/50 shadow-[0_8px_32px_rgba(0,0,0,0.12),0_2px_8px_rgba(0,0,0,0.08)]">
-          {navItems.map((item, index) => {
-            const active = isActive(item.href);
-            const Icon = item.icon;
-            
-            return (
-              <NavLink
-                key={item.href}
-                to={item.href}
-                className="relative"
+      {/* Background blur layer */}
+      <div className="absolute inset-0 bg-background/80 backdrop-blur-xl border-t border-border/40" />
+      
+      {/* Navigation container */}
+      <nav className="relative flex items-center justify-around px-2 py-2">
+        {navItems.map((item) => {
+          const active = isActive(item.href);
+          const Icon = item.icon;
+          
+          return (
+            <NavLink
+              key={item.href}
+              to={item.href}
+              className="flex-1 flex justify-center"
+            >
+              <motion.div
+                className="relative flex flex-col items-center justify-center min-w-[56px] py-1.5"
+                whileTap={{ scale: 0.9 }}
               >
-                <motion.div
+                {/* Active indicator pill */}
+                {active && (
+                  <motion.div
+                    layoutId="activeTab"
+                    className="absolute -top-1 w-8 h-1 bg-primary rounded-full"
+                    transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                  />
+                )}
+                
+                {/* Icon container */}
+                <div
                   className={cn(
-                    "relative flex items-center gap-2 px-4 py-2.5 rounded-full transition-all duration-300",
-                    active && "bg-primary"
+                    "flex items-center justify-center w-10 h-10 rounded-2xl transition-all duration-200",
+                    active 
+                      ? "bg-primary/10" 
+                      : "bg-transparent"
                   )}
-                  whileTap={{ scale: 0.92 }}
-                  layout
-                  transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                 >
-                  {/* Active glow effect */}
-                  <AnimatePresence>
-                    {active && (
-                      <motion.div
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.8 }}
-                        className="absolute inset-0 bg-primary rounded-full blur-md opacity-40"
-                        layoutId="navGlow"
-                      />
-                    )}
-                  </AnimatePresence>
-                  
-                  {/* Icon */}
                   <Icon 
                     className={cn(
-                      "relative z-10 transition-all duration-300",
+                      "transition-all duration-200",
                       active 
-                        ? "h-[22px] w-[22px] text-primary-foreground" 
+                        ? "h-[22px] w-[22px] text-primary" 
                         : "h-5 w-5 text-muted-foreground"
                     )} 
-                    strokeWidth={active ? 2.5 : 2}
+                    strokeWidth={active ? 2.5 : 1.8}
                   />
-                  
-                  {/* Label - only show when active */}
-                  <AnimatePresence mode="wait">
-                    {active && (
-                      <motion.span
-                        initial={{ opacity: 0, width: 0 }}
-                        animate={{ opacity: 1, width: 'auto' }}
-                        exit={{ opacity: 0, width: 0 }}
-                        transition={{ duration: 0.2 }}
-                        className="relative z-10 text-sm font-semibold text-primary-foreground whitespace-nowrap overflow-hidden"
-                      >
-                        {language === 'ar' ? item.titleAr : item.title}
-                      </motion.span>
-                    )}
-                  </AnimatePresence>
-                </motion.div>
-              </NavLink>
-            );
-          })}
-        </div>
-      </motion.nav>
+                </div>
+                
+                {/* Label */}
+                <span
+                  className={cn(
+                    "text-[10px] mt-0.5 font-medium transition-colors duration-200",
+                    active 
+                      ? "text-primary" 
+                      : "text-muted-foreground"
+                  )}
+                >
+                  {language === 'ar' ? item.titleAr : item.title}
+                </span>
+              </motion.div>
+            </NavLink>
+          );
+        })}
+      </nav>
     </div>
   );
 }
