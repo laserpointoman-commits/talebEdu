@@ -73,22 +73,21 @@ export function CustomizeQuickActionsDialog() {
               return (
                 <div
                   key={action.id}
-                  className="flex items-center gap-3 p-3 border rounded-lg hover:bg-accent/50 transition-colors"
+                  className="flex items-center justify-between gap-2 p-3 border rounded-lg hover:bg-accent/50 transition-colors"
                 >
-                  <GripVertical className="h-5 w-5 text-muted-foreground opacity-50" />
-                  
-                  <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <div className="p-2 rounded-lg bg-primary/10 text-primary">
-                      <Icon className="h-5 w-5" />
+                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                    <GripVertical className="h-4 w-4 text-muted-foreground opacity-50 flex-shrink-0 hidden sm:block" />
+                    <div className="p-2 rounded-lg bg-primary/10 text-primary flex-shrink-0">
+                      <Icon className="h-4 w-4" />
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium">{t(action.title)}</p>
-                      <p className="text-sm text-muted-foreground truncate">{action.href}</p>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium text-sm truncate">{t(action.title)}</p>
+                      <p className="text-xs text-muted-foreground truncate hidden sm:block">{action.href}</p>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    <Label className="text-sm cursor-pointer" htmlFor={`visible-${action.id}`}>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <Label className="text-xs cursor-pointer hidden sm:inline" htmlFor={`visible-${action.id}`}>
                       {t('Visible')}
                     </Label>
                     <Switch
