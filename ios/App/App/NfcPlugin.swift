@@ -3,7 +3,16 @@ import Capacitor
 import CoreNFC
 
 @objc(NfcPlugin)
-public class NfcPlugin: CAPPlugin, NFCNDEFReaderSessionDelegate {
+public class NfcPlugin: CAPPlugin, CAPBridgedPlugin, NFCNDEFReaderSessionDelegate {
+    public let identifier = "NfcPlugin"
+    public let jsName = "NfcPlugin"
+    public let pluginMethods: [CAPPluginMethod] = [
+        CAPPluginMethod(name: "isSupported", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "startScanning", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "stopScanning", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "write", returnType: CAPPluginReturnPromise)
+    ]
+    
     private var session: NFCNDEFReaderSession?
 
     // Only used for write() calls (read/scanning relies on notifyListeners)
