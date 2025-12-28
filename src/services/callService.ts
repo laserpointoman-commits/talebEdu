@@ -1,0 +1,524 @@
+import { supabase } from '@/integrations/supabase/client';
+
+export interface CallState {
+  status: 'idle' | 'calling' | 'ringing' | 'connected' | 'ended';
+  callId: string | null;
+  callType: 'voice' | 'video';
+  isIncoming: boolean;
+  remoteUserId: string | null;
+  remoteUserName: string | null;
+  remoteUserImage: string | null;
+  startTime: Date | null;
+  localStream: MediaStream | null;
+  remoteStream: MediaStream | null;
+}
+
+export type CallEventHandler = (state: CallState) => void;
+
+class CallService {
+  private peerConnection: RTCPeerConnection | null = null;
+  private localStream: MediaStream | null = null;
+  private remoteStream: MediaStream | null = null;
+  private callChannel: ReturnType<typeof supabase.channel> | null = null;
+  private currentUserId: string | null = null;
+  private callState: CallState = {
+    status: 'idle',
+    callId: null,
+    callType: 'voice',
+    isIncoming: false,
+    remoteUserId: null,
+    remoteUserName: null,
+    remoteUserImage: null,
+    startTime: null,
+    localStream: null,
+    remoteStream: null,
+  };
+  private stateListeners: Set<CallEventHandler> = new Set();
+  private ringtoneAudio: HTMLAudioElement | null = null;
+
+  private readonly rtcConfig: RTCConfiguration = {
+    iceServers: [
+      { urls: 'stun:stun.l.google.com:19302' },
+      { urls: 'stun:stun1.l.google.com:19302' },
+      { urls: 'stun:stun2.l.google.com:19302' },
+    ],
+  };
+
+  constructor() {
+    // Create ringtone audio element
+    if (typeof window !== 'undefined') {
+      this.ringtoneAudio = new Audio();
+      this.ringtoneAudio.loop = true;
+    }
+  }
+
+  // Subscribe to call state changes
+  subscribe(handler: CallEventHandler) {
+    this.stateListeners.add(handler);
+    handler(this.callState);
+    return () => this.stateListeners.delete(handler);
+  }
+
+  private notifyStateChange() {
+    this.stateListeners.forEach(handler => handler({ ...this.callState }));
+  }
+
+  private updateState(updates: Partial<CallState>) {
+    this.callState = { ...this.callState, ...updates };
+    this.notifyStateChange();
+  }
+
+  // Initialize the service with current user
+  async initialize(userId: string) {
+    this.currentUserId = userId;
+    await this.setupCallListener();
+  }
+
+  // Set up listener for incoming calls
+  private async setupCallListener() {
+    if (!this.currentUserId) return;
+
+    // Subscribe to call signals directed at this user
+    this.callChannel = supabase.channel(`calls:${this.currentUserId}`)
+      .on('broadcast', { event: 'call-offer' }, async (payload) => {
+        console.log('Received call offer:', payload);
+        await this.handleIncomingCall(payload.payload);
+      })
+      .on('broadcast', { event: 'call-answer' }, async (payload) => {
+        console.log('Received call answer:', payload);
+        await this.handleCallAnswer(payload.payload);
+      })
+      .on('broadcast', { event: 'ice-candidate' }, async (payload) => {
+        console.log('Received ICE candidate:', payload);
+        await this.handleIceCandidate(payload.payload);
+      })
+      .on('broadcast', { event: 'call-end' }, async (payload) => {
+        console.log('Received call end:', payload);
+        this.handleCallEnded();
+      })
+      .on('broadcast', { event: 'call-reject' }, async (payload) => {
+        console.log('Call rejected:', payload);
+        this.handleCallRejected();
+      })
+      .subscribe();
+  }
+
+  // Start an outgoing call
+  async startCall(
+    recipientId: string,
+    recipientName: string,
+    recipientImage: string | null,
+    callType: 'voice' | 'video'
+  ) {
+    if (!this.currentUserId) {
+      throw new Error('Call service not initialized');
+    }
+
+    const callId = `call_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+    try {
+      // Get local media stream
+      this.localStream = await navigator.mediaDevices.getUserMedia({
+        audio: true,
+        video: callType === 'video',
+      });
+
+      this.updateState({
+        status: 'calling',
+        callId,
+        callType,
+        isIncoming: false,
+        remoteUserId: recipientId,
+        remoteUserName: recipientName,
+        remoteUserImage: recipientImage,
+        localStream: this.localStream,
+      });
+
+      // Create peer connection
+      await this.createPeerConnection();
+
+      // Add local tracks to peer connection
+      this.localStream.getTracks().forEach(track => {
+        this.peerConnection?.addTrack(track, this.localStream!);
+      });
+
+      // Create and send offer
+      const offer = await this.peerConnection!.createOffer();
+      await this.peerConnection!.setLocalDescription(offer);
+
+      // Send offer to recipient via broadcast
+      const recipientChannel = supabase.channel(`calls:${recipientId}`);
+      await recipientChannel.subscribe();
+      
+      await recipientChannel.send({
+        type: 'broadcast',
+        event: 'call-offer',
+        payload: {
+          callId,
+          callType,
+          callerId: this.currentUserId,
+          callerName: '', // Will be fetched by recipient
+          offer: offer.sdp,
+        },
+      });
+
+      // Log call attempt
+      await supabase.from('call_logs').insert({
+        caller_id: this.currentUserId,
+        recipient_id: recipientId,
+        call_type: callType,
+        status: 'calling',
+        started_at: new Date().toISOString(),
+      });
+
+      console.log('Call offer sent to:', recipientId);
+    } catch (error) {
+      console.error('Error starting call:', error);
+      this.endCall();
+      throw error;
+    }
+  }
+
+  // Handle incoming call
+  private async handleIncomingCall(data: any) {
+    const { callId, callType, callerId, offer } = data;
+
+    // Fetch caller info
+    const { data: callerProfile } = await supabase
+      .from('profiles')
+      .select('full_name, profile_image')
+      .eq('id', callerId)
+      .single();
+
+    this.updateState({
+      status: 'ringing',
+      callId,
+      callType,
+      isIncoming: true,
+      remoteUserId: callerId,
+      remoteUserName: callerProfile?.full_name || 'Unknown',
+      remoteUserImage: callerProfile?.profile_image || null,
+    });
+
+    // Store the offer for when user accepts
+    (this.callState as any).pendingOffer = offer;
+
+    // Play ringtone
+    this.playRingtone();
+  }
+
+  // Accept incoming call
+  async acceptCall() {
+    if (this.callState.status !== 'ringing' || !this.callState.remoteUserId) {
+      return;
+    }
+
+    this.stopRingtone();
+
+    try {
+      // Get local media stream
+      this.localStream = await navigator.mediaDevices.getUserMedia({
+        audio: true,
+        video: this.callState.callType === 'video',
+      });
+
+      this.updateState({
+        localStream: this.localStream,
+      });
+
+      // Create peer connection
+      await this.createPeerConnection();
+
+      // Add local tracks
+      this.localStream.getTracks().forEach(track => {
+        this.peerConnection?.addTrack(track, this.localStream!);
+      });
+
+      // Set remote description from offer
+      const offer = (this.callState as any).pendingOffer;
+      await this.peerConnection!.setRemoteDescription({
+        type: 'offer',
+        sdp: offer,
+      });
+
+      // Create and send answer
+      const answer = await this.peerConnection!.createAnswer();
+      await this.peerConnection!.setLocalDescription(answer);
+
+      // Send answer to caller
+      const callerChannel = supabase.channel(`calls:${this.callState.remoteUserId}`);
+      await callerChannel.subscribe();
+      
+      await callerChannel.send({
+        type: 'broadcast',
+        event: 'call-answer',
+        payload: {
+          callId: this.callState.callId,
+          answer: answer.sdp,
+        },
+      });
+
+      this.updateState({
+        status: 'connected',
+        startTime: new Date(),
+      });
+
+      console.log('Call accepted and answer sent');
+    } catch (error) {
+      console.error('Error accepting call:', error);
+      this.endCall();
+    }
+  }
+
+  // Reject incoming call
+  async rejectCall() {
+    if (this.callState.status !== 'ringing' || !this.callState.remoteUserId) {
+      return;
+    }
+
+    this.stopRingtone();
+
+    // Send rejection to caller
+    const callerChannel = supabase.channel(`calls:${this.callState.remoteUserId}`);
+    await callerChannel.subscribe();
+    
+    await callerChannel.send({
+      type: 'broadcast',
+      event: 'call-reject',
+      payload: {
+        callId: this.callState.callId,
+      },
+    });
+
+    // Log as missed call
+    if (this.callState.callId) {
+      await supabase.from('call_logs')
+        .update({ status: 'declined' })
+        .eq('id', this.callState.callId);
+    }
+
+    this.resetState();
+  }
+
+  // Handle call answer from recipient
+  private async handleCallAnswer(data: any) {
+    const { answer } = data;
+
+    if (this.peerConnection && this.callState.status === 'calling') {
+      await this.peerConnection.setRemoteDescription({
+        type: 'answer',
+        sdp: answer,
+      });
+
+      this.updateState({
+        status: 'connected',
+        startTime: new Date(),
+      });
+
+      console.log('Call connected');
+    }
+  }
+
+  // Handle ICE candidate
+  private async handleIceCandidate(data: any) {
+    const { candidate } = data;
+
+    if (this.peerConnection && candidate) {
+      await this.peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+    }
+  }
+
+  // Handle call ended by remote
+  private handleCallEnded() {
+    this.stopRingtone();
+    this.cleanup();
+    this.updateState({
+      status: 'ended',
+    });
+
+    // Reset after showing ended state
+    setTimeout(() => this.resetState(), 2000);
+  }
+
+  // Handle call rejected
+  private handleCallRejected() {
+    this.cleanup();
+    this.updateState({
+      status: 'ended',
+    });
+
+    setTimeout(() => this.resetState(), 2000);
+  }
+
+  // End the current call
+  async endCall() {
+    if (this.callState.remoteUserId) {
+      // Notify remote user
+      const remoteChannel = supabase.channel(`calls:${this.callState.remoteUserId}`);
+      await remoteChannel.subscribe();
+      
+      await remoteChannel.send({
+        type: 'broadcast',
+        event: 'call-end',
+        payload: {
+          callId: this.callState.callId,
+        },
+      });
+    }
+
+    // Log call end
+    if (this.callState.callId && this.callState.startTime) {
+      const duration = Math.floor((Date.now() - this.callState.startTime.getTime()) / 1000);
+      await supabase.from('call_logs')
+        .update({
+          status: 'answered',
+          ended_at: new Date().toISOString(),
+          duration,
+        })
+        .eq('id', this.callState.callId);
+    }
+
+    this.stopRingtone();
+    this.cleanup();
+    this.resetState();
+  }
+
+  // Toggle mute
+  toggleMute(): boolean {
+    if (this.localStream) {
+      const audioTrack = this.localStream.getAudioTracks()[0];
+      if (audioTrack) {
+        audioTrack.enabled = !audioTrack.enabled;
+        return !audioTrack.enabled;
+      }
+    }
+    return false;
+  }
+
+  // Toggle video
+  toggleVideo(): boolean {
+    if (this.localStream) {
+      const videoTrack = this.localStream.getVideoTracks()[0];
+      if (videoTrack) {
+        videoTrack.enabled = !videoTrack.enabled;
+        return !videoTrack.enabled;
+      }
+    }
+    return false;
+  }
+
+  // Toggle speaker (placeholder - actual implementation depends on platform)
+  toggleSpeaker(): boolean {
+    // This would require platform-specific implementation
+    return false;
+  }
+
+  // Create peer connection
+  private async createPeerConnection() {
+    this.peerConnection = new RTCPeerConnection(this.rtcConfig);
+
+    // Handle remote stream
+    this.peerConnection.ontrack = (event) => {
+      console.log('Remote track received:', event);
+      this.remoteStream = event.streams[0];
+      this.updateState({
+        remoteStream: this.remoteStream,
+      });
+    };
+
+    // Handle ICE candidates
+    this.peerConnection.onicecandidate = async (event) => {
+      if (event.candidate && this.callState.remoteUserId) {
+        const remoteChannel = supabase.channel(`calls:${this.callState.remoteUserId}`);
+        await remoteChannel.subscribe();
+        
+        await remoteChannel.send({
+          type: 'broadcast',
+          event: 'ice-candidate',
+          payload: {
+            callId: this.callState.callId,
+            candidate: event.candidate.toJSON(),
+          },
+        });
+      }
+    };
+
+    // Handle connection state changes
+    this.peerConnection.onconnectionstatechange = () => {
+      console.log('Connection state:', this.peerConnection?.connectionState);
+      if (this.peerConnection?.connectionState === 'disconnected' ||
+          this.peerConnection?.connectionState === 'failed') {
+        this.endCall();
+      }
+    };
+  }
+
+  // Play ringtone
+  private playRingtone() {
+    // Using a simple oscillator as ringtone (could be replaced with actual audio file)
+    if (typeof window !== 'undefined') {
+      try {
+        const audioContext = new AudioContext();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        oscillator.frequency.value = 440;
+        gainNode.gain.value = 0.3;
+        
+        oscillator.start();
+        
+        // Store for later stopping
+        (this as any).ringtoneContext = audioContext;
+        (this as any).ringtoneOscillator = oscillator;
+      } catch (e) {
+        console.log('Could not play ringtone');
+      }
+    }
+  }
+
+  // Stop ringtone
+  private stopRingtone() {
+    try {
+      (this as any).ringtoneOscillator?.stop();
+      (this as any).ringtoneContext?.close();
+    } catch (e) {
+      // Ignore
+    }
+  }
+
+  // Cleanup resources
+  private cleanup() {
+    this.localStream?.getTracks().forEach(track => track.stop());
+    this.localStream = null;
+    this.remoteStream = null;
+    this.peerConnection?.close();
+    this.peerConnection = null;
+  }
+
+  // Reset state
+  private resetState() {
+    this.updateState({
+      status: 'idle',
+      callId: null,
+      callType: 'voice',
+      isIncoming: false,
+      remoteUserId: null,
+      remoteUserName: null,
+      remoteUserImage: null,
+      startTime: null,
+      localStream: null,
+      remoteStream: null,
+    });
+  }
+
+  // Get current state
+  getState(): CallState {
+    return { ...this.callState };
+  }
+}
+
+// Singleton instance
+export const callService = new CallService();
