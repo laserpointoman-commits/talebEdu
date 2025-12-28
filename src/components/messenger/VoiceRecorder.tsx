@@ -215,7 +215,7 @@ export function VoiceRecorder({ onSend, onCancel, isArabic = false, isDark = fal
     }
   };
 
-  const handleSend = useCallback(() => {
+  const handleSend = useCallback(async () => {
     const finalDuration = duration;
 
     if (finalDuration === 0) {
@@ -233,51 +233,71 @@ export function VoiceRecorder({ onSend, onCancel, isArabic = false, isDark = fal
       cancelAnimationFrame(timerRef.current);
     }
 
-    // Assign onstop BEFORE stopping (avoids race conditions on iOS)
-    recorder.onstop = () => {
-      (async () => {
-        // iOS/Safari can fire 'stop' before the final 'dataavailable' arrives.
-        // Wait briefly for the final chunk.
-        const waitUntil = Date.now() + 1200;
-        while (chunksRef.current.length === 0 && Date.now() < waitUntil) {
-          await new Promise((r) => setTimeout(r, 50));
-        }
+    const hadChunksAlready = chunksRef.current.length > 0;
 
-        // Stop stream tracks
-        if (streamRef.current) {
-          streamRef.current.getTracks().forEach((track) => track.stop());
-        }
-
-        // Stop audio context
-        if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
-          audioContextRef.current.close();
-        }
-
-        if (chunksRef.current.length === 0) {
-          setError(t('Recording failed', 'فشل التسجيل'));
-          return;
-        }
-
-        const mimeType = recorder.mimeType || 'audio/webm';
-        const blob = new Blob(chunksRef.current, { type: mimeType });
-        onSend(blob, finalDuration);
-      })();
-    };
+    // iOS/Safari can deliver the final audio chunk AFTER stop is requested.
+    // Wait for at least one dataavailable if we don't already have chunks.
+    const waitForAtLeastOneChunk = hadChunksAlready
+      ? Promise.resolve()
+      : new Promise<void>((resolve, reject) => {
+          const timeout = window.setTimeout(() => reject(new Error('no_dataavailable')), 1800);
+          const onData = (e: BlobEvent) => {
+            if (e.data && e.data.size > 0) {
+              window.clearTimeout(timeout);
+              resolve();
+            }
+          };
+          recorder.addEventListener('dataavailable', onData, { once: true });
+        });
 
     try {
-      // Make sure final buffer is flushed (especially helpful on iOS)
-      if (recorder.state === 'recording') recorder.requestData();
-    } catch {
-      // ignore
-    }
-
-    try {
-      recorder.stop();
+      if (recorder.state === 'recording') {
+        try {
+          recorder.requestData();
+        } catch {
+          // ignore
+        }
+        recorder.stop();
+      } else {
+        recorder.stop();
+      }
     } catch (e) {
       console.error('Error stopping recorder:', e);
-      onCancel();
+      setError(t('Recording failed', 'فشل التسجيل'));
+      cleanup();
+      return;
     }
-  }, [duration, onSend, onCancel]);
+
+    try {
+      await waitForAtLeastOneChunk;
+      // Give the main ondataavailable handler a tick to push into chunksRef
+      await new Promise((r) => setTimeout(r, 50));
+    } catch (e) {
+      console.error('No audio data captured:', e);
+      setError(t('Recording failed', 'فشل التسجيل'));
+      cleanup();
+      return;
+    }
+
+    // Stop stream tracks
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+    }
+
+    // Stop audio context
+    if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
+      audioContextRef.current.close();
+    }
+
+    if (chunksRef.current.length === 0) {
+      setError(t('Recording failed', 'فشل التسجيل'));
+      return;
+    }
+
+    const mimeType = recorder.mimeType || 'audio/webm';
+    const blob = new Blob(chunksRef.current, { type: mimeType });
+    onSend(blob, finalDuration);
+  }, [duration, onSend, onCancel, cleanup]);
 
   const handleDelete = () => {
     void haptic(ImpactStyle.Light); // Haptic on delete
