@@ -2,6 +2,7 @@
 // Uses native CoreNFC on iOS via custom plugin bridge
 
 import { Capacitor, registerPlugin } from '@capacitor/core';
+import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { toast } from "sonner";
 
 export interface NFCData {
@@ -13,6 +14,7 @@ export interface NFCData {
 
 interface NFCPluginInterface {
   isSupported(): Promise<{ supported: boolean }>;
+  readOnce?: () => Promise<{ message?: string | null }>;
   startScanning(): Promise<{ success: boolean }>;
   stopScanning(): Promise<{ success: boolean }>;
   write(options: { message: string }): Promise<{ success: boolean }>;
@@ -92,7 +94,7 @@ class NFCService {
     if (this.initPromise) {
       await this.initPromise;
     }
-    
+
     // If still null, do a fresh check
     if (this.supported === null) {
       if (Capacitor.isNativePlatform()) {
@@ -102,7 +104,7 @@ class NFCService {
         this.supported = 'NDEFReader' in window;
       }
     }
-    
+
     return this.supported;
   }
 
@@ -119,6 +121,38 @@ class NFCService {
     // Android requires NFC permission in manifest
     const isSupported = await this.isSupportedAsync();
     return isSupported;
+  }
+
+  private parseTagMessage(message: string): NFCData {
+    const trimmed = (message ?? '').trim();
+    try {
+      const parsed = JSON.parse(trimmed) as Partial<NFCData>;
+      if (parsed && typeof parsed.id === 'string') {
+        return {
+          id: parsed.id,
+          type: (parsed.type ?? 'student') as NFCData['type'],
+          name: parsed.name ?? '',
+          additionalData: parsed.additionalData
+        };
+      }
+    } catch {
+      // not JSON
+    }
+
+    return {
+      id: trimmed,
+      type: 'student',
+      name: ''
+    };
+  }
+
+  private async hapticSuccess(): Promise<void> {
+    if (!Capacitor.isNativePlatform()) return;
+    try {
+      await Haptics.impact({ style: ImpactStyle.Medium });
+    } catch {
+      // ignore
+    }
   }
 
   async writeTag(data: NFCData): Promise<boolean> {
@@ -217,6 +251,31 @@ class NFCService {
       return null;
     }
 
+    // Prefer single-shot native read to avoid the in-app blocking dialog and long-running sessions
+    if (Capacitor.isNativePlatform() && NfcPlugin && typeof NfcPlugin.readOnce === 'function') {
+      if (this.scanning) {
+        toast.info("NFC scanning already active");
+        return null;
+      }
+
+      this.scanning = true;
+      try {
+        const result = await NfcPlugin.readOnce();
+        const message = (result?.message ?? '') as string;
+        if (!message) return null;
+
+        const data = this.parseTagMessage(message);
+        await this.hapticSuccess();
+        return data;
+      } catch (error) {
+        console.error('Error reading NFC tag:', error);
+        toast.error("Failed to read NFC tag");
+        return null;
+      } finally {
+        this.scanning = false;
+      }
+    }
+
     return new Promise((resolve) => {
       const timeout = setTimeout(() => {
         this.stopScanning();
@@ -236,6 +295,7 @@ class NFCService {
       });
     });
   }
+
 
   async startScanning(onTagRead: (data: NFCData) => void): Promise<void> {
     // Ensure we check support properly
