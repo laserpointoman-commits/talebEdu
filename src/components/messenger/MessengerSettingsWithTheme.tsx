@@ -141,7 +141,7 @@ export function MessengerSettingsWithTheme({ profile, isArabic, onProfileUpdate 
 
       {/* Account Dialog */}
       <Dialog open={activeDialog === 'account'} onOpenChange={(open) => !open && setActiveDialog(null)}>
-        <DialogContent className="max-w-md z-[200]" style={{ backgroundColor: colors.bg, border: `1px solid ${colors.divider}` }}>
+        <DialogContent className="max-w-md z-[9999]" style={{ backgroundColor: colors.bg, border: `1px solid ${colors.divider}` }}>
           <DialogHeader>
             <DialogTitle style={{ color: colors.textPrimary }}>{isArabic ? 'الحساب' : 'Account'}</DialogTitle>
           </DialogHeader>
@@ -173,7 +173,7 @@ export function MessengerSettingsWithTheme({ profile, isArabic, onProfileUpdate 
 
       {/* Privacy Dialog */}
       <Dialog open={activeDialog === 'privacy'} onOpenChange={(open) => !open && setActiveDialog(null)}>
-        <DialogContent className="max-w-md z-[200]" style={{ backgroundColor: colors.bg, border: `1px solid ${colors.divider}` }}>
+        <DialogContent className="max-w-md z-[9999]" style={{ backgroundColor: colors.bg, border: `1px solid ${colors.divider}` }}>
           <DialogHeader>
             <DialogTitle style={{ color: colors.textPrimary }}>{isArabic ? 'الخصوصية' : 'Privacy'}</DialogTitle>
           </DialogHeader>
@@ -224,7 +224,7 @@ export function MessengerSettingsWithTheme({ profile, isArabic, onProfileUpdate 
 
       {/* Chats/Theme Dialog - WITH DYNAMIC THEME SELECTION */}
       <Dialog open={activeDialog === 'chats'} onOpenChange={(open) => !open && setActiveDialog(null)}>
-        <DialogContent className="max-w-md z-[200]" style={{ backgroundColor: colors.bg, border: `1px solid ${colors.divider}` }}>
+        <DialogContent className="max-w-md z-[9999]" style={{ backgroundColor: colors.bg, border: `1px solid ${colors.divider}` }}>
           <DialogHeader>
             <DialogTitle style={{ color: colors.textPrimary }}>{isArabic ? 'الدردشات' : 'Chats'}</DialogTitle>
           </DialogHeader>
@@ -265,7 +265,7 @@ export function MessengerSettingsWithTheme({ profile, isArabic, onProfileUpdate 
 
       {/* Notifications Dialog */}
       <Dialog open={activeDialog === 'notifications'} onOpenChange={(open) => !open && setActiveDialog(null)}>
-        <DialogContent className="max-w-md z-[200]" style={{ backgroundColor: colors.bg, border: `1px solid ${colors.divider}` }}>
+        <DialogContent className="max-w-md z-[9999]" style={{ backgroundColor: colors.bg, border: `1px solid ${colors.divider}` }}>
           <DialogHeader>
             <DialogTitle style={{ color: colors.textPrimary }}>{isArabic ? 'الإشعارات' : 'Notifications'}</DialogTitle>
           </DialogHeader>
@@ -296,7 +296,7 @@ export function MessengerSettingsWithTheme({ profile, isArabic, onProfileUpdate 
 
       {/* Storage Dialog */}
       <Dialog open={activeDialog === 'storage'} onOpenChange={(open) => !open && setActiveDialog(null)}>
-        <DialogContent className="max-w-md z-[200]" style={{ backgroundColor: colors.bg, border: `1px solid ${colors.divider}` }}>
+        <DialogContent className="max-w-md z-[9999]" style={{ backgroundColor: colors.bg, border: `1px solid ${colors.divider}` }}>
           <DialogHeader>
             <DialogTitle style={{ color: colors.textPrimary }}>{isArabic ? 'التخزين والبيانات' : 'Storage and data'}</DialogTitle>
           </DialogHeader>
@@ -310,7 +310,7 @@ export function MessengerSettingsWithTheme({ profile, isArabic, onProfileUpdate 
 
       {/* Help Dialog */}
       <Dialog open={activeDialog === 'help'} onOpenChange={(open) => !open && setActiveDialog(null)}>
-        <DialogContent className="max-w-md z-[200]" style={{ backgroundColor: colors.bg, border: `1px solid ${colors.divider}` }}>
+        <DialogContent className="max-w-md z-[9999]" style={{ backgroundColor: colors.bg, border: `1px solid ${colors.divider}` }}>
           <DialogHeader>
             <DialogTitle style={{ color: colors.textPrimary }}>{isArabic ? 'المساعدة' : 'Help'}</DialogTitle>
           </DialogHeader>
