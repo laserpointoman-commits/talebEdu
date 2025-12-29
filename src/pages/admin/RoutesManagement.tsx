@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useStudents } from '@/contexts/StudentsContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,10 +14,24 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { Plus, Edit, Trash2, MapPin, Clock, Users, Bus, ChevronRight, Eye, X, Search } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
-// Import mock data from BusesManagement
-import { mockDrivers, mockBuses, mockTeachers } from './BusesManagement';
+interface Driver {
+  id: string;
+  name: string;
+  nameAr: string;
+}
 
+interface BusData {
+  id: string;
+  busNumber: string;
+}
+
+interface Teacher {
+  id: string;
+  name: string;
+  nameAr: string;
+}
 
 export interface Route {
   id: string;
@@ -35,43 +49,14 @@ export interface Route {
   description?: string;
 }
 
-const mockRoutes: Route[] = [
-  {
-    id: 'r1',
-    name: 'Al Khuwair - Ruwi - Al Seeb',
-    nameAr: 'الخوير - روي - السيب',
-    busId: 'BUS-001',
-    driverId: '1',
-    supervisorId: 't1',
-    stops: ['Al Khuwair', 'Ruwi', 'Al Seeb'],
-    studentIds: ['s1', 's2', 's3'],
-    departureTime: '06:30',
-    arrivalTime: '07:30',
-    distance: '25 km',
-    status: 'active',
-    description: 'Morning route covering Al Khuwair, Ruwi, and Al Seeb areas',
-  },
-  {
-    id: 'r2',
-    name: 'Qurum - Al Ghubra - Al Azaiba',
-    nameAr: 'القرم - الغبرة - العذيبة',
-    busId: 'BUS-002',
-    driverId: '2',
-    supervisorId: 't2',
-    stops: ['Qurum', 'Al Ghubra', 'Al Azaiba'],
-    studentIds: ['s4', 's5', 's6', 's7'],
-    departureTime: '06:45',
-    arrivalTime: '07:45',
-    distance: '20 km',
-    status: 'active',
-    description: 'Morning route covering Qurum, Al Ghubra, and Al Azaiba areas',
-  },
-];
-
 export default function RoutesManagement() {
   const { t, language } = useLanguage();
   const { students } = useStudents();
-  const [routes, setRoutes] = useState<Route[]>(mockRoutes);
+  const [routes, setRoutes] = useState<Route[]>([]);
+  const [drivers, setDrivers] = useState<Driver[]>([]);
+  const [buses, setBuses] = useState<BusData[]>([]);
+  const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
@@ -96,6 +81,86 @@ export default function RoutesManagement() {
   const [busSearch, setBusSearch] = useState('');
   const [driverSearch, setDriverSearch] = useState('');
   const [supervisorSearch, setSupervisorSearch] = useState('');
+
+  // Fetch data from database
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        // Fetch routes
+        const { data: routesData } = await supabase
+          .from('bus_routes')
+          .select('*');
+        
+        if (routesData) {
+          setRoutes(routesData.map(r => ({
+            id: r.id,
+            name: r.route_name,
+            nameAr: r.route_name_ar || r.route_name,
+            busId: r.bus_id || undefined,
+            stops: Array.isArray(r.stops) ? r.stops as string[] : [],
+            studentIds: [],
+            departureTime: (r.morning_schedule as any)?.departure || '06:30',
+            arrivalTime: (r.morning_schedule as any)?.arrival || '07:30',
+            distance: '25 km',
+            status: r.is_active ? 'active' : 'inactive',
+          })));
+        }
+
+        // Fetch drivers
+        const { data: driversData } = await supabase
+          .from('drivers')
+          .select(`
+            id,
+            profile_id,
+            profiles:profile_id (full_name, full_name_ar)
+          `);
+        
+        if (driversData) {
+          setDrivers(driversData.map(d => ({
+            id: d.id,
+            name: (d.profiles as any)?.full_name || 'Unknown',
+            nameAr: (d.profiles as any)?.full_name_ar || (d.profiles as any)?.full_name || 'غير معروف',
+          })));
+        }
+
+        // Fetch buses
+        const { data: busesData } = await supabase
+          .from('buses')
+          .select('id, bus_number');
+        
+        if (busesData) {
+          setBuses(busesData.map(b => ({
+            id: b.id,
+            busNumber: b.bus_number,
+          })));
+        }
+
+        // Fetch teachers
+        const { data: teachersData } = await supabase
+          .from('teachers')
+          .select(`
+            id,
+            profile_id,
+            profiles:profile_id (full_name, full_name_ar)
+          `);
+        
+        if (teachersData) {
+          setTeachers(teachersData.map(t => ({
+            id: t.id,
+            name: (t.profiles as any)?.full_name || 'Unknown',
+            nameAr: (t.profiles as any)?.full_name_ar || (t.profiles as any)?.full_name || 'غير معروف',
+          })));
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const handleAddRoute = () => {
     const newRoute: Route = {
@@ -245,17 +310,17 @@ export default function RoutesManagement() {
   };
 
   const getDriverName = (driverId?: string) => {
-    const driver = mockDrivers.find(d => d.id === driverId);
+    const driver = drivers.find(d => d.id === driverId);
     return driver ? (language === 'en' ? driver.name : driver.nameAr) : (language === 'en' ? 'Not Assigned' : 'غير مخصص');
   };
 
   const getBusNumber = (busId?: string) => {
-    const bus = mockBuses.find(b => b.id === busId);
+    const bus = buses.find(b => b.id === busId);
     return bus ? bus.busNumber : (language === 'en' ? 'Not Assigned' : 'غير مخصص');
   };
 
   const getSupervisorName = (supervisorId?: string) => {
-    const supervisor = mockTeachers.find(t => t.id === supervisorId);
+    const supervisor = teachers.find(t => t.id === supervisorId);
     return supervisor ? (language === 'en' ? supervisor.name : supervisor.nameAr) : (language === 'en' ? 'Not Assigned' : 'غير مخصص');
   };
 
@@ -582,10 +647,9 @@ export default function RoutesManagement() {
                     <SelectItem value="none">
                       {language === 'en' ? 'No Bus' : 'بدون حافلة'}
                     </SelectItem>
-                    {mockBuses
+                    {buses
                       .filter(bus => 
-                        bus.busNumber.toLowerCase().includes(busSearch.toLowerCase()) ||
-                        bus.plateNumber.toLowerCase().includes(busSearch.toLowerCase())
+                        bus.busNumber.toLowerCase().includes(busSearch.toLowerCase())
                       )
                       .map((bus) => (
                         <SelectItem key={bus.id} value={bus.id}>
@@ -621,7 +685,7 @@ export default function RoutesManagement() {
                     <SelectItem value="none">
                       {language === 'en' ? 'No Driver' : 'بدون سائق'}
                     </SelectItem>
-                    {mockDrivers
+                    {drivers
                       .filter(driver => 
                         driver.name.toLowerCase().includes(driverSearch.toLowerCase()) ||
                         driver.nameAr.includes(driverSearch)
@@ -660,7 +724,7 @@ export default function RoutesManagement() {
                     <SelectItem value="none">
                       {language === 'en' ? 'No Supervisor' : 'بدون مشرف'}
                     </SelectItem>
-                    {mockTeachers
+                    {teachers
                       .filter(teacher => 
                         teacher.name.toLowerCase().includes(supervisorSearch.toLowerCase()) ||
                         teacher.nameAr.includes(supervisorSearch)
