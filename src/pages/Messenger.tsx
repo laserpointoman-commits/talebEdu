@@ -205,9 +205,15 @@ function MessengerContent() {
 
   const handleVoiceSend = async (audioBlob: Blob, duration: number) => {
     if (!selectedConversation) return;
+
     // Use the blob's actual MIME type for proper playback
     const mimeType = audioBlob.type || 'audio/webm';
-    const extension = mimeType.includes('mp4') ? 'mp4' : 'webm';
+    const extension = mimeType.includes('mp4')
+      ? 'mp4'
+      : mimeType.includes('wav')
+        ? 'wav'
+        : 'webm';
+
     const file = new File([audioBlob], `voice_message.${extension}`, { type: mimeType });
     await sendMessage(selectedConversation.recipient_id, '', [file], undefined, undefined, 'voice', duration);
   };
