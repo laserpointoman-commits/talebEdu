@@ -184,7 +184,7 @@ export function EnhancedMessageBubble({
       {/* Mobile Action Menu Modal */}
       {showMobileMenu && (
         <div 
-          className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50"
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50"
           onClick={() => setShowMobileMenu(false)}
         >
           <div 
