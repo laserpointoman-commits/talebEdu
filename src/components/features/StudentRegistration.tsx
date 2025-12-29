@@ -66,33 +66,7 @@ interface StudentRegistrationProps {
   editingStudent?: any;
 }
 
-// Mock data for saved students
-const mockSavedStudents = [
-  {
-    id: '1',
-    firstName: 'Ahmed',
-    lastName: 'Al-Said',
-    firstNameAr: 'أحمد',
-    lastNameAr: 'السعيد',
-    grade: '10',
-    class: '10-A',
-    transportationAgreement: true,
-    canteenAgreement: true,
-    profileImage: undefined,
-  },
-  {
-    id: '2',
-    firstName: 'Fatima',
-    lastName: 'Al-Rashdi',
-    firstNameAr: 'فاطمة',
-    lastNameAr: 'الراشدي',
-    grade: '9',
-    class: '9-B',
-    transportationAgreement: false,
-    canteenAgreement: true,
-    profileImage: undefined,
-  },
-];
+// Students are now fetched from StudentsContext - no mock data needed
 
 export default function StudentRegistration({ isOpen, onClose, editingStudent }: StudentRegistrationProps) {
   const { language } = useLanguage();
