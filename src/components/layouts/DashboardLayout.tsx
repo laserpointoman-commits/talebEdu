@@ -36,8 +36,9 @@ function DashboardLayout({ children }: DashboardLayoutProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   
-  // Check if we're on the mobile messaging page
-  const isOnMobileMessaging = isMobile && location.pathname === '/dashboard/social/friends';
+  // Check if we're on the Messenger page (full-screen experience on mobile)
+  const isMessengerPage = location.pathname === '/dashboard/messages';
+  const isFullScreenMobile = isMobile && isMessengerPage;
   
   // Check if developer is testing a role
   const isDeveloper = profile?.role === 'developer';
@@ -46,8 +47,8 @@ function DashboardLayout({ children }: DashboardLayoutProps) {
   // Check if kiosk mode (attendance devices)
   const isKioskMode = profile?.role === 'school_attendance' || profile?.role === 'bus_attendance';
   
-  // If kiosk mode, render without layout wrapper
-  if (isKioskMode) {
+  // If kiosk mode or full-screen mobile messenger, render without layout wrapper
+  if (isKioskMode || isFullScreenMobile) {
     return <div className="min-h-screen bg-background">{children}</div>;
   }
   
