@@ -164,34 +164,21 @@ export default function NfcReader({ showFullProfile = true, driverMode = false }
       <Button 
         onClick={handleNfcRead} 
         variant="outline"
-        disabled={isButtonDisabled}
+        disabled={isButtonDisabled || isReading}
       >
-        {checkingNfc ? (
+        {isReading ? (
+          <span className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-current border-t-transparent" />
+        ) : checkingNfc ? (
           <span className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-current border-t-transparent" />
         ) : showNfcIcon ? (
           <Nfc className="h-4 w-4 mr-2" />
         ) : (
           <AlertCircle className="h-4 w-4 mr-2" />
         )}
-        {language === 'en' ? 'Read NFC' : 'قراءة NFC'}
+        {language === 'en'
+          ? (isReading ? 'Scanning...' : 'Read NFC')
+          : (isReading ? 'جاري المسح...' : 'قراءة NFC')}
       </Button>
-
-      {/* NFC Reading Dialog */}
-      <Dialog open={isReading} onOpenChange={setIsReading}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              {language === 'en' ? 'Reading NFC Card...' : 'قراءة بطاقة NFC...'}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="flex flex-col items-center justify-center py-8">
-            <Nfc className="h-16 w-16 text-primary animate-pulse" />
-            <p className="mt-4 text-muted-foreground">
-              {language === 'en' ? 'Please tap the NFC card' : 'يرجى تقريب بطاقة NFC'}
-            </p>
-          </div>
-        </DialogContent>
-      </Dialog>
 
       {/* Student Info Dialog */}
       {studentInfo && (

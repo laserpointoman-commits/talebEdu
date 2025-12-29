@@ -166,28 +166,71 @@ export default function Students() {
   };
 
   const handleNfcScan = async () => {
-    setIsNfcDialogOpen(true);
     try {
       const tagData = await nfcService.readTag();
-      if (tagData && tagData.id) {
-        // Find student with matching NFC ID
-        const foundStudent = mappedStudents.find(s => s.nfcId === tagData.id);
-        if (foundStudent) {
-          setSelectedStudent(foundStudent);
-          setIsNfcDialogOpen(false);
-          setIsProfileDialogOpen(true);
-          toast({
-            title: language === 'ar' ? 'تم المسح بنجاح' : 'NFC Scan Successful',
-            description: language === 'ar' ? `تم العثور على: ${foundStudent.nameAr}` : `Found student: ${foundStudent.name}`,
-          });
-        } else {
-          toast({
-            title: language === 'ar' ? 'لم يتم العثور' : 'Not Found',
-            description: language === 'ar' ? 'لم يتم العثور على طالب بهذا المعرف' : 'No student found with this NFC ID',
-            variant: 'destructive',
-          });
-          setIsNfcDialogOpen(false);
+      const nfcId = tagData?.id?.trim();
+
+      if (!nfcId) {
+        toast({
+          title: language === 'ar' ? 'خطأ' : 'Error',
+          description: language === 'ar' ? 'لم يتم قراءة بطاقة NFC' : 'Could not read NFC tag',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Prefer current in-memory list first (fast)
+      let foundStudent = mappedStudents.find((s) => s.nfcId === nfcId);
+
+      // Fallback to database lookup (ensures it works even if list is filtered)
+      if (!foundStudent) {
+        const { data: dbStudent, error } = await supabase
+          .from('students')
+          .select('*')
+          .eq('nfc_id', nfcId)
+          .maybeSingle();
+
+        if (error) throw error;
+
+        if (dbStudent) {
+          foundStudent = {
+            id: dbStudent.id,
+            name: `${dbStudent.first_name ?? ''} ${dbStudent.last_name ?? ''}`.trim(),
+            nameAr: `${dbStudent.first_name_ar ?? dbStudent.first_name ?? ''} ${dbStudent.last_name_ar ?? dbStudent.last_name ?? ''}`.trim(),
+            email: dbStudent.email,
+            class: dbStudent.class ?? '',
+            grade: dbStudent.grade ?? '',
+            nfcId: dbStudent.nfc_id ?? nfcId,
+            barcode: dbStudent.barcode ?? '',
+            phone: dbStudent.phone ?? '',
+            parentPhone: dbStudent.parent_phone ?? '',
+            address: dbStudent.address ?? '',
+            profileImage: dbStudent.profile_image ?? '',
+            dateOfBirth: dbStudent.date_of_birth ?? '',
+            bloodGroup: dbStudent.blood_group ?? '',
+            allergies: dbStudent.allergies ?? '',
+            emergencyContact: dbStudent.emergency_contact ?? '',
+            emergencyContactName: dbStudent.emergency_contact_name ?? '',
+            nationality: dbStudent.nationality ?? '',
+            gender: dbStudent.gender ?? '',
+            medicalConditions: dbStudent.medical_conditions ?? '',
+          };
         }
+      }
+
+      if (foundStudent) {
+        setSelectedStudent(foundStudent);
+        setIsProfileDialogOpen(true);
+        toast({
+          title: language === 'ar' ? 'تم المسح بنجاح' : 'NFC Scan Successful',
+          description: language === 'ar' ? `تم العثور على: ${foundStudent.nameAr}` : `Found student: ${foundStudent.name}`,
+        });
+      } else {
+        toast({
+          title: language === 'ar' ? 'لم يتم العثور' : 'Not Found',
+          description: language === 'ar' ? 'لم يتم العثور على طالب بهذا المعرف' : 'No student found with this NFC ID',
+          variant: 'destructive',
+        });
       }
     } catch (error: any) {
       toast({
@@ -195,7 +238,6 @@ export default function Students() {
         description: error.message,
         variant: 'destructive',
       });
-      setIsNfcDialogOpen(false);
     }
   };
 
