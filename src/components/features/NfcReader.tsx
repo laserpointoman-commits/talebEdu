@@ -37,19 +37,31 @@ export default function NfcReader({ showFullProfile = true, driverMode = false }
   const { language } = useLanguage();
   const [isReading, setIsReading] = useState(false);
   const [studentInfo, setStudentInfo] = useState<StudentInfo | null>(null);
-  const [nfcSupported, setNfcSupported] = useState(true);
+  const [nfcSupported, setNfcSupported] = useState<boolean | null>(null); // null = checking
+  const [checkingNfc, setCheckingNfc] = useState(true);
 
   useEffect(() => {
     checkNfcSupport();
   }, []);
 
   const checkNfcSupport = async () => {
-    const supported = await nfcService.isSupportedAsync();
-    setNfcSupported(supported);
+    setCheckingNfc(true);
+    try {
+      const supported = await nfcService.isSupportedAsync();
+      console.log('NfcReader: NFC supported =', supported);
+      setNfcSupported(supported);
+    } catch (error) {
+      console.error('Error checking NFC support:', error);
+      setNfcSupported(false);
+    } finally {
+      setCheckingNfc(false);
+    }
   };
 
   const handleNfcRead = async () => {
-    if (!nfcSupported) {
+    // Re-check support before reading
+    const supported = await nfcService.isSupportedAsync();
+    if (!supported) {
       toast({
         title: language === 'en' ? 'NFC Not Supported' : 'NFC غير مدعوم',
         description: language === 'en' 
@@ -70,9 +82,17 @@ export default function NfcReader({ showFullProfile = true, driverMode = false }
       }
 
       const nfcData = await nfcService.readTag();
+      console.log('NFC data received:', nfcData);
       
-      if (nfcData && nfcData.type === 'student') {
-        // Fetch student details from database
+      if (nfcData) {
+        // Get the NFC ID - could be in id field or the data could be the student type
+        const nfcId = nfcData.id;
+        
+        if (!nfcId) {
+          throw new Error('No NFC ID in tag data');
+        }
+
+        // Fetch student details from database using the NFC ID
         const { data: student, error } = await supabase
           .from('students')
           .select(`
@@ -80,7 +100,7 @@ export default function NfcReader({ showFullProfile = true, driverMode = false }
             profiles!students_profile_id_fkey(full_name, phone),
             parent:profiles!students_parent_id_fkey(full_name, phone)
           `)
-          .eq('nfc_id', nfcData.id)
+          .eq('nfc_id', nfcId)
           .single();
 
         if (error) throw error;
@@ -135,14 +155,20 @@ export default function NfcReader({ showFullProfile = true, driverMode = false }
     window.open(url, '_blank');
   };
 
+  // Determine button state
+  const isButtonDisabled = checkingNfc || nfcSupported === false;
+  const showNfcIcon = !checkingNfc && nfcSupported !== false;
+
   return (
     <>
       <Button 
         onClick={handleNfcRead} 
         variant="outline"
-        disabled={!nfcSupported}
+        disabled={isButtonDisabled}
       >
-        {nfcSupported ? (
+        {checkingNfc ? (
+          <span className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-current border-t-transparent" />
+        ) : showNfcIcon ? (
           <Nfc className="h-4 w-4 mr-2" />
         ) : (
           <AlertCircle className="h-4 w-4 mr-2" />

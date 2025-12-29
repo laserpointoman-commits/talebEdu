@@ -31,36 +31,52 @@ try {
 }
 
 class NFCService {
-  private supported: boolean = false;
+  private supported: boolean | null = null; // null = not yet checked
   private scanning: boolean = false;
   private initialized: boolean = false;
+  private initPromise: Promise<void> | null = null;
   private scanCallback: ((data: NFCData) => void) | null = null;
   private listenerHandle: { remove: () => void } | null = null;
 
   constructor() {
-    this.initializeNFC();
+    this.initPromise = this.initializeNFC();
   }
 
   private async initializeNFC(): Promise<void> {
     try {
+      console.log('NFC: Initializing...', {
+        isNative: Capacitor.isNativePlatform(),
+        platform: Capacitor.getPlatform(),
+        hasPlugin: !!NfcPlugin
+      });
+
       if (!Capacitor.isNativePlatform()) {
         // Web fallback - check for Web NFC API
         this.supported = 'NDEFReader' in window;
-        this.initialized = true;
         console.log('NFC Web API supported:', this.supported);
         return;
       }
 
+      // On native platform, try to use the plugin
       if (NfcPlugin) {
-        const result = await NfcPlugin.isSupported();
-        this.supported = result.supported;
-        console.log('Native NFC supported:', this.supported);
+        try {
+          const result = await NfcPlugin.isSupported();
+          this.supported = result.supported;
+          console.log('Native NFC plugin isSupported result:', this.supported);
+        } catch (pluginError) {
+          console.warn('NFC plugin isSupported call failed:', pluginError);
+          // Fallback: On iOS iPhone 7+, NFC is generally available
+          const isIOS = Capacitor.getPlatform() === 'ios';
+          const isAndroid = Capacitor.getPlatform() === 'android';
+          this.supported = isIOS || isAndroid;
+          console.log('NFC assumed supported (fallback):', this.supported);
+        }
       } else {
-        // Fallback: On iOS, NFC is generally available on iPhone 7+
+        // No plugin registered, assume available on native
         const isIOS = Capacitor.getPlatform() === 'ios';
         const isAndroid = Capacitor.getPlatform() === 'android';
         this.supported = isIOS || isAndroid;
-        console.log('NFC assumed supported on native platform:', this.supported);
+        console.log('NFC assumed supported (no plugin):', this.supported);
       }
     } catch (error) {
       console.error('Error initializing NFC:', error);
@@ -72,34 +88,42 @@ class NFCService {
   }
 
   async isSupportedAsync(): Promise<boolean> {
-    // Wait for initialization if needed
-    if (!this.initialized) {
-      await new Promise<void>((resolve) => {
-        const checkInit = () => {
-          if (this.initialized) {
-            resolve();
-          } else {
-            setTimeout(checkInit, 50);
-          }
-        };
-        checkInit();
-      });
+    // Wait for initialization
+    if (this.initPromise) {
+      await this.initPromise;
     }
+    
+    // If still null, do a fresh check
+    if (this.supported === null) {
+      if (Capacitor.isNativePlatform()) {
+        // Default to true on native - let the actual NFC call fail if not supported
+        this.supported = true;
+      } else {
+        this.supported = 'NDEFReader' in window;
+      }
+    }
+    
     return this.supported;
   }
 
   isSupported(): boolean {
+    // For sync check, if not initialized yet, assume true on native
+    if (this.supported === null) {
+      return Capacitor.isNativePlatform() || 'NDEFReader' in window;
+    }
     return this.supported;
   }
 
   async requestPermission(): Promise<boolean> {
     // iOS handles NFC permission implicitly when you start scanning
     // Android requires NFC permission in manifest
-    return this.supported;
+    const isSupported = await this.isSupportedAsync();
+    return isSupported;
   }
 
   async writeTag(data: NFCData): Promise<boolean> {
-    if (!this.supported) {
+    const isSupported = await this.isSupportedAsync();
+    if (!isSupported) {
       toast.error("NFC is not supported on this device");
       return false;
     }
@@ -141,7 +165,8 @@ class NFCService {
   }
 
   async eraseTag(): Promise<boolean> {
-    if (!this.supported) {
+    const isSupported = await this.isSupportedAsync();
+    if (!isSupported) {
       toast.error("NFC is not supported on this device");
       return false;
     }
@@ -185,7 +210,9 @@ class NFCService {
   }
 
   async readTag(): Promise<NFCData | null> {
-    if (!this.supported) {
+    // Ensure we check support properly
+    const isSupported = await this.isSupportedAsync();
+    if (!isSupported) {
       toast.error("NFC is not supported on this device");
       return null;
     }
@@ -211,7 +238,11 @@ class NFCService {
   }
 
   async startScanning(onTagRead: (data: NFCData) => void): Promise<void> {
-    if (!this.supported) {
+    // Ensure we check support properly
+    const isSupported = await this.isSupportedAsync();
+    console.log('NFC startScanning - isSupported:', isSupported);
+    
+    if (!isSupported) {
       toast.error("NFC is not supported on this device");
       return;
     }
@@ -255,31 +286,53 @@ class NFCService {
         return;
       }
 
+      console.log('NFC: Starting native scanning, NfcPlugin available:', !!NfcPlugin);
+
       if (NfcPlugin) {
-        // Set up listener for tag reads
+        // Set up listener for tag reads BEFORE starting scanning
+        console.log('NFC: Setting up nfcTagRead listener...');
         this.listenerHandle = await NfcPlugin.addListener('nfcTagRead', (event: unknown) => {
+          console.log('NFC: Tag read event received:', event);
           try {
             const eventData = event as { message?: string };
             if (eventData.message) {
-              const data = JSON.parse(eventData.message) as NFCData;
-              if (this.scanCallback) {
-                this.scanCallback(data);
-                toast.success("NFC tag scanned successfully");
+              // Try to parse as JSON first
+              try {
+                const data = JSON.parse(eventData.message) as NFCData;
+                if (this.scanCallback) {
+                  this.scanCallback(data);
+                  toast.success("NFC tag scanned successfully");
+                }
+              } catch {
+                // If not JSON, treat as raw NFC ID (the nfc_id stored in the tag)
+                console.log('NFC: Raw message (not JSON):', eventData.message);
+                // Try to construct NFCData from raw string
+                const rawData: NFCData = {
+                  id: eventData.message,
+                  type: 'student',
+                  name: ''
+                };
+                if (this.scanCallback) {
+                  this.scanCallback(rawData);
+                  toast.success("NFC tag scanned successfully");
+                }
               }
             }
           } catch (e) {
-            console.error('Error parsing NFC data:', e);
-            toast.error("Invalid NFC tag format");
+            console.error('Error handling NFC event:', e);
+            toast.error("Error processing NFC tag");
           }
         });
 
+        console.log('NFC: Calling startScanning on plugin...');
         await NfcPlugin.startScanning();
-        console.log("NFC scanning started");
+        console.log("NFC: Scanning started successfully");
         return;
       }
 
-      // Native platform without plugin
-      toast.error("NFC scanning requires native plugin setup");
+      // Native platform without plugin - this shouldn't happen
+      console.error('NFC: Native platform but no plugin available');
+      toast.error("NFC plugin not available");
       this.scanning = false;
     } catch (error) {
       this.scanning = false;
