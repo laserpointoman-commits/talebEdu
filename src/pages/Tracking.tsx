@@ -30,23 +30,13 @@ import {
   Wifi,
   WifiOff,
   BatteryLow,
-  Signal
+  Signal,
+  Loader2
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import NfcReader from '@/components/features/NfcReader';
-
-interface Student {
-  id: string;
-  name: string;
-  nameAr: string;
-  location: string;
-  locationAr: string;
-  pickupTime: string;
-  status: 'waiting' | 'picked' | 'absent' | 'dropped';
-  parentPhone: string;
-  address: string;
-  addressAr: string;
-}
+import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from '@tanstack/react-query';
 
 interface RouteInfo {
   id: string;
@@ -59,75 +49,129 @@ interface RouteInfo {
   status: 'not-started' | 'in-progress' | 'completed' | 'paused';
 }
 
+interface StudentOnRoute {
+  id: string;
+  name: string;
+  nameAr: string;
+  location: string;
+  locationAr: string;
+  pickupTime: string;
+  status: 'waiting' | 'picked' | 'absent' | 'dropped';
+  parentPhone: string;
+  address: string;
+  addressAr: string;
+}
+
 export default function Tracking() {
   const { language } = useLanguage();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [isTracking, setIsTracking] = useState(false);
   const [currentRoute, setCurrentRoute] = useState<RouteInfo>({
-    id: '1',
-    name: 'Route A - Morning',
-    nameAr: 'المسار أ - الصباح',
+    id: '',
+    name: 'No Route Assigned',
+    nameAr: 'لا يوجد مسار',
     type: 'morning',
-    totalStops: 12,
+    totalStops: 0,
     completedStops: 0,
-    estimatedTime: 45,
+    estimatedTime: 0,
     status: 'not-started'
   });
 
-  const [students, setStudents] = useState<Student[]>([
-    {
-      id: '1',
-      name: 'Sara Ahmed',
-      nameAr: 'سارة أحمد',
-      location: 'Al Khuwair 33',
-      locationAr: 'الخوير ٣٣',
-      pickupTime: '7:15 AM',
-      status: 'waiting',
-      parentPhone: '+968 9123 4567',
-      address: '123 Street, Al Khuwair',
-      addressAr: '١٢٣ شارع، الخوير'
-    },
-    {
-      id: '2',
-      name: 'Mohammed Ali',
-      nameAr: 'محمد علي',
-      location: 'Al Ghubra',
-      locationAr: 'الغبرة',
-      pickupTime: '7:20 AM',
-      status: 'waiting',
-      parentPhone: '+968 9234 5678',
-      address: '456 Avenue, Al Ghubra',
-      addressAr: '٤٥٦ شارع، الغبرة'
-    },
-    {
-      id: '3',
-      name: 'Fatima Hassan',
-      nameAr: 'فاطمة حسن',
-      location: 'Al Azaiba',
-      locationAr: 'العذيبة',
-      pickupTime: '7:25 AM',
-      status: 'waiting',
-      parentPhone: '+968 9345 6789',
-      address: '789 Road, Al Azaiba',
-      addressAr: '٧٨٩ طريق، العذيبة'
-    },
-    {
-      id: '4',
-      name: 'Omar Khalid',
-      nameAr: 'عمر خالد',
-      location: 'Al Seeb',
-      locationAr: 'السيب',
-      pickupTime: '7:30 AM',
-      status: 'waiting',
-      parentPhone: '+968 9456 7890',
-      address: '321 Street, Al Seeb',
-      addressAr: '٣٢١ شارع، السيب'
-    }
-  ]);
-
+  const [studentsOnRoute, setStudentsOnRoute] = useState<StudentOnRoute[]>([]);
   const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
   const [reportMessage, setReportMessage] = useState('');
-  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+  const [selectedStudent, setSelectedStudent] = useState<StudentOnRoute | null>(null);
+
+  // Fetch bus routes from database
+  const { data: busRoutes = [], isLoading: routesLoading } = useQuery({
+    queryKey: ['bus-routes'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('bus_routes')
+        .select(`
+          *,
+          bus:buses(id, bus_number, driver_id)
+        `)
+        .eq('is_active', true);
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  // Fetch students for the route
+  const { data: students = [], isLoading: studentsLoading } = useQuery({
+    queryKey: ['students-for-tracking'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('students')
+        .select(`
+          id,
+          first_name,
+          last_name,
+          first_name_ar,
+          last_name_ar,
+          class,
+          parent:profiles!students_parent_id_fkey(phone)
+        `)
+        .eq('status', 'active')
+        .limit(20);
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  // Fetch bus location
+  const { data: busLocation } = useQuery({
+    queryKey: ['bus-location'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('bus_locations')
+        .select('*')
+        .order('last_updated', { ascending: false })
+        .limit(1)
+        .single();
+      if (error && error.code !== 'PGRST116') throw error;
+      return data;
+    },
+    refetchInterval: 10000 // Refresh every 10 seconds
+  });
+
+  // Set up route based on fetched data
+  useEffect(() => {
+    if (busRoutes.length > 0) {
+      const route = busRoutes[0];
+      const stopsArray = Array.isArray(route.stops) ? route.stops : [];
+      setCurrentRoute({
+        id: route.id,
+        name: route.route_name,
+        nameAr: route.route_name_ar || route.route_name,
+        type: 'morning',
+        totalStops: stopsArray.length,
+        completedStops: 0,
+        estimatedTime: 45,
+        status: 'not-started'
+      });
+    }
+  }, [busRoutes]);
+
+  // Map students to route format
+  useEffect(() => {
+    if (students.length > 0) {
+      const mappedStudents: StudentOnRoute[] = students.map((s, index) => ({
+        id: s.id,
+        name: `${s.first_name} ${s.last_name}`,
+        nameAr: `${s.first_name_ar || s.first_name} ${s.last_name_ar || s.last_name}`,
+        location: s.class || 'Unknown',
+        locationAr: s.class || 'غير معروف',
+        pickupTime: `7:${15 + index * 5} AM`,
+        status: 'waiting' as const,
+        parentPhone: s.parent?.phone || '+968 9000 0000',
+        address: s.class || 'Unknown',
+        addressAr: s.class || 'غير معروف'
+      }));
+      setStudentsOnRoute(mappedStudents);
+    }
+  }, [students]);
 
   const handleStartRoute = () => {
     setIsTracking(true);
@@ -162,14 +206,27 @@ export default function Tracking() {
     });
   };
 
-  const handleStudentPickup = (studentId: string) => {
-    setStudents(students.map(s => 
+  const handleStudentPickup = async (studentId: string) => {
+    setStudentsOnRoute(studentsOnRoute.map(s => 
       s.id === studentId ? { ...s, status: 'picked' as const } : s
     ));
     setCurrentRoute({ 
       ...currentRoute, 
       completedStops: currentRoute.completedStops + 1 
     });
+
+    // Record in database
+    try {
+      await supabase.from('bus_boarding_logs').insert({
+        student_id: studentId,
+        action: 'picked',
+        timestamp: new Date().toISOString(),
+        location: 'Pickup Point'
+      });
+    } catch (error) {
+      console.error('Failed to log pickup:', error);
+    }
+
     toast({
       title: language === 'en' ? 'Student Picked Up' : 'تم استلام الطالب',
       description: language === 'en' 
@@ -179,7 +236,7 @@ export default function Tracking() {
   };
 
   const handleStudentAbsent = (studentId: string) => {
-    setStudents(students.map(s => 
+    setStudentsOnRoute(studentsOnRoute.map(s => 
       s.id === studentId ? { ...s, status: 'absent' as const } : s
     ));
     setCurrentRoute({ 
@@ -246,6 +303,14 @@ export default function Tracking() {
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 
+  if (routesLoading || studentsLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
   // Show parent tracking view
   if (user?.role === 'parent') {
     return (
@@ -285,6 +350,11 @@ export default function Tracking() {
                     ? 'Live map tracking will be displayed here'
                     : 'سيتم عرض التتبع المباشر للخريطة هنا'}
                 </p>
+                {busLocation && (
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Last update: {new Date(busLocation.last_updated || '').toLocaleTimeString()}
+                  </p>
+                )}
               </div>
             </div>
           </CardContent>
@@ -300,7 +370,7 @@ export default function Tracking() {
                     {language === 'en' ? 'Current Location' : 'الموقع الحالي'}
                   </p>
                   <p className="text-lg font-semibold">
-                    {language === 'en' ? 'Al Khuwair' : 'الخوير'}
+                    {busLocation?.current_stop || (language === 'en' ? 'En Route' : 'في الطريق')}
                   </p>
                 </div>
                 <MapPin className="h-8 w-8 text-primary" />
@@ -316,7 +386,9 @@ export default function Tracking() {
                     {language === 'en' ? 'ETA to School' : 'الوقت المتوقع للوصول'}
                   </p>
                   <p className="text-lg font-semibold">
-                    {language === 'en' ? '15 minutes' : '١٥ دقيقة'}
+                    {busLocation?.eta_minutes 
+                      ? `${busLocation.eta_minutes} ${language === 'en' ? 'minutes' : 'دقيقة'}`
+                      : (language === 'en' ? 'Calculating...' : 'جاري الحساب...')}
                   </p>
                 </div>
                 <Clock className="h-8 w-8 text-accent" />
@@ -329,15 +401,13 @@ export default function Tracking() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">
-                    {language === 'en' ? 'Driver' : 'السائق'}
+                    {language === 'en' ? 'Bus Number' : 'رقم الحافلة'}
                   </p>
                   <p className="text-lg font-semibold">
-                    {language === 'en' ? 'Ali Mohammed' : 'علي محمد'}
+                    {busRoutes[0]?.bus?.bus_number || (language === 'en' ? 'Not Assigned' : 'غير محدد')}
                   </p>
                 </div>
-                <Button size="sm" variant="outline">
-                  <Phone className="h-4 w-4" />
-                </Button>
+                <Bus className="h-8 w-8 text-primary" />
               </div>
             </CardContent>
           </Card>
@@ -398,12 +468,12 @@ export default function Tracking() {
                   {language === 'en' ? 'Progress' : 'التقدم'}
                 </p>
                 <p className="text-2xl font-bold">
-                  {currentRoute.completedStops}/{currentRoute.totalStops}
+                  {currentRoute.completedStops}/{currentRoute.totalStops || studentsOnRoute.length}
                 </p>
               </div>
               <div className="w-16">
                 <Progress 
-                  value={(currentRoute.completedStops / currentRoute.totalStops) * 100} 
+                  value={currentRoute.totalStops > 0 ? (currentRoute.completedStops / currentRoute.totalStops) * 100 : 0} 
                   className="h-2"
                 />
               </div>
@@ -435,7 +505,7 @@ export default function Tracking() {
                   {language === 'en' ? 'Students' : 'الطلاب'}
                 </p>
                 <p className="text-2xl font-bold">
-                  {students.filter(s => s.status === 'picked').length}/{students.length}
+                  {studentsOnRoute.filter(s => s.status === 'picked').length}/{studentsOnRoute.length}
                 </p>
               </div>
               <Users className="h-8 w-8 text-accent" />
@@ -501,105 +571,77 @@ export default function Tracking() {
         {/* Student List */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <span className="flex items-center gap-2">
-                <Users className="h-5 w-5" />
-                {language === 'en' ? 'Student List' : 'قائمة الطلاب'}
-              </span>
-              <Button 
-                size="sm" 
-                variant="outline"
-                onClick={() => setIsReportDialogOpen(true)}
-              >
-                <MessageSquare className="h-4 w-4 mr-2" />
-                {language === 'en' ? 'Report' : 'تقرير'}
-              </Button>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              {language === 'en' ? 'Students on Route' : 'الطلاب في المسار'}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <ScrollArea className="h-96">
-              <div className="space-y-3">
-                {students.map((student) => (
-                  <div 
-                    key={student.id} 
-                    className="p-3 rounded-lg bg-muted/50 space-y-2"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        {getStatusIcon(student.status)}
-                        <div>
-                          <p className="font-medium">
-                            {language === 'en' ? student.name : student.nameAr}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {language === 'en' ? student.location : student.locationAr} • {student.pickupTime}
-                          </p>
+              {studentsOnRoute.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>{language === 'en' ? 'No students assigned to this route' : 'لا يوجد طلاب في هذا المسار'}</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {studentsOnRoute.map((student) => (
+                    <div
+                      key={student.id}
+                      className="p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-start gap-3">
+                          {getStatusIcon(student.status)}
+                          <div>
+                            <h4 className="font-medium">
+                              {language === 'en' ? student.name : student.nameAr}
+                            </h4>
+                            <p className="text-sm text-muted-foreground">
+                              {language === 'en' ? student.location : student.locationAr}
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {language === 'en' ? 'Pickup:' : 'الاستلام:'} {student.pickupTime}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-end gap-2">
+                          {getStatusBadge(student.status)}
+                          {student.status === 'waiting' && (
+                            <div className="flex gap-1">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleCallParent(student.parentPhone)}
+                              >
+                                <Phone className="h-3 w-3" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="default"
+                                onClick={() => handleStudentPickup(student.id)}
+                              >
+                                <CheckCircle className="h-3 w-3" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => handleStudentAbsent(student.id)}
+                              >
+                                <AlertCircle className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          )}
                         </div>
                       </div>
-                      {getStatusBadge(student.status)}
                     </div>
-                    
-                    {student.status === 'waiting' && (
-                      <div className="flex gap-2 ml-8">
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={() => handleStudentPickup(student.id)}
-                        >
-                          <CheckCircle className="h-3 w-3 mr-1" />
-                          {language === 'en' ? 'Pick Up' : 'استلام'}
-                        </Button>
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={() => handleStudentAbsent(student.id)}
-                        >
-                          <AlertCircle className="h-3 w-3 mr-1" />
-                          {language === 'en' ? 'Absent' : 'غائب'}
-                        </Button>
-                        <Button 
-                          size="sm" 
-                          variant="ghost"
-                          onClick={() => handleCallParent(student.parentPhone)}
-                        >
-                          <Phone className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </ScrollArea>
           </CardContent>
         </Card>
       </div>
-
-      {/* Quick Actions */}
-      <Card>
-        <CardHeader>
-          <CardTitle>{language === 'en' ? 'Quick Actions' : 'الإجراءات السريعة'}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-4">
-            <Button variant="outline" className="w-full">
-              <BatteryLow className="h-4 w-4 mr-2" />
-              {language === 'en' ? 'Low Fuel Alert' : 'تنبيه انخفاض الوقود'}
-            </Button>
-            <Button variant="outline" className="w-full">
-              <AlertCircle className="h-4 w-4 mr-2" />
-              {language === 'en' ? 'Traffic Delay' : 'تأخير المرور'}
-            </Button>
-            <Button variant="outline" className="w-full">
-              <School className="h-4 w-4 mr-2" />
-              {language === 'en' ? 'Arrived at School' : 'وصل إلى المدرسة'}
-            </Button>
-            <Button variant="outline" className="w-full">
-              <Phone className="h-4 w-4 mr-2" />
-              {language === 'en' ? 'Emergency Contact' : 'اتصال طوارئ'}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Report Dialog */}
       <Dialog open={isReportDialogOpen} onOpenChange={setIsReportDialogOpen}>
@@ -611,41 +653,17 @@ export default function Tracking() {
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label>{language === 'en' ? 'Report Type' : 'نوع التقرير'}</Label>
-              <select className="w-full p-2 border rounded-lg">
-                <option value="delay">
-                  {language === 'en' ? 'Route Delay' : 'تأخير المسار'}
-                </option>
-                <option value="incident">
-                  {language === 'en' ? 'Incident Report' : 'تقرير حادث'}
-                </option>
-                <option value="mechanical">
-                  {language === 'en' ? 'Mechanical Issue' : 'مشكلة ميكانيكية'}
-                </option>
-                <option value="other">
-                  {language === 'en' ? 'Other' : 'أخرى'}
-                </option>
-              </select>
-            </div>
-            <div>
               <Label>{language === 'en' ? 'Message' : 'الرسالة'}</Label>
               <Textarea
                 value={reportMessage}
                 onChange={(e) => setReportMessage(e.target.value)}
-                placeholder={language === 'en' 
-                  ? 'Describe the issue...'
-                  : 'صف المشكلة...'}
+                placeholder={language === 'en' ? 'Describe the issue...' : 'صف المشكلة...'}
                 rows={4}
               />
             </div>
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setIsReportDialogOpen(false)}>
-                {language === 'en' ? 'Cancel' : 'إلغاء'}
-              </Button>
-              <Button onClick={handleSendReport}>
-                {language === 'en' ? 'Send Report' : 'إرسال التقرير'}
-              </Button>
-            </div>
+            <Button onClick={handleSendReport} className="w-full">
+              {language === 'en' ? 'Send Report' : 'إرسال التقرير'}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

@@ -23,11 +23,14 @@ import {
   CheckCircle,
   PieChart,
   BarChart3,
-  Activity
+  Activity,
+  Loader2
 } from 'lucide-react';
 import { format, subDays, startOfMonth, endOfMonth } from 'date-fns';
+import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from '@tanstack/react-query';
 
-interface Report {
+interface ReportData {
   id: string;
   title: string;
   titleAr: string;
@@ -46,7 +49,67 @@ export default function Reports() {
   const [selectedType, setSelectedType] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
 
-  const reports: Report[] = [
+  // Fetch attendance stats
+  const { data: attendanceStats } = useQuery({
+    queryKey: ['attendance-stats'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('attendance_records')
+        .select('status, date')
+        .gte('date', startOfMonth(new Date()).toISOString().split('T')[0]);
+      if (error) throw error;
+      
+      const total = data.length;
+      const present = data.filter(r => r.status === 'present').length;
+      const absent = data.filter(r => r.status === 'absent').length;
+      return { total, present, absent, rate: total > 0 ? Math.round((present / total) * 100) : 0 };
+    }
+  });
+
+  // Fetch financial stats
+  const { data: financialStats } = useQuery({
+    queryKey: ['financial-stats'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('financial_transactions')
+        .select('amount, type')
+        .gte('transaction_date', startOfMonth(new Date()).toISOString().split('T')[0]);
+      if (error) throw error;
+      
+      const income = data.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
+      const expense = data.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+      return { income, expense, total: data.length };
+    }
+  });
+
+  // Fetch student count
+  const { data: studentCount = 0 } = useQuery({
+    queryKey: ['student-count'],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from('students')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'active');
+      if (error) throw error;
+      return count || 0;
+    }
+  });
+
+  // Fetch bus count
+  const { data: busCount = 0 } = useQuery({
+    queryKey: ['bus-count'],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from('buses')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'active');
+      if (error) throw error;
+      return count || 0;
+    }
+  });
+
+  // Generate dynamic reports based on actual data
+  const reports: ReportData[] = [
     {
       id: '1',
       title: 'Monthly Attendance Report',
@@ -55,30 +118,30 @@ export default function Reports() {
       date: new Date(),
       status: 'completed',
       generatedBy: profile?.full_name || 'System',
-      description: 'Comprehensive attendance analysis for all students',
-      descriptionAr: 'تحليل شامل للحضور لجميع الطلاب'
+      description: `Attendance rate: ${attendanceStats?.rate || 0}% - ${attendanceStats?.present || 0} present out of ${attendanceStats?.total || 0} records`,
+      descriptionAr: `معدل الحضور: ${attendanceStats?.rate || 0}% - ${attendanceStats?.present || 0} حاضر من ${attendanceStats?.total || 0} سجل`
     },
     {
       id: '2',
-      title: 'Bus Route Efficiency Report',
-      titleAr: 'تقرير كفاءة مسارات الحافلات',
+      title: 'Transport Overview',
+      titleAr: 'نظرة عامة على النقل',
       type: 'transport',
       date: subDays(new Date(), 2),
       status: 'completed',
-      generatedBy: 'Ali Mohammed',
-      description: 'Analysis of bus routes and timing optimization',
-      descriptionAr: 'تحليل مسارات الحافلات وتحسين التوقيت'
+      generatedBy: 'System',
+      description: `${busCount} active buses serving students`,
+      descriptionAr: `${busCount} حافلة نشطة تخدم الطلاب`
     },
     {
       id: '3',
-      title: 'Student Performance Overview',
-      titleAr: 'نظرة عامة على أداء الطلاب',
+      title: 'Student Enrollment Report',
+      titleAr: 'تقرير تسجيل الطلاب',
       type: 'performance',
       date: subDays(new Date(), 5),
-      status: 'processing',
+      status: 'completed',
       generatedBy: 'Academic Department',
-      description: 'Quarterly academic performance metrics',
-      descriptionAr: 'مقاييس الأداء الأكاديمي الربع سنوية'
+      description: `${studentCount} active students enrolled`,
+      descriptionAr: `${studentCount} طالب نشط مسجل`
     },
     {
       id: '4',
@@ -88,50 +151,39 @@ export default function Reports() {
       date: subDays(new Date(), 7),
       status: 'completed',
       generatedBy: 'Finance Department',
-      description: 'Monthly financial transactions and fee collection',
-      descriptionAr: 'المعاملات المالية الشهرية وتحصيل الرسوم'
-    },
-    {
-      id: '5',
-      title: 'Safety Incident Report',
-      titleAr: 'تقرير حوادث السلامة',
-      type: 'incident',
-      date: subDays(new Date(), 10),
-      status: 'completed',
-      generatedBy: 'Safety Officer',
-      description: 'Documentation of safety incidents and resolutions',
-      descriptionAr: 'توثيق حوادث السلامة والحلول'
+      description: `Income: ${financialStats?.income || 0} OMR | Expenses: ${financialStats?.expense || 0} OMR`,
+      descriptionAr: `الدخل: ${financialStats?.income || 0} ر.ع | المصروفات: ${financialStats?.expense || 0} ر.ع`
     }
   ];
 
   const stats = [
     {
-      title: language === 'en' ? 'Total Reports' : 'إجمالي التقارير',
-      value: '156',
-      change: '+12%',
-      icon: FileText,
+      title: language === 'en' ? 'Total Students' : 'إجمالي الطلاب',
+      value: studentCount.toString(),
+      change: '+5%',
+      icon: Users,
       color: 'text-primary'
     },
     {
-      title: language === 'en' ? 'This Month' : 'هذا الشهر',
-      value: '24',
-      change: '+8%',
-      icon: Calendar,
+      title: language === 'en' ? 'Attendance Rate' : 'معدل الحضور',
+      value: `${attendanceStats?.rate || 0}%`,
+      change: '+2%',
+      icon: CheckCircle,
+      color: 'text-success'
+    },
+    {
+      title: language === 'en' ? 'Active Buses' : 'الحافلات النشطة',
+      value: busCount.toString(),
+      change: '0',
+      icon: Bus,
       color: 'text-accent'
     },
     {
-      title: language === 'en' ? 'Pending' : 'قيد الانتظار',
-      value: '3',
-      change: '-2',
-      icon: Clock,
+      title: language === 'en' ? 'This Month Revenue' : 'إيرادات هذا الشهر',
+      value: `${financialStats?.income || 0}`,
+      change: '+8%',
+      icon: DollarSign,
       color: 'text-warning'
-    },
-    {
-      title: language === 'en' ? 'Completed' : 'مكتمل',
-      value: '21',
-      change: '+10',
-      icon: CheckCircle,
-      color: 'text-success'
     }
   ];
 
@@ -212,7 +264,7 @@ export default function Reports() {
                   <p className="text-sm text-muted-foreground">
                     {language === 'en' ? 'Total Reports' : 'إجمالي التقارير'}
                   </p>
-                  <p className="text-2xl font-bold">12</p>
+                  <p className="text-2xl font-bold">{driverReports.length}</p>
                 </div>
                 <FileText className="h-8 w-8 text-primary" />
               </div>
@@ -225,7 +277,7 @@ export default function Reports() {
                   <p className="text-sm text-muted-foreground">
                     {language === 'en' ? 'This Month' : 'هذا الشهر'}
                   </p>
-                  <p className="text-2xl font-bold">3</p>
+                  <p className="text-2xl font-bold">{driverReports.length}</p>
                 </div>
                 <Calendar className="h-8 w-8 text-accent" />
               </div>
@@ -328,7 +380,7 @@ export default function Reports() {
                   <p className="text-sm text-muted-foreground">{stat.title}</p>
                   <p className="text-2xl font-bold">{stat.value}</p>
                   <p className={`text-xs mt-1 ${
-                    stat.change.startsWith('+') ? 'text-success' : 'text-destructive'
+                    stat.change.startsWith('+') ? 'text-success' : 'text-muted-foreground'
                   }`}>
                     {stat.change} {language === 'en' ? 'from last month' : 'من الشهر الماضي'}
                   </p>
@@ -429,9 +481,6 @@ export default function Reports() {
           <TabsTrigger value="analytics">
             {language === 'en' ? 'Analytics' : 'التحليلات'}
           </TabsTrigger>
-          <TabsTrigger value="scheduled">
-            {language === 'en' ? 'Scheduled' : 'المجدولة'}
-          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="all">
@@ -439,41 +488,48 @@ export default function Reports() {
             <CardContent className="p-0">
               <ScrollArea className="h-[500px]">
                 <div className="p-6 space-y-3">
-                  {filteredReports.map(report => (
-                    <div key={report.id} className="p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-start gap-3">
-                          <div className="p-2 bg-background rounded-lg">
-                            {getTypeIcon(report.type)}
-                          </div>
-                          <div>
-                            <h4 className="font-semibold">
-                              {language === 'en' ? report.title : report.titleAr}
-                            </h4>
-                            <p className="text-sm text-muted-foreground mt-1">
-                              {language === 'en' ? report.description : report.descriptionAr}
-                            </p>
-                            <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-                              <span className="flex items-center gap-1">
-                                <Calendar className="h-3 w-3" />
-                                {format(report.date, 'MMM dd, yyyy')}
-                              </span>
-                              <span className="flex items-center gap-1">
-                                <Users className="h-3 w-3" />
-                                {report.generatedBy}
-                              </span>
+                  {filteredReports.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                      <p>{language === 'en' ? 'No reports found' : 'لا توجد تقارير'}</p>
+                    </div>
+                  ) : (
+                    filteredReports.map(report => (
+                      <div key={report.id} className="p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-start gap-3">
+                            <div className="p-2 bg-background rounded-lg">
+                              {getTypeIcon(report.type)}
+                            </div>
+                            <div>
+                              <h4 className="font-semibold">
+                                {language === 'en' ? report.title : report.titleAr}
+                              </h4>
+                              <p className="text-sm text-muted-foreground mt-1">
+                                {language === 'en' ? report.description : report.descriptionAr}
+                              </p>
+                              <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+                                <span className="flex items-center gap-1">
+                                  <Calendar className="h-3 w-3" />
+                                  {format(report.date, 'MMM dd, yyyy')}
+                                </span>
+                                <span className="flex items-center gap-1">
+                                  <Users className="h-3 w-3" />
+                                  {report.generatedBy}
+                                </span>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {getStatusBadge(report.status)}
-                          <Button size="sm" variant="ghost">
-                            <Download className="h-4 w-4" />
-                          </Button>
+                          <div className="flex items-center gap-2">
+                            {getStatusBadge(report.status)}
+                            <Button size="sm" variant="ghost">
+                              <Download className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
               </ScrollArea>
             </CardContent>
@@ -486,14 +542,25 @@ export default function Reports() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <PieChart className="h-5 w-5" />
-                  {language === 'en' ? 'Report Distribution' : 'توزيع التقارير'}
+                  {language === 'en' ? 'Attendance Overview' : 'نظرة عامة على الحضور'}
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="h-64 flex items-center justify-center bg-muted rounded-lg">
-                  <p className="text-sm text-muted-foreground">
-                    {language === 'en' ? 'Chart visualization here' : 'عرض الرسم البياني هنا'}
-                  </p>
+                <div className="h-48 flex items-center justify-center">
+                  <div className="text-center">
+                    <p className="text-4xl font-bold text-success">{attendanceStats?.rate || 0}%</p>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      {language === 'en' ? 'Average Attendance Rate' : 'متوسط معدل الحضور'}
+                    </p>
+                    <div className="flex gap-4 justify-center mt-4 text-sm">
+                      <span className="text-success">
+                        {language === 'en' ? 'Present:' : 'حاضر:'} {attendanceStats?.present || 0}
+                      </span>
+                      <span className="text-destructive">
+                        {language === 'en' ? 'Absent:' : 'غائب:'} {attendanceStats?.absent || 0}
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -502,39 +569,29 @@ export default function Reports() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <BarChart3 className="h-5 w-5" />
-                  {language === 'en' ? 'Monthly Trends' : 'الاتجاهات الشهرية'}
+                  {language === 'en' ? 'Financial Summary' : 'الملخص المالي'}
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="h-64 flex items-center justify-center bg-muted rounded-lg">
-                  <p className="text-sm text-muted-foreground">
-                    {language === 'en' ? 'Trend analysis here' : 'تحليل الاتجاهات هنا'}
-                  </p>
+                <div className="h-48 flex items-center justify-center">
+                  <div className="text-center">
+                    <p className="text-4xl font-bold text-primary">{financialStats?.income || 0} OMR</p>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      {language === 'en' ? 'Total Revenue This Month' : 'إجمالي الإيرادات هذا الشهر'}
+                    </p>
+                    <div className="flex gap-4 justify-center mt-4 text-sm">
+                      <span className="text-success">
+                        {language === 'en' ? 'Income:' : 'الدخل:'} {financialStats?.income || 0}
+                      </span>
+                      <span className="text-destructive">
+                        {language === 'en' ? 'Expenses:' : 'المصروفات:'} {financialStats?.expense || 0}
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
           </div>
-        </TabsContent>
-
-        <TabsContent value="scheduled">
-          <Card>
-            <CardHeader>
-              <CardTitle>{language === 'en' ? 'Scheduled Reports' : 'التقارير المجدولة'}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8">
-                <Activity className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">
-                  {language === 'en' 
-                    ? 'No scheduled reports. Set up automatic report generation.'
-                    : 'لا توجد تقارير مجدولة. قم بإعداد إنشاء التقارير التلقائية.'}
-                </p>
-                <Button className="mt-4">
-                  {language === 'en' ? 'Schedule Report' : 'جدولة تقرير'}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
         </TabsContent>
       </Tabs>
     </div>

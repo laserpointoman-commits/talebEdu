@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useStudents } from '@/contexts/StudentsContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,221 +12,288 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Plus, Edit, Trash2, Bus, Users, Activity, Wrench, Calendar, UserPlus, X, Search } from 'lucide-react';
+import { Plus, Edit, Trash2, Bus, Users, Activity, Wrench, Calendar, UserPlus, X, Search, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { Driver } from './DriversManagement';
+import { supabase } from '@/integrations/supabase/client';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
-export interface Student {
+interface BusData {
   id: string;
-  name: string;
-  nameAr: string;
-  grade: string;
-  class: string;
-  address: string;
-  parentPhone: string;
-  transportationAgreement?: boolean;
-}
-
-export interface Bus {
-  id: string;
-  busNumber: string;
-  plateNumber: string;
-  make: string;
-  model: string;
-  year: number;
+  bus_number: string;
   capacity: number;
-  currentStudents: number;
-  studentIds: string[];
-  driverId?: string;
-  supervisorId?: string;
-  routeId?: string;
-  status: 'active' | 'inactive' | 'maintenance';
-  lastMaintenance: string;
-  nextMaintenance: string;
-  fuelType: string;
-  color: string;
+  model: string | null;
+  year: number | null;
+  status: string | null;
+  driver_id: string | null;
 }
 
-export const mockBuses: Bus[] = [
-  {
-    id: 'BUS-001',
-    busNumber: 'BUS-001',
-    plateNumber: 'AB-1234',
-    make: 'Mercedes',
-    model: 'Sprinter',
-    year: 2020,
-    capacity: 50,
-    currentStudents: 42,
-    studentIds: ['s1', 's2', 's3', 's4', 's5'],
-    driverId: '1',
-    supervisorId: 't1',
-    routeId: 'r1',
-    status: 'active',
-    lastMaintenance: '2024-01-15',
-    nextMaintenance: '2024-04-15',
-    fuelType: 'Diesel',
-    color: 'Yellow',
-  },
-  {
-    id: 'BUS-002',
-    busNumber: 'BUS-002',
-    plateNumber: 'CD-5678',
-    make: 'Volvo',
-    model: 'B8R',
-    year: 2021,
-    capacity: 45,
-    currentStudents: 38,
-    studentIds: ['s6', 's7', 's8'],
-    driverId: '2',
-    supervisorId: 't2',
-    routeId: 'r2',
-    status: 'active',
-    lastMaintenance: '2024-02-01',
-    nextMaintenance: '2024-05-01',
-    fuelType: 'Diesel',
-    color: 'Yellow',
-  },
-];
+interface DriverData {
+  id: string;
+  employee_id: string;
+  license_number: string;
+  profile: {
+    id: string;
+    full_name: string;
+    full_name_ar: string | null;
+  } | null;
+}
 
-
-// Mock drivers data for selection
-export const mockDrivers: Driver[] = [
-  {
-    id: '1',
-    name: 'Ali Mohammed',
-    nameAr: 'علي محمد',
-    phone: '+968 9123 4567',
-    email: 'ali@school.om',
-    address: 'Muscat',
-    licenseNumber: 'DL-12345',
-    licenseExpiry: '2025-06-15',
-    experience: 8,
-    status: 'active',
-    image: '',
-    joinDate: '2020-03-15',
-  },
-  {
-    id: '2',
-    name: 'Hassan Ibrahim',
-    nameAr: 'حسن إبراهيم',
-    phone: '+968 9234 5678',
-    email: 'hassan@school.om',
-    address: 'Muscat',
-    licenseNumber: 'DL-23456',
-    licenseExpiry: '2024-12-20',
-    experience: 5,
-    status: 'active',
-    image: '',
-    joinDate: '2021-01-10',
-  },
-  {
-    id: '3',
-    name: 'Omar Said',
-    nameAr: 'عمر سعيد',
-    phone: '+968 9345 6789',
-    email: 'omar@school.om',
-    address: 'Muscat',
-    licenseNumber: 'DL-34567',
-    licenseExpiry: '2025-08-30',
-    experience: 10,
-    status: 'active',
-    image: '',
-    joinDate: '2019-05-20',
-  },
-];
-
-// Mock teachers for supervisor selection
-export const mockTeachers = [
-  { id: 't1', name: 'Sarah Ahmed', nameAr: 'سارة أحمد' },
-  { id: 't2', name: 'Fatima Ali', nameAr: 'فاطمة علي' },
-  { id: 't3', name: 'Maryam Hassan', nameAr: 'مريم حسن' },
-];
+interface TeacherData {
+  id: string;
+  employee_id: string;
+  profile: {
+    id: string;
+    full_name: string;
+    full_name_ar: string | null;
+  } | null;
+}
 
 export default function BusesManagement() {
   const { t, language } = useLanguage();
   const { students } = useStudents();
-  const [buses, setBuses] = useState<Bus[]>(mockBuses);
+  const queryClient = useQueryClient();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
   const [selectedBuses, setSelectedBuses] = useState<string[]>([]);
-  const [formData, setFormData] = useState<Partial<Bus>>({
-    status: 'active',
+  const [formData, setFormData] = useState<{
+    bus_number: string;
+    capacity: number;
+    model: string;
+    year: number;
+    status: string;
+    driver_id: string;
+  }>({
+    bus_number: '',
     capacity: 50,
-    currentStudents: 0,
+    model: '',
     year: new Date().getFullYear(),
-    studentIds: [],
+    status: 'active',
+    driver_id: '',
   });
-  const [editingBus, setEditingBus] = useState<Bus | null>(null);
+  const [editingBus, setEditingBus] = useState<BusData | null>(null);
   
-  // Search states
   const [studentSearch, setStudentSearch] = useState('');
   const [driverSearch, setDriverSearch] = useState('');
-  const [supervisorSearch, setSupervisorSearch] = useState('');
   
-  // Confirmation dialog states
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [bulkDeleteConfirmOpen, setBulkDeleteConfirmOpen] = useState(false);
   const [busToDelete, setBusToDelete] = useState<string | null>(null);
 
-  const handleAddBus = () => {
-    const newBus: Bus = {
-      id: `BUS-${String(buses.length + 1).padStart(3, '0')}`,
-      busNumber: formData.busNumber || `BUS-${String(buses.length + 1).padStart(3, '0')}`,
-      plateNumber: formData.plateNumber || '',
-      make: formData.make || '',
-      model: formData.model || '',
-      year: formData.year || new Date().getFullYear(),
-      capacity: formData.capacity || 50,
-      currentStudents: selectedStudents.length,
-      studentIds: selectedStudents,
-      driverId: formData.driverId,
-      supervisorId: formData.supervisorId,
-      status: formData.status as 'active' | 'inactive' | 'maintenance',
-      lastMaintenance: formData.lastMaintenance || '',
-      nextMaintenance: formData.nextMaintenance || '',
-      fuelType: formData.fuelType || 'Diesel',
-      color: formData.color || 'Yellow',
-    };
-    
-    setBuses([...buses, newBus]);
-    setIsAddDialogOpen(false);
-    setSelectedStudents([]);
-    setFormData({ status: 'active', capacity: 50, currentStudents: 0, year: new Date().getFullYear(), studentIds: [] });
-    
-    toast({
-      variant: 'success',
-      title: language === 'ar' ? 'تمت الإضافة بنجاح' : 'Added Successfully',
-      description: language === 'ar' ? 'تمت إضافة الحافلة بنجاح' : 'Bus has been added successfully',
+  // Fetch buses from database
+  const { data: buses = [], isLoading: busesLoading } = useQuery({
+    queryKey: ['buses'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('buses')
+        .select('*')
+        .order('bus_number');
+      if (error) throw error;
+      return data as BusData[];
+    }
+  });
+
+  // Fetch drivers from database
+  const { data: drivers = [], isLoading: driversLoading } = useQuery({
+    queryKey: ['drivers-for-buses'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('drivers')
+        .select(`
+          id,
+          employee_id,
+          license_number,
+          profile:profiles!drivers_profile_id_fkey(id, full_name, full_name_ar)
+        `)
+        .eq('status', 'active');
+      if (error) throw error;
+      return data as DriverData[];
+    }
+  });
+
+  // Fetch teachers for supervisor selection
+  const { data: teachers = [] } = useQuery({
+    queryKey: ['teachers-for-buses'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('teachers')
+        .select(`
+          id,
+          employee_id,
+          profile:profiles!teachers_profile_id_fkey(id, full_name, full_name_ar)
+        `);
+      if (error) throw error;
+      return data as TeacherData[];
+    }
+  });
+
+  // Add bus mutation
+  const addBusMutation = useMutation({
+    mutationFn: async (busData: typeof formData) => {
+      const { data, error } = await supabase
+        .from('buses')
+        .insert({
+          bus_number: busData.bus_number,
+          capacity: busData.capacity,
+          model: busData.model || null,
+          year: busData.year || null,
+          status: busData.status,
+          driver_id: busData.driver_id || null,
+        })
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['buses'] });
+      setIsAddDialogOpen(false);
+      resetForm();
+      toast({
+        variant: 'success',
+        title: language === 'ar' ? 'تمت الإضافة بنجاح' : 'Added Successfully',
+        description: language === 'ar' ? 'تمت إضافة الحافلة بنجاح' : 'Bus has been added successfully',
+      });
+    },
+    onError: (error) => {
+      toast({
+        variant: 'destructive',
+        title: language === 'ar' ? 'خطأ' : 'Error',
+        description: error.message,
+      });
+    }
+  });
+
+  // Update bus mutation
+  const updateBusMutation = useMutation({
+    mutationFn: async ({ id, busData }: { id: string; busData: typeof formData }) => {
+      const { data, error } = await supabase
+        .from('buses')
+        .update({
+          bus_number: busData.bus_number,
+          capacity: busData.capacity,
+          model: busData.model || null,
+          year: busData.year || null,
+          status: busData.status,
+          driver_id: busData.driver_id || null,
+        })
+        .eq('id', id)
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['buses'] });
+      setIsEditDialogOpen(false);
+      setEditingBus(null);
+      resetForm();
+      toast({
+        variant: 'success',
+        title: language === 'ar' ? 'تم التحديث بنجاح' : 'Updated Successfully',
+        description: language === 'ar' ? 'تم تحديث معلومات الحافلة بنجاح' : 'Bus information has been updated successfully',
+      });
+    },
+    onError: (error) => {
+      toast({
+        variant: 'destructive',
+        title: language === 'ar' ? 'خطأ' : 'Error',
+        description: error.message,
+      });
+    }
+  });
+
+  // Delete bus mutation
+  const deleteBusMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('buses')
+        .delete()
+        .eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['buses'] });
+      setBusToDelete(null);
+      setDeleteConfirmOpen(false);
+      toast({
+        variant: 'success',
+        title: language === 'ar' ? 'تم الحذف بنجاح' : 'Deleted Successfully',
+        description: language === 'ar' ? 'تم حذف الحافلة بنجاح' : 'Bus has been deleted successfully',
+      });
+    },
+    onError: (error) => {
+      toast({
+        variant: 'destructive',
+        title: language === 'ar' ? 'خطأ' : 'Error',
+        description: error.message,
+      });
+    }
+  });
+
+  // Bulk delete mutation
+  const bulkDeleteMutation = useMutation({
+    mutationFn: async (ids: string[]) => {
+      const { error } = await supabase
+        .from('buses')
+        .delete()
+        .in('id', ids);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['buses'] });
+      const count = selectedBuses.length;
+      setSelectedBuses([]);
+      setBulkDeleteConfirmOpen(false);
+      toast({
+        variant: 'success',
+        title: language === 'ar' ? 'تم الحذف بنجاح' : 'Deleted Successfully',
+        description: language === 'ar' 
+          ? `تم حذف ${count} حافلة بنجاح` 
+          : `${count} buses have been deleted successfully`,
+      });
+    },
+    onError: (error) => {
+      toast({
+        variant: 'destructive',
+        title: language === 'ar' ? 'خطأ' : 'Error',
+        description: error.message,
+      });
+    }
+  });
+
+  const resetForm = () => {
+    setFormData({
+      bus_number: '',
+      capacity: 50,
+      model: '',
+      year: new Date().getFullYear(),
+      status: 'active',
+      driver_id: '',
     });
+    setSelectedStudents([]);
   };
 
-  const handleEditBus = (bus: Bus) => {
+  const handleAddBus = () => {
+    addBusMutation.mutate(formData);
+  };
+
+  const handleEditBus = (bus: BusData) => {
     setEditingBus(bus);
-    setFormData(bus);
-    setSelectedStudents(bus.studentIds || []);
+    setFormData({
+      bus_number: bus.bus_number,
+      capacity: bus.capacity,
+      model: bus.model || '',
+      year: bus.year || new Date().getFullYear(),
+      status: bus.status || 'active',
+      driver_id: bus.driver_id || '',
+    });
     setIsEditDialogOpen(true);
   };
 
   const handleUpdateBus = () => {
     if (!editingBus) return;
-    
-    setBuses(buses.map(b => 
-      b.id === editingBus.id 
-        ? { ...b, ...formData, studentIds: selectedStudents, currentStudents: selectedStudents.length } as Bus
-        : b
-    ));
-    
-    setIsEditDialogOpen(false);
-    setEditingBus(null);
-    setSelectedStudents([]);
-    setFormData({ status: 'active', capacity: 50, currentStudents: 0, year: new Date().getFullYear(), studentIds: [] });
-    
-    toast({
-      variant: 'success',
-      title: language === 'ar' ? 'تم التحديث بنجاح' : 'Updated Successfully',
-      description: language === 'ar' ? 'تم تحديث معلومات الحافلة بنجاح' : 'Bus information has been updated successfully',
-    });
+    updateBusMutation.mutate({ id: editingBus.id, busData: formData });
   };
 
   const handleDeleteBus = (id: string) => {
@@ -236,18 +303,8 @@ export default function BusesManagement() {
   
   const confirmDelete = () => {
     if (busToDelete) {
-      setBuses(buses.filter(b => b.id !== busToDelete));
-      setSelectedBuses(prev => prev.filter(busId => busId !== busToDelete));
-      
-      toast({
-        variant: 'success',
-        title: language === 'ar' ? 'تم الحذف بنجاح' : 'Deleted Successfully',
-        description: language === 'ar' ? 'تم حذف الحافلة بنجاح' : 'Bus has been deleted successfully',
-      });
-      
-      setBusToDelete(null);
+      deleteBusMutation.mutate(busToDelete);
     }
-    setDeleteConfirmOpen(false);
   };
 
   const handleBulkDelete = () => {
@@ -255,19 +312,7 @@ export default function BusesManagement() {
   };
   
   const confirmBulkDelete = () => {
-    setBuses(buses.filter(b => !selectedBuses.includes(b.id)));
-    const count = selectedBuses.length;
-    setSelectedBuses([]);
-    
-    toast({
-      variant: 'success',
-      title: language === 'ar' ? 'تم الحذف بنجاح' : 'Deleted Successfully',
-      description: language === 'ar' 
-        ? `تم حذف ${count} حافلة بنجاح` 
-        : `${count} buses have been deleted successfully`,
-    });
-    
-    setBulkDeleteConfirmOpen(false);
+    bulkDeleteMutation.mutate(selectedBuses);
   };
 
   const toggleBusSelection = (busId: string) => {
@@ -286,7 +331,7 @@ export default function BusesManagement() {
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string | null) => {
     switch (status) {
       case 'active':
         return 'bg-success/10 text-success';
@@ -299,14 +344,11 @@ export default function BusesManagement() {
     }
   };
 
-  const getDriverName = (driverId?: string) => {
-    const driver = mockDrivers.find(d => d.id === driverId);
-    return driver ? (language === 'en' ? driver.name : driver.nameAr) : (language === 'en' ? 'Not Assigned' : 'غير مخصص');
-  };
-
-  const getSupervisorName = (supervisorId?: string) => {
-    const supervisor = mockTeachers.find(t => t.id === supervisorId);
-    return supervisor ? (language === 'en' ? supervisor.name : supervisor.nameAr) : (language === 'en' ? 'Not Assigned' : 'غير مخصص');
+  const getDriverName = (driverId: string | null) => {
+    if (!driverId) return language === 'en' ? 'Not Assigned' : 'غير مخصص';
+    const driver = drivers.find(d => d.id === driverId);
+    if (!driver?.profile) return language === 'en' ? 'Not Assigned' : 'غير مخصص';
+    return language === 'en' ? driver.profile.full_name : (driver.profile.full_name_ar || driver.profile.full_name);
   };
 
   const toggleStudentSelection = (studentId: string) => {
@@ -325,6 +367,21 @@ export default function BusesManagement() {
     }
     return `${selected.length} ${language === 'en' ? 'students selected' : 'طلاب محددون'}`;
   };
+
+  const filteredDrivers = drivers.filter(d => {
+    if (!driverSearch) return true;
+    const name = d.profile?.full_name?.toLowerCase() || '';
+    const nameAr = d.profile?.full_name_ar?.toLowerCase() || '';
+    return name.includes(driverSearch.toLowerCase()) || nameAr.includes(driverSearch.toLowerCase());
+  });
+
+  if (busesLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -350,14 +407,9 @@ export default function BusesManagement() {
             </Button>
           )}
           <Button 
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              console.log('Opening Add Bus dialog');
-              setSelectedStudents([]);
-              setFormData({ status: 'active', capacity: 50, currentStudents: 0, year: new Date().getFullYear(), studentIds: [] });
+            onClick={() => {
+              resetForm();
               setIsAddDialogOpen(true);
-              console.log('Dialog state:', true);
             }}
           >
             <Plus className="h-4 w-4 mr-2" />
@@ -405,12 +457,12 @@ export default function BusesManagement() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              {language === 'en' ? 'Total Students' : 'إجمالي الطلاب'}
+              {language === 'en' ? 'In Maintenance' : 'في الصيانة'}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {buses.reduce((sum, b) => sum + b.currentStudents, 0)}
+            <div className="text-2xl font-bold text-warning">
+              {buses.filter(b => b.status === 'maintenance').length}
             </div>
           </CardContent>
         </Card>
@@ -422,700 +474,291 @@ export default function BusesManagement() {
           <CardTitle>{language === 'en' ? 'All Buses' : 'جميع الحافلات'}</CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-12">
-                  <Checkbox
-                    checked={selectedBuses.length === buses.length && buses.length > 0}
-                    onCheckedChange={toggleSelectAll}
-                  />
-                </TableHead>
-                <TableHead>{language === 'en' ? 'Bus Details' : 'تفاصيل الحافلة'}</TableHead>
-                <TableHead>{language === 'en' ? 'Driver' : 'السائق'}</TableHead>
-                <TableHead>{language === 'en' ? 'Supervisor' : 'المشرف'}</TableHead>
-                <TableHead>{language === 'en' ? 'Capacity' : 'السعة'}</TableHead>
-                <TableHead>{language === 'en' ? 'Maintenance' : 'الصيانة'}</TableHead>
-                <TableHead>{language === 'en' ? 'Status' : 'الحالة'}</TableHead>
-                <TableHead>{language === 'en' ? 'Actions' : 'الإجراءات'}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {buses.map((bus) => (
-                <TableRow key={bus.id}>
-                  <TableCell>
+          {buses.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <Bus className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p>{language === 'en' ? 'No buses found. Add your first bus!' : 'لا توجد حافلات. أضف أول حافلة!'}</p>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-12">
                     <Checkbox
-                      checked={selectedBuses.includes(bus.id)}
-                      onCheckedChange={() => toggleBusSelection(bus.id)}
+                      checked={selectedBuses.length === buses.length && buses.length > 0}
+                      onCheckedChange={toggleSelectAll}
                     />
-                  </TableCell>
-                  <TableCell>
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <Bus className="h-4 w-4 text-primary" />
-                        <span className="font-medium">{bus.busNumber}</span>
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        {language === 'en' ? 'Plate' : 'اللوحة'}: {bus.plateNumber}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {bus.make} {bus.model} ({bus.year})
-                      </p>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <p className="text-sm">{getDriverName(bus.driverId)}</p>
-                  </TableCell>
-                  <TableCell>
-                    <p className="text-sm">{getSupervisorName(bus.supervisorId)}</p>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-1">
-                      <Users className="h-3 w-3" />
-                      <span className="text-sm">{bus.currentStudents}/{bus.capacity}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="space-y-1">
-                      <p className="text-xs">
-                        {language === 'en' ? 'Last' : 'آخر'}: {bus.lastMaintenance}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {language === 'en' ? 'Next' : 'التالي'}: {bus.nextMaintenance}
-                      </p>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge className={getStatusColor(bus.status)}>
-                      {bus.status === 'active' && <Activity className="h-3 w-3 mr-1" />}
-                      {bus.status === 'maintenance' && <Wrench className="h-3 w-3 mr-1" />}
-                      {bus.status === 'active' ? (language === 'ar' ? 'نشط' : 'Active') :
-                       bus.status === 'inactive' ? (language === 'ar' ? 'غير نشط' : 'Inactive') :
-                       (language === 'ar' ? 'صيانة' : 'Maintenance')}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        onClick={() => handleEditBus(bus)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        onClick={() => handleDeleteBus(bus.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
+                  </TableHead>
+                  <TableHead>{language === 'en' ? 'Bus Details' : 'تفاصيل الحافلة'}</TableHead>
+                  <TableHead>{language === 'en' ? 'Driver' : 'السائق'}</TableHead>
+                  <TableHead>{language === 'en' ? 'Capacity' : 'السعة'}</TableHead>
+                  <TableHead>{language === 'en' ? 'Status' : 'الحالة'}</TableHead>
+                  <TableHead>{language === 'en' ? 'Actions' : 'الإجراءات'}</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {buses.map((bus) => (
+                  <TableRow key={bus.id}>
+                    <TableCell>
+                      <Checkbox
+                        checked={selectedBuses.includes(bus.id)}
+                        onCheckedChange={() => toggleBusSelection(bus.id)}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <Bus className="h-4 w-4 text-primary" />
+                          <span className="font-medium">{bus.bus_number}</span>
+                        </div>
+                        {bus.model && (
+                          <p className="text-xs text-muted-foreground">
+                            {bus.model} {bus.year && `(${bus.year})`}
+                          </p>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <p className="text-sm">{getDriverName(bus.driver_id)}</p>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        <Users className="h-3 w-3" />
+                        <span className="text-sm">{bus.capacity}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge className={getStatusColor(bus.status)}>
+                        {bus.status === 'active' 
+                          ? (language === 'en' ? 'Active' : 'نشط')
+                          : bus.status === 'maintenance'
+                          ? (language === 'en' ? 'Maintenance' : 'صيانة')
+                          : (language === 'en' ? 'Inactive' : 'غير نشط')}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-2">
+                        <Button size="sm" variant="ghost" onClick={() => handleEditBus(bus)}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={() => handleDeleteBus(bus.id)}>
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
 
       {/* Add Bus Dialog */}
-      <Dialog open={isAddDialogOpen} onOpenChange={(open) => {
-        setIsAddDialogOpen(open);
-        if (!open) {
-          setSelectedStudents([]);
-          setFormData({ status: 'active', capacity: 50, currentStudents: 0, year: new Date().getFullYear(), studentIds: [] });
-          setStudentSearch('');
-          setDriverSearch('');
-          setSupervisorSearch('');
-        }
-      }}>
-        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>
-              {language === 'en' ? 'Add New Bus' : 'إضافة حافلة جديدة'}
-            </DialogTitle>
+            <DialogTitle>{language === 'en' ? 'Add New Bus' : 'إضافة حافلة جديدة'}</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="busNumber">{language === 'en' ? 'Bus Number' : 'رقم الحافلة'}</Label>
+                <Label>{language === 'en' ? 'Bus Number' : 'رقم الحافلة'}</Label>
                 <Input
-                  id="busNumber"
-                  value={formData.busNumber || ''}
-                  onChange={(e) => setFormData({ ...formData, busNumber: e.target.value })}
+                  value={formData.bus_number}
+                  onChange={(e) => setFormData({ ...formData, bus_number: e.target.value })}
+                  placeholder="BUS-001"
                 />
               </div>
               <div>
-                <Label htmlFor="plateNumber">{language === 'en' ? 'Plate Number' : 'رقم اللوحة'}</Label>
+                <Label>{language === 'en' ? 'Capacity' : 'السعة'}</Label>
                 <Input
-                  id="plateNumber"
-                  value={formData.plateNumber || ''}
-                  onChange={(e) => setFormData({ ...formData, plateNumber: e.target.value })}
+                  type="number"
+                  value={formData.capacity}
+                  onChange={(e) => setFormData({ ...formData, capacity: parseInt(e.target.value) || 0 })}
                 />
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="make">{language === 'en' ? 'Make' : 'الصانع'}</Label>
+                <Label>{language === 'en' ? 'Model' : 'الموديل'}</Label>
                 <Input
-                  id="make"
-                  value={formData.make || ''}
-                  onChange={(e) => setFormData({ ...formData, make: e.target.value })}
-                />
-              </div>
-              <div>
-                <Label htmlFor="model">{language === 'en' ? 'Model' : 'الطراز'}</Label>
-                <Input
-                  id="model"
-                  value={formData.model || ''}
+                  value={formData.model}
                   onChange={(e) => setFormData({ ...formData, model: e.target.value })}
+                  placeholder="Mercedes Sprinter"
                 />
               </div>
               <div>
-                <Label htmlFor="year">{language === 'en' ? 'Year' : 'السنة'}</Label>
+                <Label>{language === 'en' ? 'Year' : 'السنة'}</Label>
                 <Input
-                  id="year"
                   type="number"
-                  value={formData.year || ''}
-                  onChange={(e) => setFormData({ ...formData, year: parseInt(e.target.value) })}
+                  value={formData.year}
+                  onChange={(e) => setFormData({ ...formData, year: parseInt(e.target.value) || new Date().getFullYear() })}
                 />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="capacity">{language === 'en' ? 'Capacity' : 'السعة'}</Label>
-                <Input
-                  id="capacity"
-                  type="number"
-                  value={formData.capacity || ''}
-                  onChange={(e) => setFormData({ ...formData, capacity: parseInt(e.target.value) })}
-                />
-              </div>
-              <div>
-                <Label htmlFor="fuelType">{language === 'en' ? 'Fuel Type' : 'نوع الوقود'}</Label>
-                <Input
-                  id="fuelType"
-                  value={formData.fuelType || ''}
-                  onChange={(e) => setFormData({ ...formData, fuelType: e.target.value })}
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="driver">{language === 'en' ? 'Assign Driver' : 'تعيين سائق'}</Label>
-                <Select
-                  value={formData.driverId || 'none'}
-                  onValueChange={(value) => setFormData({ ...formData, driverId: value === 'none' ? undefined : value })}
-                >
+                <Label>{language === 'en' ? 'Status' : 'الحالة'}</Label>
+                <Select value={formData.status} onValueChange={(v) => setFormData({ ...formData, status: v })}>
                   <SelectTrigger>
-                    <SelectValue placeholder={language === 'en' ? 'Select a driver' : 'اختر سائق'} />
+                    <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <div className="p-2">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Search className="h-4 w-4 text-muted-foreground" />
-                        <Input
-                          placeholder={language === 'en' ? 'Search drivers...' : 'البحث عن السائقين...'}
-                          value={driverSearch}
-                          onChange={(e) => setDriverSearch(e.target.value)}
-                          className="h-8"
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                      </div>
-                    </div>
-                    <SelectItem value="none">
-                      {language === 'en' ? 'No Driver' : 'بدون سائق'}
-                    </SelectItem>
-                    {mockDrivers
-                      .filter(driver => 
-                        driver.name.toLowerCase().includes(driverSearch.toLowerCase()) ||
-                        driver.nameAr.includes(driverSearch)
-                      )
-                      .map((driver) => (
-                        <SelectItem key={driver.id} value={driver.id}>
-                          {language === 'en' ? driver.name : driver.nameAr}
-                        </SelectItem>
-                      ))}
+                    <SelectItem value="active">{language === 'en' ? 'Active' : 'نشط'}</SelectItem>
+                    <SelectItem value="inactive">{language === 'en' ? 'Inactive' : 'غير نشط'}</SelectItem>
+                    <SelectItem value="maintenance">{language === 'en' ? 'Maintenance' : 'صيانة'}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label htmlFor="supervisor">{language === 'en' ? 'Assign Supervisor' : 'تعيين مشرف'}</Label>
-                <Select
-                  value={formData.supervisorId || 'none'}
-                  onValueChange={(value) => setFormData({ ...formData, supervisorId: value === 'none' ? undefined : value })}
-                >
+                <Label>{language === 'en' ? 'Driver' : 'السائق'}</Label>
+                <Select value={formData.driver_id} onValueChange={(v) => setFormData({ ...formData, driver_id: v })}>
                   <SelectTrigger>
-                    <SelectValue placeholder={language === 'en' ? 'Select a supervisor' : 'اختر مشرف'} />
+                    <SelectValue placeholder={language === 'en' ? 'Select driver' : 'اختر السائق'} />
                   </SelectTrigger>
                   <SelectContent>
-                    <div className="p-2">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Search className="h-4 w-4 text-muted-foreground" />
-                        <Input
-                          placeholder={language === 'en' ? 'Search supervisors...' : 'البحث عن المشرفين...'}
-                          value={supervisorSearch}
-                          onChange={(e) => setSupervisorSearch(e.target.value)}
-                          className="h-8"
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                      </div>
-                    </div>
-                    <SelectItem value="none">
-                      {language === 'en' ? 'No Supervisor' : 'بدون مشرف'}
-                    </SelectItem>
-                    {mockTeachers
-                      .filter(teacher => 
-                        teacher.name.toLowerCase().includes(supervisorSearch.toLowerCase()) ||
-                        teacher.nameAr.includes(supervisorSearch)
-                      )
-                      .map((teacher) => (
-                        <SelectItem key={teacher.id} value={teacher.id}>
-                          {language === 'en' ? teacher.name : teacher.nameAr}
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            
-            {/* Students Selection */}
-            <div className="space-y-2">
-              <Label>{language === 'en' ? 'Select Students' : 'اختر الطلاب'}</Label>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-muted-foreground">{getSelectedStudentsNames()}</span>
-                <Badge variant="outline">
-                  {selectedStudents.length}/{formData.capacity || 50}
-                </Badge>
-              </div>
-              <div className="mb-2">
-                <div className="flex items-center gap-2">
-                  <Search className="h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder={language === 'en' ? 'Search students...' : 'البحث عن الطلاب...'}
-                    value={studentSearch}
-                    onChange={(e) => setStudentSearch(e.target.value)}
-                    className="h-8"
-                  />
-                </div>
-              </div>
-              <ScrollArea className="h-40 border rounded-md p-3">
-                <div className="space-y-2">
-                  {students
-                    .filter(student => {
-                      const fullName = `${student.firstName} ${student.lastName}`.toLowerCase();
-                      const fullNameAr = `${student.firstNameAr} ${student.lastNameAr}`;
-                      const search = studentSearch.toLowerCase();
-                      return (
-                        fullName.includes(search) ||
-                        fullNameAr.includes(studentSearch) ||
-                        student.grade.includes(studentSearch) ||
-                        student.class.includes(studentSearch) ||
-                        student.address.toLowerCase().includes(search)
-                      );
-                    })
-                    .map((student) => (
-                      <div key={student.id} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={`student-${student.id}`}
-                          checked={selectedStudents.includes(student.id)}
-                          onCheckedChange={() => toggleStudentSelection(student.id)}
-                          disabled={!selectedStudents.includes(student.id) && selectedStudents.length >= (formData.capacity || 50)}
-                        />
-                        <label
-                          htmlFor={`student-${student.id}`}
-                          className="flex-1 text-sm cursor-pointer"
-                        >
-                          <div className="flex justify-between items-center">
-                            <div>
-                              <span className="font-medium">
-                                {language === 'en' ? `${student.firstName} ${student.lastName}` : `${student.firstNameAr} ${student.lastNameAr}`}
-                              </span>
-                              <span className="text-xs text-muted-foreground ml-2">
-                                {student.grade}-{student.class}
-                              </span>
-                            </div>
-                            <span className="text-xs text-muted-foreground">
-                              {student.address}
-                            </span>
-                          </div>
-                        </label>
-                      </div>
+                    {filteredDrivers.map(driver => (
+                      <SelectItem key={driver.id} value={driver.id}>
+                        {language === 'en' ? driver.profile?.full_name : (driver.profile?.full_name_ar || driver.profile?.full_name)}
+                      </SelectItem>
                     ))}
-                </div>
-              </ScrollArea>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="lastMaintenance">{language === 'en' ? 'Last Maintenance' : 'آخر صيانة'}</Label>
-                <Input
-                  id="lastMaintenance"
-                  type="date"
-                  value={formData.lastMaintenance || ''}
-                  onChange={(e) => setFormData({ ...formData, lastMaintenance: e.target.value })}
-                />
-              </div>
-              <div>
-                <Label htmlFor="nextMaintenance">{language === 'en' ? 'Next Maintenance' : 'الصيانة التالية'}</Label>
-                <Input
-                  id="nextMaintenance"
-                  type="date"
-                  value={formData.nextMaintenance || ''}
-                  onChange={(e) => setFormData({ ...formData, nextMaintenance: e.target.value })}
-                />
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </div>
           <DialogFooter>
-            <Button 
-              variant="outline" 
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setIsAddDialogOpen(false);
-                setSelectedStudents([]);
-                setStudentSearch('');
-                setDriverSearch('');
-                setSupervisorSearch('');
-                setFormData({ status: 'active', capacity: 50, currentStudents: 0, year: new Date().getFullYear(), studentIds: [] });
-              }}
-            >
-              {t('common.cancel')}
+            <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+              {language === 'en' ? 'Cancel' : 'إلغاء'}
             </Button>
-            <Button 
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                handleAddBus();
-                setStudentSearch('');
-                setDriverSearch('');
-                setSupervisorSearch('');
-              }}
-            >
-              {t('common.save')}
+            <Button onClick={handleAddBus} disabled={addBusMutation.isPending}>
+              {addBusMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              {language === 'en' ? 'Add Bus' : 'إضافة حافلة'}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Edit Bus Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={(open) => {
-        setIsEditDialogOpen(open);
-        if (!open) {
-          setEditingBus(null);
-          setSelectedStudents([]);
-          setFormData({ status: 'active', capacity: 50, currentStudents: 0, year: new Date().getFullYear(), studentIds: [] });
-          setStudentSearch('');
-          setDriverSearch('');
-          setSupervisorSearch('');
-        }
-      }}>
-        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>
-              {language === 'en' ? 'Edit Bus' : 'تعديل الحافلة'}
-            </DialogTitle>
+            <DialogTitle>{language === 'en' ? 'Edit Bus' : 'تعديل الحافلة'}</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="edit-busNumber">{language === 'en' ? 'Bus Number' : 'رقم الحافلة'}</Label>
+                <Label>{language === 'en' ? 'Bus Number' : 'رقم الحافلة'}</Label>
                 <Input
-                  id="edit-busNumber"
-                  value={formData.busNumber || ''}
-                  onChange={(e) => setFormData({ ...formData, busNumber: e.target.value })}
+                  value={formData.bus_number}
+                  onChange={(e) => setFormData({ ...formData, bus_number: e.target.value })}
                 />
               </div>
               <div>
-                <Label htmlFor="edit-plateNumber">{language === 'en' ? 'Plate Number' : 'رقم اللوحة'}</Label>
+                <Label>{language === 'en' ? 'Capacity' : 'السعة'}</Label>
                 <Input
-                  id="edit-plateNumber"
-                  value={formData.plateNumber || ''}
-                  onChange={(e) => setFormData({ ...formData, plateNumber: e.target.value })}
+                  type="number"
+                  value={formData.capacity}
+                  onChange={(e) => setFormData({ ...formData, capacity: parseInt(e.target.value) || 0 })}
                 />
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="edit-make">{language === 'en' ? 'Make' : 'الصانع'}</Label>
+                <Label>{language === 'en' ? 'Model' : 'الموديل'}</Label>
                 <Input
-                  id="edit-make"
-                  value={formData.make || ''}
-                  onChange={(e) => setFormData({ ...formData, make: e.target.value })}
-                />
-              </div>
-              <div>
-                <Label htmlFor="edit-model">{language === 'en' ? 'Model' : 'الطراز'}</Label>
-                <Input
-                  id="edit-model"
-                  value={formData.model || ''}
+                  value={formData.model}
                   onChange={(e) => setFormData({ ...formData, model: e.target.value })}
                 />
               </div>
               <div>
-                <Label htmlFor="edit-year">{language === 'en' ? 'Year' : 'السنة'}</Label>
+                <Label>{language === 'en' ? 'Year' : 'السنة'}</Label>
                 <Input
-                  id="edit-year"
                   type="number"
-                  value={formData.year || ''}
-                  onChange={(e) => setFormData({ ...formData, year: parseInt(e.target.value) })}
+                  value={formData.year}
+                  onChange={(e) => setFormData({ ...formData, year: parseInt(e.target.value) || new Date().getFullYear() })}
                 />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="edit-capacity">{language === 'en' ? 'Capacity' : 'السعة'}</Label>
-                <Input
-                  id="edit-capacity"
-                  type="number"
-                  value={formData.capacity || ''}
-                  onChange={(e) => setFormData({ ...formData, capacity: parseInt(e.target.value) })}
-                />
-              </div>
-              <div>
-                <Label htmlFor="edit-fuelType">{language === 'en' ? 'Fuel Type' : 'نوع الوقود'}</Label>
-                <Input
-                  id="edit-fuelType"
-                  value={formData.fuelType || ''}
-                  onChange={(e) => setFormData({ ...formData, fuelType: e.target.value })}
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="edit-driver">{language === 'en' ? 'Assign Driver' : 'تعيين سائق'}</Label>
-                <Select
-                  value={formData.driverId || 'none'}
-                  onValueChange={(value) => setFormData({ ...formData, driverId: value === 'none' ? undefined : value })}
-                >
+                <Label>{language === 'en' ? 'Status' : 'الحالة'}</Label>
+                <Select value={formData.status} onValueChange={(v) => setFormData({ ...formData, status: v })}>
                   <SelectTrigger>
-                    <SelectValue placeholder={language === 'en' ? 'Select a driver' : 'اختر سائق'} />
+                    <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <div className="p-2">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Search className="h-4 w-4 text-muted-foreground" />
-                        <Input
-                          placeholder={language === 'en' ? 'Search drivers...' : 'البحث عن السائقين...'}
-                          value={driverSearch}
-                          onChange={(e) => setDriverSearch(e.target.value)}
-                          className="h-8"
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                      </div>
-                    </div>
-                    <SelectItem value="none">
-                      {language === 'en' ? 'No Driver' : 'بدون سائق'}
-                    </SelectItem>
-                    {mockDrivers
-                      .filter(driver => 
-                        driver.name.toLowerCase().includes(driverSearch.toLowerCase()) ||
-                        driver.nameAr.includes(driverSearch)
-                      )
-                      .map((driver) => (
-                        <SelectItem key={driver.id} value={driver.id}>
-                          {language === 'en' ? driver.name : driver.nameAr}
-                        </SelectItem>
-                      ))}
+                    <SelectItem value="active">{language === 'en' ? 'Active' : 'نشط'}</SelectItem>
+                    <SelectItem value="inactive">{language === 'en' ? 'Inactive' : 'غير نشط'}</SelectItem>
+                    <SelectItem value="maintenance">{language === 'en' ? 'Maintenance' : 'صيانة'}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label htmlFor="edit-supervisor">{language === 'en' ? 'Assign Supervisor' : 'تعيين مشرف'}</Label>
-                <Select
-                  value={formData.supervisorId || 'none'}
-                  onValueChange={(value) => setFormData({ ...formData, supervisorId: value === 'none' ? undefined : value })}
-                >
+                <Label>{language === 'en' ? 'Driver' : 'السائق'}</Label>
+                <Select value={formData.driver_id} onValueChange={(v) => setFormData({ ...formData, driver_id: v })}>
                   <SelectTrigger>
-                    <SelectValue placeholder={language === 'en' ? 'Select a supervisor' : 'اختر مشرف'} />
+                    <SelectValue placeholder={language === 'en' ? 'Select driver' : 'اختر السائق'} />
                   </SelectTrigger>
                   <SelectContent>
-                    <div className="p-2">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Search className="h-4 w-4 text-muted-foreground" />
-                        <Input
-                          placeholder={language === 'en' ? 'Search supervisors...' : 'البحث عن المشرفين...'}
-                          value={supervisorSearch}
-                          onChange={(e) => setSupervisorSearch(e.target.value)}
-                          className="h-8"
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                      </div>
-                    </div>
-                    <SelectItem value="none">
-                      {language === 'en' ? 'No Supervisor' : 'بدون مشرف'}
-                    </SelectItem>
-                    {mockTeachers
-                      .filter(teacher => 
-                        teacher.name.toLowerCase().includes(supervisorSearch.toLowerCase()) ||
-                        teacher.nameAr.includes(supervisorSearch)
-                      )
-                      .map((teacher) => (
-                        <SelectItem key={teacher.id} value={teacher.id}>
-                          {language === 'en' ? teacher.name : teacher.nameAr}
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            
-            {/* Students Selection for Edit */}
-            <div className="space-y-2">
-              <Label>{language === 'en' ? 'Select Students' : 'اختر الطلاب'}</Label>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-muted-foreground">{getSelectedStudentsNames()}</span>
-                <Badge variant="outline">
-                  {selectedStudents.length}/{formData.capacity || 50}
-                </Badge>
-              </div>
-              <div className="mb-2">
-                <div className="flex items-center gap-2">
-                  <Search className="h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder={language === 'en' ? 'Search students...' : 'البحث عن الطلاب...'}
-                    value={studentSearch}
-                    onChange={(e) => setStudentSearch(e.target.value)}
-                    className="h-8"
-                  />
-                </div>
-              </div>
-              <ScrollArea className="h-40 border rounded-md p-3">
-                <div className="space-y-2">
-                  {students
-                    .filter(student => {
-                      const fullName = `${student.firstName} ${student.lastName}`.toLowerCase();
-                      const fullNameAr = `${student.firstNameAr} ${student.lastNameAr}`;
-                      const search = studentSearch.toLowerCase();
-                      return (
-                        fullName.includes(search) ||
-                        fullNameAr.includes(studentSearch) ||
-                        student.grade.includes(studentSearch) ||
-                        student.class.includes(studentSearch) ||
-                        student.address.toLowerCase().includes(search)
-                      );
-                    })
-                    .map((student) => (
-                      <div key={student.id} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={`edit-student-${student.id}`}
-                          checked={selectedStudents.includes(student.id)}
-                          onCheckedChange={() => toggleStudentSelection(student.id)}
-                          disabled={!selectedStudents.includes(student.id) && selectedStudents.length >= (formData.capacity || 50)}
-                        />
-                        <label
-                          htmlFor={`edit-student-${student.id}`}
-                          className="flex-1 text-sm cursor-pointer"
-                        >
-                          <div className="flex justify-between items-center">
-                            <div>
-                              <span className="font-medium">
-                                {language === 'en' ? `${student.firstName} ${student.lastName}` : `${student.firstNameAr} ${student.lastNameAr}`}
-                              </span>
-                              <span className="text-xs text-muted-foreground ml-2">
-                                {student.grade}-{student.class}
-                              </span>
-                            </div>
-                            <span className="text-xs text-muted-foreground">
-                              {student.address}
-                            </span>
-                          </div>
-                        </label>
-                      </div>
+                    {filteredDrivers.map(driver => (
+                      <SelectItem key={driver.id} value={driver.id}>
+                        {language === 'en' ? driver.profile?.full_name : (driver.profile?.full_name_ar || driver.profile?.full_name)}
+                      </SelectItem>
                     ))}
-                </div>
-              </ScrollArea>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="edit-lastMaintenance">{language === 'en' ? 'Last Maintenance' : 'آخر صيانة'}</Label>
-                <Input
-                  id="edit-lastMaintenance"
-                  type="date"
-                  value={formData.lastMaintenance || ''}
-                  onChange={(e) => setFormData({ ...formData, lastMaintenance: e.target.value })}
-                />
-              </div>
-              <div>
-                <Label htmlFor="edit-nextMaintenance">{language === 'en' ? 'Next Maintenance' : 'الصيانة التالية'}</Label>
-                <Input
-                  id="edit-nextMaintenance"
-                  type="date"
-                  value={formData.nextMaintenance || ''}
-                  onChange={(e) => setFormData({ ...formData, nextMaintenance: e.target.value })}
-                />
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </div>
           <DialogFooter>
-            <Button 
-              variant="outline" 
-              onClick={() => {
-                setIsEditDialogOpen(false);
-                setEditingBus(null);
-                setSelectedStudents([]);
-                setStudentSearch('');
-                setDriverSearch('');
-                setSupervisorSearch('');
-                setFormData({ status: 'active', capacity: 50, currentStudents: 0, year: new Date().getFullYear(), studentIds: [] });
-              }}
-            >
-              {t('common.cancel')}
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+              {language === 'en' ? 'Cancel' : 'إلغاء'}
             </Button>
-            <Button 
-              onClick={() => {
-                handleUpdateBus();
-                setStudentSearch('');
-                setDriverSearch('');
-                setSupervisorSearch('');
-              }}
-            >
-              {t('common.save')}
+            <Button onClick={handleUpdateBus} disabled={updateBusMutation.isPending}>
+              {updateBusMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              {language === 'en' ? 'Update Bus' : 'تحديث الحافلة'}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation Dialog */}
+      {/* Delete Confirmation */}
       <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>
-              {language === 'en' ? 'Confirm Deletion' : 'تأكيد الحذف'}
-            </AlertDialogTitle>
+            <AlertDialogTitle>{language === 'en' ? 'Delete Bus' : 'حذف الحافلة'}</AlertDialogTitle>
             <AlertDialogDescription>
               {language === 'en' 
                 ? 'Are you sure you want to delete this bus? This action cannot be undone.'
-                : 'هل أنت متأكد من حذف هذه الحافلة؟ لا يمكن التراجع عن هذا الإجراء.'}
+                : 'هل أنت متأكد أنك تريد حذف هذه الحافلة؟ لا يمكن التراجع عن هذا الإجراء.'}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>{language === 'en' ? 'Cancel' : 'إلغاء'}</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+            <AlertDialogAction onClick={confirmDelete}>
               {language === 'en' ? 'Delete' : 'حذف'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Bulk Delete Confirmation Dialog */}
+      {/* Bulk Delete Confirmation */}
       <AlertDialog open={bulkDeleteConfirmOpen} onOpenChange={setBulkDeleteConfirmOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>
-              {language === 'en' ? 'Confirm Bulk Deletion' : 'تأكيد الحذف الجماعي'}
-            </AlertDialogTitle>
+            <AlertDialogTitle>{language === 'en' ? 'Delete Selected Buses' : 'حذف الحافلات المحددة'}</AlertDialogTitle>
             <AlertDialogDescription>
               {language === 'en' 
-                ? `Are you sure you want to delete ${selectedBuses.length} selected buses? This action cannot be undone.`
-                : `هل أنت متأكد من حذف ${selectedBuses.length} حافلة محددة؟ لا يمكن التراجع عن هذا الإجراء.`}
+                ? `Are you sure you want to delete ${selectedBuses.length} buses? This action cannot be undone.`
+                : `هل أنت متأكد أنك تريد حذف ${selectedBuses.length} حافلات؟ لا يمكن التراجع عن هذا الإجراء.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>{language === 'en' ? 'Cancel' : 'إلغاء'}</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmBulkDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              {language === 'en' ? `Delete ${selectedBuses.length} Buses` : `حذف ${selectedBuses.length} حافلة`}
+            <AlertDialogAction onClick={confirmBulkDelete}>
+              {language === 'en' ? 'Delete All' : 'حذف الكل'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
