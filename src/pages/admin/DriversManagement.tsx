@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,9 +9,10 @@ import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Edit, Trash2, Phone, Mail, MapPin, Calendar, Car } from 'lucide-react';
+import { Plus, Edit, Trash2, Phone, Mail, MapPin, Calendar, Car, Loader2 } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface Driver {
   id: string;
@@ -29,42 +30,10 @@ export interface Driver {
   joinDate: string;
 }
 
-const mockDrivers: Driver[] = [
-  {
-    id: '1',
-    name: 'Ali Mohammed',
-    nameAr: 'علي محمد',
-    phone: '+968 9123 4567',
-    email: 'ali.mohammed@school.om',
-    address: 'Al Khuwair, Muscat',
-    licenseNumber: 'DL-12345',
-    licenseExpiry: '2025-06-15',
-    experience: 8,
-    status: 'active',
-    image: '',
-    busId: 'BUS-001',
-    joinDate: '2020-03-15',
-  },
-  {
-    id: '2',
-    name: 'Hassan Ibrahim',
-    nameAr: 'حسن إبراهيم',
-    phone: '+968 9234 5678',
-    email: 'hassan.ibrahim@school.om',
-    address: 'Qurum, Muscat',
-    licenseNumber: 'DL-23456',
-    licenseExpiry: '2024-12-20',
-    experience: 5,
-    status: 'active',
-    image: '',
-    busId: 'BUS-002',
-    joinDate: '2021-01-10',
-  },
-];
-
 export default function DriversManagement() {
   const { t, language } = useLanguage();
-  const [drivers, setDrivers] = useState<Driver[]>(mockDrivers);
+  const [drivers, setDrivers] = useState<Driver[]>([]);
+  const [loading, setLoading] = useState(true);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedDrivers, setSelectedDrivers] = useState<string[]>([]);
@@ -78,31 +47,102 @@ export default function DriversManagement() {
   const [bulkDeleteConfirmOpen, setBulkDeleteConfirmOpen] = useState(false);
   const [driverToDelete, setDriverToDelete] = useState<string | null>(null);
 
-  const handleAddDriver = () => {
-    const newDriver: Driver = {
-      id: `d-${Date.now()}`,
-      name: formData.name || '',
-      nameAr: formData.nameAr || '',
-      phone: formData.phone || '',
-      email: formData.email || '',
-      address: formData.address || '',
-      licenseNumber: formData.licenseNumber || '',
-      licenseExpiry: formData.licenseExpiry || '',
-      experience: formData.experience || 0,
-      status: formData.status as 'active' | 'inactive' | 'on-leave',
-      image: '',
-      joinDate: new Date().toISOString().split('T')[0],
-    };
-    
-    setDrivers([...drivers, newDriver]);
-    setIsAddDialogOpen(false);
-    setFormData({ status: 'active' });
-    
-    toast({
-      variant: 'success',
-      title: language === 'ar' ? 'تمت الإضافة بنجاح' : 'Added Successfully',
-      description: language === 'ar' ? 'تمت إضافة السائق بنجاح' : 'Driver has been added successfully',
-    });
+  // Fetch drivers from database
+  const fetchDrivers = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('drivers')
+        .select(`
+          id,
+          employee_id,
+          license_number,
+          license_expiry,
+          experience_years,
+          status,
+          join_date,
+          bus_id,
+          profile_id,
+          profiles:profile_id (
+            id,
+            full_name,
+            full_name_ar,
+            phone,
+            email,
+            address,
+            profile_image
+          )
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      const mappedDrivers: Driver[] = (data || []).map((d: any) => ({
+        id: d.id,
+        name: d.profiles?.full_name || d.employee_id || 'Unknown',
+        nameAr: d.profiles?.full_name_ar || d.profiles?.full_name || 'غير معروف',
+        phone: d.profiles?.phone || '',
+        email: d.profiles?.email || '',
+        address: d.profiles?.address || '',
+        licenseNumber: d.license_number || '',
+        licenseExpiry: d.license_expiry || '',
+        experience: d.experience_years || 0,
+        status: d.status || 'active',
+        image: d.profiles?.profile_image || '',
+        busId: d.bus_id || undefined,
+        joinDate: d.join_date || new Date().toISOString().split('T')[0],
+      }));
+
+      setDrivers(mappedDrivers);
+    } catch (error) {
+      console.error('Error fetching drivers:', error);
+      toast({
+        variant: 'destructive',
+        title: language === 'ar' ? 'خطأ' : 'Error',
+        description: language === 'ar' ? 'فشل في تحميل السائقين' : 'Failed to load drivers',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDrivers();
+  }, []);
+
+  const handleAddDriver = async () => {
+    try {
+      // Create the driver record with a generated employee_id
+      const { error: driverError } = await supabase
+        .from('drivers')
+        .insert({
+          employee_id: `DRV-${Date.now().toString().slice(-6)}`,
+          license_number: formData.licenseNumber || '',
+          license_expiry: formData.licenseExpiry || null,
+          experience_years: formData.experience || 0,
+          status: formData.status || 'active',
+          join_date: new Date().toISOString().split('T')[0],
+        });
+
+      if (driverError) throw driverError;
+
+      await fetchDrivers();
+      setIsAddDialogOpen(false);
+      setFormData({ status: 'active' });
+      
+      toast({
+        variant: 'success',
+        title: language === 'ar' ? 'تمت الإضافة بنجاح' : 'Added Successfully',
+        description: language === 'ar' ? 'تمت إضافة السائق بنجاح' : 'Driver has been added successfully',
+      });
+    } catch (error) {
+      console.error('Error adding driver:', error);
+      toast({
+        variant: 'destructive',
+        title: language === 'ar' ? 'خطأ' : 'Error',
+        description: language === 'ar' ? 'فشل في إضافة السائق' : 'Failed to add driver',
+      });
+    }
   };
 
   const handleEditDriver = (driver: Driver) => {
@@ -111,24 +151,60 @@ export default function DriversManagement() {
     setIsEditDialogOpen(true);
   };
 
-  const handleUpdateDriver = () => {
+  const handleUpdateDriver = async () => {
     if (!editingDriver) return;
     
-    setDrivers(drivers.map(d => 
-      d.id === editingDriver.id 
-        ? { ...d, ...formData } as Driver
-        : d
-    ));
-    
-    setIsEditDialogOpen(false);
-    setEditingDriver(null);
-    setFormData({ status: 'active' });
-    
-    toast({
-      variant: 'success',
-      title: language === 'ar' ? 'تم التحديث بنجاح' : 'Updated Successfully',
-      description: language === 'ar' ? 'تم تحديث معلومات السائق بنجاح' : 'Driver information has been updated successfully',
-    });
+    try {
+      // Get the driver record to find profile_id
+      const { data: driverRecord } = await supabase
+        .from('drivers')
+        .select('profile_id')
+        .eq('id', editingDriver.id)
+        .single();
+
+      if (driverRecord?.profile_id) {
+        // Update profile
+        await supabase
+          .from('profiles')
+          .update({
+            full_name: formData.name || '',
+            full_name_ar: formData.nameAr || '',
+            phone: formData.phone || '',
+            email: formData.email || '',
+            address: formData.address || '',
+          })
+          .eq('id', driverRecord.profile_id);
+      }
+
+      // Update driver record
+      await supabase
+        .from('drivers')
+        .update({
+          license_number: formData.licenseNumber || '',
+          license_expiry: formData.licenseExpiry || null,
+          experience_years: formData.experience || 0,
+          status: formData.status || 'active',
+        })
+        .eq('id', editingDriver.id);
+
+      await fetchDrivers();
+      setIsEditDialogOpen(false);
+      setEditingDriver(null);
+      setFormData({ status: 'active' });
+      
+      toast({
+        variant: 'success',
+        title: language === 'ar' ? 'تم التحديث بنجاح' : 'Updated Successfully',
+        description: language === 'ar' ? 'تم تحديث معلومات السائق بنجاح' : 'Driver information has been updated successfully',
+      });
+    } catch (error) {
+      console.error('Error updating driver:', error);
+      toast({
+        variant: 'destructive',
+        title: language === 'ar' ? 'خطأ' : 'Error',
+        description: language === 'ar' ? 'فشل في تحديث السائق' : 'Failed to update driver',
+      });
+    }
   };
 
   const handleDeleteDriver = (id: string) => {
@@ -136,16 +212,26 @@ export default function DriversManagement() {
     setDeleteConfirmOpen(true);
   };
   
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (driverToDelete) {
-      setDrivers(drivers.filter(d => d.id !== driverToDelete));
-      setSelectedDrivers(prev => prev.filter(driverId => driverId !== driverToDelete));
-      
-      toast({
-        variant: 'success',
-        title: language === 'ar' ? 'تم الحذف بنجاح' : 'Deleted Successfully',
-        description: language === 'ar' ? 'تم حذف السائق بنجاح' : 'Driver has been deleted successfully',
-      });
+      try {
+        await supabase.from('drivers').delete().eq('id', driverToDelete);
+        await fetchDrivers();
+        setSelectedDrivers(prev => prev.filter(driverId => driverId !== driverToDelete));
+        
+        toast({
+          variant: 'success',
+          title: language === 'ar' ? 'تم الحذف بنجاح' : 'Deleted Successfully',
+          description: language === 'ar' ? 'تم حذف السائق بنجاح' : 'Driver has been deleted successfully',
+        });
+      } catch (error) {
+        console.error('Error deleting driver:', error);
+        toast({
+          variant: 'destructive',
+          title: language === 'ar' ? 'خطأ' : 'Error',
+          description: language === 'ar' ? 'فشل في حذف السائق' : 'Failed to delete driver',
+        });
+      }
       
       setDriverToDelete(null);
     }
@@ -156,18 +242,31 @@ export default function DriversManagement() {
     setBulkDeleteConfirmOpen(true);
   };
   
-  const confirmBulkDelete = () => {
-    setDrivers(drivers.filter(d => !selectedDrivers.includes(d.id)));
-    const count = selectedDrivers.length;
-    setSelectedDrivers([]);
-    
-    toast({
-      variant: 'success',
-      title: language === 'ar' ? 'تم الحذف بنجاح' : 'Deleted Successfully',
-      description: language === 'ar' 
-        ? `تم حذف ${count} سائق بنجاح` 
-        : `${count} drivers have been deleted successfully`,
-    });
+  const confirmBulkDelete = async () => {
+    try {
+      for (const id of selectedDrivers) {
+        await supabase.from('drivers').delete().eq('id', id);
+      }
+      
+      await fetchDrivers();
+      const count = selectedDrivers.length;
+      setSelectedDrivers([]);
+      
+      toast({
+        variant: 'success',
+        title: language === 'ar' ? 'تم الحذف بنجاح' : 'Deleted Successfully',
+        description: language === 'ar' 
+          ? `تم حذف ${count} سائق بنجاح` 
+          : `${count} drivers have been deleted successfully`,
+      });
+    } catch (error) {
+      console.error('Error bulk deleting drivers:', error);
+      toast({
+        variant: 'destructive',
+        title: language === 'ar' ? 'خطأ' : 'Error',
+        description: language === 'ar' ? 'فشل في حذف السائقين' : 'Failed to delete drivers',
+      });
+    }
     
     setBulkDeleteConfirmOpen(false);
   };
@@ -200,6 +299,14 @@ export default function DriversManagement() {
         return '';
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -272,7 +379,9 @@ export default function DriversManagement() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {(drivers.reduce((sum, d) => sum + d.experience, 0) / drivers.length).toFixed(1)} {language === 'en' ? 'years' : 'سنوات'}
+              {drivers.length > 0 
+                ? (drivers.reduce((sum, d) => sum + d.experience, 0) / drivers.length).toFixed(1) 
+                : 0} {language === 'en' ? 'years' : 'سنوات'}
             </div>
           </CardContent>
         </Card>
@@ -284,113 +393,121 @@ export default function DriversManagement() {
           <CardTitle>{language === 'en' ? 'All Drivers' : 'جميع السائقين'}</CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-12">
-                  <Checkbox
-                    checked={selectedDrivers.length === drivers.length && drivers.length > 0}
-                    onCheckedChange={toggleSelectAll}
-                  />
-                </TableHead>
-                <TableHead>{language === 'en' ? 'Driver' : 'السائق'}</TableHead>
-                <TableHead>{language === 'en' ? 'Contact' : 'التواصل'}</TableHead>
-                <TableHead>{language === 'en' ? 'License' : 'الرخصة'}</TableHead>
-                <TableHead>{language === 'en' ? 'Experience' : 'الخبرة'}</TableHead>
-                <TableHead>{language === 'en' ? 'Bus' : 'الحافلة'}</TableHead>
-                <TableHead>{language === 'en' ? 'Status' : 'الحالة'}</TableHead>
-                <TableHead>{language === 'en' ? 'Actions' : 'الإجراءات'}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {drivers.map((driver) => (
-                <TableRow key={driver.id}>
-                  <TableCell>
+          {drivers.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              {language === 'en' ? 'No drivers found. Add a driver to get started.' : 'لا يوجد سائقون. أضف سائق للبدء.'}
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-12">
                     <Checkbox
-                      checked={selectedDrivers.includes(driver.id)}
-                      onCheckedChange={() => toggleDriverSelection(driver.id)}
+                      checked={selectedDrivers.length === drivers.length && drivers.length > 0}
+                      onCheckedChange={toggleSelectAll}
                     />
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <Avatar>
-                        <AvatarImage src={driver.image} />
-                        <AvatarFallback>{driver.name.charAt(0)}</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="font-medium">
-                          {language === 'en' ? driver.name : driver.nameAr}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {language === 'en' ? 'Since' : 'منذ'} {driver.joinDate}
-                        </p>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-1 text-xs">
-                        <Phone className="h-3 w-3" />
-                        {driver.phone}
-                      </div>
-                      <div className="flex items-center gap-1 text-xs">
-                        <Mail className="h-3 w-3" />
-                        {driver.email}
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="space-y-1">
-                      <p className="text-sm font-medium">{driver.licenseNumber}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {language === 'en' ? 'Expires' : 'تنتهي'}: {driver.licenseExpiry}
-                      </p>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <p className="text-sm">{driver.experience} {language === 'en' ? 'years' : 'سنوات'}</p>
-                  </TableCell>
-                  <TableCell>
-                    {driver.busId ? (
-                      <Badge variant="outline">
-                        <Car className="h-3 w-3 mr-1" />
-                        {driver.busId}
-                      </Badge>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">
-                        {language === 'en' ? 'Not Assigned' : 'غير مخصص'}
-                      </span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Badge className={getStatusColor(driver.status)}>
-                      {driver.status === 'active' ? (language === 'ar' ? 'نشط' : 'Active') :
-                       driver.status === 'inactive' ? (language === 'ar' ? 'غير نشط' : 'Inactive') :
-                       (language === 'ar' ? 'في إجازة' : 'On Leave')}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        onClick={() => handleEditDriver(driver)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        onClick={() => handleDeleteDriver(driver.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
+                  </TableHead>
+                  <TableHead>{language === 'en' ? 'Driver' : 'السائق'}</TableHead>
+                  <TableHead>{language === 'en' ? 'Contact' : 'التواصل'}</TableHead>
+                  <TableHead>{language === 'en' ? 'License' : 'الرخصة'}</TableHead>
+                  <TableHead>{language === 'en' ? 'Experience' : 'الخبرة'}</TableHead>
+                  <TableHead>{language === 'en' ? 'Bus' : 'الحافلة'}</TableHead>
+                  <TableHead>{language === 'en' ? 'Status' : 'الحالة'}</TableHead>
+                  <TableHead>{language === 'en' ? 'Actions' : 'الإجراءات'}</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {drivers.map((driver) => (
+                  <TableRow key={driver.id}>
+                    <TableCell>
+                      <Checkbox
+                        checked={selectedDrivers.includes(driver.id)}
+                        onCheckedChange={() => toggleDriverSelection(driver.id)}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <Avatar>
+                          <AvatarImage src={driver.image} />
+                          <AvatarFallback>{driver.name.charAt(0)}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-medium">
+                            {language === 'en' ? driver.name : driver.nameAr}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {language === 'en' ? 'Since' : 'منذ'} {driver.joinDate}
+                          </p>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-1 text-xs">
+                          <Phone className="h-3 w-3" />
+                          {driver.phone || '-'}
+                        </div>
+                        <div className="flex items-center gap-1 text-xs">
+                          <Mail className="h-3 w-3" />
+                          {driver.email || '-'}
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="space-y-1">
+                        <p className="text-sm font-medium">{driver.licenseNumber || '-'}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {driver.licenseExpiry 
+                            ? `${language === 'en' ? 'Expires' : 'تنتهي'}: ${driver.licenseExpiry}`
+                            : '-'}
+                        </p>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <p className="text-sm">{driver.experience} {language === 'en' ? 'years' : 'سنوات'}</p>
+                    </TableCell>
+                    <TableCell>
+                      {driver.busId ? (
+                        <Badge variant="outline">
+                          <Car className="h-3 w-3 mr-1" />
+                          {driver.busId}
+                        </Badge>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">
+                          {language === 'en' ? 'Not Assigned' : 'غير مخصص'}
+                        </span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Badge className={getStatusColor(driver.status)}>
+                        {driver.status === 'active' ? (language === 'ar' ? 'نشط' : 'Active') :
+                         driver.status === 'inactive' ? (language === 'ar' ? 'غير نشط' : 'Inactive') :
+                         (language === 'ar' ? 'في إجازة' : 'On Leave')}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-2">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={() => handleEditDriver(driver)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={() => handleDeleteDriver(driver.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
 
