@@ -26,21 +26,7 @@ interface StudentInfo {
   profileImage: string;
 }
 
-const mockStudent: StudentInfo = {
-  id: '1',
-  name: 'Sara Ahmed',
-  nameAr: 'سارة أحمد',
-  class: '10-A',
-  parentName: 'Mohammed Ali',
-  parentPhone: '+968 9234 5678',
-  homeLocation: {
-    lat: 23.5880,
-    lng: 58.3829,
-    address: 'Al Khuwair, Building 45, Flat 12, Muscat',
-  },
-  notes: 'Allergic to peanuts. Requires special attention during sports activities.',
-  profileImage: undefined,
-};
+// No mock data - all data comes from database
 
 interface NfcReaderProps {
   showFullProfile?: boolean;
@@ -136,16 +122,15 @@ export default function NfcReader({ showFullProfile = true, driverMode = false }
           : 'تعذر قراءة بطاقة NFC. يرجى المحاولة مرة أخرى.',
         variant: 'destructive',
       });
-      
-      // Fallback to mock data for demo
-      setStudentInfo(mockStudent);
+      // No fallback - show error only
     } finally {
       setIsReading(false);
     }
   };
 
   const openInGoogleMaps = () => {
-    const { lat, lng } = mockStudent.homeLocation;
+    if (!studentInfo) return;
+    const { lat, lng } = studentInfo.homeLocation;
     const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
     window.open(url, '_blank');
   };
