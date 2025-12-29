@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card } from '@/components/ui/card';
 import { toast } from '@/hooks/use-toast';
-import { Camera, Upload, User, School, Phone, MapPin, Calendar, AlertCircle, Bus, Utensils, ShoppingBag, FileText, Edit, Save, X, Trash2 } from 'lucide-react';
+import { Camera, Upload, User, School, Phone, MapPin, Calendar, AlertCircle, Bus, Utensils, ShoppingBag, FileText, Edit, Save, X, Trash2, GraduationCap, Users, Heart, CheckSquare, BookmarkCheck } from 'lucide-react';
 import { z } from 'zod';
 
 // Validation schema
@@ -373,13 +373,34 @@ export default function StudentRegistration({ isOpen, onClose, editingStudent }:
         <div className="flex-1 overflow-y-auto px-6 py-4">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full" dir={language === 'ar' ? 'rtl' : 'ltr'}>
             <TabsList className={`grid grid-cols-7 w-full mb-4 sticky top-0 z-10 bg-background ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
-              <TabsTrigger value="basic">{language === 'en' ? 'Basic' : 'الأساسية'}</TabsTrigger>
-              <TabsTrigger value="academic">{language === 'en' ? 'Academic' : 'الأكاديمية'}</TabsTrigger>
-              <TabsTrigger value="contact">{language === 'en' ? 'Contact' : 'الاتصال'}</TabsTrigger>
-              <TabsTrigger value="parent">{language === 'en' ? 'Parent' : 'ولي الأمر'}</TabsTrigger>
-              <TabsTrigger value="medical">{language === 'en' ? 'Medical' : 'الطبية'}</TabsTrigger>
-              <TabsTrigger value="agreements">{language === 'en' ? 'Agreements' : 'الموافقات'}</TabsTrigger>
-              <TabsTrigger value="saved">{language === 'en' ? 'Saved' : 'المحفوظون'}</TabsTrigger>
+              <TabsTrigger value="basic" className="flex items-center justify-center gap-1.5">
+                <User className="h-4 w-4" />
+                <span className="hidden sm:inline">{language === 'en' ? 'Basic' : 'الأساسية'}</span>
+              </TabsTrigger>
+              <TabsTrigger value="academic" className="flex items-center justify-center gap-1.5">
+                <GraduationCap className="h-4 w-4" />
+                <span className="hidden sm:inline">{language === 'en' ? 'Academic' : 'الأكاديمية'}</span>
+              </TabsTrigger>
+              <TabsTrigger value="contact" className="flex items-center justify-center gap-1.5">
+                <Phone className="h-4 w-4" />
+                <span className="hidden sm:inline">{language === 'en' ? 'Contact' : 'الاتصال'}</span>
+              </TabsTrigger>
+              <TabsTrigger value="parent" className="flex items-center justify-center gap-1.5">
+                <Users className="h-4 w-4" />
+                <span className="hidden sm:inline">{language === 'en' ? 'Parent' : 'ولي الأمر'}</span>
+              </TabsTrigger>
+              <TabsTrigger value="medical" className="flex items-center justify-center gap-1.5">
+                <Heart className="h-4 w-4" />
+                <span className="hidden sm:inline">{language === 'en' ? 'Medical' : 'الطبية'}</span>
+              </TabsTrigger>
+              <TabsTrigger value="agreements" className="flex items-center justify-center gap-1.5">
+                <CheckSquare className="h-4 w-4" />
+                <span className="hidden sm:inline">{language === 'en' ? 'Agreements' : 'الموافقات'}</span>
+              </TabsTrigger>
+              <TabsTrigger value="saved" className="flex items-center justify-center gap-1.5">
+                <BookmarkCheck className="h-4 w-4" />
+                <span className="hidden sm:inline">{language === 'en' ? 'Saved' : 'المحفوظون'}</span>
+              </TabsTrigger>
             </TabsList>
             
             <div className="pb-4">
