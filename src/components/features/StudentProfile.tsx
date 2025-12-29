@@ -248,7 +248,7 @@ export default function StudentProfile({ studentId, onClose }: StudentProfilePro
                   <span className="text-2xl font-bold">{calculateGPA()}</span>
                   <span className="text-sm text-muted-foreground">/ 4.0</span>
                 </div>
-                <Progress value={(parseFloat(calculateGPA()) / 4) * 100} className="mt-2" />
+                <Progress value={(Number(calculateGPA()) / 4) * 100} className="mt-2" />
               </CardContent>
             </Card>
 
