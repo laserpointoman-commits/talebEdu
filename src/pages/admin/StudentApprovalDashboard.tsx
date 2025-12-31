@@ -68,22 +68,31 @@ export default function StudentApprovalDashboard() {
             </p>
           ) : (
             <div className="space-y-4">
-              {students.map((student) => (
-                <div key={student.id} className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex items-center gap-4">
-                    <User className="w-10 h-10 text-muted-foreground" />
-                    <div>
-                      <p className="font-medium">{student.full_name}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {language === 'en' ? 'Parent:' : 'ولي الأمر:'} {student.profiles?.full_name}
-                      </p>
+              {students.map((student) => {
+                const studentName = student.first_name && student.last_name 
+                  ? `${student.first_name} ${student.last_name}`
+                  : student.full_name || 'Unknown Student';
+                
+                return (
+                  <div key={student.id} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div className="flex items-center gap-4">
+                      <User className="w-10 h-10 text-muted-foreground" />
+                      <div>
+                        <p className="font-medium">{studentName}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {language === 'en' ? 'Parent:' : 'ولي الأمر:'} {student.profiles?.full_name}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {language === 'en' ? 'Grade:' : 'الصف:'} {student.grade} {student.class && `- ${student.class}`}
+                        </p>
+                      </div>
                     </div>
+                    <Button onClick={() => setSelectedStudent(student)}>
+                      {language === 'en' ? 'Review' : 'مراجعة'}
+                    </Button>
                   </div>
-                  <Button onClick={() => setSelectedStudent(student)}>
-                    {language === 'en' ? 'Review' : 'مراجعة'}
-                  </Button>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </CardContent>

@@ -52,12 +52,35 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
+    // Generate full_name from form data
+    const fullName = studentData.full_name || 
+      `${studentData.firstName || studentData.first_name || ''} ${studentData.lastName || studentData.last_name || ''}`.trim();
+
     // Create student record with pending status
     const { data: student, error: studentError } = await supabase
       .from("students")
       .insert({
-        ...studentData,
+        first_name: studentData.firstName || studentData.first_name || '',
+        last_name: studentData.lastName || studentData.last_name || '',
+        first_name_ar: studentData.firstNameAr || studentData.first_name_ar || '',
+        last_name_ar: studentData.lastNameAr || studentData.last_name_ar || '',
+        date_of_birth: studentData.dateOfBirth || studentData.date_of_birth,
+        gender: studentData.gender,
+        grade: studentData.grade,
+        class: studentData.class,
+        nationality: studentData.nationality,
+        blood_group: studentData.bloodType || studentData.blood_group,
+        allergies: studentData.allergies,
+        medical_conditions: studentData.medicalConditions || studentData.medical_conditions,
         parent_id: user.id,
+        parent_name: studentData.parentName || studentData.parent_name,
+        parent_phone: studentData.parentPhone || studentData.parent_phone,
+        parent_email: studentData.parentEmail || studentData.parent_email,
+        emergency_contact_name: studentData.emergencyContact || studentData.emergency_contact_name,
+        emergency_contact: studentData.emergencyPhone || studentData.emergency_contact,
+        address: studentData.address,
+        phone: studentData.phone,
+        student_id: `STU-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`,
         approval_status: "pending",
         visible_to_parent: false,
         submitted_at: new Date().toISOString(),
@@ -102,17 +125,26 @@ const handler = async (req: Request): Promise<Response> => {
       .select("id, full_name")
       .eq("role", "admin");
 
+    // Get parent name
+    const { data: parentProfile } = await supabase
+      .from("profiles")
+      .select("full_name")
+      .eq("id", user.id)
+      .single();
+
+    const studentFullName = `${student.first_name} ${student.last_name}`;
+
     // Create notifications for admins
     if (admins && admins.length > 0) {
       const notifications = admins.map(admin => ({
         user_id: admin.id,
         notification_type: "system_announcements",
         title: "New Student Registration Pending Approval",
-        message: `${studentData.full_name} has been submitted by ${profile} for approval`,
+        message: `${studentFullName} has been submitted by ${parentProfile?.full_name || 'a parent'} for approval`,
         read: false,
         data: {
           student_id: student.id,
-          student_name: studentData.full_name,
+          student_name: studentFullName,
           parent_id: user.id,
         },
       }));

@@ -133,14 +133,19 @@ const handler = async (req: Request): Promise<Response> => {
       console.error("Error updating approval record:", approvalUpdateError);
     }
 
+    // Get student name
+    const studentName = student.first_name && student.last_name 
+      ? `${student.first_name} ${student.last_name}`
+      : student.full_name || 'Student';
+
     // Send notification to parent
     const notificationTitle = approved 
       ? "Student Registration Approved!" 
       : "Student Registration Needs Attention";
     
     const notificationMessage = approved
-      ? `Great news! ${student.full_name}'s registration has been approved. You can now access their profile and all features.`
-      : `${student.full_name}'s registration requires additional information. ${rejectionReason || 'Please contact administration.'}`;
+      ? `Great news! ${studentName}'s registration has been approved. You can now access their profile and all features.`
+      : `${studentName}'s registration requires additional information. ${rejectionReason || 'Please contact administration.'}`;
 
     await supabase.from("notification_history").insert({
       user_id: student.parent_id,
@@ -150,7 +155,7 @@ const handler = async (req: Request): Promise<Response> => {
       read: false,
       data: {
         student_id: studentId,
-        student_name: student.full_name,
+        student_name: studentName,
         approved,
         rejection_reason: rejectionReason,
       },
