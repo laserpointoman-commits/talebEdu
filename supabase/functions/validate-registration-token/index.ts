@@ -63,12 +63,19 @@ serve(async (req: Request) => {
 
     console.log("Token is valid for email:", tokenData.email);
 
+    // Return both flat data (for ParentSelfSignup) and parentInfo (for ParentRegistration)
     return new Response(
       JSON.stringify({
         valid: true,
         email: tokenData.email,
         maxStudents: tokenData.max_students,
         expiresAt: tokenData.expires_at,
+        // For backward compatibility with ParentRegistration page
+        parentInfo: {
+          email: tokenData.email,
+          full_name: '',
+          phone: '',
+        },
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );

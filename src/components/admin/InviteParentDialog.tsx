@@ -40,19 +40,20 @@ export function InviteParentDialog({ open, onOpenChange, onSuccess }: InvitePare
     setLoading(true);
 
     try {
-      // Call the send-parent-invitation edge function
-      const { data, error } = await supabase.functions.invoke('send-parent-invitation', {
+      // Call the send-registration-invitation edge function
+      const { data, error } = await supabase.functions.invoke('send-registration-invitation', {
         body: {
-          parentEmail: formData.email,
-          parentName: formData.fullName,
-          parentNameAr: formData.fullNameAr || formData.fullName,
-          phone: formData.phone,
+          invitationEmail: formData.email,
+          maxStudents: formData.maxStudents ? parseInt(formData.maxStudents) : 5,
           notes: formData.notes,
-          maxStudents: formData.maxStudents ? parseInt(formData.maxStudents) : null,
         }
       });
 
       if (error) throw error;
+
+      if (!data?.success && data?.error) {
+        throw new Error(data.error);
+      }
 
       setRegistrationLink(data.registrationUrl);
       setShowSuccess(true);

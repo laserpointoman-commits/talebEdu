@@ -90,6 +90,31 @@ serve(async (req) => {
 
     console.log('Attendance recorded successfully:', attendanceRecord.id);
 
+    // Send notification to parent
+    const notificationTitle = action === 'check_in' 
+      ? 'Student Checked In' 
+      : 'Student Checked Out';
+    const notificationMessage = action === 'check_in'
+      ? `${student.first_name} ${student.last_name} has arrived at school`
+      : `${student.first_name} ${student.last_name} has left school`;
+
+    if (student.parent_id) {
+      await supabase.functions.invoke('send-parent-notification', {
+        body: {
+          parentId: student.parent_id,
+          studentId: student.id,
+          type: action === 'check_in' ? 'student_checkin' : 'student_checkout',
+          title: notificationTitle,
+          message: notificationMessage,
+          data: {
+            location: location,
+            action: action,
+            timestamp: attendanceRecord.created_at,
+          },
+        },
+      });
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
