@@ -9,9 +9,12 @@ interface Profile {
   email: string;
   full_name: string;
   full_name_ar?: string;
-  role: 'admin' | 'teacher' | 'parent' | 'student' | 'driver' | 'developer' | 'finance' | 'canteen' | 'school_attendance' | 'bus_attendance';
+  role: 'admin' | 'teacher' | 'parent' | 'student' | 'driver' | 'developer' | 'finance' | 'canteen' | 'school_attendance' | 'bus_attendance' | 'supervisor';
   phone?: string;
   address?: string;
+  email_confirmed?: boolean;
+  expected_students_count?: number;
+  registered_students_count?: number;
 }
 
 interface AuthState {

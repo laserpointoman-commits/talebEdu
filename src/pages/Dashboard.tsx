@@ -6,6 +6,7 @@ import AdminDashboard from '@/pages/dashboards/AdminDashboard';
 import TeacherDashboard from '@/pages/dashboards/TeacherDashboard';
 import ParentDashboard from '@/pages/dashboards/ParentDashboard';
 import DriverDashboard from '@/pages/dashboards/DriverDashboard';
+import SupervisorDashboard from '@/pages/dashboards/SupervisorDashboard';
 import StudentDashboard from '@/components/dashboards/StudentDashboard';
 import DeveloperDashboard from '@/components/dashboards/DeveloperDashboard';
 import CanteenDashboard from '@/pages/dashboards/CanteenDashboard';
@@ -45,6 +46,7 @@ import ParentalCanteenControl from '@/components/features/ParentalCanteenControl
 import ParentInvitationsDashboard from './admin/ParentInvitationsDashboard';
 import QuickPasswordReset from './admin/QuickPasswordReset';
 import FeeManagement from './admin/FeeManagement';
+import TeacherNFCScanning from './TeacherNFCScanning';
 
 export default function Dashboard() {
   const { user, profile, isAuthenticated } = useAuth();
@@ -80,6 +82,8 @@ export default function Dashboard() {
         return <StudentDashboard />;
       case 'driver':
         return <DriverDashboard />;
+      case 'supervisor':
+        return <SupervisorDashboard />;
       case 'canteen':
         return <CanteenDashboard />;
       case 'school_attendance':
@@ -127,6 +131,7 @@ export default function Dashboard() {
         <Route path="admin/password-reset" element={<QuickPasswordReset />} />
         <Route path="admin/fees" element={<FeeManagement />} />
         <Route path="canteen-controls" element={<ParentalCanteenControl />} />
+        <Route path="teacher-nfc" element={<TeacherNFCScanning />} />
         <Route path="profile" element={<Profile />} />
         <Route path="settings" element={<Settings />} />
         <Route path="*" element={getDashboardComponent()} />
