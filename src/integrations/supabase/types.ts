@@ -38,6 +38,73 @@ export type Database = {
         }
         Relationships: []
       }
+      allowance_settings: {
+        Row: {
+          allowed_categories: string[] | null
+          auto_deduct_on_entry: boolean | null
+          blocked_categories: string[] | null
+          created_at: string | null
+          daily_limit: number | null
+          entry_allowance_amount: number | null
+          id: string
+          is_active: boolean | null
+          parent_id: string
+          student_id: string
+          updated_at: string | null
+          weekly_limit: number | null
+        }
+        Insert: {
+          allowed_categories?: string[] | null
+          auto_deduct_on_entry?: boolean | null
+          blocked_categories?: string[] | null
+          created_at?: string | null
+          daily_limit?: number | null
+          entry_allowance_amount?: number | null
+          id?: string
+          is_active?: boolean | null
+          parent_id: string
+          student_id: string
+          updated_at?: string | null
+          weekly_limit?: number | null
+        }
+        Update: {
+          allowed_categories?: string[] | null
+          auto_deduct_on_entry?: boolean | null
+          blocked_categories?: string[] | null
+          created_at?: string | null
+          daily_limit?: number | null
+          entry_allowance_amount?: number | null
+          id?: string
+          is_active?: boolean | null
+          parent_id?: string
+          student_id?: string
+          updated_at?: string | null
+          weekly_limit?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "allowance_settings_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "available_contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "allowance_settings_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "allowance_settings_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: true
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       archived_chats: {
         Row: {
           contact_id: string | null
@@ -354,6 +421,86 @@ export type Database = {
           },
         ]
       }
+      bus_trips: {
+        Row: {
+          bus_id: string
+          created_at: string | null
+          current_latitude: number | null
+          current_longitude: number | null
+          current_stop: string | null
+          driver_id: string | null
+          ended_at: string | null
+          id: string
+          next_stop: string | null
+          started_at: string | null
+          status: string
+          supervisor_id: string | null
+          trip_type: string
+          updated_at: string | null
+        }
+        Insert: {
+          bus_id: string
+          created_at?: string | null
+          current_latitude?: number | null
+          current_longitude?: number | null
+          current_stop?: string | null
+          driver_id?: string | null
+          ended_at?: string | null
+          id?: string
+          next_stop?: string | null
+          started_at?: string | null
+          status?: string
+          supervisor_id?: string | null
+          trip_type?: string
+          updated_at?: string | null
+        }
+        Update: {
+          bus_id?: string
+          created_at?: string | null
+          current_latitude?: number | null
+          current_longitude?: number | null
+          current_stop?: string | null
+          driver_id?: string | null
+          ended_at?: string | null
+          id?: string
+          next_stop?: string | null
+          started_at?: string | null
+          status?: string
+          supervisor_id?: string | null
+          trip_type?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bus_trips_bus_id_fkey"
+            columns: ["bus_id"]
+            isOneToOne: false
+            referencedRelation: "buses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bus_trips_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bus_trips_supervisor_id_fkey"
+            columns: ["supervisor_id"]
+            isOneToOne: false
+            referencedRelation: "available_contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bus_trips_supervisor_id_fkey"
+            columns: ["supervisor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       buses: {
         Row: {
           bus_number: string
@@ -363,6 +510,7 @@ export type Database = {
           id: string
           model: string | null
           status: string | null
+          supervisor_id: string | null
           updated_at: string | null
           year: number | null
         }
@@ -374,6 +522,7 @@ export type Database = {
           id?: string
           model?: string | null
           status?: string | null
+          supervisor_id?: string | null
           updated_at?: string | null
           year?: number | null
         }
@@ -385,6 +534,7 @@ export type Database = {
           id?: string
           model?: string | null
           status?: string | null
+          supervisor_id?: string | null
           updated_at?: string | null
           year?: number | null
         }
@@ -394,6 +544,20 @@ export type Database = {
             columns: ["driver_id"]
             isOneToOne: false
             referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "buses_supervisor_id_fkey"
+            columns: ["supervisor_id"]
+            isOneToOne: false
+            referencedRelation: "available_contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "buses_supervisor_id_fkey"
+            columns: ["supervisor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -3898,6 +4062,64 @@ export type Database = {
           },
         ]
       }
+      supervisors: {
+        Row: {
+          bus_id: string | null
+          created_at: string | null
+          emergency_contact: string | null
+          employee_id: string
+          id: string
+          phone: string | null
+          profile_id: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          bus_id?: string | null
+          created_at?: string | null
+          emergency_contact?: string | null
+          employee_id: string
+          id?: string
+          phone?: string | null
+          profile_id?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          bus_id?: string | null
+          created_at?: string | null
+          emergency_contact?: string | null
+          employee_id?: string
+          id?: string
+          phone?: string | null
+          profile_id?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supervisors_bus_id_fkey"
+            columns: ["bus_id"]
+            isOneToOne: false
+            referencedRelation: "buses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "supervisors_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: true
+            referencedRelation: "available_contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "supervisors_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       teacher_attendance: {
         Row: {
           check_in_method: string | null
@@ -4594,6 +4816,7 @@ export type Database = {
         | "canteen"
         | "school_attendance"
         | "bus_attendance"
+        | "supervisor"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -4778,6 +5001,7 @@ export const Constants = {
         "canteen",
         "school_attendance",
         "bus_attendance",
+        "supervisor",
       ],
     },
   },

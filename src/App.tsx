@@ -38,6 +38,9 @@ import PresentationManual from "./pages/PresentationManual";
 import PresentationSales from "./pages/PresentationSales";
 import ScreenshotManager from "./pages/admin/ScreenshotManager";
 import DemoRoutes from "./pages/screenshot-demo/DemoRoutes";
+import StudentDetails from "./pages/parent/StudentDetails";
+import StudentWalletControl from "./pages/parent/StudentWalletControl";
+import StudentBusTracking from "./pages/parent/StudentBusTracking";
 // Removed test page
 
 // Create a stable QueryClient instance
@@ -96,6 +99,9 @@ function App() {
                         <Route path="/admin/parent-invitations" element={<ParentInvitationsDashboard />} />
                         <Route path="/admin/student-approvals" element={<StudentApprovalDashboard />} />
                         <Route path="/dashboard/*" element={<Dashboard />} />
+                        <Route path="/student/:studentId" element={<StudentDetails />} />
+                        <Route path="/student/:studentId/wallet" element={<StudentWalletControl />} />
+                        <Route path="/student/:studentId/bus" element={<StudentBusTracking />} />
                         <Route path="/create-admin" element={<CreateAdmin />} />
                         {/* Test page removed */}
                         <Route path="/nfc-kiosk" element={<NFCKiosk />} />
