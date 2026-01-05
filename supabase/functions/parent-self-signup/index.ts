@@ -67,15 +67,16 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Create auth user - email confirmation required
+    // Create auth user - auto confirm email since auth is configured for it
     const { data: authData, error: authError } = await supabase.auth.admin.createUser({
       email,
       password,
-      email_confirm: false, // Require email confirmation
+      email_confirm: true, // Auto-confirm since auth settings have auto-confirm enabled
       user_metadata: {
         full_name: fullName,
         full_name_ar: fullNameAr,
         phone,
+        role: 'parent',
       },
     });
 

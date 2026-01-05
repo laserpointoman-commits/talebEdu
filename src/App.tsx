@@ -41,7 +41,9 @@ import DemoRoutes from "./pages/screenshot-demo/DemoRoutes";
 import StudentDetails from "./pages/parent/StudentDetails";
 import StudentWalletControl from "./pages/parent/StudentWalletControl";
 import StudentBusTracking from "./pages/parent/StudentBusTracking";
-// Removed test page
+import DeviceLogin from "./pages/device/DeviceLogin";
+import BusAttendanceDevice from "./pages/device/BusAttendanceDevice";
+import SchoolAttendanceDevice from "./pages/device/SchoolAttendanceDevice";
 
 // Create a stable QueryClient instance
 const createQueryClient = () => new QueryClient({
@@ -103,7 +105,10 @@ function App() {
                         <Route path="/student/:studentId/wallet" element={<StudentWalletControl />} />
                         <Route path="/student/:studentId/bus" element={<StudentBusTracking />} />
                         <Route path="/create-admin" element={<CreateAdmin />} />
-                        {/* Test page removed */}
+                        {/* Device Login Pages - No Authentication Required */}
+                        <Route path="/device/login" element={<DeviceLogin />} />
+                        <Route path="/device/bus-attendance" element={<BusAttendanceDevice />} />
+                        <Route path="/device/school-attendance" element={<SchoolAttendanceDevice />} />
                         <Route path="/nfc-kiosk" element={<NFCKiosk />} />
                         <Route path="/checkpoint" element={<EntranceCheckpoint />} />
                         <Route path="/presentation" element={<Presentation />} />
