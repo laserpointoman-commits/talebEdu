@@ -143,7 +143,10 @@ export type Database = {
           date: string
           id: string
           location: string | null
+          manual_entry: boolean | null
+          manual_entry_by: string | null
           method: string
+          nfc_verified: boolean | null
           recorded_by: string | null
           status: string
           student_id: string | null
@@ -155,7 +158,10 @@ export type Database = {
           date: string
           id?: string
           location?: string | null
+          manual_entry?: boolean | null
+          manual_entry_by?: string | null
           method: string
+          nfc_verified?: boolean | null
           recorded_by?: string | null
           status: string
           student_id?: string | null
@@ -167,7 +173,10 @@ export type Database = {
           date?: string
           id?: string
           location?: string | null
+          manual_entry?: boolean | null
+          manual_entry_by?: string | null
           method?: string
+          nfc_verified?: boolean | null
           recorded_by?: string | null
           status?: string
           student_id?: string | null
@@ -282,6 +291,9 @@ export type Database = {
           latitude: number | null
           location: string | null
           longitude: number | null
+          manual_entry: boolean | null
+          manual_entry_by: string | null
+          nfc_verified: boolean | null
           student_id: string | null
           timestamp: string
         }
@@ -293,6 +305,9 @@ export type Database = {
           latitude?: number | null
           location?: string | null
           longitude?: number | null
+          manual_entry?: boolean | null
+          manual_entry_by?: string | null
+          nfc_verified?: boolean | null
           student_id?: string | null
           timestamp?: string
         }
@@ -304,6 +319,9 @@ export type Database = {
           latitude?: number | null
           location?: string | null
           longitude?: number | null
+          manual_entry?: boolean | null
+          manual_entry_by?: string | null
+          nfc_verified?: boolean | null
           student_id?: string | null
           timestamp?: string
         }
@@ -1059,8 +1077,13 @@ export type Database = {
           device_type: string
           id: string
           is_active: boolean | null
+          last_login_at: string | null
+          linked_bus_id: string | null
+          linked_user_id: string | null
           location: string
           mode: string | null
+          nfc_id: string | null
+          session_nfc_id: string | null
           updated_at: string | null
         }
         Insert: {
@@ -1069,8 +1092,13 @@ export type Database = {
           device_type: string
           id?: string
           is_active?: boolean | null
+          last_login_at?: string | null
+          linked_bus_id?: string | null
+          linked_user_id?: string | null
           location: string
           mode?: string | null
+          nfc_id?: string | null
+          session_nfc_id?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -1079,11 +1107,62 @@ export type Database = {
           device_type?: string
           id?: string
           is_active?: boolean | null
+          last_login_at?: string | null
+          linked_bus_id?: string | null
+          linked_user_id?: string | null
           location?: string
           mode?: string | null
+          nfc_id?: string | null
+          session_nfc_id?: string | null
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "device_configs_linked_bus_id_fkey"
+            columns: ["linked_bus_id"]
+            isOneToOne: false
+            referencedRelation: "buses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      device_sessions: {
+        Row: {
+          device_id: string
+          ended_at: string | null
+          id: string
+          nfc_id: string
+          session_type: string
+          started_at: string
+          status: string
+        }
+        Insert: {
+          device_id: string
+          ended_at?: string | null
+          id?: string
+          nfc_id: string
+          session_type: string
+          started_at?: string
+          status?: string
+        }
+        Update: {
+          device_id?: string
+          ended_at?: string | null
+          id?: string
+          nfc_id?: string
+          session_type?: string
+          started_at?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "device_sessions_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "device_configs"
+            referencedColumns: ["device_id"]
+          },
+        ]
       }
       direct_messages: {
         Row: {

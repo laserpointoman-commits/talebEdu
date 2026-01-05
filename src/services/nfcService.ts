@@ -426,6 +426,52 @@ class NFCService {
   isScanningActive(): boolean {
     return this.scanning;
   }
+
+  // Single-shot read for logout confirmation and quick scans
+  async readOnce(): Promise<NFCData> {
+    const isSupported = await this.isSupportedAsync();
+    if (!isSupported) {
+      throw new Error("NFC is not supported on this device");
+    }
+
+    if (this.scanning) {
+      throw new Error("NFC scanning already active");
+    }
+
+    this.scanning = true;
+    try {
+      if (Capacitor.isNativePlatform() && NfcPlugin && typeof NfcPlugin.readOnce === 'function') {
+        const result = await NfcPlugin.readOnce();
+        const message = (result?.message ?? '') as string;
+        if (!message) {
+          throw new Error("No NFC data read");
+        }
+
+        const data = this.parseTagMessage(message);
+        await this.hapticSuccess();
+        return data;
+      }
+
+      // Fallback to using readTag for non-native or older plugins
+      return new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          this.stopScanning();
+          reject(new Error("NFC scan timed out"));
+        }, 30000);
+
+        this.startScanning((data) => {
+          clearTimeout(timeout);
+          this.stopScanning();
+          resolve(data);
+        }).catch((error) => {
+          clearTimeout(timeout);
+          reject(error);
+        });
+      });
+    } finally {
+      this.scanning = false;
+    }
+  }
 }
 
 // Web NFC types

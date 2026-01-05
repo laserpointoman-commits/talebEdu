@@ -184,25 +184,18 @@ export default function ParentSelfSignup() {
           <CardHeader className="text-center">
             <CheckCircle2 className="w-16 h-16 mx-auto mb-4 text-green-500" />
             <CardTitle>
-              {language === 'en' ? 'Check Your Email!' : 'تحقق من بريدك الإلكتروني!'}
+              {language === 'en' ? 'Account Created!' : 'تم إنشاء الحساب!'}
             </CardTitle>
             <CardDescription>
               {language === 'en'
-                ? 'We sent a confirmation link to your email address. Please click the link to verify your account.'
-                : 'لقد أرسلنا رابط تأكيد إلى عنوان بريدك الإلكتروني. يرجى النقر على الرابط للتحقق من حسابك.'}
+                ? 'Your account has been created successfully. You can now log in to register your students.'
+                : 'تم إنشاء حسابك بنجاح. يمكنك الآن تسجيل الدخول لتسجيل طلابك.'}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="bg-muted p-4 rounded-lg">
-              <p className="text-sm text-muted-foreground">
-                {language === 'en'
-                  ? "Can't find the email? Check your spam folder or "
-                  : 'لا تجد البريد الإلكتروني؟ تحقق من مجلد البريد العشوائي أو '}
-                <Button variant="link" className="p-0 h-auto" onClick={() => navigate('/auth')}>
-                  {language === 'en' ? 'go to login' : 'انتقل إلى تسجيل الدخول'}
-                </Button>
-              </p>
-            </div>
+            <Button className="w-full" onClick={() => navigate('/auth')}>
+              {language === 'en' ? 'Go to Login' : 'الذهاب لتسجيل الدخول'}
+            </Button>
           </CardContent>
         </Card>
       </div>
