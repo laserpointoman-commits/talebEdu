@@ -172,15 +172,6 @@ export default function ParentDashboard() {
 
   const quickActions = [
     {
-      icon: Wallet,
-      titleEn: "Top Up Wallet",
-      titleAr: "شحن المحفظة",
-      descEn: "Add money to student wallet",
-      descAr: "إضافة أموال لمحفظة الطالب",
-      onClick: () => navigate('/dashboard/wallet'),
-      color: "text-green-500"
-    },
-    {
       icon: Bus,
       titleEn: "Track Bus",
       titleAr: "تتبع الحافلة",
@@ -199,6 +190,15 @@ export default function ParentDashboard() {
       color: "text-purple-500"
     },
     {
+      icon: Calendar,
+      titleEn: "Schedule",
+      titleAr: "الجدول",
+      descEn: "Class timetable",
+      descAr: "جدول الحصص",
+      onClick: () => navigate('/dashboard/schedule'),
+      color: "text-green-500"
+    },
+    {
       icon: ShoppingBag,
       titleEn: "Canteen Controls",
       titleAr: "ضوابط المقصف",
@@ -214,7 +214,7 @@ export default function ParentDashboard() {
       descEn: "Chat with teachers",
       descAr: "محادثة المعلمين",
       onClick: () => navigate('/dashboard/messages'),
-      color: "text-orange-500"
+      color: "text-cyan-500"
     }
   ];
 
@@ -332,25 +332,35 @@ export default function ParentDashboard() {
         )}
       </div>
 
-      {/* Total Balance Card */}
-      <Card className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Wallet className="h-5 w-5" />
-            {language === 'ar' ? 'إجمالي الرصيد' : 'Total Balance'}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-4xl font-bold mb-2">
-            {totalBalance.toFixed(2)} {language === 'ar' ? 'ريال' : 'OMR'}
-          </div>
-          <p className="text-primary-foreground/80">
-            {language === 'ar' 
-              ? `${children.length} ${children.length === 1 ? 'طالب' : 'طلاب'}`
-              : `${children.length} ${children.length === 1 ? 'student' : 'students'}`}
-          </p>
-        </CardContent>
-      </Card>
+      {/* Total Balance Card - Compact */}
+      {children.length > 0 && (
+        <Card className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground">
+          <CardContent className="py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Wallet className="h-6 w-6" />
+                <div>
+                  <p className="text-sm opacity-80">
+                    {language === 'ar' ? 'إجمالي الرصيد' : 'Total Balance'}
+                  </p>
+                  <p className="text-2xl font-bold">
+                    {totalBalance.toFixed(2)} {language === 'ar' ? 'ريال' : 'OMR'}
+                  </p>
+                </div>
+              </div>
+              <Button 
+                variant="secondary" 
+                size="sm"
+                onClick={() => navigate('/dashboard/wallet')}
+                className="gap-2"
+              >
+                <TrendingUp className="h-4 w-4" />
+                {language === 'ar' ? 'شحن' : 'Top Up'}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Recent Activity */}
       <Card>

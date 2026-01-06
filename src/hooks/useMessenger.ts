@@ -471,16 +471,30 @@ export function useMessenger() {
       }, { onConflict: 'user_id' });
   }, [user]);
 
-  // Search users
+  // Search users - for admin show all, for others filter by role
   const searchUsers = useCallback(async (query: string): Promise<UserSearchResult[]> => {
     if (!user || !query.trim()) return [];
     
-    const { data, error } = await supabase
+    // Get current user role
+    const { data: currentProfile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    let queryBuilder = supabase
       .from('profiles')
       .select('id, full_name, profile_image, role')
       .ilike('full_name', `%${query}%`)
-      .neq('id', user.id)
-      .limit(20);
+      .neq('id', user.id);
+    
+    // Admin can see all users
+    if (currentProfile?.role !== 'admin') {
+      // Filter out device-linked roles for non-admins
+      queryBuilder = queryBuilder.not('role', 'in', '(device,school_gate)');
+    }
+
+    const { data, error } = await queryBuilder.limit(50);
 
     return error ? [] : (data as UserSearchResult[]);
   }, [user]);

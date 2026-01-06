@@ -25,6 +25,7 @@ interface BusData {
   year: number | null;
   status: string | null;
   driver_id: string | null;
+  supervisor_id: string | null;
 }
 
 interface DriverData {
@@ -63,6 +64,7 @@ export default function BusesManagement() {
     year: number;
     status: string;
     driver_id: string;
+    supervisor_id: string;
   }>({
     bus_number: '',
     capacity: 50,
@@ -70,6 +72,7 @@ export default function BusesManagement() {
     year: new Date().getFullYear(),
     status: 'active',
     driver_id: '',
+    supervisor_id: '',
   });
   const [editingBus, setEditingBus] = useState<BusData | null>(null);
   
@@ -111,19 +114,17 @@ export default function BusesManagement() {
     }
   });
 
-  // Fetch teachers for supervisor selection
-  const { data: teachers = [] } = useQuery({
-    queryKey: ['teachers-for-buses'],
+  // Fetch supervisors (teachers and employees who can supervise)
+  const { data: supervisors = [] } = useQuery({
+    queryKey: ['supervisors-for-buses'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('teachers')
-        .select(`
-          id,
-          employee_id,
-          profile:profiles!teachers_profile_id_fkey(id, full_name, full_name_ar)
-        `);
+      // Get profiles with supervisor role or teachers
+      const { data: profiles, error } = await supabase
+        .from('profiles')
+        .select('id, full_name, full_name_ar, role')
+        .in('role', ['supervisor', 'teacher', 'admin']);
       if (error) throw error;
-      return data as TeacherData[];
+      return profiles || [];
     }
   });
 
@@ -139,6 +140,7 @@ export default function BusesManagement() {
           year: busData.year || null,
           status: busData.status,
           driver_id: busData.driver_id || null,
+          supervisor_id: busData.supervisor_id || null,
         })
         .select()
         .single();
@@ -176,6 +178,7 @@ export default function BusesManagement() {
           year: busData.year || null,
           status: busData.status,
           driver_id: busData.driver_id || null,
+          supervisor_id: busData.supervisor_id || null,
         })
         .eq('id', id)
         .select()
@@ -270,6 +273,7 @@ export default function BusesManagement() {
       year: new Date().getFullYear(),
       status: 'active',
       driver_id: '',
+      supervisor_id: '',
     });
     setSelectedStudents([]);
   };
@@ -287,6 +291,7 @@ export default function BusesManagement() {
       year: bus.year || new Date().getFullYear(),
       status: bus.status || 'active',
       driver_id: bus.driver_id || '',
+      supervisor_id: bus.supervisor_id || '',
     });
     setIsEditDialogOpen(true);
   };
@@ -347,8 +352,19 @@ export default function BusesManagement() {
   const getDriverName = (driverId: string | null) => {
     if (!driverId) return language === 'en' ? 'Not Assigned' : 'غير مخصص';
     const driver = drivers.find(d => d.id === driverId);
-    if (!driver?.profile) return language === 'en' ? 'Not Assigned' : 'غير مخصص';
-    return language === 'en' ? driver.profile.full_name : (driver.profile.full_name_ar || driver.profile.full_name);
+    if (!driver?.profile) return language === 'en' ? 'Unknown' : 'غير معروف';
+    return language === 'en' 
+      ? (driver.profile.full_name || 'Unknown') 
+      : (driver.profile.full_name_ar || driver.profile.full_name || 'غير معروف');
+  };
+
+  const getSupervisorName = (supervisorId: string | null) => {
+    if (!supervisorId) return language === 'en' ? 'Not Assigned' : 'غير مخصص';
+    const supervisor = supervisors.find(s => s.id === supervisorId);
+    if (!supervisor) return language === 'en' ? 'Unknown' : 'غير معروف';
+    return language === 'en' 
+      ? (supervisor.full_name || 'Unknown') 
+      : (supervisor.full_name_ar || supervisor.full_name || 'غير معروف');
   };
 
   const toggleStudentSelection = (studentId: string) => {
