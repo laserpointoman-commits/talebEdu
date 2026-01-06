@@ -471,7 +471,7 @@ export function useMessenger() {
       }, { onConflict: 'user_id' });
   }, [user]);
 
-  // Search users - for admin show all, for others filter by role
+  // Search users - for admin show all accounts, for others filter by role
   const searchUsers = useCallback(async (query: string): Promise<UserSearchResult[]> => {
     if (!user || !query.trim()) return [];
     
@@ -488,9 +488,11 @@ export function useMessenger() {
       .ilike('full_name', `%${query}%`)
       .neq('id', user.id);
     
-    // Admin can see all users
-    if (currentProfile?.role !== 'admin') {
-      // Filter out device-linked roles for non-admins
+    // Admin can see ALL users without any filter
+    if (currentProfile?.role === 'admin') {
+      // No filter - admin sees everyone
+    } else {
+      // Non-admins: Filter out device-linked roles
       queryBuilder = queryBuilder.not('role', 'in', '(device,school_gate)');
     }
 

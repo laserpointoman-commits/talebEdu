@@ -350,7 +350,7 @@ export default function UserManagement() {
 
   const handleNfcProgramming = async (user: UserProfile) => {
     try {
-      // Get the NFC ID from the teacher or student record
+      // Get the NFC ID from the teacher, student, or employee record
       let nfcId = '';
       let entityId = '';
       
@@ -376,6 +376,39 @@ export default function UserManagement() {
           nfcId = student.nfc_id || '';
           entityId = student.student_id;
         }
+      } else if (user.role === 'driver' || user.role === 'bus_attendance' || user.role === 'school_attendance') {
+        // Check employees table for staff roles
+        const { data: employee } = await supabase
+          .from('employees')
+          .select('id, nfc_id, employee_id')
+          .eq('profile_id', user.id)
+          .single();
+        
+        if (employee) {
+          nfcId = employee.nfc_id || '';
+          entityId = employee.employee_id;
+        } else {
+          // Create employee record if doesn't exist
+          const employeeId = `EMP-${Date.now().toString().slice(-6)}`;
+          const generatedNfcId = `NFC-${Date.now().toString().slice(-9)}`;
+          
+          const { data: newEmployee, error: empError } = await supabase
+            .from('employees')
+            .insert({
+              profile_id: user.id,
+              employee_id: employeeId,
+              nfc_id: generatedNfcId,
+              position: user.role === 'driver' ? 'bus_driver' : 'other',
+              join_date: new Date().toISOString().split('T')[0],
+            })
+            .select()
+            .single();
+          
+          if (!empError && newEmployee) {
+            nfcId = newEmployee.nfc_id || generatedNfcId;
+            entityId = newEmployee.employee_id;
+          }
+        }
       }
       
       setSelectedUserForNfc({
@@ -398,7 +431,7 @@ export default function UserManagement() {
     if (!selectedUserForNfc) return;
     
     try {
-      // Update the NFC ID in the database
+      // Update the NFC ID in the database based on role
       if (selectedUserForNfc.role === 'teacher') {
         await supabase
           .from('teachers')
@@ -407,6 +440,11 @@ export default function UserManagement() {
       } else if (selectedUserForNfc.role === 'student') {
         await supabase
           .from('students')
+          .update({ nfc_id: nfcId })
+          .eq('profile_id', selectedUserForNfc.id);
+      } else if (selectedUserForNfc.role === 'driver' || selectedUserForNfc.role === 'bus_attendance' || selectedUserForNfc.role === 'school_attendance') {
+        await supabase
+          .from('employees')
           .update({ nfc_id: nfcId })
           .eq('profile_id', selectedUserForNfc.id);
       }
@@ -1132,7 +1170,7 @@ export default function UserManagement() {
                       >
                         <Edit className="h-3 w-3" />
                       </Button>
-                      {(user.role === 'teacher' || user.role === 'student') && (
+                      {(user.role === 'teacher' || user.role === 'student' || user.role === 'bus_attendance' || user.role === 'school_attendance' || user.role === 'driver') && (
                         <Button
                           size="sm"
                           variant="ghost"
@@ -1258,7 +1296,7 @@ export default function UserManagement() {
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
-                        {(user.role === 'teacher' || user.role === 'student') && (
+                        {(user.role === 'teacher' || user.role === 'student' || user.role === 'bus_attendance' || user.role === 'school_attendance' || user.role === 'driver') && (
                           <Button
                             size="sm"
                             variant="ghost"

@@ -512,13 +512,45 @@ class CallService {
     }
   }
 
-  // Cleanup resources
+  // Cleanup resources with iOS-safe error handling
   private cleanup() {
-    this.localStream?.getTracks().forEach(track => track.stop());
-    this.localStream = null;
-    this.remoteStream = null;
-    this.peerConnection?.close();
-    this.peerConnection = null;
+    try {
+      // Safely stop local stream tracks
+      if (this.localStream) {
+        this.localStream.getTracks().forEach(track => {
+          try {
+            track.stop();
+          } catch (e) {
+            console.warn('Error stopping track:', e);
+          }
+        });
+        this.localStream = null;
+      }
+      
+      // Safely stop remote stream tracks
+      if (this.remoteStream) {
+        this.remoteStream.getTracks().forEach(track => {
+          try {
+            track.stop();
+          } catch (e) {
+            console.warn('Error stopping remote track:', e);
+          }
+        });
+        this.remoteStream = null;
+      }
+      
+      // Safely close peer connection
+      if (this.peerConnection) {
+        try {
+          this.peerConnection.close();
+        } catch (e) {
+          console.warn('Error closing peer connection:', e);
+        }
+        this.peerConnection = null;
+      }
+    } catch (error) {
+      console.error('Cleanup error (non-fatal):', error);
+    }
   }
 
   // Reset state
