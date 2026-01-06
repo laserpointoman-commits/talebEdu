@@ -6,20 +6,28 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { GraduationCap, Mail, Lock, Globe, Eye, EyeOff } from 'lucide-react';
+import { GraduationCap, Mail, Lock, Globe, Eye, EyeOff, Users, CreditCard, Wifi } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { nfcService } from '@/services/nfcService';
+
+type LoginType = 'parent' | 'staff';
 
 export default function Auth() {
   const navigate = useNavigate();
   const { language, setLanguage } = useLanguage();
   const [loading, setLoading] = useState(false);
+  const [loginType, setLoginType] = useState<LoginType>('parent');
   
   // Sign In State
   const [signInEmail, setSignInEmail] = useState('');
   const [signInPassword, setSignInPassword] = useState('');
   const [showSignInPassword, setShowSignInPassword] = useState(false);
+  
+  // Staff NFC Login
+  const [isNfcScanning, setIsNfcScanning] = useState(false);
   
   // Forgot Password State
   const [showForgotPassword, setShowForgotPassword] = useState(false);
@@ -71,6 +79,58 @@ export default function Auth() {
       toast.error(error.message || (language === 'en' ? 'Login failed' : 'فشل تسجيل الدخول'));
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleNfcLogin = async () => {
+    setIsNfcScanning(true);
+    
+    try {
+      const nfcData = await nfcService.readOnce();
+      
+      // Find employee by NFC ID
+      const { data: employee, error } = await supabase
+        .from('employees')
+        .select('*, profiles(id, full_name, role)')
+        .eq('nfc_id', nfcData.id)
+        .single();
+
+      if (error || !employee) {
+        // Try students table
+        const { data: student } = await supabase
+          .from('students')
+          .select('*, profiles:profile_id(id, full_name, role)')
+          .eq('nfc_id', nfcData.id)
+          .single();
+        
+        if (!student) {
+          toast.error(language === 'ar' ? 'بطاقة غير معروفة' : 'Unknown card');
+          return;
+        }
+        
+        // Student login via NFC - get their auth credentials
+        toast.info(language === 'ar' ? 'يرجى استخدام بيانات الحساب' : 'Please use account credentials');
+        return;
+      }
+
+      // Get auth user email for employee
+      if (employee.profile_id) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('email')
+          .eq('id', employee.profile_id)
+          .single();
+        
+        if (profile?.email) {
+          setSignInEmail(profile.email);
+          toast.success(language === 'ar' ? 'تم التعرف على البطاقة - أدخل كلمة المرور' : 'Card recognized - Enter password');
+        }
+      }
+    } catch (error) {
+      console.error('NFC login error:', error);
+      toast.error(language === 'ar' ? 'فشل قراءة البطاقة' : 'Card scan failed');
+    } finally {
+      setIsNfcScanning(false);
     }
   };
 
@@ -201,65 +261,195 @@ export default function Auth() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSignIn} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">
-                    {language === 'en' ? 'Email' : 'البريد الإلكتروني'}
-                  </Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder={language === 'en' ? 'Enter your email' : 'أدخل بريدك الإلكتروني'}
-                      value={signInEmail}
-                      onChange={(e) => setSignInEmail(e.target.value)}
-                      required
-                      className="pl-10"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="password">
-                    {language === 'en' ? 'Password' : 'كلمة المرور'}
-                  </Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="password"
-                      type={showSignInPassword ? 'text' : 'password'}
-                      placeholder={language === 'en' ? 'Enter your password' : 'أدخل كلمة المرور'}
-                      value={signInPassword}
-                      onChange={(e) => setSignInPassword(e.target.value)}
-                      required
-                      className="pl-10 pr-10"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowSignInPassword(!showSignInPassword)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              {/* Login Type Tabs */}
+              <Tabs value={loginType} onValueChange={(v) => setLoginType(v as LoginType)} className="mb-6">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="parent" className="gap-2">
+                    <GraduationCap className="h-4 w-4" />
+                    {language === 'en' ? 'Parent/Student' : 'ولي أمر/طالب'}
+                  </TabsTrigger>
+                  <TabsTrigger value="staff" className="gap-2">
+                    <Users className="h-4 w-4" />
+                    {language === 'en' ? 'Staff' : 'موظفين'}
+                  </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="parent">
+                  <form onSubmit={handleSignIn} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="email">
+                        {language === 'en' ? 'Email' : 'البريد الإلكتروني'}
+                      </Label>
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          id="email"
+                          type="email"
+                          placeholder={language === 'en' ? 'Enter your email' : 'أدخل بريدك الإلكتروني'}
+                          value={signInEmail}
+                          onChange={(e) => setSignInEmail(e.target.value)}
+                          required
+                          className="pl-10"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="password">
+                        {language === 'en' ? 'Password' : 'كلمة المرور'}
+                      </Label>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          id="password"
+                          type={showSignInPassword ? 'text' : 'password'}
+                          placeholder={language === 'en' ? 'Enter your password' : 'أدخل كلمة المرور'}
+                          value={signInPassword}
+                          onChange={(e) => setSignInPassword(e.target.value)}
+                          required
+                          className="pl-10 pr-10"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowSignInPassword(!showSignInPassword)}
+                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                          {showSignInPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
+                      </div>
+                    </div>
+                    <div className="flex justify-end">
+                      <button
+                        type="button"
+                        onClick={() => setShowForgotPassword(true)}
+                        className="text-sm text-primary hover:underline"
+                      >
+                        {language === 'en' ? 'Forgot password?' : 'نسيت كلمة المرور؟'}
+                      </button>
+                    </div>
+                    <Button
+                      type="submit"
+                      className="w-full bg-gradient-to-r from-primary to-secondary hover:opacity-90 transition-opacity"
+                      disabled={loading}
                     >
-                      {showSignInPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
+                      {loading ? (language === 'en' ? 'Signing in...' : 'جاري تسجيل الدخول...') : (language === 'en' ? 'Sign In' : 'تسجيل الدخول')}
+                    </Button>
+                  </form>
+                </TabsContent>
+
+                <TabsContent value="staff">
+                  <div className="space-y-4">
+                    {/* NFC Login Option */}
+                    <div className="text-center p-6 rounded-lg bg-muted/50 border-2 border-dashed">
+                      <AnimatePresence mode="wait">
+                        {isNfcScanning ? (
+                          <motion.div
+                            key="scanning"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                          >
+                            <motion.div
+                              animate={{ scale: [1, 1.1, 1] }}
+                              transition={{ duration: 1.5, repeat: Infinity }}
+                              className="flex justify-center mb-4"
+                            >
+                              <Wifi className="h-12 w-12 text-primary" />
+                            </motion.div>
+                            <p className="text-sm font-medium">
+                              {language === 'ar' ? 'امسح بطاقتك...' : 'Scan your card...'}
+                            </p>
+                          </motion.div>
+                        ) : (
+                          <motion.div
+                            key="ready"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                          >
+                            <CreditCard className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                            <p className="text-sm text-muted-foreground mb-4">
+                              {language === 'ar' ? 'سجل دخولك ببطاقة NFC' : 'Login with NFC Card'}
+                            </p>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={handleNfcLogin}
+                              disabled={isNfcScanning}
+                              className="gap-2"
+                            >
+                              <CreditCard className="h-4 w-4" />
+                              {language === 'ar' ? 'مسح البطاقة' : 'Scan Card'}
+                            </Button>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+
+                    <div className="relative">
+                      <div className="absolute inset-0 flex items-center">
+                        <span className="w-full border-t" />
+                      </div>
+                      <div className="relative flex justify-center text-xs uppercase">
+                        <span className="bg-background px-2 text-muted-foreground">
+                          {language === 'ar' ? 'أو' : 'OR'}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Email Login for Staff */}
+                    <form onSubmit={handleSignIn} className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="staff-email">
+                          {language === 'en' ? 'Email' : 'البريد الإلكتروني'}
+                        </Label>
+                        <div className="relative">
+                          <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            id="staff-email"
+                            type="email"
+                            placeholder={language === 'en' ? 'Enter your email' : 'أدخل بريدك الإلكتروني'}
+                            value={signInEmail}
+                            onChange={(e) => setSignInEmail(e.target.value)}
+                            required
+                            className="pl-10"
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="staff-password">
+                          {language === 'en' ? 'Password' : 'كلمة المرور'}
+                        </Label>
+                        <div className="relative">
+                          <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            id="staff-password"
+                            type={showSignInPassword ? 'text' : 'password'}
+                            placeholder={language === 'en' ? 'Enter your password' : 'أدخل كلمة المرور'}
+                            value={signInPassword}
+                            onChange={(e) => setSignInPassword(e.target.value)}
+                            required
+                            className="pl-10 pr-10"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowSignInPassword(!showSignInPassword)}
+                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                          >
+                            {showSignInPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </button>
+                        </div>
+                      </div>
+                      <Button
+                        type="submit"
+                        className="w-full bg-gradient-to-r from-primary to-secondary hover:opacity-90 transition-opacity"
+                        disabled={loading}
+                      >
+                        {loading ? (language === 'en' ? 'Signing in...' : 'جاري تسجيل الدخول...') : (language === 'en' ? 'Sign In' : 'تسجيل الدخول')}
+                      </Button>
+                    </form>
                   </div>
-                </div>
-                <div className="flex justify-end">
-                  <button
-                    type="button"
-                    onClick={() => setShowForgotPassword(true)}
-                    className="text-sm text-primary hover:underline"
-                  >
-                    {language === 'en' ? 'Forgot password?' : 'نسيت كلمة المرور؟'}
-                  </button>
-                </div>
-                <Button
-                  type="submit"
-                  className="w-full bg-gradient-to-r from-primary to-secondary hover:opacity-90 transition-opacity"
-                  disabled={loading}
-                >
-                  {loading ? (language === 'en' ? 'Signing in...' : 'جاري تسجيل الدخول...') : (language === 'en' ? 'Sign In' : 'تسجيل الدخول')}
-                </Button>
-              </form>
+                </TabsContent>
+              </Tabs>
             </CardContent>
           </Card>
         </motion.div>

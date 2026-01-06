@@ -117,11 +117,29 @@ class CallService {
     const callId = `call_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
     try {
-      // Get local media stream
-      this.localStream = await navigator.mediaDevices.getUserMedia({
-        audio: true,
-        video: callType === 'video',
-      });
+      // Check if getUserMedia is available (iOS compatibility)
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('Media devices not supported on this device');
+      }
+
+      // Get local media stream with error handling for iOS
+      try {
+        this.localStream = await navigator.mediaDevices.getUserMedia({
+          audio: true,
+          video: callType === 'video',
+        });
+      } catch (mediaError: any) {
+        console.error('Media access error:', mediaError);
+        // Fallback to audio only if video fails
+        if (callType === 'video') {
+          this.localStream = await navigator.mediaDevices.getUserMedia({
+            audio: true,
+            video: false,
+          });
+        } else {
+          throw mediaError;
+        }
+      }
 
       this.updateState({
         status: 'calling',
@@ -157,24 +175,29 @@ class CallService {
           callId,
           callType,
           callerId: this.currentUserId,
-          callerName: '', // Will be fetched by recipient
+          callerName: '',
           offer: offer.sdp,
         },
       });
 
-      // Log call attempt
-      await supabase.from('call_logs').insert({
-        caller_id: this.currentUserId,
-        recipient_id: recipientId,
-        call_type: callType,
-        status: 'calling',
-        started_at: new Date().toISOString(),
-      });
+      // Log call attempt (wrapped in try-catch for safety)
+      try {
+        await supabase.from('call_logs').insert({
+          caller_id: this.currentUserId,
+          recipient_id: recipientId,
+          call_type: callType,
+          status: 'calling',
+          started_at: new Date().toISOString(),
+        });
+      } catch (logError) {
+        console.warn('Could not log call:', logError);
+      }
 
       console.log('Call offer sent to:', recipientId);
     } catch (error) {
       console.error('Error starting call:', error);
-      this.endCall();
+      this.cleanup();
+      this.resetState();
       throw error;
     }
   }
