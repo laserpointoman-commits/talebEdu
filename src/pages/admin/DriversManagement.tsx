@@ -77,21 +77,36 @@ export default function DriversManagement() {
 
       if (error) throw error;
 
-      const mappedDrivers: Driver[] = (data || []).map((d: any) => ({
-        id: d.id,
-        name: d.profiles?.full_name || d.employee_id || 'Unknown',
-        nameAr: d.profiles?.full_name_ar || d.profiles?.full_name || 'غير معروف',
-        phone: d.profiles?.phone || '',
-        email: d.profiles?.email || '',
-        address: d.profiles?.address || '',
-        licenseNumber: d.license_number || '',
-        licenseExpiry: d.license_expiry || '',
-        experience: d.experience_years || 0,
-        status: d.status || 'active',
-        image: d.profiles?.profile_image || '',
-        busId: d.bus_id || undefined,
-        joinDate: d.join_date || new Date().toISOString().split('T')[0],
-      }));
+      const mappedDrivers: Driver[] = (data || []).map((d: any) => {
+        // Try to get name from profile, fallback to employee_id with better formatting
+        let displayName = 'Not Assigned';
+        let displayNameAr = 'غير محدد';
+        
+        if (d.profiles?.full_name && d.profiles.full_name.trim()) {
+          displayName = d.profiles.full_name;
+          displayNameAr = d.profiles.full_name_ar || d.profiles.full_name || displayNameAr;
+        } else if (d.employee_id) {
+          displayName = `Driver ${d.employee_id}`;
+          displayNameAr = `سائق ${d.employee_id}`;
+        }
+        
+        return {
+          id: d.id,
+          name: displayName,
+          nameAr: displayNameAr,
+          phone: d.profiles?.phone || '',
+          email: d.profiles?.email || '',
+          address: d.profiles?.address || '',
+          licenseNumber: d.license_number || '',
+          licenseExpiry: d.license_expiry || '',
+          experience: d.experience_years || 0,
+          status: d.status || 'active',
+          image: d.profiles?.profile_image || '',
+          busId: d.bus_id || undefined,
+          joinDate: d.join_date || new Date().toISOString().split('T')[0],
+          profileId: d.profile_id || null,
+        };
+      });
 
       setDrivers(mappedDrivers);
     } catch (error) {
@@ -112,10 +127,30 @@ export default function DriversManagement() {
 
   const handleAddDriver = async () => {
     try {
-      // Create the driver record with a generated employee_id
+      // First create a profile for the driver using the edge function
+      const driverEmail = `driver.${Date.now()}@talebedu.local`;
+      
+      const { data: userData, error: userError } = await supabase.functions.invoke('create-user', {
+        body: {
+          email: driverEmail,
+          password: `Driver${Date.now().toString().slice(-6)}!`,
+          role: 'driver',
+          full_name: formData.name || 'New Driver',
+          full_name_ar: formData.nameAr || '',
+          phone: formData.phone || '',
+        }
+      });
+
+      if (userError || !userData?.userId) {
+        console.error('User creation error:', userError);
+        throw userError || new Error('Failed to create user');
+      }
+
+      // Create the driver record linked to the profile
       const { error: driverError } = await supabase
         .from('drivers')
         .insert({
+          profile_id: userData.userId,
           employee_id: `DRV-${Date.now().toString().slice(-6)}`,
           license_number: formData.licenseNumber || '',
           license_expiry: formData.licenseExpiry || null,

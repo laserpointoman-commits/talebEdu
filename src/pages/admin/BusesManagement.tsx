@@ -634,14 +634,33 @@ export default function BusesManagement() {
                     <SelectValue placeholder={language === 'en' ? 'Select driver' : 'اختر السائق'} />
                   </SelectTrigger>
                   <SelectContent>
-                    {filteredDrivers.map(driver => (
-                      <SelectItem key={driver.id} value={driver.id}>
-                        {language === 'en' ? driver.profile?.full_name : (driver.profile?.full_name_ar || driver.profile?.full_name)}
-                      </SelectItem>
-                    ))}
+                    {filteredDrivers.map(driver => {
+                      const driverName = driver.profile?.full_name || `Driver ${driver.employee_id || driver.id.slice(0, 6)}`;
+                      const driverNameAr = driver.profile?.full_name_ar || driver.profile?.full_name || `سائق ${driver.employee_id || driver.id.slice(0, 6)}`;
+                      return (
+                        <SelectItem key={driver.id} value={driver.id}>
+                          {language === 'en' ? driverName : driverNameAr}
+                        </SelectItem>
+                      );
+                    })}
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+            <div>
+              <Label>{language === 'en' ? 'Supervisor' : 'المشرف'}</Label>
+              <Select value={formData.supervisor_id} onValueChange={(v) => setFormData({ ...formData, supervisor_id: v })}>
+                <SelectTrigger>
+                  <SelectValue placeholder={language === 'en' ? 'Select supervisor' : 'اختر المشرف'} />
+                </SelectTrigger>
+                <SelectContent>
+                  {supervisors.map(supervisor => (
+                    <SelectItem key={supervisor.id} value={supervisor.id}>
+                      {language === 'en' ? supervisor.full_name : (supervisor.full_name_ar || supervisor.full_name)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <DialogFooter>
@@ -718,15 +737,34 @@ export default function BusesManagement() {
                     <SelectValue placeholder={language === 'en' ? 'Select driver' : 'اختر السائق'} />
                   </SelectTrigger>
                   <SelectContent>
-                    {filteredDrivers.map(driver => (
-                      <SelectItem key={driver.id} value={driver.id}>
-                        {language === 'en' ? driver.profile?.full_name : (driver.profile?.full_name_ar || driver.profile?.full_name)}
-                      </SelectItem>
-                    ))}
+                    {filteredDrivers.map(driver => {
+                      const driverName = driver.profile?.full_name || `Driver ${driver.employee_id || driver.id.slice(0, 6)}`;
+                      const driverNameAr = driver.profile?.full_name_ar || driver.profile?.full_name || `سائق ${driver.employee_id || driver.id.slice(0, 6)}`;
+                      return (
+                        <SelectItem key={driver.id} value={driver.id}>
+                          {language === 'en' ? driverName : driverNameAr}
+                        </SelectItem>
+                      );
+                    })}
                   </SelectContent>
                 </Select>
-              </div>
             </div>
+            <div>
+              <Label>{language === 'en' ? 'Supervisor' : 'المشرف'}</Label>
+              <Select value={formData.supervisor_id} onValueChange={(v) => setFormData({ ...formData, supervisor_id: v })}>
+                <SelectTrigger>
+                  <SelectValue placeholder={language === 'en' ? 'Select supervisor' : 'اختر المشرف'} />
+                </SelectTrigger>
+                <SelectContent>
+                  {supervisors.map(supervisor => (
+                    <SelectItem key={supervisor.id} value={supervisor.id}>
+                      {language === 'en' ? supervisor.full_name : (supervisor.full_name_ar || supervisor.full_name)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
