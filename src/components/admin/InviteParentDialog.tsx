@@ -55,7 +55,19 @@ export function InviteParentDialog({ open, onOpenChange, onSuccess }: InvitePare
         throw new Error(data.error);
       }
 
-      setRegistrationLink(data.registrationUrl);
+      const returnedUrl: string = data.registrationUrl;
+
+      // Always rewrite to the current app origin to avoid external/incorrect links in the popup.
+      let safeLink = returnedUrl;
+      try {
+        const url = new URL(returnedUrl);
+        const token = url.searchParams.get('token');
+        if (token) safeLink = `${window.location.origin}/register?token=${token}`;
+      } catch {
+        // keep returnedUrl as-is
+      }
+
+      setRegistrationLink(safeLink);
       setShowSuccess(true);
       toast.success(language === 'ar' ? "تم إرسال الدعوة بنجاح!" : "Invitation sent successfully!");
       

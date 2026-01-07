@@ -21,21 +21,44 @@ serve(async (req: Request) => {
       );
     }
 
-    // Get token details
+    // Extend expiration date
+    const newExpirationDate = new Date();
+    newExpirationDate.setDate(newExpirationDate.getDate() + 7);
+
+    // --- Preferred: pending parent registrations (self-signup flow) ---
+    const { data: pendingToken, error: pendingError } = await supabase
+      .from("pending_parent_registrations")
+      .select("id")
+      .eq("id", tokenId)
+      .single();
+
+    if (!pendingError && pendingToken) {
+      const { error: updatePendingError } = await supabase
+        .from("pending_parent_registrations")
+        .update({
+          expires_at: newExpirationDate.toISOString(),
+          used: false,
+          used_at: null,
+        })
+        .eq("id", tokenId);
+
+      if (updatePendingError) throw updatePendingError;
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: "Invitation resent successfully",
+          expiresAt: newExpirationDate.toISOString(),
+        }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // --- Backward compatible: parent_registration_tokens (legacy flow) ---
     const { data: tokenData, error: tokenError } = await supabase
-      .from('parent_registration_tokens')
-      .select(`
-        id,
-        token,
-        parent_id,
-        profiles!parent_id (
-          email,
-          full_name,
-          full_name_ar,
-          phone
-        )
-      `)
-      .eq('id', tokenId)
+      .from("parent_registration_tokens")
+      .select("id")
+      .eq("id", tokenId)
       .single();
 
     if (tokenError || !tokenData) {
@@ -45,45 +68,32 @@ serve(async (req: Request) => {
       );
     }
 
-    // Extend expiration date
-    const newExpirationDate = new Date();
-    newExpirationDate.setDate(newExpirationDate.getDate() + 7);
-
     const { error: updateError } = await supabase
-      .from('parent_registration_tokens')
-      .update({ 
+      .from("parent_registration_tokens")
+      .update({
         expires_at: newExpirationDate.toISOString(),
-        used: false 
+        used: false,
       })
-      .eq('id', tokenId);
+      .eq("id", tokenId);
 
     if (updateError) throw updateError;
 
     // Log the resend action
-    await supabase
-      .from('parent_invitation_logs')
-      .insert({
-        token_id: tokenId,
-        action: 'resent',
-        method: 'email',
-        metadata: { resent_at: new Date().toISOString() }
-      });
-
-    // Call send-parent-invitation to resend email
-    const registrationUrl = `${req.headers.get('origin') || 'http://localhost:5173'}/parent-registration?token=${tokenData.token}`;
-    
-    // Here you would call your email service
-    console.log(`Resending invitation to ${tokenData.profiles.email}: ${registrationUrl}`);
+    await supabase.from("parent_invitation_logs").insert({
+      token_id: tokenId,
+      action: "resent",
+      method: "email",
+      metadata: { resent_at: new Date().toISOString() },
+    });
 
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         success: true,
         message: "Invitation resent successfully",
-        expiresAt: newExpirationDate.toISOString()
+        expiresAt: newExpirationDate.toISOString(),
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
-
   } catch (error: any) {
     console.error("Resend invitation error:", error);
     return new Response(

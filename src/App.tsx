@@ -95,6 +95,9 @@ function App() {
                         <Route path="/landing" element={<Index />} />
                         <Route path="/auth" element={<Auth />} />
                         <Route path="/email-confirmation-pending" element={<EmailConfirmationPending />} />
+                        {/* Public parent onboarding */}
+                        <Route path="/register" element={<ParentSelfSignup />} />
+                        <Route path="/parent-self-signup" element={<ParentSelfSignup />} />
                         <Route path="/parent-registration" element={<ParentRegistration />} />
                         <Route path="/register-student" element={<RegisterStudent />} />
                         <Route path="/dashboard/register-student" element={<StudentRegistrationWizard />} />

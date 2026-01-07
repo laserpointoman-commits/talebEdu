@@ -44,8 +44,12 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Parent profile not found");
     }
 
-    // Check if parent has remaining slots
-    if (profile.registered_students_count >= (profile.expected_students_count || 0)) {
+    // Check if parent has remaining slots (only when expected_students_count is configured)
+    const expectedCountRaw = profile.expected_students_count;
+    const expectedCount = typeof expectedCountRaw === "number" && expectedCountRaw > 0 ? expectedCountRaw : null;
+    const registeredCount = profile.registered_students_count ?? 0;
+
+    if (expectedCount !== null && registeredCount >= expectedCount) {
       return new Response(
         JSON.stringify({ error: "You have reached the maximum number of students allowed" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -112,10 +116,11 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Increment parent's registered students count
+    const nextRegisteredCount = registeredCount + 1;
     await supabase
       .from("profiles")
       .update({
-        registered_students_count: profile.registered_students_count + 1,
+        registered_students_count: nextRegisteredCount,
       })
       .eq("id", user.id);
 
@@ -152,7 +157,7 @@ const handler = async (req: Request): Promise<Response> => {
       await supabase.from("notification_history").insert(notifications);
     }
 
-    const remainingSlots = (profile.expected_students_count || 0) - (profile.registered_students_count + 1);
+    const remainingSlots = expectedCount !== null ? (expectedCount - nextRegisteredCount) : null;
 
     console.log("Student submitted for approval successfully");
 
