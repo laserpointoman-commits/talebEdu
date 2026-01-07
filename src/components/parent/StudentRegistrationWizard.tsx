@@ -62,13 +62,16 @@ export default function StudentRegistrationWizard() {
       return;
     }
 
-    setTotalStudents(data.expected_students_count || 0);
-    setRegisteredCount(data.registered_students_count || 0);
-    setCurrentStep((data.registered_students_count || 0) + 1);
+    const expectedRaw = data.expected_students_count;
+    const expected = typeof expectedRaw === 'number' && expectedRaw > 0 ? expectedRaw : null;
+    const registered = data.registered_students_count ?? 0;
 
-    if (data.registered_students_count >= (data.expected_students_count || 0)) {
-      setAllCompleted(true);
-    }
+    setTotalStudents(expected ?? 0);
+    setRegisteredCount(registered);
+    setCurrentStep(registered + 1);
+
+    // Only mark complete when the expected count is known and fully reached.
+    setAllCompleted(expected !== null && registered >= expected);
   };
 
   const validateForm = () => {
@@ -197,9 +200,11 @@ export default function StudentRegistrationWizard() {
             <div className="space-y-4">
               <div>
                 <CardTitle className="text-2xl mb-2">
-                  {language === 'en' 
-                    ? `Register Student ${currentStep} of ${totalStudents}`
-                    : `تسجيل الطالب ${currentStep} من ${totalStudents}`}
+                  {totalStudents > 0
+                    ? (language === 'en'
+                        ? `Register Student ${currentStep} of ${totalStudents}`
+                        : `تسجيل الطالب ${currentStep} من ${totalStudents}`)
+                    : (language === 'en' ? 'Register Student' : 'تسجيل الطالب')}
                 </CardTitle>
                 <p className="text-sm text-muted-foreground">
                   {language === 'en'

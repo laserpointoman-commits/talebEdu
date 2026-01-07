@@ -59,10 +59,12 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Construct registration URL
-    const appUrl = Deno.env.get("APP_URL") || req.headers.get("origin") || "http://localhost:8080";
-    const registrationUrl = `${appUrl}/register?token=${tokenData.token}`;
+    // Prefer the calling app origin to avoid misconfigured APP_URL sending parents to external/incorrect pages.
+    const appUrl = req.headers.get("origin") || Deno.env.get("APP_URL") || "http://localhost:8080";
+    const registrationUrl = new URL("/register", appUrl);
+    registrationUrl.searchParams.set("token", tokenData.token);
 
-    console.log("Registration URL:", registrationUrl);
+    console.log("Registration URL:", registrationUrl.toString());
 
     // Send email
     const emailResponse = await resend.emails.send({
@@ -137,7 +139,7 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(
       JSON.stringify({
         success: true,
-        registrationUrl,
+        registrationUrl: registrationUrl.toString(),
         tokenId: tokenData.id,
         expiresAt: tokenData.expires_at,
       }),
