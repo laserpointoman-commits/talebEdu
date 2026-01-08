@@ -67,53 +67,102 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Create auth user - auto confirm email since auth is configured for it
-    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true, // Auto-confirm since auth settings have auto-confirm enabled
-      user_metadata: {
-        full_name: fullName,
-        full_name_ar: fullNameAr,
-        phone,
-        role: 'parent',
-      },
-    });
+    // Check if user already exists in auth but not in profiles (orphaned user)
+    const { data: existingUsers } = await supabase.auth.admin.listUsers();
+    const existingAuthUser = existingUsers?.users?.find(
+      (u) => u.email?.toLowerCase() === email.toLowerCase()
+    );
 
-    if (authError) {
-      console.error("Error creating auth user:", authError);
-      // Handle specific error cases with user-friendly messages
-      let errorMessage = authError.message;
-      if (authError.code === 'email_exists' || authError.message.includes('already been registered')) {
-        errorMessage = "An account with this email already exists. Please login instead or contact support.";
+    let userId: string;
+
+    if (existingAuthUser) {
+      console.log("Found existing auth user:", existingAuthUser.id);
+      
+      // Check if profile exists
+      const { data: existingProfile } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("id", existingAuthUser.id)
+        .single();
+
+      if (existingProfile) {
+        // User has both auth and profile - they should login instead
+        return new Response(
+          JSON.stringify({ error: "An account with this email already exists. Please login instead." }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
       }
-      return new Response(
-        JSON.stringify({ error: errorMessage }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+
+      // Auth user exists but no profile - update password and use this user
+      console.log("Auth user exists without profile, updating and creating profile");
+      const { error: updateError } = await supabase.auth.admin.updateUserById(existingAuthUser.id, {
+        password,
+        email_confirm: true,
+        user_metadata: {
+          full_name: fullName,
+          full_name_ar: fullNameAr,
+          phone,
+          role: 'parent',
+        },
+      });
+
+      if (updateError) {
+        console.error("Error updating existing auth user:", updateError);
+        return new Response(
+          JSON.stringify({ error: "Failed to setup account. Please contact support." }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      userId = existingAuthUser.id;
+    } else {
+      // Create new auth user
+      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+        user_metadata: {
+          full_name: fullName,
+          full_name_ar: fullNameAr,
+          phone,
+          role: 'parent',
+        },
+      });
+
+      if (authError) {
+        console.error("Error creating auth user:", authError);
+        return new Response(
+          JSON.stringify({ error: authError.message }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      userId = authData.user.id;
     }
 
-    console.log("Auth user created:", authData.user.id);
+    console.log("Using user ID:", userId);
 
     // Create profile with email auto-confirmed
     const { error: profileError } = await supabase
       .from("profiles")
       .insert({
-        id: authData.user.id,
+        id: userId,
         email,
         full_name: fullName,
         full_name_ar: fullNameAr,
         phone,
         role: "parent",
-        email_confirmed: true, // Auto-confirm since email confirmation is disabled
+        email_confirmed: true,
         expected_students_count: expectedStudentsCount,
         registered_students_count: 0,
       });
 
     if (profileError) {
       console.error("Error creating profile:", profileError);
-      // Try to cleanup auth user
-      await supabase.auth.admin.deleteUser(authData.user.id);
+      // Only try to delete user if we just created them (not existing orphan)
+      if (!existingAuthUser) {
+        await supabase.auth.admin.deleteUser(userId);
+      }
       throw new Error("Failed to create profile");
     }
 
@@ -126,13 +175,13 @@ const handler = async (req: Request): Promise<Response> => {
       })
       .eq("id", tokenData.id);
 
-    console.log("Parent signup successful, user ID:", authData.user.id);
+    console.log("Parent signup successful, user ID:", userId);
 
     return new Response(
       JSON.stringify({
         success: true,
-        userId: authData.user.id,
-        message: "Account created! Please check your email to confirm your account.",
+        userId: userId,
+        message: "Account created successfully! You can now login.",
         expectedStudentsCount,
       }),
       {
