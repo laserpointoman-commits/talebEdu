@@ -119,38 +119,12 @@ export default function StudentRegistrationWizard() {
       toast({
         title: language === 'en' ? 'Success!' : 'نجح!',
         description: language === 'en' 
-          ? 'Student submitted for approval successfully'
-          : 'تم إرسال بيانات الطالب للموافقة بنجاح',
+          ? 'Student submitted for approval successfully. Awaiting admin approval.'
+          : 'تم إرسال بيانات الطالب للموافقة بنجاح. في انتظار موافقة الإدارة.',
       });
 
-      // Reset form
-      setFormData({
-        firstName: '',
-        lastName: '',
-        firstNameAr: '',
-        lastNameAr: '',
-        dateOfBirth: '',
-        gender: '',
-        grade: '',
-        class: '',
-        nationality: '',
-        bloodType: '',
-        address: '',
-        phone: '',
-        emergencyContact: '',
-        emergencyPhone: '',
-        medicalConditions: '',
-        allergies: '',
-      });
-      setActiveTab('basic');
-
-      await loadParentData();
-
-      if (data.remainingSlots === 0) {
-        setAllCompleted(true);
-      } else {
-        setCurrentStep(currentStep + 1);
-      }
+      // Navigate back to dashboard - student will show as "waiting for approval"
+      navigate('/dashboard');
     } catch (error: any) {
       toast({
         variant: 'destructive',
