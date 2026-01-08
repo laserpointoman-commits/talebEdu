@@ -82,8 +82,13 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (authError) {
       console.error("Error creating auth user:", authError);
+      // Handle specific error cases with user-friendly messages
+      let errorMessage = authError.message;
+      if (authError.code === 'email_exists' || authError.message.includes('already been registered')) {
+        errorMessage = "An account with this email already exists. Please login instead or contact support.";
+      }
       return new Response(
-        JSON.stringify({ error: authError.message }),
+        JSON.stringify({ error: errorMessage }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
