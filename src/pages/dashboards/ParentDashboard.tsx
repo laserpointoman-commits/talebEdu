@@ -86,16 +86,17 @@ export default function ParentDashboard() {
         .from('students')
         .select('*')
         .eq('parent_id', user?.id)
-        .eq('visible_to_parent', true);
+        .eq('approval_status', 'approved');
 
       if (studentsError) throw studentsError;
       
-      // Load pending students separately
+      // Load pending students separately (waiting for admin approval)
       const { data: pendingData } = await supabase
         .from('students')
         .select('*')
         .eq('parent_id', user?.id)
-        .eq('visible_to_parent', false);
+        .eq('approval_status', 'pending')
+        .order('submitted_at', { ascending: false });
       
       setPendingStudents(pendingData || []);
       

@@ -49,9 +49,11 @@ export default function StudentManagement() {
 
   const loadStudents = async () => {
     try {
+      // Only load approved students (active) - pending students are in StudentApprovalDashboard
       const { data, error } = await supabase
         .from('students')
         .select('*')
+        .eq('approval_status', 'approved')
         .order('created_at', { ascending: false });
 
       if (error) throw error;

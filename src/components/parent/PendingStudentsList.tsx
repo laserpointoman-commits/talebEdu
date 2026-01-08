@@ -10,9 +10,12 @@ import { useNavigate } from 'react-router-dom';
 
 interface PendingStudent {
   id: string;
-  full_name?: string;
-  full_name_ar?: string;
-  class: string;
+  first_name?: string;
+  last_name?: string;
+  first_name_ar?: string;
+  last_name_ar?: string;
+  grade?: string;
+  class?: string;
   approval_status: 'pending' | 'approved' | 'rejected';
   submitted_at: string;
   pending_student_approvals?: Array<{
@@ -119,25 +122,36 @@ export default function PendingStudentsList({ students: propStudents, onRefresh:
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {pendingStudents.map((student) => (
-              <div key={student.id} className="flex items-center justify-between p-4 border rounded-lg">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                    <User className="w-6 h-6 text-primary" />
+            {pendingStudents.map((student) => {
+              const studentName = language === 'ar' && student.first_name_ar
+                ? `${student.first_name_ar} ${student.last_name_ar || ''}`
+                : `${student.first_name || ''} ${student.last_name || ''}`;
+              
+              return (
+                <div key={student.id} className="flex items-center justify-between p-4 border rounded-lg bg-amber-50/50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-full bg-amber-100 dark:bg-amber-900 flex items-center justify-center">
+                      <Clock className="w-6 h-6 text-amber-600 dark:text-amber-400" />
+                    </div>
+                    <div>
+                      <p className="font-medium">{studentName.trim() || 'Student'}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {student.grade && `${language === 'ar' ? 'الصف' : 'Grade'}: ${student.grade}`}
+                        {student.class && ` - ${student.class}`}
+                      </p>
+                      <p className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1 mt-1">
+                        <Calendar className="w-3 h-3" />
+                        {language === 'en' ? 'Waiting for admin approval' : 'في انتظار موافقة الإدارة'}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-medium">
-                      {language === 'en' ? student.full_name : student.full_name_ar || student.full_name}
-                    </p>
-                    <p className="text-sm text-muted-foreground flex items-center gap-2">
-                      <Calendar className="w-3 h-3" />
-                      {language === 'en' ? 'Submitted' : 'تم الإرسال'}: {new Date(student.submitted_at).toLocaleDateString(language === 'en' ? 'en-US' : 'ar-SA')}
-                    </p>
-                  </div>
+                  <Badge variant="secondary" className="bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300">
+                    <Clock className="w-3 h-3 mr-1" />
+                    {language === 'en' ? 'Pending' : 'قيد الانتظار'}
+                  </Badge>
                 </div>
-                {getStatusBadge(student.approval_status)}
-              </div>
-            ))}
+              );
+            })}
           </CardContent>
         </Card>
       )}
@@ -151,32 +165,39 @@ export default function PendingStudentsList({ students: propStudents, onRefresh:
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {rejectedStudents.map((student) => (
-              <div key={student.id} className="p-4 border border-destructive/20 rounded-lg space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center">
-                      <User className="w-6 h-6 text-destructive" />
+            {rejectedStudents.map((student) => {
+              const studentName = language === 'ar' && student.first_name_ar
+                ? `${student.first_name_ar} ${student.last_name_ar || ''}`
+                : `${student.first_name || ''} ${student.last_name || ''}`;
+                
+              return (
+                <div key={student.id} className="p-4 border border-destructive/20 rounded-lg space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center">
+                        <User className="w-6 h-6 text-destructive" />
+                      </div>
+                      <div>
+                        <p className="font-medium">{studentName.trim() || 'Student'}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {student.grade && `${language === 'ar' ? 'الصف' : 'Grade'}: ${student.grade}`}
+                          {student.class && ` - ${student.class}`}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-medium">
-                        {language === 'en' ? student.full_name : student.full_name_ar || student.full_name}
+                    {getStatusBadge(student.approval_status)}
+                  </div>
+                  {student.pending_student_approvals?.[0]?.rejection_reason && (
+                    <div className="bg-destructive/5 p-3 rounded border border-destructive/20">
+                      <p className="text-sm font-medium mb-1">{language === 'en' ? 'Reason:' : 'السبب:'}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {student.pending_student_approvals[0].rejection_reason}
                       </p>
-                      <p className="text-sm text-muted-foreground">{language === 'en' ? 'Class' : 'الصف'}: {student.class}</p>
                     </div>
-                  </div>
-                  {getStatusBadge(student.approval_status)}
+                  )}
                 </div>
-                {student.pending_student_approvals?.[0]?.rejection_reason && (
-                  <div className="bg-destructive/5 p-3 rounded border border-destructive/20">
-                    <p className="text-sm font-medium mb-1">{language === 'en' ? 'Reason:' : 'السبب:'}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {student.pending_student_approvals[0].rejection_reason}
-                    </p>
-                  </div>
-                )}
-              </div>
-            ))}
+              );
+            })}
           </CardContent>
         </Card>
       )}
