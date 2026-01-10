@@ -15,7 +15,6 @@ import {
   Briefcase,
   Target,
   CheckCircle2,
-  DollarSign,
   Calendar,
   PieChart,
   BarChart3,
@@ -23,12 +22,13 @@ import {
   Award,
   Globe,
   Smartphone,
-  CreditCard,
   Bell,
   MapPin,
   Clock,
   Utensils,
-  BookOpen
+  BookOpen,
+  Watch,
+  ShoppingBag
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -54,14 +54,17 @@ const InvestorPresentation = () => {
               className="w-40 h-40 rounded-3xl shadow-2xl mx-auto"
             />
           </motion.div>
-          <motion.h1
+          <motion.div
             initial={{ y: 50, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.3, duration: 0.6 }}
-            className="text-5xl md:text-7xl font-bold bg-gradient-to-l from-blue-600 to-cyan-500 bg-clip-text text-transparent mb-6"
+            className="relative inline-block mb-6"
           >
-            طالب إيدو
-          </motion.h1>
+            <h1 className="text-5xl md:text-7xl font-bold bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent animate-gradient">
+              TalebEdu
+            </h1>
+            <div className="absolute -inset-4 bg-primary/20 blur-xl rounded-full -z-10" />
+          </motion.div>
           <motion.p
             initial={{ y: 30, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -140,7 +143,7 @@ const InvestorPresentation = () => {
             animate={{ x: 0, opacity: 1 }}
             className="text-4xl font-bold text-primary mb-8 text-center"
           >
-            الحل: طالب إيدو
+            الحل: TalebEdu
           </motion.h2>
           <motion.p
             initial={{ y: 20, opacity: 0 }}
@@ -150,16 +153,17 @@ const InvestorPresentation = () => {
           >
             منصة متكاملة تجمع كل احتياجات المدرسة في تطبيق واحد
           </motion.p>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 flex-1">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 flex-1">
             {[
-              { icon: CreditCard, title: "بطاقة NFC ذكية", color: "from-blue-500 to-cyan-500" },
+              { icon: Watch, title: "أساور NFC الذكية", color: "from-blue-500 to-cyan-500" },
               { icon: MapPin, title: "تتبع GPS مباشر", color: "from-green-500 to-emerald-500" },
               { icon: Wallet, title: "محفظة إلكترونية", color: "from-purple-500 to-pink-500" },
               { icon: Bell, title: "إشعارات فورية", color: "from-orange-500 to-amber-500" },
               { icon: Utensils, title: "إدارة المقصف", color: "from-red-500 to-rose-500" },
               { icon: Bus, title: "تتبع الحافلات", color: "from-indigo-500 to-violet-500" },
               { icon: GraduationCap, title: "إدارة الدرجات", color: "from-teal-500 to-cyan-500" },
-              { icon: Users, title: "تواصل مباشر", color: "from-pink-500 to-fuchsia-500" }
+              { icon: Users, title: "تواصل مباشر", color: "from-pink-500 to-fuchsia-500" },
+              { icon: ShoppingBag, title: "متجر قرطاسية إلكتروني", color: "from-amber-500 to-yellow-500" }
             ].map((item, index) => (
               <motion.div
                 key={index}
@@ -191,8 +195,8 @@ const InvestorPresentation = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
             {[
               { value: "1,200+", label: "مدرسة في سلطنة عمان", icon: Building2 },
-              { value: "700,000+", label: "طالب وطالبة", icon: Users },
-              { value: "$50M+", label: "حجم السوق المتوقع", icon: TrendingUp }
+              { value: "250,000+", label: "طالب وطالبة", icon: Users },
+              { value: "20M+ ر.ع", label: "حجم السوق المتوقع", icon: TrendingUp }
             ].map((item, index) => (
               <motion.div
                 key={index}
@@ -220,108 +224,7 @@ const InvestorPresentation = () => {
         </div>
       )
     },
-    // Slide 5: Business Model
-    {
-      id: "business-model",
-      content: (
-        <div className="flex flex-col h-full px-8 py-12" dir="rtl">
-          <motion.h2
-            initial={{ x: -50, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            className="text-4xl font-bold text-primary mb-8 text-center"
-          >
-            نموذج العمل والإيرادات
-          </motion.h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 flex-1">
-            <motion.div
-              initial={{ x: -50, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ delay: 0.3 }}
-              className="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border border-blue-500/20 rounded-2xl p-6"
-            >
-              <DollarSign className="w-10 h-10 text-blue-600 mb-4" />
-              <h3 className="text-2xl font-bold mb-4">اشتراك شهري للمدارس</h3>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span>مدرسة صغيرة (حتى 300 طالب)</span>
-                  <span className="font-bold text-blue-600">150 ر.ع/شهر</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span>مدرسة متوسطة (300-800 طالب)</span>
-                  <span className="font-bold text-blue-600">300 ر.ع/شهر</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span>مدرسة كبيرة (800+ طالب)</span>
-                  <span className="font-bold text-blue-600">500 ر.ع/شهر</span>
-                </div>
-              </div>
-            </motion.div>
-            <motion.div
-              initial={{ x: 50, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ delay: 0.4 }}
-              className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-500/20 rounded-2xl p-6"
-            >
-              <CreditCard className="w-10 h-10 text-green-600 mb-4" />
-              <h3 className="text-2xl font-bold mb-4">بيع بطاقات NFC</h3>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span>سعر البطاقة للمدرسة</span>
-                  <span className="font-bold text-green-600">2 ر.ع</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span>سعر البيع لولي الأمر</span>
-                  <span className="font-bold text-green-600">5 ر.ع</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span>الربح لكل بطاقة</span>
-                  <span className="font-bold text-green-600">3 ر.ع</span>
-                </div>
-              </div>
-            </motion.div>
-            <motion.div
-              initial={{ x: -50, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ delay: 0.5 }}
-              className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-2xl p-6"
-            >
-              <Wallet className="w-10 h-10 text-purple-600 mb-4" />
-              <h3 className="text-2xl font-bold mb-4">عمولة المحفظة</h3>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span>عمولة الشحن</span>
-                  <span className="font-bold text-purple-600">2%</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span>متوسط الشحن الشهري/طالب</span>
-                  <span className="font-bold text-purple-600">20 ر.ع</span>
-                </div>
-              </div>
-            </motion.div>
-            <motion.div
-              initial={{ x: 50, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ delay: 0.6 }}
-              className="bg-gradient-to-br from-orange-500/10 to-amber-500/10 border border-orange-500/20 rounded-2xl p-6"
-            >
-              <Monitor className="w-10 h-10 text-orange-600 mb-4" />
-              <h3 className="text-2xl font-bold mb-4">بيع الأجهزة</h3>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span>جهاز NFC للبوابات</span>
-                  <span className="font-bold text-orange-600">250 ر.ع</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span>تابلت للمقصف</span>
-                  <span className="font-bold text-orange-600">150 ر.ع</span>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        </div>
-      )
-    },
-    // Slide 6: Investment Usage
+    // Slide 5: Investment Usage (without prices)
     {
       id: "investment-usage",
       content: (
@@ -337,42 +240,36 @@ const InvestorPresentation = () => {
             {[
               { 
                 title: "تأسيس الشركة والتراخيص", 
-                amount: "15,000", 
                 percent: 7.5,
                 icon: Briefcase,
                 items: ["تسجيل الشركة", "التراخيص التجارية", "الاستشارات القانونية", "العلامة التجارية"]
               },
               { 
                 title: "المكتب والتجهيزات", 
-                amount: "35,000", 
                 percent: 17.5,
                 icon: Building2,
                 items: ["إيجار مكتب (سنة)", "أثاث مكتبي", "أجهزة كمبيوتر", "معدات اجتماعات"]
               },
               { 
                 title: "غرفة الخوادم والبنية التحتية", 
-                amount: "45,000", 
                 percent: 22.5,
                 icon: Server,
                 items: ["خوادم عالية الأداء", "نظام تبريد", "UPS وحماية", "شبكات وأمان"]
               },
               { 
                 title: "معدات المدارس", 
-                amount: "40,000", 
                 percent: 20,
                 icon: Monitor,
-                items: ["أجهزة NFC", "تابلتات", "طابعات البطاقات", "بطاقات NFC"]
+                items: ["أجهزة NFC", "تابلتات", "طابعات الأساور", "أساور NFC"]
               },
               { 
                 title: "الرواتب والتوظيف", 
-                amount: "50,000", 
                 percent: 25,
                 icon: Users,
                 items: ["مدير تقني", "مطورين", "مبيعات وتسويق", "دعم فني"]
               },
               { 
                 title: "التسويق والمبيعات", 
-                amount: "15,000", 
                 percent: 7.5,
                 icon: TrendingUp,
                 items: ["حملات إعلانية", "معارض تعليمية", "مواد ترويجية", "موقع إلكتروني"]
@@ -391,10 +288,7 @@ const InvestorPresentation = () => {
                   </div>
                   <div className="flex-1">
                     <h3 className="font-bold">{item.title}</h3>
-                    <div className="flex items-center gap-2">
-                      <span className="text-primary font-bold">{item.amount} ر.ع</span>
-                      <span className="text-xs text-muted-foreground">({item.percent}%)</span>
-                    </div>
+                    <span className="text-xs text-muted-foreground">({item.percent}%)</span>
                   </div>
                 </div>
                 <Progress value={item.percent} className="h-2 mb-3" />
@@ -405,6 +299,75 @@ const InvestorPresentation = () => {
                 </div>
               </motion.div>
             ))}
+          </div>
+        </div>
+      )
+    },
+    // Slide 6: Revenue Sources
+    {
+      id: "revenue",
+      content: (
+        <div className="flex flex-col h-full px-8 py-12" dir="rtl">
+          <motion.h2
+            initial={{ x: -50, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            className="text-4xl font-bold text-primary mb-8 text-center"
+          >
+            مصادر الإيرادات
+          </motion.h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 flex-1">
+            <motion.div
+              initial={{ x: -50, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.3 }}
+              className="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border border-blue-500/20 rounded-2xl p-6"
+            >
+              <GraduationCap className="w-12 h-12 text-blue-600 mb-4" />
+              <h3 className="text-2xl font-bold mb-4">اشتراك الطلاب السنوي</h3>
+              <div className="text-center">
+                <p className="text-5xl font-bold text-blue-600 mb-2">25 ر.ع</p>
+                <p className="text-muted-foreground">لكل طالب سنوياً</p>
+              </div>
+            </motion.div>
+            <motion.div
+              initial={{ x: 50, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.4 }}
+              className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-500/20 rounded-2xl p-6"
+            >
+              <Bus className="w-12 h-12 text-green-600 mb-4" />
+              <h3 className="text-2xl font-bold mb-4">اشتراك الحافلات السنوي</h3>
+              <div className="text-center">
+                <p className="text-5xl font-bold text-green-600 mb-2">100 ر.ع</p>
+                <p className="text-muted-foreground">لكل طالب يستخدم الحافلة سنوياً</p>
+              </div>
+            </motion.div>
+            <motion.div
+              initial={{ x: -50, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.5 }}
+              className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-2xl p-6"
+            >
+              <ShoppingBag className="w-12 h-12 text-purple-600 mb-4" />
+              <h3 className="text-2xl font-bold mb-4">متجر القرطاسية</h3>
+              <div className="text-center">
+                <p className="text-5xl font-bold text-purple-600 mb-2">50 ر.ع</p>
+                <p className="text-muted-foreground">متوسط الإنفاق لكل طالب سنوياً</p>
+              </div>
+            </motion.div>
+            <motion.div
+              initial={{ x: 50, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.6 }}
+              className="bg-gradient-to-br from-orange-500/10 to-amber-500/10 border border-orange-500/20 rounded-2xl p-6"
+            >
+              <Watch className="w-12 h-12 text-orange-600 mb-4" />
+              <h3 className="text-2xl font-bold mb-4">أساور NFC الذكية</h3>
+              <div className="text-center">
+                <p className="text-5xl font-bold text-orange-600 mb-2">بيع</p>
+                <p className="text-muted-foreground">أساور ذكية لكل طالب</p>
+              </div>
+            </motion.div>
           </div>
         </div>
       )
@@ -527,8 +490,8 @@ const InvestorPresentation = () => {
                 color: "from-purple-500 to-pink-500"
               },
               { 
-                icon: Shield, 
-                title: "تقنية NFC متقدمة", 
+                icon: Watch, 
+                title: "أساور NFC ذكية", 
                 desc: "تتبع دقيق وآمن للطلاب في جميع الأوقات",
                 color: "from-green-500 to-emerald-500"
               },
@@ -571,7 +534,7 @@ const InvestorPresentation = () => {
         </div>
       )
     },
-    // Slide 9: Roadmap
+    // Slide 9: Roadmap (4 months)
     {
       id: "roadmap",
       content: (
@@ -581,34 +544,34 @@ const InvestorPresentation = () => {
             animate={{ x: 0, opacity: 1 }}
             className="text-4xl font-bold text-primary mb-8 text-center"
           >
-            خطة التنفيذ
+            خطة التنفيذ - 4 أشهر
           </motion.h2>
           <div className="relative flex-1">
             <div className="absolute right-6 top-0 bottom-0 w-1 bg-gradient-to-b from-primary via-primary to-primary/30 rounded-full" />
             <div className="space-y-6">
               {[
                 { 
-                  phase: "الشهر 1-2", 
+                  phase: "الشهر 1", 
                   title: "التأسيس", 
-                  tasks: ["تسجيل الشركة", "تأجير المكتب", "توظيف الفريق الأساسي"],
+                  tasks: ["تسجيل الشركة", "تأجير المكتب", "توظيف الفريق الأساسي", "التراخيص التجارية"],
                   status: "start"
                 },
                 { 
-                  phase: "الشهر 3-4", 
+                  phase: "الشهر 2", 
                   title: "البنية التحتية", 
-                  tasks: ["تجهيز غرفة الخوادم", "شراء المعدات", "إعداد الأنظمة"],
+                  tasks: ["تجهيز غرفة الخوادم", "شراء المعدات", "إعداد الأنظمة", "تدريب الفريق"],
                   status: "progress"
                 },
                 { 
-                  phase: "الشهر 5-6", 
+                  phase: "الشهر 3", 
                   title: "الإطلاق التجريبي", 
-                  tasks: ["5 مدارس تجريبية", "جمع التغذية الراجعة", "تحسين النظام"],
+                  tasks: ["5 مدارس تجريبية", "جمع التغذية الراجعة", "تحسين النظام", "إعداد المواد التسويقية"],
                   status: "progress"
                 },
                 { 
-                  phase: "الشهر 7-12", 
-                  title: "التوسع", 
-                  tasks: ["إطلاق رسمي", "استهداف 20 مدرسة", "بناء فريق المبيعات"],
+                  phase: "الشهر 4", 
+                  title: "الإطلاق الرسمي", 
+                  tasks: ["إطلاق رسمي", "استهداف 20 مدرسة", "حملات تسويقية", "بناء فريق المبيعات"],
                   status: "future"
                 }
               ].map((item, index) => (
@@ -621,7 +584,7 @@ const InvestorPresentation = () => {
                 >
                   <div className={`w-7 h-7 rounded-full flex items-center justify-center z-10 ${
                     item.status === 'start' ? 'bg-green-500' :
-                    item.status === 'progress' ? 'bg-blue-500' : 'bg-gray-400'
+                    item.status === 'progress' ? 'bg-blue-500' : 'bg-amber-500'
                   }`}>
                     <CheckCircle2 className="w-4 h-4 text-white" />
                   </div>
@@ -647,7 +610,7 @@ const InvestorPresentation = () => {
         </div>
       )
     },
-    // Slide 10: Investment Offer
+    // Slide 10: Investment Offer (without valuation)
     {
       id: "offer",
       content: (
@@ -666,15 +629,14 @@ const InvestorPresentation = () => {
               transition={{ delay: 0.3 }}
               className="bg-gradient-to-br from-amber-500 to-orange-500 rounded-3xl p-8 text-white text-center mb-8"
             >
-              <DollarSign className="w-16 h-16 mx-auto mb-4" />
+              <Wallet className="w-16 h-16 mx-auto mb-4" />
               <h3 className="text-5xl font-bold mb-2">200,000 ر.ع</h3>
               <p className="text-2xl opacity-90">مقابل 25% من الشركة</p>
             </motion.div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {[
                 { icon: PieChart, title: "حصة المستثمر", value: "25%", desc: "من أرباح الشركة" },
-                { icon: BarChart3, title: "العائد المتوقع", value: "575%", desc: "خلال 3 سنوات" },
-                { icon: Rocket, title: "قيمة الشركة", value: "800,000 ر.ع", desc: "التقييم الحالي" }
+                { icon: BarChart3, title: "العائد المتوقع", value: "575%", desc: "خلال 3 سنوات" }
               ].map((item, index) => (
                 <motion.div
                   key={index}
@@ -711,14 +673,25 @@ const InvestorPresentation = () => {
               className="w-32 h-32 rounded-3xl shadow-2xl mx-auto"
             />
           </motion.div>
-          <motion.h2
+          <motion.div
             initial={{ y: 30, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.3 }}
-            className="text-4xl md:text-5xl font-bold text-primary mb-6"
+            className="relative inline-block mb-6"
+          >
+            <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent animate-gradient">
+              TalebEdu
+            </h2>
+            <div className="absolute -inset-4 bg-primary/20 blur-xl rounded-full -z-10" />
+          </motion.div>
+          <motion.p
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.4 }}
+            className="text-2xl text-primary mb-4"
           >
             انضم إلى مستقبل التعليم
-          </motion.h2>
+          </motion.p>
           <motion.p
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -830,11 +803,6 @@ const InvestorPresentation = () => {
             <ChevronLeft className="w-4 h-4" />
           </Button>
         </div>
-      </div>
-
-      {/* Slide counter */}
-      <div className="fixed bottom-20 left-4 text-sm text-muted-foreground">
-        {currentSlide + 1} / {slides.length}
       </div>
     </div>
   );
