@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   ChevronLeft, 
@@ -28,13 +28,286 @@ import {
   Utensils,
   BookOpen,
   Watch,
-  ShoppingBag
+  ShoppingBag,
+  Sparkles
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 
+// Floating particle component
+const FloatingParticle = ({ delay, duration, x, y, size }: { delay: number; duration: number; x: number; y: number; size: number }) => (
+  <motion.div
+    className="absolute rounded-full bg-gradient-to-r from-primary/40 to-accent/40"
+    style={{ width: size, height: size }}
+    initial={{ x, y, opacity: 0, scale: 0 }}
+    animate={{
+      opacity: [0, 1, 1, 0],
+      scale: [0, 1, 1, 0],
+      y: [y, y - 200],
+      x: [x, x + (Math.random() - 0.5) * 100]
+    }}
+    transition={{
+      duration,
+      delay,
+      ease: "easeOut"
+    }}
+  />
+);
+
+// Intro Animation Component
+const IntroAnimation = ({ onComplete }: { onComplete: () => void }) => {
+  useEffect(() => {
+    const timer = setTimeout(onComplete, 5500);
+    return () => clearTimeout(timer);
+  }, [onComplete]);
+
+  const particles = Array.from({ length: 30 }, (_, i) => ({
+    id: i,
+    delay: 2 + Math.random() * 1.5,
+    duration: 2 + Math.random(),
+    x: Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 400),
+    y: (typeof window !== 'undefined' ? window.innerHeight : 800) + 50,
+    size: 4 + Math.random() * 12
+  }));
+
+  return (
+    <motion.div
+      className="fixed inset-0 z-[9999] bg-gradient-to-br from-background via-background to-primary/5 flex items-center justify-center overflow-hidden"
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.8 }}
+    >
+      {/* Animated background circles */}
+      <motion.div
+        className="absolute w-[800px] h-[800px] rounded-full border border-primary/10"
+        initial={{ scale: 0, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ duration: 1.5, delay: 0.2 }}
+      />
+      <motion.div
+        className="absolute w-[600px] h-[600px] rounded-full border border-primary/20"
+        initial={{ scale: 0, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ duration: 1.3, delay: 0.4 }}
+      />
+      <motion.div
+        className="absolute w-[400px] h-[400px] rounded-full border border-primary/30"
+        initial={{ scale: 0, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ duration: 1.1, delay: 0.6 }}
+      />
+      
+      {/* Floating particles */}
+      {particles.map((particle) => (
+        <FloatingParticle key={particle.id} {...particle} />
+      ))}
+
+      {/* Spinning rings */}
+      <motion.div
+        className="absolute w-[300px] h-[300px] rounded-full border-2 border-dashed border-primary/30"
+        initial={{ scale: 0, rotate: 0 }}
+        animate={{ scale: 1, rotate: 360 }}
+        transition={{ duration: 4, delay: 0.5, ease: "linear", repeat: Infinity }}
+      />
+      <motion.div
+        className="absolute w-[250px] h-[250px] rounded-full border-2 border-dotted border-accent/40"
+        initial={{ scale: 0, rotate: 0 }}
+        animate={{ scale: 1, rotate: -360 }}
+        transition={{ duration: 3, delay: 0.7, ease: "linear", repeat: Infinity }}
+      />
+
+      {/* Main content */}
+      <div className="relative z-10 flex flex-col items-center">
+        {/* Glowing backdrop */}
+        <motion.div
+          className="absolute -inset-32 bg-gradient-to-r from-primary/20 via-accent/20 to-primary/20 blur-3xl rounded-full"
+          initial={{ opacity: 0, scale: 0.5 }}
+          animate={{ opacity: [0, 0.6, 0.4], scale: [0.5, 1.2, 1] }}
+          transition={{ duration: 2, delay: 0.3 }}
+        />
+
+        {/* Logo with dramatic entrance */}
+        <motion.div
+          className="relative mb-8"
+          initial={{ scale: 0, rotateY: 180 }}
+          animate={{ scale: 1, rotateY: 0 }}
+          transition={{ 
+            type: "spring", 
+            stiffness: 200, 
+            damping: 20, 
+            delay: 0.8 
+          }}
+        >
+          {/* Logo glow effect */}
+          <motion.div
+            className="absolute -inset-4 bg-primary/30 rounded-3xl blur-xl"
+            animate={{ 
+              opacity: [0.3, 0.6, 0.3],
+              scale: [1, 1.1, 1]
+            }}
+            transition={{ duration: 2, repeat: Infinity }}
+          />
+          <motion.img 
+            src="/app-icon.jpg" 
+            alt="TalebEdu Logo" 
+            className="w-32 h-32 md:w-40 md:h-40 rounded-3xl shadow-2xl relative z-10"
+            animate={{ 
+              boxShadow: [
+                "0 0 20px rgba(var(--primary), 0.3)",
+                "0 0 60px rgba(var(--primary), 0.5)",
+                "0 0 20px rgba(var(--primary), 0.3)"
+              ]
+            }}
+            transition={{ duration: 2, repeat: Infinity }}
+          />
+          
+          {/* Sparkle effects around logo */}
+          {[0, 72, 144, 216, 288].map((angle, i) => (
+            <motion.div
+              key={i}
+              className="absolute w-3 h-3"
+              style={{
+                top: '50%',
+                left: '50%',
+                transform: `rotate(${angle}deg) translateY(-80px)`
+              }}
+              initial={{ opacity: 0, scale: 0 }}
+              animate={{ opacity: [0, 1, 0], scale: [0, 1, 0] }}
+              transition={{ duration: 1.5, delay: 1.5 + i * 0.15, repeat: Infinity, repeatDelay: 1 }}
+            >
+              <Sparkles className="w-3 h-3 text-amber-400" />
+            </motion.div>
+          ))}
+        </motion.div>
+
+        {/* Title with letter-by-letter animation */}
+        <motion.div className="relative mb-4">
+          <motion.h1
+            className="text-5xl md:text-7xl font-bold"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1.2 }}
+          >
+            {"TalebEdu".split("").map((letter, i) => (
+              <motion.span
+                key={i}
+                className="inline-block bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent bg-[length:200%_auto]"
+                initial={{ opacity: 0, y: 50, rotateX: -90 }}
+                animate={{ 
+                  opacity: 1, 
+                  y: 0, 
+                  rotateX: 0,
+                  backgroundPosition: ["0% center", "200% center"]
+                }}
+                transition={{ 
+                  opacity: { delay: 1.3 + i * 0.08, duration: 0.5 },
+                  y: { delay: 1.3 + i * 0.08, duration: 0.5 },
+                  rotateX: { delay: 1.3 + i * 0.08, duration: 0.5 },
+                  backgroundPosition: { delay: 2.5, duration: 3, repeat: Infinity }
+                }}
+              >
+                {letter}
+              </motion.span>
+            ))}
+          </motion.h1>
+          
+          {/* Underline animation */}
+          <motion.div
+            className="h-1 bg-gradient-to-r from-transparent via-primary to-transparent rounded-full mt-2"
+            initial={{ scaleX: 0 }}
+            animate={{ scaleX: 1 }}
+            transition={{ delay: 2.2, duration: 0.8 }}
+          />
+        </motion.div>
+
+        {/* Arabic tagline */}
+        <motion.p
+          className="text-xl md:text-2xl text-muted-foreground mb-6 text-center"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 2.5, duration: 0.6 }}
+          dir="rtl"
+        >
+          مستقبل الإدارة المدرسية الذكية
+        </motion.p>
+
+        {/* Investment badge with pulse */}
+        <motion.div
+          className="relative"
+          initial={{ opacity: 0, scale: 0.5 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 3, type: "spring", stiffness: 200 }}
+        >
+          <motion.div
+            className="absolute -inset-2 bg-gradient-to-r from-amber-500/50 to-orange-500/50 rounded-2xl blur-lg"
+            animate={{ opacity: [0.5, 0.8, 0.5], scale: [1, 1.05, 1] }}
+            transition={{ duration: 2, repeat: Infinity }}
+          />
+          <div className="relative bg-gradient-to-l from-amber-500 to-orange-500 text-white px-8 py-4 rounded-2xl text-lg md:text-xl font-bold shadow-xl" dir="rtl">
+            عرض استثماري - 200,000 ريال عماني
+          </div>
+        </motion.div>
+
+        {/* Loading indicator */}
+        <motion.div
+          className="mt-12 flex items-center gap-3"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 3.5 }}
+        >
+          <motion.div
+            className="flex gap-1"
+          >
+            {[0, 1, 2].map((i) => (
+              <motion.div
+                key={i}
+                className="w-2 h-2 bg-primary rounded-full"
+                animate={{ y: [0, -8, 0] }}
+                transition={{ duration: 0.6, delay: 4 + i * 0.15, repeat: Infinity }}
+              />
+            ))}
+          </motion.div>
+          <motion.span
+            className="text-muted-foreground text-sm"
+            animate={{ opacity: [0.5, 1, 0.5] }}
+            transition={{ duration: 1.5, repeat: Infinity }}
+          >
+            جاري التحميل...
+          </motion.span>
+        </motion.div>
+      </div>
+
+      {/* Corner decorations */}
+      <motion.div
+        className="absolute top-10 left-10 w-20 h-20 border-l-2 border-t-2 border-primary/30 rounded-tl-3xl"
+        initial={{ opacity: 0, scale: 0 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 0.5, duration: 0.5 }}
+      />
+      <motion.div
+        className="absolute top-10 right-10 w-20 h-20 border-r-2 border-t-2 border-primary/30 rounded-tr-3xl"
+        initial={{ opacity: 0, scale: 0 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 0.6, duration: 0.5 }}
+      />
+      <motion.div
+        className="absolute bottom-10 left-10 w-20 h-20 border-l-2 border-b-2 border-primary/30 rounded-bl-3xl"
+        initial={{ opacity: 0, scale: 0 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 0.7, duration: 0.5 }}
+      />
+      <motion.div
+        className="absolute bottom-10 right-10 w-20 h-20 border-r-2 border-b-2 border-primary/30 rounded-br-3xl"
+        initial={{ opacity: 0, scale: 0 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 0.8, duration: 0.5 }}
+      />
+    </motion.div>
+  );
+};
+
 const InvestorPresentation = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [showIntro, setShowIntro] = useState(true);
 
   const slides = [
     // Slide 1: Cover
@@ -745,14 +1018,22 @@ const InvestorPresentation = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      {/* Progress bar */}
-      <div className="fixed top-0 left-0 right-0 z-50">
-        <Progress value={(currentSlide / (slides.length - 1)) * 100} className="h-1 rounded-none" />
-      </div>
+    <>
+      {/* Intro Animation */}
+      <AnimatePresence>
+        {showIntro && (
+          <IntroAnimation onComplete={() => setShowIntro(false)} />
+        )}
+      </AnimatePresence>
 
-      {/* Slide content */}
-      <div className="flex-1 pt-4 pb-24">
+      <div className="min-h-screen bg-background flex flex-col">
+        {/* Progress bar */}
+        <div className="fixed top-0 left-0 right-0 z-50">
+          <Progress value={(currentSlide / (slides.length - 1)) * 100} className="h-1 rounded-none" />
+        </div>
+
+        {/* Slide content */}
+        <div className="flex-1 pt-4 pb-24">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentSlide}
@@ -804,7 +1085,8 @@ const InvestorPresentation = () => {
           </Button>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 };
 
