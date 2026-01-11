@@ -17,12 +17,17 @@ const FeasibilityPrint = () => {
   const pageStyle: React.CSSProperties = {
     width: "210mm",
     height: "297mm",
+    minHeight: "297mm",
+    maxHeight: "297mm",
     padding: "15mm",
     boxSizing: "border-box",
     backgroundColor: "white",
-    margin: "0 auto 20px auto",
+    margin: "0 auto",
+    marginBottom: "20px",
     boxShadow: "0 4px 20px rgba(0, 0, 0, 0.15)",
     overflow: "hidden",
+    display: "block",
+    position: "relative",
   };
 
   const headerStyle: React.CSSProperties = {
@@ -80,38 +85,67 @@ const FeasibilityPrint = () => {
   // Print-specific styles
   const printStyles = `
     @media print {
-      @page {
-        size: A4;
-        margin: 0;
-      }
-      body {
-        margin: 0;
-        padding: 0;
+      * {
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
+        color-adjust: exact !important;
       }
-      .print-page {
+      
+      @page {
+        size: 210mm 297mm;
+        margin: 0;
+      }
+      
+      html, body {
+        margin: 0 !important;
+        padding: 0 !important;
         width: 210mm !important;
         height: 297mm !important;
-        margin: 0 !important;
-        padding: 15mm !important;
-        box-shadow: none !important;
-        page-break-after: always !important;
-        page-break-inside: avoid !important;
-        break-after: page !important;
-        break-inside: avoid !important;
+        overflow: visible !important;
       }
-      .print-page:last-child {
-        page-break-after: auto !important;
-        break-after: auto !important;
-      }
-      .print\\:hidden {
-        display: none !important;
-      }
+      
       .print-container {
         padding: 0 !important;
         margin: 0 !important;
         background: white !important;
+        width: 210mm !important;
+      }
+      
+      .print-pages-wrapper {
+        padding: 0 !important;
+        margin: 0 !important;
+      }
+      
+      .print-page {
+        width: 210mm !important;
+        height: 297mm !important;
+        min-height: 297mm !important;
+        max-height: 297mm !important;
+        margin: 0 !important;
+        padding: 15mm !important;
+        box-sizing: border-box !important;
+        box-shadow: none !important;
+        page-break-after: always !important;
+        page-break-before: auto !important;
+        page-break-inside: avoid !important;
+        break-after: page !important;
+        break-inside: avoid !important;
+        overflow: hidden !important;
+        position: relative !important;
+        display: block !important;
+      }
+      
+      .print-page:last-child {
+        page-break-after: avoid !important;
+        break-after: avoid !important;
+      }
+      
+      .print\\:hidden {
+        display: none !important;
+        visibility: hidden !important;
+        height: 0 !important;
+        width: 0 !important;
+        overflow: hidden !important;
       }
     }
   `;
@@ -121,8 +155,8 @@ const FeasibilityPrint = () => {
       <style>{printStyles}</style>
       <div
         className="min-h-screen bg-gray-200 print:bg-white print-container"
-        dir={language === "ar" ? "rtl" : "ltr"}
-        style={{ fontFamily: language === "ar" ? "Geeza Pro, Noto Naskh Arabic, Arial, sans-serif" : "Arial, sans-serif" }}
+        dir="ltr"
+        style={{ fontFamily: language === "ar" ? "'Noto Naskh Arabic', 'Geeza Pro', 'Arial', sans-serif" : "Arial, sans-serif" }}
       >
       {/* Controls - Hidden when printing */}
       <div className="print:hidden sticky top-0 z-50 bg-slate-900 p-4 shadow-lg">
@@ -161,12 +195,13 @@ const FeasibilityPrint = () => {
       </div>
 
       {/* A4 Pages Container */}
-      <div className="py-8 print:py-0">
+      <div className="py-8 print:py-0 print-pages-wrapper">
         {language === "ar" ? (
           <>
             {/* Arabic Cover Page */}
             <div
               className="print-page"
+              dir="rtl"
               style={{
                 ...pageStyle,
                 background: "linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%)",
@@ -176,6 +211,7 @@ const FeasibilityPrint = () => {
                 justifyContent: "center",
                 color: "white",
                 textAlign: "center",
+                direction: "rtl",
               }}
             >
               <LogoImage size="120px" style={{ marginBottom: "30px" }} />
@@ -206,7 +242,7 @@ const FeasibilityPrint = () => {
             </div>
 
             {/* Arabic Page 2: Executive Summary */}
-            <div className="print-page" style={{ ...pageStyle, backgroundColor: "white" }}>
+            <div className="print-page" dir="rtl" style={{ ...pageStyle, backgroundColor: "white", direction: "rtl" }}>
               <div style={headerStyle}>
                 <span style={{ fontSize: "20px", fontWeight: "bold" }}>الملخص التنفيذي</span>
                 <HeaderLogo />
@@ -253,7 +289,7 @@ const FeasibilityPrint = () => {
             </div>
 
             {/* Arabic Page 3: Project Scope */}
-            <div className="print-page" style={{ ...pageStyle, backgroundColor: "white" }}>
+            <div className="print-page" dir="rtl" style={{ ...pageStyle, backgroundColor: "white", direction: "rtl" }}>
               <div style={headerStyle}>
                 <span style={{ fontSize: "20px", fontWeight: "bold" }}>نطاق المشروع</span>
                 <HeaderLogo />
@@ -290,7 +326,7 @@ const FeasibilityPrint = () => {
             </div>
 
             {/* Arabic Page 4: Competitive Advantages */}
-            <div className="print-page" style={{ ...pageStyle, backgroundColor: "white" }}>
+            <div className="print-page" dir="rtl" style={{ ...pageStyle, backgroundColor: "white", direction: "rtl" }}>
               <div style={headerStyle}>
                 <span style={{ fontSize: "20px", fontWeight: "bold" }}>المزايا التنافسية</span>
                 <HeaderLogo />
@@ -330,7 +366,7 @@ const FeasibilityPrint = () => {
             </div>
 
             {/* Arabic Page 5: Revenue */}
-            <div className="print-page" style={{ ...pageStyle, backgroundColor: "white" }}>
+            <div className="print-page" dir="rtl" style={{ ...pageStyle, backgroundColor: "white", direction: "rtl" }}>
               <div style={headerStyle}>
                 <span style={{ fontSize: "20px", fontWeight: "bold" }}>الدراسة المالية - الإيرادات</span>
                 <HeaderLogo />
@@ -399,7 +435,7 @@ const FeasibilityPrint = () => {
             </div>
 
             {/* Arabic Page 6: Costs */}
-            <div className="print-page" style={{ ...pageStyle, backgroundColor: "white" }}>
+            <div className="print-page" dir="rtl" style={{ ...pageStyle, backgroundColor: "white", direction: "rtl" }}>
               <div style={headerStyle}>
                 <span style={{ fontSize: "20px", fontWeight: "bold" }}>الدراسة المالية - التكاليف</span>
                 <HeaderLogo />
@@ -475,7 +511,7 @@ const FeasibilityPrint = () => {
             </div>
 
             {/* Arabic Page 7: Profitability */}
-            <div className="print-page" style={{ ...pageStyle, backgroundColor: "white" }}>
+            <div className="print-page" dir="rtl" style={{ ...pageStyle, backgroundColor: "white", direction: "rtl" }}>
               <div style={headerStyle}>
                 <span style={{ fontSize: "20px", fontWeight: "bold" }}>الربحية والتدفق النقدي</span>
                 <HeaderLogo />
@@ -541,7 +577,7 @@ const FeasibilityPrint = () => {
             </div>
 
             {/* Arabic Page 8: Loan Repayment */}
-            <div className="print-page" style={{ ...pageStyle, backgroundColor: "white" }}>
+            <div className="print-page" dir="rtl" style={{ ...pageStyle, backgroundColor: "white", direction: "rtl" }}>
               <div style={headerStyle}>
                 <span style={{ fontSize: "20px", fontWeight: "bold" }}>سيناريو سداد القرض</span>
                 <HeaderLogo />
@@ -628,7 +664,7 @@ const FeasibilityPrint = () => {
             </div>
 
             {/* Arabic Page 9: Risk Analysis */}
-            <div className="print-page" style={{ ...pageStyle, backgroundColor: "white" }}>
+            <div className="print-page" dir="rtl" style={{ ...pageStyle, backgroundColor: "white", direction: "rtl" }}>
               <div style={headerStyle}>
                 <span style={{ fontSize: "20px", fontWeight: "bold" }}>تحليل المخاطر والتخفيف</span>
                 <HeaderLogo />
@@ -681,10 +717,12 @@ const FeasibilityPrint = () => {
             {/* Arabic Page 10: Conclusion */}
             <div
               className="print-page"
+              dir="rtl"
               style={{
                 ...pageStyle,
                 background: "linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%)",
                 color: "white",
+                direction: "rtl",
               }}
             >
               <div style={{ textAlign: "center", marginBottom: "30px" }}>
