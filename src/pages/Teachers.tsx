@@ -9,6 +9,9 @@ import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -49,6 +52,14 @@ interface Teacher {
   } | null;
 }
 
+interface ClassInfo {
+  id: string;
+  name: string;
+  grade: string;
+  section: string;
+  class_teacher_id: string | null;
+}
+
 export default function Teachers() {
   const { profile } = useAuth();
   const { t, language } = useLanguage();
@@ -60,9 +71,12 @@ export default function Teachers() {
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isClassAssignDialogOpen, setIsClassAssignDialogOpen] = useState(false);
   const [teacherToDelete, setTeacherToDelete] = useState<Teacher | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [editForm, setEditForm] = useState<any>(null);
+  const [availableClasses, setAvailableClasses] = useState<ClassInfo[]>([]);
+  const [selectedClassIds, setSelectedClassIds] = useState<string[]>([]);
   const [addForm, setAddForm] = useState({
     // Basic Information
     name: '',
@@ -111,7 +125,85 @@ export default function Teachers() {
 
   useEffect(() => {
     fetchTeachers();
+    fetchClasses();
   }, []);
+
+  const fetchClasses = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('classes')
+        .select('id, name, grade, section, class_teacher_id')
+        .order('grade', { ascending: true });
+
+      if (error) throw error;
+      setAvailableClasses(data || []);
+    } catch (error: any) {
+      console.error('Error fetching classes:', error);
+    }
+  };
+
+  const openClassAssignDialog = (teacher: Teacher) => {
+    setSelectedTeacher(teacher);
+    // Find classes where this teacher is assigned
+    const assignedClasses = availableClasses.filter(c => c.class_teacher_id === teacher.id);
+    setSelectedClassIds(assignedClasses.map(c => c.id));
+    setIsClassAssignDialogOpen(true);
+  };
+
+  const handleToggleClass = (classId: string) => {
+    setSelectedClassIds(prev =>
+      prev.includes(classId)
+        ? prev.filter(id => id !== classId)
+        : [...prev, classId]
+    );
+  };
+
+  const handleSaveClassAssignments = async () => {
+    if (!selectedTeacher) return;
+
+    try {
+      // Remove this teacher from all classes first
+      await supabase
+        .from('classes')
+        .update({ class_teacher_id: null })
+        .eq('class_teacher_id', selectedTeacher.id);
+
+      // Assign selected classes to this teacher
+      if (selectedClassIds.length > 0) {
+        const { error } = await supabase
+          .from('classes')
+          .update({ class_teacher_id: selectedTeacher.id })
+          .in('id', selectedClassIds);
+
+        if (error) throw error;
+      }
+
+      // Update the teacher's classes array with class names
+      const assignedClassNames = availableClasses
+        .filter(c => selectedClassIds.includes(c.id))
+        .map(c => c.name);
+
+      await supabase
+        .from('teachers')
+        .update({ classes: assignedClassNames })
+        .eq('id', selectedTeacher.id);
+
+      toast({
+        title: language === 'en' ? 'Success' : 'نجاح',
+        description: language === 'en' ? 'Classes assigned successfully' : 'تم تعيين الصفوف بنجاح',
+      });
+
+      setIsClassAssignDialogOpen(false);
+      fetchTeachers();
+      fetchClasses();
+    } catch (error: any) {
+      toast({
+        title: language === 'en' ? 'Error' : 'خطأ',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  };
 
   const fetchTeachers = async () => {
     try {
@@ -589,14 +681,24 @@ export default function Teachers() {
                   </span>
                 </div>
               </div>
-              <Button
-                className="w-full mt-4"
-                variant="outline"
-                size="sm"
-                onClick={() => handleViewProfile(teacher)}
-              >
-                {language === 'en' ? 'View Profile' : 'عرض الملف'}
-              </Button>
+              <div className="flex gap-2 mt-4">
+                <Button
+                  className="flex-1"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => openClassAssignDialog(teacher)}
+                >
+                  <GraduationCap className="h-4 w-4 mr-1" />
+                  {language === 'en' ? 'Assign Classes' : 'تعيين صفوف'}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleViewProfile(teacher)}
+                >
+                  <User className="h-4 w-4" />
+                </Button>
+              </div>
             </CardContent>
           </Card>
         ))}
@@ -1448,6 +1550,53 @@ export default function Teachers() {
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Assign Classes Dialog */}
+      <Dialog open={isClassAssignDialogOpen} onOpenChange={setIsClassAssignDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>
+              {language === 'en' ? 'Assign Classes to' : 'تعيين صفوف إلى'} {selectedTeacher?.profiles?.full_name}
+            </DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="h-[400px] pr-4">
+            <div className="space-y-2">
+              {availableClasses.map((classInfo) => {
+                const isAssignedToOther = classInfo.class_teacher_id && classInfo.class_teacher_id !== selectedTeacher?.id;
+                return (
+                  <div
+                    key={classInfo.id}
+                    className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-colors ${
+                      selectedClassIds.includes(classInfo.id) ? 'bg-primary/10 border-primary' : 
+                      isAssignedToOther ? 'bg-orange-50 border-orange-200' : 'hover:bg-muted'
+                    }`}
+                    onClick={() => handleToggleClass(classInfo.id)}
+                  >
+                    <Checkbox checked={selectedClassIds.includes(classInfo.id)} />
+                    <div className="flex-1">
+                      <p className="font-medium">{classInfo.name}</p>
+                      <p className="text-sm text-muted-foreground">{classInfo.grade} - {classInfo.section}</p>
+                    </div>
+                    {isAssignedToOther && (
+                      <Badge variant="outline" className="text-orange-600 border-orange-300">
+                        {language === 'en' ? 'Assigned' : 'معين'}
+                      </Badge>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </ScrollArea>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsClassAssignDialogOpen(false)}>
+              {t('common.cancel')}
+            </Button>
+            <Button onClick={handleSaveClassAssignments}>
+              {language === 'en' ? 'Save' : 'حفظ'} ({selectedClassIds.length})
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
