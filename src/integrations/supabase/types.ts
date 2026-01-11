@@ -974,31 +974,43 @@ export type Database = {
       }
       classes: {
         Row: {
+          academic_year: string | null
+          capacity: number | null
           class_teacher_id: string | null
           created_at: string | null
+          description: string | null
           grade: string
           id: string
           name: string
+          room: string | null
           section: string
           total_students: number | null
           updated_at: string | null
         }
         Insert: {
+          academic_year?: string | null
+          capacity?: number | null
           class_teacher_id?: string | null
           created_at?: string | null
+          description?: string | null
           grade: string
           id?: string
           name: string
+          room?: string | null
           section: string
           total_students?: number | null
           updated_at?: string | null
         }
         Update: {
+          academic_year?: string | null
+          capacity?: number | null
           class_teacher_id?: string | null
           created_at?: string | null
+          description?: string | null
           grade?: string
           id?: string
           name?: string
+          room?: string | null
           section?: string
           total_students?: number | null
           updated_at?: string | null
@@ -3971,6 +3983,7 @@ export type Database = {
           canteen_agreement: boolean | null
           civil_id: string | null
           class: string | null
+          class_id: string | null
           created_at: string | null
           date_of_birth: string | null
           email: string | null
@@ -4025,6 +4038,7 @@ export type Database = {
           canteen_agreement?: boolean | null
           civil_id?: string | null
           class?: string | null
+          class_id?: string | null
           created_at?: string | null
           date_of_birth?: string | null
           email?: string | null
@@ -4079,6 +4093,7 @@ export type Database = {
           canteen_agreement?: boolean | null
           civil_id?: string | null
           class?: string | null
+          class_id?: string | null
           created_at?: string | null
           date_of_birth?: string | null
           email?: string | null
@@ -4123,6 +4138,13 @@ export type Database = {
           visible_to_parent?: boolean | null
         }
         Relationships: [
+          {
+            foreignKeyName: "students_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "students_parent_id_fkey"
             columns: ["parent_id"]
