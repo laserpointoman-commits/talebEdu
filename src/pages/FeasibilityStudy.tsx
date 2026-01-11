@@ -2,10 +2,10 @@ import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { 
-  Download, 
-  Users, 
-  Shield, 
+import {
+  Download,
+  Users,
+  Shield,
   TrendingUp,
   CheckCircle2,
   Globe,
@@ -15,12 +15,13 @@ import {
   ArrowUpRight,
   Sparkles,
   Award,
-  Phone
+  Phone,
 } from "lucide-react";
-import html2pdf from "html2pdf.js";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
+import talebEduBlueLogo from "@/assets/talebedu-logo-user.png";
 
-// Use the app icon from public folder
-const APP_ICON_URL = "/app-icon.jpg";
+const PHONE_NUMBER = "+968 9656 4540";
 
 const FeasibilityStudy = () => {
   const [isGeneratingEn, setIsGeneratingEn] = useState(false);
@@ -29,17 +30,21 @@ const FeasibilityStudy = () => {
   const arabicPdfRef = useRef<HTMLDivElement>(null);
   const englishPdfRef = useRef<HTMLDivElement>(null);
 
+  const blobToDataUrl = (blob: Blob) =>
+    new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(reader.error);
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.readAsDataURL(blob);
+    });
+
   // Preload and convert logo to base64 for reliable PDF embedding
   useEffect(() => {
     const loadLogo = async () => {
       try {
-        const response = await fetch(APP_ICON_URL);
-        const blob = await response.blob();
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          setLogoBase64(reader.result as string);
-        };
-        reader.readAsDataURL(blob);
+        const res = await fetch(talebEduBlueLogo, { cache: "force-cache" });
+        const blob = await res.blob();
+        setLogoBase64(await blobToDataUrl(blob));
       } catch (error) {
         console.error("Failed to load logo:", error);
       }
@@ -47,7 +52,19 @@ const FeasibilityStudy = () => {
     loadLogo();
   }, []);
 
-  const waitForImages = (element: HTMLElement): Promise<void> => {
+  const waitForFonts = async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const anyDoc = document as any;
+    if (anyDoc.fonts?.ready) {
+      try {
+        await anyDoc.fonts.ready;
+      } catch {
+        // ignore
+      }
+    }
+  };
+
+  const waitForImages = async (element: HTMLElement): Promise<void> => {
     const images = element.querySelectorAll("img");
     const promises = Array.from(images).map((img) => {
       if (img.complete) return Promise.resolve();
@@ -56,85 +73,153 @@ const FeasibilityStudy = () => {
         img.onerror = () => resolve();
       });
     });
-    return Promise.all(promises).then(() => {});
+    await Promise.all(promises);
   };
 
-  const buildPdfOptions = (filename: string) => ({
-    margin: 0,
-    filename,
-    image: { type: "jpeg" as const, quality: 0.98 },
-    html2canvas: {
-      scale: 2,
-      useCORS: true,
-      logging: false,
-      allowTaint: true,
-      backgroundColor: "#ffffff",
-      windowWidth: 794, // A4 width in pixels at 96 DPI
-      windowHeight: 1123, // A4 height in pixels at 96 DPI
-    },
-    jsPDF: {
-      unit: "mm" as const,
-      format: "a4" as const,
-      orientation: "portrait" as const,
-    },
-    pagebreak: { mode: ["css", "legacy"] as const },
-  });
+  // Inline all local images as data-urls to avoid iOS/Safari blank renders caused by late-loading assets.
+  const inlineImagesAsDataUrls = async (element: HTMLElement) => {
+    const imgs = Array.from(element.querySelectorAll("img"));
+    await Promise.all(
+      imgs.map(async (img) => {
+        const src = img.getAttribute("src") || "";
+        if (!src || src.startsWith("data:")) return;
 
-  const generateEnglishPDF = async () => {
-    if (!englishPdfRef.current || !logoBase64) return;
+        try {
+          const res = await fetch(src, { cache: "force-cache" });
+          const blob = await res.blob();
+          img.src = await blobToDataUrl(blob);
+        } catch {
+          // If anything fails, keep original src.
+        }
+      }),
+    );
+  };
 
-    setIsGeneratingEn(true);
+  const waitForNextPaint = () =>
+    new Promise<void>((resolve) => {
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+    });
+
+  const isIOS = () => {
+    const ua = navigator.userAgent || "";
+    const iOSUA = /iPad|iPhone|iPod/i.test(ua);
+    const iPadOS = navigator.platform === "MacIntel" && (navigator as any).maxTouchPoints > 1;
+    return iOSUA || iPadOS;
+  };
+
+  const mountCloneForCapture = (clone: HTMLDivElement) => {
+    const container = document.createElement("div");
+    container.style.position = "fixed";
+    container.style.left = "0";
+    container.style.top = "0";
+    container.style.zIndex = "2147483647";
+    container.style.pointerEvents = "none";
+    // Keep it visible for rendering, but make sure it doesn't affect layout.
+    container.style.width = "0";
+    container.style.height = "0";
+    container.style.overflow = "visible";
+
+    clone.style.position = "absolute";
+    clone.style.left = "0";
+    clone.style.top = "0";
+    clone.style.pointerEvents = "none";
+
+    container.appendChild(clone);
+    document.body.appendChild(container);
+
+    return () => {
+      if (container.parentNode) container.parentNode.removeChild(container);
+    };
+  };
+
+  const generatePdfFromRef = async (ref: React.RefObject<HTMLDivElement>, filename: string) => {
+    if (!ref.current) return;
+
+    // A4 at 96 DPI (stable layout for html2canvas)
+    const A4_WIDTH_PX = 794;
+    const A4_HEIGHT_PX = 1123;
+
+    const clone = ref.current.cloneNode(true) as HTMLDivElement;
+    clone.style.width = `${A4_WIDTH_PX}px`;
+    clone.style.background = "#ffffff";
+    clone.style.transform = "none";
+
+    const cleanup = mountCloneForCapture(clone);
 
     try {
-      // Clone the element for capture
-      const clone = englishPdfRef.current.cloneNode(true) as HTMLDivElement;
-      clone.style.position = "absolute";
-      clone.style.left = "0";
-      clone.style.top = "0";
-      clone.style.width = "210mm";
-      clone.style.zIndex = "9999";
-      clone.style.background = "white";
-      document.body.appendChild(clone);
-
+      await waitForFonts();
+      await inlineImagesAsDataUrls(clone);
       await waitForImages(clone);
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      await waitForNextPaint();
 
-      const opt = buildPdfOptions("TalebEdu_Feasibility_Study_EN_2026.pdf");
-      await html2pdf().set(opt).from(clone).save();
+      const pdf = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
+      const pages = Array.from(clone.children).filter((n): n is HTMLElement => n instanceof HTMLElement);
 
-      document.body.removeChild(clone);
+      const scale = isIOS() ? 1.25 : 2;
+
+      for (let i = 0; i < pages.length; i++) {
+        const pageEl = pages[i];
+
+        // Force exact page sizing for consistent output
+        pageEl.style.width = `${A4_WIDTH_PX}px`;
+        pageEl.style.height = `${A4_HEIGHT_PX}px`;
+        pageEl.style.overflow = "hidden";
+        pageEl.style.transform = "none";
+
+        const canvas = await html2canvas(pageEl, {
+          scale,
+          backgroundColor: "#ffffff",
+          useCORS: true,
+          allowTaint: true,
+          logging: false,
+          windowWidth: A4_WIDTH_PX,
+          windowHeight: A4_HEIGHT_PX,
+        });
+
+        const imgData = canvas.toDataURL("image/jpeg", 0.98);
+
+        if (i > 0) pdf.addPage();
+        pdf.addImage(imgData, "JPEG", 0, 0, 210, 297, undefined, "FAST");
+
+        // Help GC on memory-tight devices (iOS)
+        canvas.width = 0;
+        canvas.height = 0;
+      }
+
+      const blob = pdf.output("blob");
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      a.target = "_blank";
+      a.rel = "noopener";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+
+      // Give iOS some time before revoking
+      setTimeout(() => URL.revokeObjectURL(url), 30_000);
     } catch (error) {
-      console.error("English PDF generation failed:", error);
+      console.error("PDF generation failed:", error);
+    } finally {
+      cleanup();
+    }
+  };
+
+  const generateEnglishPDF = async () => {
+    setIsGeneratingEn(true);
+    try {
+      await generatePdfFromRef(englishPdfRef, "TalebEdu_Feasibility_Study_EN_2026.pdf");
     } finally {
       setIsGeneratingEn(false);
     }
   };
 
   const generateArabicPDF = async () => {
-    if (!arabicPdfRef.current || !logoBase64) return;
-
     setIsGeneratingAr(true);
-
     try {
-      // Clone the element for capture
-      const clone = arabicPdfRef.current.cloneNode(true) as HTMLDivElement;
-      clone.style.position = "absolute";
-      clone.style.left = "0";
-      clone.style.top = "0";
-      clone.style.width = "210mm";
-      clone.style.zIndex = "9999";
-      clone.style.background = "white";
-      document.body.appendChild(clone);
-
-      await waitForImages(clone);
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
-      const opt = buildPdfOptions("TalebEdu_Feasibility_Study_AR_2026.pdf");
-      await html2pdf().set(opt).from(clone).save();
-
-      document.body.removeChild(clone);
-    } catch (error) {
-      console.error("Arabic PDF generation failed:", error);
+      await generatePdfFromRef(arabicPdfRef, "TalebEdu_Feasibility_Study_AR_2026.pdf");
     } finally {
       setIsGeneratingAr(false);
     }
