@@ -18,7 +18,7 @@ import {
   Phone,
 } from "lucide-react";
 import html2pdf from "html2pdf.js";
-import talebEduBlueLogo from "@/assets/talebedu-logo-user.png";
+import talebEduBlueLogo from "@/assets/talebedu-logo-blue.png";
 
 const PHONE_NUMBER = "+968 9656 4540";
 
@@ -53,7 +53,7 @@ const FeasibilityStudy = () => {
     setLoading(true);
 
     try {
-      const container = document.createElement("div");
+      container = document.createElement("div");
       container.style.position = "fixed";
       container.style.left = "0";
       container.style.top = "0";
@@ -85,9 +85,9 @@ const FeasibilityStudy = () => {
       const opt = {
         margin: 0,
         filename,
-        image: { type: "jpeg" as const, quality: 0.95 },
+        image: { type: "png" as const, quality: 1 },
         html2canvas: {
-          scale: 2,
+          scale: 3,
           useCORS: true,
           logging: false,
           allowTaint: true,
@@ -96,7 +96,7 @@ const FeasibilityStudy = () => {
           windowHeight: 1123,
         },
         jsPDF: { unit: "mm" as const, format: "a4" as const, orientation: "portrait" as const },
-        pagebreak: { mode: ["css", "legacy"] as const },
+        pagebreak: { mode: ["css"] as const },
       };
 
       await html2pdf().set(opt).from(clone).save();
@@ -104,7 +104,7 @@ const FeasibilityStudy = () => {
     } catch (error) {
       console.error("PDF generation failed:", error);
     } finally {
-      setLoading(false);
+      setLoading(false); if (container?.parentNode) container.parentNode.removeChild(container);
     }
   };
 
@@ -116,11 +116,11 @@ const FeasibilityStudy = () => {
 
   const pageStyle: React.CSSProperties = {
     width: "210mm",
-    minHeight: "297mm",
+    height: "297mm",
     padding: "15mm",
     boxSizing: "border-box",
     pageBreakAfter: "always",
-    fontFamily: "Arial, sans-serif",
+    overflow: "hidden",
     backgroundColor: "white",
   };
 
@@ -182,7 +182,7 @@ const FeasibilityStudy = () => {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900" dir="rtl">
       {/* Hidden Arabic PDF Content */}
       <div style={{ position: "absolute", left: "-9999px", top: 0, overflow: "hidden" }}>
-        <div ref={arabicPdfRef} dir="rtl" style={{ fontFamily: "Arial, sans-serif", backgroundColor: "white" }}>
+        <div ref={arabicPdfRef} dir="rtl" style={{ fontFamily: "Geeza Pro, Noto Naskh Arabic, Arial, sans-serif", backgroundColor: "white" }}>
           {/* Cover Page */}
           <div
             style={{
@@ -216,7 +216,7 @@ const FeasibilityStudy = () => {
             </div>
 
             <p style={{ fontSize: "14px" }}>مقدم من: مازن خنفر - TalebEdu</p>
-            <p style={{ fontSize: "14px", marginTop: "10px" }}>هاتف: {PHONE_NUMBER}</p>
+            <p style={{ fontSize: "14px", marginTop: "10px" }}>هاتف: <span style={{ direction: "ltr", unicodeBidi: "plaintext", display: "inline-block" }}>{PHONE_NUMBER}</span></p>
             <p style={{ fontSize: "14px", marginTop: "10px" }}>السنة: 2026</p>
             <p style={{ fontSize: "14px", marginTop: "20px", color: "#94a3b8" }}>مسقط، سلطنة عمان</p>
           </div>
@@ -353,7 +353,7 @@ const FeasibilityStudy = () => {
             </div>
 
             <div style={{ color: "#1e293b" }}>
-              <h3 style={{ fontSize: "16px", fontWeight: "bold", marginBottom: "15px" }}>
+              <h3 style={{ fontSize: "18px", fontWeight: "bold", marginBottom: "15px" }}>
                 أ) الإيرادات السنوية - المدارس الخاصة فقط (ر.ع)
               </h3>
 
@@ -739,7 +739,7 @@ const FeasibilityStudy = () => {
             <div style={{ textAlign: "center", marginTop: "40px" }}>
               <GlowingTitle size="32px" />
               <p style={{ fontSize: "14px", marginTop: "15px" }}>مازن خنفر</p>
-              <p style={{ fontSize: "14px", marginTop: "8px" }}>هاتف: {PHONE_NUMBER}</p>
+              <p style={{ fontSize: "14px", marginTop: "8px" }}>هاتف: <span style={{ direction: "ltr", unicodeBidi: "plaintext", display: "inline-block" }}>{PHONE_NUMBER}</span></p>
               <p style={{ fontSize: "14px", color: "#94a3b8", marginTop: "10px" }}>مسقط، سلطنة عمان - 2026</p>
             </div>
           </div>
@@ -1168,7 +1168,7 @@ const FeasibilityStudy = () => {
         <div className="text-center mt-12 text-blue-200">
           <p className="flex items-center justify-center gap-2">
             <Phone className="w-4 h-4" />
-            {PHONE_NUMBER}
+            <span className="direction-ltr unicode-bidi-plaintext">{PHONE_NUMBER}</span>
           </p>
         </div>
       </div>
