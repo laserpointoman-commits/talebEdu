@@ -14,6 +14,8 @@ export interface Student {
   civilId: string;
   grade: string;
   class: string;
+  classId?: string;
+  className?: string;
   academicYear: string;
   enrollmentDate: string;
   previousSchool?: string;
@@ -74,7 +76,15 @@ export function StudentsProvider({ children }: { children: React.ReactNode }) {
     try {
       const { data, error } = await supabase
         .from('students')
-        .select('*')
+        .select(`
+          *,
+          classes:class_id (
+            id,
+            name,
+            grade,
+            section
+          )
+        `)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -91,7 +101,9 @@ export function StudentsProvider({ children }: { children: React.ReactNode }) {
           nationality: student.nationality || '',
           civilId: student.civil_id || '',
           grade: student.grade || '',
-          class: student.class || '',
+          class: (student as any).classes?.name || student.class || '',
+          classId: (student as any).class_id || undefined,
+          className: (student as any).classes?.name || undefined,
           academicYear: student.academic_year || '',
           enrollmentDate: student.enrollment_date || '',
           previousSchool: student.previous_school,
