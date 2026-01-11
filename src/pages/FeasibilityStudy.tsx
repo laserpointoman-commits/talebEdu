@@ -29,16 +29,39 @@ const FeasibilityStudy = () => {
     setIsGeneratingEn(true);
     
     if (englishPdfRef.current) {
+      // Temporarily make the element visible for html2canvas
+      const container = englishPdfRef.current.parentElement;
+      if (container) {
+        container.style.position = 'fixed';
+        container.style.left = '0';
+        container.style.top = '0';
+        container.style.zIndex = '-1';
+        container.style.opacity = '1';
+      }
+
       const opt = {
         margin: 0,
         filename: 'TalebEdu_Feasibility_Study_EN_2026.pdf',
         image: { type: 'jpeg' as const, quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true },
+        html2canvas: { 
+          scale: 2, 
+          useCORS: true,
+          logging: false,
+          allowTaint: true,
+        },
         jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const },
         pagebreak: { mode: ['css', 'legacy'] as const }
       };
       
       await html2pdf().set(opt).from(englishPdfRef.current).save();
+
+      // Hide it again
+      if (container) {
+        container.style.position = 'absolute';
+        container.style.left = '-9999px';
+        container.style.zIndex = '';
+        container.style.opacity = '';
+      }
     }
     
     setIsGeneratingEn(false);
@@ -48,16 +71,39 @@ const FeasibilityStudy = () => {
     setIsGeneratingAr(true);
     
     if (arabicPdfRef.current) {
+      // Temporarily make the element visible for html2canvas
+      const container = arabicPdfRef.current.parentElement;
+      if (container) {
+        container.style.position = 'fixed';
+        container.style.left = '0';
+        container.style.top = '0';
+        container.style.zIndex = '-1';
+        container.style.opacity = '1';
+      }
+
       const opt = {
         margin: 0,
         filename: 'TalebEdu_Feasibility_Study_AR_2026.pdf',
         image: { type: 'jpeg' as const, quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true },
+        html2canvas: { 
+          scale: 2, 
+          useCORS: true,
+          logging: false,
+          allowTaint: true,
+        },
         jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const },
         pagebreak: { mode: ['css', 'legacy'] as const }
       };
       
       await html2pdf().set(opt).from(arabicPdfRef.current).save();
+
+      // Hide it again
+      if (container) {
+        container.style.position = 'absolute';
+        container.style.left = '-9999px';
+        container.style.zIndex = '';
+        container.style.opacity = '';
+      }
     }
     
     setIsGeneratingAr(false);
