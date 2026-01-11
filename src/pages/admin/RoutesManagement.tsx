@@ -33,6 +33,14 @@ interface Teacher {
   nameAr: string;
 }
 
+interface RouteStop {
+  lat?: number;
+  lng?: number;
+  name: string;
+  name_ar?: string;
+  time?: string;
+}
+
 export interface Route {
   id: string;
   name: string;
@@ -40,7 +48,7 @@ export interface Route {
   busId?: string;
   driverId?: string;
   supervisorId?: string;
-  stops: string[];
+  stops: (string | RouteStop)[];
   studentIds: string[];
   departureTime: string;
   arrivalTime: string;
@@ -68,8 +76,14 @@ export default function RoutesManagement() {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [bulkDeleteConfirmOpen, setBulkDeleteConfirmOpen] = useState(false);
   const [routeToDelete, setRouteToDelete] = useState<string | null>(null);
-  const [stops, setStops] = useState<string[]>([]);
+  const [stops, setStops] = useState<(string | RouteStop)[]>([]);
   const [newStop, setNewStop] = useState('');
+
+  // Helper function to get stop name from string or RouteStop object
+  const getStopName = (stop: string | RouteStop, lang: string = language): string => {
+    if (typeof stop === 'string') return stop;
+    return lang === 'ar' && stop.name_ar ? stop.name_ar : stop.name;
+  };
   const [formData, setFormData] = useState<Partial<Route>>({
     status: 'active',
     stops: [],
@@ -404,7 +418,7 @@ export default function RoutesManagement() {
                   <p className="text-xs text-muted-foreground mb-1">
                     {language === 'en' ? 'Stops' : 'المحطات'}:
                   </p>
-                  <p className="text-sm">{route.stops.join(' → ')}</p>
+                  <p className="text-sm">{route.stops.map(s => getStopName(s)).join(' → ')}</p>
                 </div>
               )}
             </CardContent>
@@ -519,7 +533,7 @@ export default function RoutesManagement() {
                 <div className="flex flex-wrap gap-2">
                   {selectedRoute.stops.map((stop, index) => (
                     <Badge key={index} variant="outline">
-                      {stop}
+                      {getStopName(stop)}
                     </Badge>
                   ))}
                 </div>
@@ -761,7 +775,7 @@ export default function RoutesManagement() {
               <div className="flex flex-wrap gap-2">
                 {stops.map((stop, index) => (
                   <Badge key={index} variant="secondary" className="py-1">
-                    {stop}
+                    {getStopName(stop)}
                     <button
                       onClick={() => removeStop(index)}
                       className="ml-2 hover:text-destructive"
