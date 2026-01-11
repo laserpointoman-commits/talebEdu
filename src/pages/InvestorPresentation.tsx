@@ -339,7 +339,7 @@ const InvestorPresentation = () => {
               <h3 className="text-2xl font-bold mb-4">اشتراك الحافلات السنوي</h3>
               <div className="text-center">
                 <p className="text-5xl font-bold text-green-600 mb-2">100 ر.ع</p>
-                <p className="text-muted-foreground">لكل طالب يستخدم الحافلة سنوياً</p>
+                <p className="text-muted-foreground">لكل حافلة سنوياً</p>
               </div>
             </motion.div>
             <motion.div
@@ -752,7 +752,7 @@ const InvestorPresentation = () => {
       </div>
 
       {/* Slide content */}
-      <div className="flex-1 pt-4">
+      <div className="flex-1 pt-4 pb-24">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentSlide}
