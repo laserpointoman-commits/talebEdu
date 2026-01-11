@@ -1,8 +1,8 @@
 import { motion } from 'framer-motion';
-import { MessageCircle, Users, Phone, Search, Settings } from 'lucide-react';
+import { MessageCircle, Users, Phone, UserCircle, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-type MessengerTab = 'chats' | 'groups' | 'calls' | 'search' | 'settings';
+type MessengerTab = 'chats' | 'groups' | 'calls' | 'contacts' | 'settings';
 
 interface MessengerBottomNavProps {
   activeTab: MessengerTab;
@@ -20,8 +20,8 @@ export function MessengerBottomNav({
   const tabs = [
     { id: 'chats' as const, icon: MessageCircle, label: isArabic ? 'المحادثات' : 'Chats', badge: unreadCount },
     { id: 'groups' as const, icon: Users, label: isArabic ? 'المجموعات' : 'Groups' },
+    { id: 'contacts' as const, icon: UserCircle, label: isArabic ? 'جهات الاتصال' : 'Contacts' },
     { id: 'calls' as const, icon: Phone, label: isArabic ? 'المكالمات' : 'Calls' },
-    { id: 'search' as const, icon: Search, label: isArabic ? 'البحث' : 'Search' },
     { id: 'settings' as const, icon: Settings, label: isArabic ? 'الإعدادات' : 'Settings' },
   ];
 

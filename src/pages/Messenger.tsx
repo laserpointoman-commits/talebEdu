@@ -18,6 +18,7 @@ import { MessengerBottomNav } from '@/components/messenger/MessengerBottomNav';
 import { MessengerUpdates } from '@/components/messenger/MessengerUpdates';
 import { MessengerCalls } from '@/components/messenger/MessengerCalls';
 import { MessengerSearch } from '@/components/messenger/MessengerSearch';
+import { MessengerContacts } from '@/components/messenger/MessengerContacts';
 import { MessengerDesktopLayout } from '@/components/messenger/MessengerDesktopLayout';
 import { CallScreen } from '@/components/messenger/CallScreen';
 import { ContactInfoScreen } from '@/components/messenger/ContactInfoScreen';
@@ -43,7 +44,7 @@ import { format, isToday, isYesterday, isThisWeek } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessengerSettingsWithTheme } from '@/components/messenger/MessengerSettingsWithTheme';
 
-type MessengerTab = 'chats' | 'groups' | 'calls' | 'search' | 'settings';
+type MessengerTab = 'chats' | 'groups' | 'calls' | 'contacts' | 'settings';
 
 function MessengerContent() {
   const navigate = useNavigate();
@@ -595,7 +596,7 @@ function MessengerContent() {
             {activeTab === 'chats' ? (isArabic ? 'المحادثات' : 'Chats') :
              activeTab === 'groups' ? (isArabic ? 'المجموعات' : 'Groups') :
              activeTab === 'calls' ? (isArabic ? 'المكالمات' : 'Calls') :
-             activeTab === 'search' ? (isArabic ? 'البحث' : 'Search') :
+             activeTab === 'contacts' ? (isArabic ? 'جهات الاتصال' : 'Contacts') :
              (isArabic ? 'الإعدادات' : 'Settings')}
           </h1>
         </div>
@@ -798,14 +799,22 @@ function MessengerContent() {
           </ScrollArea>
         )}
 
-        {activeTab === 'calls' && <MessengerCalls callLogs={callLogs} isArabic={isArabic} />}
-        {activeTab === 'search' && (
-          <MessengerSearch
-            conversations={conversations}
-            groups={groups}
-            onSelectConversation={handleSelectConversation}
-            onSelectGroup={handleSelectGroup}
-            searchUsers={searchUsers}
+        {activeTab === 'contacts' && (
+          <MessengerContacts
+            onSelectContact={(contact) => {
+              const newConv: Conversation = {
+                id: contact.id,
+                recipient_id: contact.id,
+                recipient_name: contact.full_name,
+                recipient_image: contact.profile_image,
+                last_message: null,
+                last_message_time: null,
+                unread_count: 0,
+                is_group: false,
+                is_online: false
+              };
+              handleSelectConversation(newConv);
+            }}
             isArabic={isArabic}
           />
         )}
