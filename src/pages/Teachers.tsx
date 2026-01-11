@@ -673,14 +673,38 @@ export default function Teachers() {
                     {teacher.experience_years || 5} {language === 'en' ? 'years' : 'سنوات'}
                   </span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <MapPin className="h-3 w-3 text-muted-foreground" />
-                  <span className="text-xs">
-                    {language === 'en' ? 'Classes: ' : 'الفصول: '}
-                    {teacher.classes?.join(', ') || 'Grade 5A, Grade 6B'}
-                  </span>
+              </div>
+              
+              {/* Assigned Classes Section */}
+              <div className="mt-3 pt-3 border-t">
+                <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1">
+                  <GraduationCap className="h-3 w-3" />
+                  {language === 'en' ? 'Assigned Classes:' : 'الصفوف المعينة:'}
+                </p>
+                <div className="flex flex-wrap gap-1">
+                  {(() => {
+                    // Get classes assigned to this teacher from availableClasses
+                    const assignedClasses = availableClasses.filter(c => c.class_teacher_id === teacher.id);
+                    if (assignedClasses.length === 0) {
+                      return (
+                        <span className="text-xs text-muted-foreground italic">
+                          {language === 'en' ? 'No classes assigned' : 'لا يوجد صفوف معينة'}
+                        </span>
+                      );
+                    }
+                    return assignedClasses.map((classInfo) => (
+                      <Badge 
+                        key={classInfo.id} 
+                        variant="secondary"
+                        className="text-xs bg-primary/10 text-primary"
+                      >
+                        {classInfo.name}
+                      </Badge>
+                    ));
+                  })()}
                 </div>
               </div>
+              
               <div className="flex gap-2 mt-4">
                 <Button
                   className="flex-1"
