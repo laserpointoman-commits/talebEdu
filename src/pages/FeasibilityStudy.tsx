@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -16,1128 +16,1052 @@ import {
   Sparkles,
   Award
 } from "lucide-react";
-import jsPDF from "jspdf";
+import html2pdf from "html2pdf.js";
 import logoImage from "@/assets/talebedu-logo-hq.png";
 
 const FeasibilityStudy = () => {
   const [isGeneratingEn, setIsGeneratingEn] = useState(false);
   const [isGeneratingAr, setIsGeneratingAr] = useState(false);
-
-  // Convert image to base64
-  const getImageAsBase64 = async (imagePath: string): Promise<string> => {
-    return new Promise((resolve) => {
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        canvas.width = img.width;
-        canvas.height = img.height;
-        const ctx = canvas.getContext('2d');
-        ctx?.drawImage(img, 0, 0);
-        const dataURL = canvas.toDataURL('image/png');
-        resolve(dataURL);
-      };
-      img.onerror = () => resolve('');
-      img.src = imagePath;
-    });
-  };
+  const arabicPdfRef = useRef<HTMLDivElement>(null);
+  const englishPdfRef = useRef<HTMLDivElement>(null);
 
   const generateEnglishPDF = async () => {
     setIsGeneratingEn(true);
     
-    const pdf = new jsPDF({
-      orientation: 'portrait',
-      unit: 'mm',
-      format: 'a4',
-    });
-
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const pageHeight = pdf.internal.pageSize.getHeight();
-    const margin = 15;
-    const contentWidth = pageWidth - (margin * 2);
-    let yPosition = margin;
-
-    // Load logo
-    const logoBase64 = await getImageAsBase64(logoImage);
-
-    const addNewPage = () => {
-      pdf.addPage();
-      yPosition = margin;
-    };
-
-    const checkPageBreak = (neededHeight: number) => {
-      if (yPosition + neededHeight > pageHeight - margin) {
-        addNewPage();
-        return true;
-      }
-      return false;
-    };
-
-    const addCenteredText = (text: string, y: number, size: number = 12) => {
-      pdf.setFontSize(size);
-      const textWidth = pdf.getTextWidth(text);
-      pdf.text(text, (pageWidth - textWidth) / 2, y);
-    };
-
-    const addPageHeader = (title: string) => {
-      pdf.setFillColor(15, 23, 42);
-      pdf.rect(0, 0, pageWidth, 30, 'F');
-      pdf.setTextColor(255, 255, 255);
-      pdf.setFontSize(16);
-      addCenteredText(title, 18);
+    if (englishPdfRef.current) {
+      const opt = {
+        margin: 0,
+        filename: 'TalebEdu_Feasibility_Study_EN_2026.pdf',
+        image: { type: 'jpeg' as const, quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const },
+        pagebreak: { mode: ['css', 'legacy'] as const }
+      };
       
-      // Add logo to header
-      if (logoBase64) {
-        try {
-          pdf.addImage(logoBase64, 'PNG', pageWidth - 35, 5, 20, 20);
-        } catch (e) {
-          console.log('Logo not added');
-        }
-      }
-      yPosition = 40;
-    };
-
-    // === COVER PAGE ===
-    pdf.setFillColor(15, 23, 42);
-    pdf.rect(0, 0, pageWidth, pageHeight, 'F');
-    
-    pdf.setFillColor(59, 130, 246);
-    pdf.circle(pageWidth - 30, 40, 50, 'F');
-    pdf.setFillColor(16, 185, 129);
-    pdf.circle(30, pageHeight - 50, 35, 'F');
-    
-    // Logo on cover
-    if (logoBase64) {
-      try {
-        pdf.addImage(logoBase64, 'PNG', pageWidth/2 - 25, 40, 50, 50);
-      } catch (e) {
-        console.log('Logo not added');
-      }
+      await html2pdf().set(opt).from(englishPdfRef.current).save();
     }
     
-    pdf.setTextColor(255, 255, 255);
-    pdf.setFontSize(32);
-    addCenteredText('TalebEdu', 110);
-    
-    pdf.setFontSize(20);
-    addCenteredText('Feasibility Study', 130);
-    
-    pdf.setFontSize(12);
-    addCenteredText('Comprehensive School Management Application', 148);
-    addCenteredText('Electronic Wallet | Smart Gates | Digital Stores', 158);
-    
-    pdf.setFillColor(59, 130, 246);
-    pdf.roundedRect(margin + 30, 175, contentWidth - 60, 35, 5, 5, 'F');
-    pdf.setFontSize(11);
-    addCenteredText('Submitted to:', 188);
-    pdf.setFontSize(14);
-    addCenteredText('Oman Development Bank', 198);
-    
-    pdf.setFontSize(11);
-    addCenteredText('Submitted by: Mazen Khanfar - TalebEdu', 230);
-    addCenteredText('Year: 2026', 242);
-    addCenteredText('Muscat, Sultanate of Oman', 265);
-
-    // === PAGE 2: EXECUTIVE SUMMARY ===
-    addNewPage();
-    addPageHeader('Executive Summary');
-    
-    pdf.setTextColor(15, 23, 42);
-    pdf.setFontSize(10);
-    
-    const execSummary = [
-      'TalebEdu is the ONLY application in the world that combines in one platform:',
-      '',
-      '  - School Management: Attendance, Grades, Homework, Schedules',
-      '  - Bus Management: Minimum 6 buses per school with real-time tracking',
-      '  - Smart Gates & Canteen with NFC technology',
-      '  - Electronic Wallet for students',
-      '  - Digital Store for NFC wristbands + Private Label stationery',
-      '  - Integrated Communication: Messages, Voice/Video calls, File sharing',
-      '',
-      'UNIQUE ADVANTAGES:',
-      '',
-      '  - Smart Wristband: Resistant to all elements except fire, NO charging needed',
-      '  - Multi-language Support: Arabic, English, Hindi',
-      '  - Complete Security for students and parents',
-      '  - Local and International Scalability (GCC countries in Year 3)',
-      '  - Complete Financial Management: All subscriptions paid via wallet to school',
-      '',
-      'PROJECT GOAL:',
-      'Create a reliable and comprehensive platform to solve school management,',
-      'security, communication, and digital purchasing problems in a sustainable way.'
-    ];
-    
-    execSummary.forEach(line => {
-      checkPageBreak(7);
-      pdf.text(line, margin, yPosition);
-      yPosition += 6;
-    });
-
-    // === PAGE 3: PROJECT SCOPE ===
-    addNewPage();
-    addPageHeader('Project Scope');
-    
-    pdf.setTextColor(15, 23, 42);
-    
-    const metrics = [
-      ['Target Segment', 'Private Schools + Government Partnership'],
-      ['Location', 'Muscat & Ad Dakhiliyah'],
-      ['Year 1 Schools', '50 Schools'],
-      ['Avg. Students/School', '500 Students'],
-      ['Buses per School', '6 Buses'],
-      ['Gates per School', '2 Gates'],
-      ['Canteen per School', '1 Canteen'],
-    ];
-    
-    pdf.setFontSize(10);
-    metrics.forEach((metric, i) => {
-      const y = yPosition + (i * 14);
-      pdf.setFillColor(240, 249, 255);
-      pdf.roundedRect(margin, y, contentWidth, 12, 2, 2, 'F');
-      pdf.setTextColor(59, 130, 246);
-      pdf.text(metric[0] + ':', margin + 5, y + 8);
-      pdf.setTextColor(15, 23, 42);
-      pdf.text(metric[1], margin + 60, y + 8);
-    });
-    
-    yPosition += 115;
-    
-    pdf.setFontSize(12);
-    pdf.setTextColor(15, 23, 42);
-    pdf.text('Services Offered:', margin, yPosition);
-    yPosition += 10;
-    
-    const services = [
-      '1. Annual Student Subscription (Bus, Gate, Canteen, Wallet, Grades tracking)',
-      '2. Additional NFC Wristband Sales',
-      '3. Private Label Stationery Store',
-      '4. Internal Messaging System for Parent-Teacher-Admin Communication'
-    ];
-    
-    pdf.setFontSize(10);
-    services.forEach(service => {
-      pdf.text(service, margin + 5, yPosition);
-      yPosition += 8;
-    });
-
-    // === PAGE 4: COMPETITIVE ADVANTAGES ===
-    addNewPage();
-    addPageHeader('Competitive Advantages');
-    
-    pdf.setTextColor(15, 23, 42);
-    
-    const advantages = [
-      ['Smart Wristband Technology', 'No charging or maintenance required'],
-      ['Comprehensive Tracking', 'Grades, Homework, Attendance in one place'],
-      ['Parental Control', 'Parents control canteen purchases & limits'],
-      ['Integrated Communication', 'Messages, Voice/Video calls, File sharing'],
-      ['Digital Marketplace', 'Wristbands + Private Label Stationery'],
-      ['Multi-Language Support', 'Arabic, English, Hindi'],
-      ['GCC Expansion Ready', 'Scalable architecture for regional growth'],
-      ['Complete Student Safety', 'Real-time tracking and secure access'],
-      ['FIRST in Oman', 'Smart Wristband as digital school ID'],
-      ['Electronic Wallet Pioneer', 'Student pocket money via wristband'],
-      ['Direct Payment System', 'Fees paid directly through wallet'],
-    ];
-    
-    pdf.setFontSize(9);
-    advantages.forEach((adv, i) => {
-      checkPageBreak(12);
-      pdf.setFillColor(240, 253, 244);
-      pdf.roundedRect(margin, yPosition, contentWidth, 10, 2, 2, 'F');
-      pdf.setTextColor(16, 185, 129);
-      pdf.text('> ' + adv[0] + ':', margin + 3, yPosition + 7);
-      pdf.setTextColor(75, 85, 99);
-      pdf.text(adv[1], margin + 65, yPosition + 7);
-      yPosition += 12;
-    });
-
-    // === PAGE 5: FINANCIAL STUDY - REVENUE ===
-    addNewPage();
-    addPageHeader('Financial Study - Revenue Projections');
-    
-    pdf.setTextColor(15, 23, 42);
-    pdf.setFontSize(11);
-    pdf.text('A) Annual Revenue - Private Schools Only (OMR)', margin, yPosition);
-    yPosition += 8;
-    
-    // Table
-    const tableHeaders = ['Year', 'Students', 'Schools', 'Student', 'Bus', 'NFC', 'Stationery', 'TOTAL'];
-    const tableData = [
-      ['1', '25,000', '50', '625,000', '30,000', '42,500', '312,500', '1,010,000'],
-      ['2', '50,000', '100', '1,250,000', '60,000', '85,000', '625,000', '2,020,000'],
-      ['3', '100,000', '200', '2,500,000', '120,000', '170,000', '1,250,000', '4,040,000'],
-    ];
-    
-    const colWidths = [15, 22, 20, 26, 22, 22, 26, 28];
-    let xPos = margin;
-    
-    pdf.setFillColor(59, 130, 246);
-    pdf.rect(margin, yPosition, contentWidth, 8, 'F');
-    pdf.setTextColor(255, 255, 255);
-    pdf.setFontSize(7);
-    tableHeaders.forEach((header, i) => {
-      pdf.text(header, xPos + 2, yPosition + 5);
-      xPos += colWidths[i];
-    });
-    yPosition += 8;
-    
-    pdf.setTextColor(15, 23, 42);
-    pdf.setFontSize(7);
-    tableData.forEach((row, rowIndex) => {
-      xPos = margin;
-      pdf.setFillColor(rowIndex % 2 === 0 ? 248 : 255, rowIndex % 2 === 0 ? 250 : 255, rowIndex % 2 === 0 ? 252 : 255);
-      pdf.rect(margin, yPosition, contentWidth, 7, 'F');
-      row.forEach((cell, i) => {
-        pdf.text(cell, xPos + 2, yPosition + 5);
-        xPos += colWidths[i];
-      });
-      yPosition += 7;
-    });
-    
-    yPosition += 12;
-    pdf.setFontSize(11);
-    pdf.text('B) Government + Private Schools Scenario (OMR)', margin, yPosition);
-    yPosition += 10;
-    
-    pdf.setFontSize(9);
-    const govScenario = [
-      '- Total Students: 242,000 (192,000 Government + 50,000 Private)',
-      '- Student Subscriptions: 6,050,000 OMR',
-      '- Bus Subscriptions: 290,400 OMR',
-      '- NFC Profit: 411,400 OMR',
-      '- Stationery Profit: 3,025,000 OMR',
-    ];
-    
-    govScenario.forEach(line => {
-      pdf.text(line, margin + 5, yPosition);
-      yPosition += 7;
-    });
-    
-    yPosition += 3;
-    pdf.setFillColor(16, 185, 129);
-    pdf.roundedRect(margin, yPosition, contentWidth, 12, 2, 2, 'F');
-    pdf.setTextColor(255, 255, 255);
-    pdf.setFontSize(11);
-    pdf.text('TOTAL REVENUE = 9,776,800 OMR', margin + 50, yPosition + 8);
-
-    // === PAGE 6: CAPEX & OPEX ===
-    addNewPage();
-    addPageHeader('Capital & Operating Expenditure');
-    
-    pdf.setTextColor(15, 23, 42);
-    pdf.setFontSize(11);
-    pdf.text('Capital Expenditure (CAPEX)', margin, yPosition);
-    yPosition += 8;
-    
-    const capexItems = [
-      ['Bus Devices (300 units)', '290', '87,000'],
-      ['Smart Gates (100 units)', '290', '29,000'],
-      ['Canteen Systems (50 units)', '370', '18,500'],
-      ['Electric Vehicles (5 units)', '8,000', '40,000'],
-      ['Employee Devices (10 units)', '1,000', '10,000'],
-      ['Servers & Data Room', '-', '35,000'],
-      ['Company Furniture', '-', '30,000'],
-      ['Licenses & Registration', '-', '7,000'],
-      ['Initial Stationery Import', '-', '30,000'],
-      ['App Development', '-', '25,000'],
-      ['Cybersecurity', '-', '18,000'],
-    ];
-    
-    const capexHeaders = ['Item', 'Unit Price', 'Total (OMR)'];
-    const capexColWidths = [100, 35, 35];
-    xPos = margin;
-    
-    pdf.setFillColor(59, 130, 246);
-    pdf.rect(margin, yPosition, contentWidth, 7, 'F');
-    pdf.setTextColor(255, 255, 255);
-    pdf.setFontSize(8);
-    capexHeaders.forEach((header, i) => {
-      pdf.text(header, xPos + 2, yPosition + 5);
-      xPos += capexColWidths[i];
-    });
-    yPosition += 7;
-    
-    pdf.setTextColor(15, 23, 42);
-    pdf.setFontSize(7);
-    capexItems.forEach((row, rowIndex) => {
-      xPos = margin;
-      pdf.setFillColor(rowIndex % 2 === 0 ? 248 : 255, rowIndex % 2 === 0 ? 250 : 255, rowIndex % 2 === 0 ? 252 : 255);
-      pdf.rect(margin, yPosition, contentWidth, 6, 'F');
-      pdf.text(row[0], xPos + 2, yPosition + 4);
-      xPos += capexColWidths[0];
-      pdf.text(row[1], xPos + 2, yPosition + 4);
-      xPos += capexColWidths[1];
-      pdf.text(row[2], xPos + 2, yPosition + 4);
-      yPosition += 6;
-    });
-    
-    pdf.setFillColor(15, 23, 42);
-    pdf.rect(margin, yPosition, contentWidth, 8, 'F');
-    pdf.setTextColor(255, 255, 255);
-    pdf.setFontSize(9);
-    pdf.text('TOTAL CAPEX', margin + 5, yPosition + 5);
-    pdf.text('329,500 OMR', margin + contentWidth - 35, yPosition + 5);
-    
-    yPosition += 18;
-    
-    pdf.setTextColor(15, 23, 42);
-    pdf.setFontSize(11);
-    pdf.text('Operating Expenses (OPEX)', margin, yPosition);
-    yPosition += 8;
-    
-    const opexHeaders = ['Item', 'Monthly', 'Annual (OMR)'];
-    xPos = margin;
-    
-    pdf.setFillColor(245, 158, 11);
-    pdf.rect(margin, yPosition, contentWidth, 7, 'F');
-    pdf.setTextColor(255, 255, 255);
-    pdf.setFontSize(8);
-    opexHeaders.forEach((header, i) => {
-      pdf.text(header, xPos + 2, yPosition + 5);
-      xPos += capexColWidths[i];
-    });
-    yPosition += 7;
-    
-    const opexItems = [
-      ['Staff Salaries + Manager', '8,500', '102,000'],
-      ['Office Rent', '2,000', '24,000'],
-    ];
-    
-    pdf.setTextColor(15, 23, 42);
-    pdf.setFontSize(8);
-    opexItems.forEach((row, rowIndex) => {
-      xPos = margin;
-      pdf.setFillColor(255, 251, 235);
-      pdf.rect(margin, yPosition, contentWidth, 6, 'F');
-      pdf.text(row[0], xPos + 2, yPosition + 4);
-      xPos += capexColWidths[0];
-      pdf.text(row[1], xPos + 2, yPosition + 4);
-      xPos += capexColWidths[1];
-      pdf.text(row[2], xPos + 2, yPosition + 4);
-      yPosition += 6;
-    });
-    
-    pdf.setFillColor(245, 158, 11);
-    pdf.rect(margin, yPosition, contentWidth, 8, 'F');
-    pdf.setTextColor(255, 255, 255);
-    pdf.setFontSize(9);
-    pdf.text('TOTAL OPEX', margin + 5, yPosition + 5);
-    pdf.text('126,000 OMR / Year', margin + contentWidth - 50, yPosition + 5);
-
-    // === PAGE 7: CASH FLOW ===
-    addNewPage();
-    addPageHeader('Cash Flow Analysis - Year 1');
-    
-    pdf.setTextColor(15, 23, 42);
-    
-    const cashFlowData = [
-      { label: 'Total Revenue', value: '1,010,000 OMR', color: [16, 185, 129] as [number, number, number] },
-      { label: 'CAPEX', value: '329,500 OMR', color: [239, 68, 68] as [number, number, number] },
-      { label: 'OPEX', value: '126,000 OMR', color: [245, 158, 11] as [number, number, number] },
-      { label: 'Net Income Before Loan', value: '554,500 OMR', color: [59, 130, 246] as [number, number, number] },
-    ];
-    
-    cashFlowData.forEach((item) => {
-      pdf.setFillColor(item.color[0], item.color[1], item.color[2]);
-      pdf.roundedRect(margin, yPosition, contentWidth, 14, 3, 3, 'F');
-      pdf.setTextColor(255, 255, 255);
-      pdf.setFontSize(11);
-      pdf.text(item.label, margin + 10, yPosition + 9);
-      pdf.text(item.value, margin + contentWidth - 50, yPosition + 9);
-      yPosition += 18;
-    });
-    
-    yPosition += 8;
-    
-    pdf.setFillColor(240, 253, 244);
-    pdf.roundedRect(margin, yPosition, contentWidth, 45, 5, 5, 'F');
-    pdf.setTextColor(16, 185, 129);
-    pdf.setFontSize(12);
-    pdf.text('LOAN COVERAGE ANALYSIS', margin + 10, yPosition + 12);
-    pdf.setTextColor(15, 23, 42);
-    pdf.setFontSize(10);
-    pdf.text('Requested Loan: 420,000 OMR', margin + 10, yPosition + 24);
-    pdf.text('Year 1 Net Income: 554,500 OMR', margin + 10, yPosition + 34);
-    pdf.setTextColor(16, 185, 129);
-    pdf.setFontSize(11);
-    pdf.text('Coverage Ratio: 132% - LOAN FULLY COVERED IN YEAR 1', margin + 10, yPosition + 44);
-
-    // === PAGE 8: EXPANSION PLAN ===
-    addNewPage();
-    addPageHeader('Future Expansion Plan');
-    
-    const expansionPhases = [
-      {
-        phase: 'Year 1 - Foundation',
-        items: ['50 Private Schools in Muscat & Ad Dakhiliyah', '25,000 Students', 'Establish brand presence'],
-        color: [59, 130, 246] as [number, number, number]
-      },
-      {
-        phase: 'Year 2 - Growth',
-        items: ['Expand to 100+ Private Schools', 'Cover all major cities', '50,000 Students'],
-        color: [16, 185, 129] as [number, number, number]
-      },
-      {
-        phase: 'Year 3 - Expansion',
-        items: ['Government school integration', 'GCC market entry', '100,000+ Students'],
-        color: [245, 158, 11] as [number, number, number]
-      },
-    ];
-    
-    expansionPhases.forEach((phase) => {
-      pdf.setFillColor(phase.color[0], phase.color[1], phase.color[2]);
-      pdf.roundedRect(margin, yPosition, contentWidth, 40, 5, 5, 'F');
-      pdf.setTextColor(255, 255, 255);
-      pdf.setFontSize(12);
-      pdf.text(phase.phase, margin + 10, yPosition + 12);
-      pdf.setFontSize(9);
-      phase.items.forEach((item, j) => {
-        pdf.text('- ' + item, margin + 15, yPosition + 22 + (j * 7));
-      });
-      yPosition += 48;
-    });
-
-    // === PAGE 9: RISKS ===
-    addNewPage();
-    addPageHeader('Risk Analysis & Mitigation');
-    
-    const risks = [
-      { risk: 'Low Subscription Rates', mitigation: 'Free 1-month trial for schools' },
-      { risk: 'Payment Delays', mitigation: 'Binding contracts; service suspension' },
-      { risk: 'Technical Failures', mitigation: '24/7 support and local servers' },
-      { risk: 'Market Competition', mitigation: 'Unique features create differentiation' },
-      { risk: 'Government Policy Changes', mitigation: 'Flexible adaptable business model' },
-    ];
-    
-    risks.forEach((item) => {
-      checkPageBreak(28);
-      pdf.setFillColor(254, 242, 242);
-      pdf.roundedRect(margin, yPosition, contentWidth/2 - 3, 24, 3, 3, 'F');
-      pdf.setFillColor(240, 253, 244);
-      pdf.roundedRect(margin + contentWidth/2 + 3, yPosition, contentWidth/2 - 3, 24, 3, 3, 'F');
-      
-      pdf.setTextColor(239, 68, 68);
-      pdf.setFontSize(8);
-      pdf.text('RISK:', margin + 5, yPosition + 8);
-      pdf.setTextColor(15, 23, 42);
-      pdf.setFontSize(8);
-      pdf.text(item.risk, margin + 5, yPosition + 16);
-      
-      pdf.setTextColor(16, 185, 129);
-      pdf.text('MITIGATION:', margin + contentWidth/2 + 8, yPosition + 8);
-      pdf.setTextColor(15, 23, 42);
-      pdf.text(item.mitigation, margin + contentWidth/2 + 8, yPosition + 16);
-      
-      yPosition += 28;
-    });
-
-    // === PAGE 10: CONCLUSION ===
-    addNewPage();
-    pdf.setFillColor(15, 23, 42);
-    pdf.rect(0, 0, pageWidth, pageHeight, 'F');
-    
-    pdf.setFillColor(59, 130, 246);
-    pdf.circle(pageWidth - 20, 30, 40, 'F');
-    pdf.setFillColor(16, 185, 129);
-    pdf.circle(20, pageHeight - 40, 30, 'F');
-    
-    // Logo
-    if (logoBase64) {
-      try {
-        pdf.addImage(logoBase64, 'PNG', pageWidth/2 - 20, 25, 40, 40);
-      } catch (e) {
-        console.log('Logo not added');
-      }
-    }
-    
-    pdf.setTextColor(255, 255, 255);
-    pdf.setFontSize(18);
-    addCenteredText('Conclusion & Recommendation', 80);
-    
-    yPosition = 100;
-    
-    const summaryPoints = [
-      'TalebEdu is an innovative and unique project in Oman',
-      'Capable of generating stable income covering the loan',
-      'Loan of 420,000 OMR recoverable within 3 years',
-      'Strong potential for local and international expansion',
-      'First-mover advantage in smart school management',
-      'Sustainable recurring revenue model'
-    ];
-    
-    pdf.setFontSize(10);
-    summaryPoints.forEach((point) => {
-      pdf.text('> ' + point, margin + 15, yPosition);
-      yPosition += 12;
-    });
-    
-    yPosition += 15;
-    
-    pdf.setFillColor(16, 185, 129);
-    pdf.roundedRect(margin + 10, yPosition, contentWidth - 20, 40, 5, 5, 'F');
-    pdf.setTextColor(255, 255, 255);
-    pdf.setFontSize(14);
-    addCenteredText('RECOMMENDATION', yPosition + 15);
-    pdf.setFontSize(10);
-    addCenteredText('Approve the project financing to support this', yPosition + 27);
-    addCenteredText('integrated educational and digital security solution.', yPosition + 36);
-    
-    pdf.setFontSize(9);
-    addCenteredText('TalebEdu - Mazen Khanfar', pageHeight - 25);
-    addCenteredText('Muscat, Sultanate of Oman - 2026', pageHeight - 16);
-
-    pdf.save('TalebEdu_Feasibility_Study_EN_2026.pdf');
     setIsGeneratingEn(false);
   };
 
   const generateArabicPDF = async () => {
     setIsGeneratingAr(true);
     
-    const pdf = new jsPDF({
-      orientation: 'portrait',
-      unit: 'mm',
-      format: 'a4',
-    });
-
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const pageHeight = pdf.internal.pageSize.getHeight();
-    const margin = 15;
-    const contentWidth = pageWidth - (margin * 2);
-    let yPosition = margin;
-
-    // Load logo
-    const logoBase64 = await getImageAsBase64(logoImage);
-
-    const addNewPage = () => {
-      pdf.addPage();
-      yPosition = margin;
-    };
-
-    const checkPageBreak = (neededHeight: number) => {
-      if (yPosition + neededHeight > pageHeight - margin) {
-        addNewPage();
-        return true;
-      }
-      return false;
-    };
-
-    const addCenteredText = (text: string, y: number, size: number = 12) => {
-      pdf.setFontSize(size);
-      const textWidth = pdf.getTextWidth(text);
-      pdf.text(text, (pageWidth - textWidth) / 2, y);
-    };
-
-    const addPageHeader = (titleEn: string, titleAr: string) => {
-      pdf.setFillColor(15, 23, 42);
-      pdf.rect(0, 0, pageWidth, 30, 'F');
-      pdf.setTextColor(255, 255, 255);
-      pdf.setFontSize(14);
-      addCenteredText(titleEn, 14);
-      pdf.setFontSize(12);
-      addCenteredText(titleAr, 24);
+    if (arabicPdfRef.current) {
+      const opt = {
+        margin: 0,
+        filename: 'TalebEdu_Feasibility_Study_AR_2026.pdf',
+        image: { type: 'jpeg' as const, quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const },
+        pagebreak: { mode: ['css', 'legacy'] as const }
+      };
       
-      if (logoBase64) {
-        try {
-          pdf.addImage(logoBase64, 'PNG', pageWidth - 35, 5, 20, 20);
-        } catch (e) {
-          console.log('Logo not added');
-        }
-      }
-      yPosition = 42;
-    };
-
-    // === COVER PAGE ===
-    pdf.setFillColor(15, 23, 42);
-    pdf.rect(0, 0, pageWidth, pageHeight, 'F');
-    
-    pdf.setFillColor(59, 130, 246);
-    pdf.circle(pageWidth - 30, 40, 50, 'F');
-    pdf.setFillColor(16, 185, 129);
-    pdf.circle(30, pageHeight - 50, 35, 'F');
-    
-    if (logoBase64) {
-      try {
-        pdf.addImage(logoBase64, 'PNG', pageWidth/2 - 25, 35, 50, 50);
-      } catch (e) {
-        console.log('Logo not added');
-      }
+      await html2pdf().set(opt).from(arabicPdfRef.current).save();
     }
     
-    pdf.setTextColor(255, 255, 255);
-    pdf.setFontSize(32);
-    addCenteredText('TalebEdu', 105);
-    
-    pdf.setFontSize(18);
-    addCenteredText('Feasibility Study', 125);
-    addCenteredText('(Dirasah Jadwa)', 138);
-    
-    pdf.setFontSize(11);
-    addCenteredText('Comprehensive School Management Application', 155);
-    addCenteredText('Electronic Wallet | Smart Gates | Digital Stores', 165);
-    
-    pdf.setFillColor(59, 130, 246);
-    pdf.roundedRect(margin + 30, 182, contentWidth - 60, 35, 5, 5, 'F');
-    pdf.setFontSize(10);
-    addCenteredText('Submitted to / Muqaddam Ila:', 195);
-    pdf.setFontSize(13);
-    addCenteredText('Oman Development Bank / Bank Al-Tanmiya Al-Umani', 207);
-    
-    pdf.setFontSize(10);
-    addCenteredText('Submitted by / Al-Muqaddim: Mazen Khanfar - TalebEdu', 235);
-    addCenteredText('Year / Al-Sana: 2026', 247);
-    addCenteredText('Muscat, Sultanate of Oman / Masqat, Saltanat Uman', 268);
-
-    // === PAGE 2: EXECUTIVE SUMMARY ===
-    addNewPage();
-    addPageHeader('Executive Summary', 'Al-Mulakhkhas Al-Tanfidhi');
-    
-    pdf.setTextColor(15, 23, 42);
-    pdf.setFontSize(9);
-    
-    const execSummaryAr = [
-      'TalebEdu is the ONLY application in the world combining:',
-      '(TalebEdu huwa al-tatbiq al-wahid fi al-alam alladhi yajma):',
-      '',
-      '  - School Management (Idarat Al-Madrasa): Attendance, Grades, Homework',
-      '  - Bus Management (Idarat Al-Hafila): 6 buses per school minimum',
-      '  - Smart Gates & Canteen (Al-Bawwabat Al-Dhakiya wal-Maqsaf)',
-      '  - Electronic Wallet (Al-Mahfadha Al-Iliktruniya)',
-      '  - Digital Store (Al-Matjar Al-Raqami): NFC wristbands + stationery',
-      '  - Communication (Al-Tawasul): Messages, Voice/Video calls, Files',
-      '',
-      'UNIQUE ADVANTAGES (Mazaya Farida):',
-      '',
-      '  - Smart Wristband (Al-Siwar Al-Dhaki): No charging or maintenance',
-      '  - Multi-language: Arabic, English, Hindi (Mutaaddid Al-Lughat)',
-      '  - Complete Security (Aman Kamil) for students and parents',
-      '  - GCC Expansion (Al-Tawassu Al-Khaliji) in Year 3',
-      '  - Financial Management (Al-Idara Al-Maliya): All payments via wallet',
-      '',
-      'PROJECT GOAL (Hadaf Al-Mashru):',
-      'Create a reliable platform to solve school management and security problems.'
-    ];
-    
-    execSummaryAr.forEach(line => {
-      checkPageBreak(6);
-      pdf.text(line, margin, yPosition);
-      yPosition += 5.5;
-    });
-
-    // === PAGE 3: PROJECT SCOPE ===
-    addNewPage();
-    addPageHeader('Project Scope', 'Nitaq Al-Mashru');
-    
-    pdf.setTextColor(15, 23, 42);
-    
-    const metricsAr = [
-      ['Target Segment (Al-Shariha Al-Mustahda)', 'Private + Government Schools'],
-      ['Location (Al-Mawqi)', 'Muscat & Ad Dakhiliyah'],
-      ['Year 1 Schools (Madaris Al-Sana 1)', '50 Schools (50 Madrasa)'],
-      ['Avg. Students (Mutawassit Al-Tullab)', '500 Students (500 Talib)'],
-      ['Buses per School (Hafilat li-kul Madrasa)', '6 Buses (6 Hafilat)'],
-      ['Gates per School (Bawwabat)', '2 Gates (2 Bawwaba)'],
-      ['Canteen per School (Maqsaf)', '1 Canteen (1 Maqsaf)'],
-    ];
-    
-    pdf.setFontSize(9);
-    metricsAr.forEach((metric, i) => {
-      const y = yPosition + (i * 13);
-      pdf.setFillColor(240, 249, 255);
-      pdf.roundedRect(margin, y, contentWidth, 11, 2, 2, 'F');
-      pdf.setTextColor(59, 130, 246);
-      pdf.text(metric[0], margin + 5, y + 7);
-      pdf.setTextColor(15, 23, 42);
-      pdf.text(metric[1], margin + contentWidth - 60, y + 7);
-    });
-    
-    yPosition += 105;
-    
-    pdf.setFontSize(11);
-    pdf.text('Services Offered (Al-Khadamat Al-Muqaddama):', margin, yPosition);
-    yPosition += 10;
-    
-    const servicesAr = [
-      '1. Annual Student Subscription (Ishtirak Al-Talib Al-Sanawi)',
-      '2. NFC Wristband Sales (Bay Asawir NFC)',
-      '3. Private Label Stationery (Qartasiya)',
-      '4. Messaging System (Nidham Al-Rasail)'
-    ];
-    
-    pdf.setFontSize(9);
-    servicesAr.forEach(service => {
-      pdf.text(service, margin + 5, yPosition);
-      yPosition += 8;
-    });
-
-    // === PAGE 4: COMPETITIVE ADVANTAGES ===
-    addNewPage();
-    addPageHeader('Competitive Advantages', 'Al-Mazaya Al-Tanafusiya');
-    
-    pdf.setTextColor(15, 23, 42);
-    
-    const advantagesAr = [
-      ['Smart Wristband (Al-Siwar Al-Dhaki)', 'No charging needed'],
-      ['Tracking (Al-Mutaba\'a)', 'Grades, Homework, Attendance'],
-      ['Parental Control (Tahakkum Al-Wali)', 'Control purchases'],
-      ['Communication (Al-Tawasul)', 'Messages, Calls, Files'],
-      ['Digital Store (Al-Matjar)', 'Wristbands + Stationery'],
-      ['Multi-Language (Mutaaddid Al-Lughat)', 'Arabic, English, Hindi'],
-      ['GCC Ready (Jahiz lil-Khalij)', 'Regional expansion'],
-      ['Student Safety (Salamat Al-Talib)', 'Real-time tracking'],
-      ['FIRST in Oman (Al-Awwal fi Uman)', 'Smart wristband ID'],
-      ['Wallet Pioneer (Rayid Al-Mahfadha)', 'Student money via wristband'],
-    ];
-    
-    pdf.setFontSize(8);
-    advantagesAr.forEach((adv) => {
-      checkPageBreak(11);
-      pdf.setFillColor(240, 253, 244);
-      pdf.roundedRect(margin, yPosition, contentWidth, 9, 2, 2, 'F');
-      pdf.setTextColor(16, 185, 129);
-      pdf.text('> ' + adv[0], margin + 3, yPosition + 6);
-      pdf.setTextColor(75, 85, 99);
-      pdf.text(adv[1], margin + 90, yPosition + 6);
-      yPosition += 11;
-    });
-
-    // === PAGE 5: FINANCIAL STUDY ===
-    addNewPage();
-    addPageHeader('Financial Study', 'Al-Dirasa Al-Maliya');
-    
-    pdf.setTextColor(15, 23, 42);
-    pdf.setFontSize(10);
-    pdf.text('Annual Revenue - Private Schools (Al-Iradat - Madaris Khassa)', margin, yPosition);
-    yPosition += 8;
-    
-    const tableHeadersAr = ['Year', 'Students', 'Schools', 'Student', 'Bus', 'NFC', 'Stationery', 'TOTAL'];
-    const tableDataAr = [
-      ['1', '25,000', '50', '625,000', '30,000', '42,500', '312,500', '1,010,000'],
-      ['2', '50,000', '100', '1,250,000', '60,000', '85,000', '625,000', '2,020,000'],
-      ['3', '100,000', '200', '2,500,000', '120,000', '170,000', '1,250,000', '4,040,000'],
-    ];
-    
-    const colWidthsAr = [15, 22, 20, 26, 22, 22, 26, 28];
-    let xPos = margin;
-    
-    pdf.setFillColor(59, 130, 246);
-    pdf.rect(margin, yPosition, contentWidth, 8, 'F');
-    pdf.setTextColor(255, 255, 255);
-    pdf.setFontSize(7);
-    tableHeadersAr.forEach((header, i) => {
-      pdf.text(header, xPos + 2, yPosition + 5);
-      xPos += colWidthsAr[i];
-    });
-    yPosition += 8;
-    
-    pdf.setTextColor(15, 23, 42);
-    tableDataAr.forEach((row, rowIndex) => {
-      xPos = margin;
-      pdf.setFillColor(rowIndex % 2 === 0 ? 248 : 255, 250, 252);
-      pdf.rect(margin, yPosition, contentWidth, 7, 'F');
-      row.forEach((cell, i) => {
-        pdf.text(cell, xPos + 2, yPosition + 5);
-        xPos += colWidthsAr[i];
-      });
-      yPosition += 7;
-    });
-    
-    yPosition += 10;
-    pdf.setFontSize(10);
-    pdf.text('Government + Private Scenario (Hukuma + Khass)', margin, yPosition);
-    yPosition += 8;
-    
-    pdf.setFontSize(9);
-    const govScenarioAr = [
-      '- Total: 242,000 students (192,000 Gov + 50,000 Private)',
-      '- Student Subscriptions: 6,050,000 OMR',
-      '- Bus Subscriptions: 290,400 OMR',
-      '- NFC Profit: 411,400 OMR',
-      '- Stationery Profit: 3,025,000 OMR',
-    ];
-    
-    govScenarioAr.forEach(line => {
-      pdf.text(line, margin + 5, yPosition);
-      yPosition += 7;
-    });
-    
-    yPosition += 3;
-    pdf.setFillColor(16, 185, 129);
-    pdf.roundedRect(margin, yPosition, contentWidth, 12, 2, 2, 'F');
-    pdf.setTextColor(255, 255, 255);
-    pdf.setFontSize(11);
-    pdf.text('TOTAL = 9,776,800 OMR (Ijmali Al-Iradat)', margin + 35, yPosition + 8);
-
-    // === PAGE 6: CAPEX & OPEX ===
-    addNewPage();
-    addPageHeader('CAPEX & OPEX', 'Al-Takaleef Al-Rasmaliya wal-Tashghiliya');
-    
-    pdf.setTextColor(15, 23, 42);
-    pdf.setFontSize(10);
-    pdf.text('Capital Expenditure - CAPEX (Takaleef Rasmaliya)', margin, yPosition);
-    yPosition += 8;
-    
-    const capexItemsAr = [
-      ['Bus Devices (Ajhizat Hafilat) - 300', '290', '87,000'],
-      ['Smart Gates (Bawwabat) - 100', '290', '29,000'],
-      ['Canteen Systems (Maqasif) - 50', '370', '18,500'],
-      ['Electric Vehicles (Sayarat) - 5', '8,000', '40,000'],
-      ['Employee Devices (Ajhiza) - 10', '1,000', '10,000'],
-      ['Servers & Data Room (Khawadem)', '-', '35,000'],
-      ['Furniture (Athath)', '-', '30,000'],
-      ['Licenses (Tarakhis)', '-', '7,000'],
-      ['Stationery Import (Qartasiya)', '-', '30,000'],
-      ['App Development (Tatwir)', '-', '25,000'],
-      ['Cybersecurity (Amn Sibrani)', '-', '18,000'],
-    ];
-    
-    const capexColWidthsAr = [100, 35, 35];
-    xPos = margin;
-    
-    pdf.setFillColor(59, 130, 246);
-    pdf.rect(margin, yPosition, contentWidth, 7, 'F');
-    pdf.setTextColor(255, 255, 255);
-    pdf.setFontSize(7);
-    ['Item (Band)', 'Unit Price', 'Total (OMR)'].forEach((header, i) => {
-      pdf.text(header, xPos + 2, yPosition + 5);
-      xPos += capexColWidthsAr[i];
-    });
-    yPosition += 7;
-    
-    pdf.setTextColor(15, 23, 42);
-    pdf.setFontSize(7);
-    capexItemsAr.forEach((row, rowIndex) => {
-      xPos = margin;
-      pdf.setFillColor(rowIndex % 2 === 0 ? 248 : 255, 250, 252);
-      pdf.rect(margin, yPosition, contentWidth, 5.5, 'F');
-      pdf.text(row[0], xPos + 2, yPosition + 4);
-      xPos += capexColWidthsAr[0];
-      pdf.text(row[1], xPos + 2, yPosition + 4);
-      xPos += capexColWidthsAr[1];
-      pdf.text(row[2], xPos + 2, yPosition + 4);
-      yPosition += 5.5;
-    });
-    
-    pdf.setFillColor(15, 23, 42);
-    pdf.rect(margin, yPosition, contentWidth, 8, 'F');
-    pdf.setTextColor(255, 255, 255);
-    pdf.setFontSize(9);
-    pdf.text('TOTAL CAPEX (Ijmali)', margin + 5, yPosition + 5);
-    pdf.text('329,500 OMR', margin + contentWidth - 35, yPosition + 5);
-    
-    yPosition += 15;
-    
-    pdf.setTextColor(15, 23, 42);
-    pdf.setFontSize(10);
-    pdf.text('Operating Expenses - OPEX (Takaleef Tashghiliya)', margin, yPosition);
-    yPosition += 8;
-    
-    xPos = margin;
-    pdf.setFillColor(245, 158, 11);
-    pdf.rect(margin, yPosition, contentWidth, 7, 'F');
-    pdf.setTextColor(255, 255, 255);
-    pdf.setFontSize(7);
-    ['Item (Band)', 'Monthly', 'Annual (OMR)'].forEach((header, i) => {
-      pdf.text(header, xPos + 2, yPosition + 5);
-      xPos += capexColWidthsAr[i];
-    });
-    yPosition += 7;
-    
-    const opexItemsAr = [
-      ['Staff Salaries (Rawatib) + Manager', '8,500', '102,000'],
-      ['Office Rent (Ijar)', '2,000', '24,000'],
-    ];
-    
-    pdf.setTextColor(15, 23, 42);
-    pdf.setFontSize(8);
-    opexItemsAr.forEach((row, rowIndex) => {
-      xPos = margin;
-      pdf.setFillColor(255, 251, 235);
-      pdf.rect(margin, yPosition, contentWidth, 6, 'F');
-      pdf.text(row[0], xPos + 2, yPosition + 4);
-      xPos += capexColWidthsAr[0];
-      pdf.text(row[1], xPos + 2, yPosition + 4);
-      xPos += capexColWidthsAr[1];
-      pdf.text(row[2], xPos + 2, yPosition + 4);
-      yPosition += 6;
-    });
-    
-    pdf.setFillColor(245, 158, 11);
-    pdf.rect(margin, yPosition, contentWidth, 8, 'F');
-    pdf.setTextColor(255, 255, 255);
-    pdf.setFontSize(9);
-    pdf.text('TOTAL OPEX (Ijmali)', margin + 5, yPosition + 5);
-    pdf.text('126,000 OMR / Year', margin + contentWidth - 50, yPosition + 5);
-
-    // === PAGE 7: CASH FLOW ===
-    addNewPage();
-    addPageHeader('Cash Flow Analysis', 'Tahlil Al-Tadaffuq Al-Naqdi');
-    
-    pdf.setTextColor(255, 255, 255);
-    
-    const cashFlowDataAr = [
-      { label: 'Total Revenue (Ijmali Al-Iradat)', value: '1,010,000 OMR', color: [16, 185, 129] as [number, number, number] },
-      { label: 'CAPEX (Takaleef Rasmaliya)', value: '329,500 OMR', color: [239, 68, 68] as [number, number, number] },
-      { label: 'OPEX (Takaleef Tashghiliya)', value: '126,000 OMR', color: [245, 158, 11] as [number, number, number] },
-      { label: 'Net Income (Safi Al-Dakhl)', value: '554,500 OMR', color: [59, 130, 246] as [number, number, number] },
-    ];
-    
-    cashFlowDataAr.forEach((item) => {
-      pdf.setFillColor(item.color[0], item.color[1], item.color[2]);
-      pdf.roundedRect(margin, yPosition, contentWidth, 14, 3, 3, 'F');
-      pdf.setFontSize(10);
-      pdf.text(item.label, margin + 10, yPosition + 9);
-      pdf.text(item.value, margin + contentWidth - 45, yPosition + 9);
-      yPosition += 18;
-    });
-    
-    yPosition += 8;
-    
-    pdf.setFillColor(240, 253, 244);
-    pdf.roundedRect(margin, yPosition, contentWidth, 45, 5, 5, 'F');
-    pdf.setTextColor(16, 185, 129);
-    pdf.setFontSize(11);
-    pdf.text('LOAN ANALYSIS (Tahlil Al-Qard)', margin + 10, yPosition + 12);
-    pdf.setTextColor(15, 23, 42);
-    pdf.setFontSize(9);
-    pdf.text('Requested Loan (Al-Qard Al-Matlub): 420,000 OMR', margin + 10, yPosition + 24);
-    pdf.text('Year 1 Net Income (Safi Dakhl Sana 1): 554,500 OMR', margin + 10, yPosition + 34);
-    pdf.setTextColor(16, 185, 129);
-    pdf.setFontSize(10);
-    pdf.text('Coverage: 132% - LOAN COVERED IN YEAR 1', margin + 10, yPosition + 44);
-
-    // === PAGE 8: EXPANSION ===
-    addNewPage();
-    addPageHeader('Expansion Plan', 'Khuttat Al-Tawassu');
-    
-    const expansionPhasesAr = [
-      {
-        phase: 'Year 1 - Foundation (Al-Tasis)',
-        items: ['50 Private Schools', '25,000 Students', 'Brand presence'],
-        color: [59, 130, 246] as [number, number, number]
-      },
-      {
-        phase: 'Year 2 - Growth (Al-Numuw)',
-        items: ['100+ Private Schools', 'All major cities', '50,000 Students'],
-        color: [16, 185, 129] as [number, number, number]
-      },
-      {
-        phase: 'Year 3 - Expansion (Al-Tawassu)',
-        items: ['Government integration', 'GCC market entry', '100,000+ Students'],
-        color: [245, 158, 11] as [number, number, number]
-      },
-    ];
-    
-    expansionPhasesAr.forEach((phase) => {
-      pdf.setFillColor(phase.color[0], phase.color[1], phase.color[2]);
-      pdf.roundedRect(margin, yPosition, contentWidth, 40, 5, 5, 'F');
-      pdf.setTextColor(255, 255, 255);
-      pdf.setFontSize(11);
-      pdf.text(phase.phase, margin + 10, yPosition + 12);
-      pdf.setFontSize(9);
-      phase.items.forEach((item, j) => {
-        pdf.text('- ' + item, margin + 15, yPosition + 22 + (j * 7));
-      });
-      yPosition += 48;
-    });
-
-    // === PAGE 9: RISKS ===
-    addNewPage();
-    addPageHeader('Risk Analysis', 'Tahlil Al-Makhatir');
-    
-    const risksAr = [
-      { risk: 'Low Subscriptions (Ishtirakat Munkhafida)', mitigation: 'Free 1-month trial (Tajriba Majjaniya)' },
-      { risk: 'Payment Delays (Takhir Al-Daf)', mitigation: 'Contracts + suspension (Uqud + Tawqif)' },
-      { risk: 'Technical Failures (Ataal Tiqniya)', mitigation: '24/7 support + local servers' },
-      { risk: 'Competition (Al-Munafasa)', mitigation: 'Unique features (Mazaya Farida)' },
-      { risk: 'Policy Changes (Taghyirat)', mitigation: 'Flexible model (Namudhaj Marin)' },
-    ];
-    
-    risksAr.forEach((item) => {
-      checkPageBreak(26);
-      pdf.setFillColor(254, 242, 242);
-      pdf.roundedRect(margin, yPosition, contentWidth/2 - 3, 22, 3, 3, 'F');
-      pdf.setFillColor(240, 253, 244);
-      pdf.roundedRect(margin + contentWidth/2 + 3, yPosition, contentWidth/2 - 3, 22, 3, 3, 'F');
-      
-      pdf.setTextColor(239, 68, 68);
-      pdf.setFontSize(7);
-      pdf.text('RISK:', margin + 5, yPosition + 7);
-      pdf.setTextColor(15, 23, 42);
-      pdf.setFontSize(7);
-      pdf.text(item.risk, margin + 5, yPosition + 14);
-      
-      pdf.setTextColor(16, 185, 129);
-      pdf.text('MITIGATION:', margin + contentWidth/2 + 8, yPosition + 7);
-      pdf.setTextColor(15, 23, 42);
-      pdf.text(item.mitigation, margin + contentWidth/2 + 8, yPosition + 14);
-      
-      yPosition += 26;
-    });
-
-    // === PAGE 10: CONCLUSION ===
-    addNewPage();
-    pdf.setFillColor(15, 23, 42);
-    pdf.rect(0, 0, pageWidth, pageHeight, 'F');
-    
-    pdf.setFillColor(59, 130, 246);
-    pdf.circle(pageWidth - 20, 30, 40, 'F');
-    pdf.setFillColor(16, 185, 129);
-    pdf.circle(20, pageHeight - 40, 30, 'F');
-    
-    if (logoBase64) {
-      try {
-        pdf.addImage(logoBase64, 'PNG', pageWidth/2 - 20, 22, 40, 40);
-      } catch (e) {
-        console.log('Logo not added');
-      }
-    }
-    
-    pdf.setTextColor(255, 255, 255);
-    pdf.setFontSize(16);
-    addCenteredText('Conclusion & Recommendation', 75);
-    pdf.setFontSize(12);
-    addCenteredText('Al-Khulasa wal-Tawsiya', 87);
-    
-    yPosition = 105;
-    
-    const summaryPointsAr = [
-      'TalebEdu - Innovative project in Oman (Mashru Mubtakar fi Uman)',
-      'Stable income covering the loan (Dakhl Thabit Yughatti Al-Qard)',
-      '420,000 OMR recoverable in 3 years (Qabil lil-Istirdad)',
-      'Strong expansion potential (Imkaniyat Tawassu Qawiya)',
-      'First-mover advantage (Mizat Al-Raaid Al-Awwal)',
-      'Sustainable revenue model (Namudhaj Iradat Mustadim)'
-    ];
-    
-    pdf.setFontSize(9);
-    summaryPointsAr.forEach((point) => {
-      pdf.text('> ' + point, margin + 15, yPosition);
-      yPosition += 11;
-    });
-    
-    yPosition += 12;
-    
-    pdf.setFillColor(16, 185, 129);
-    pdf.roundedRect(margin + 10, yPosition, contentWidth - 20, 38, 5, 5, 'F');
-    pdf.setTextColor(255, 255, 255);
-    pdf.setFontSize(13);
-    addCenteredText('RECOMMENDATION (TAWSIYA)', yPosition + 14);
-    pdf.setFontSize(9);
-    addCenteredText('Approve financing for this integrated educational', yPosition + 26);
-    addCenteredText('and digital security solution.', yPosition + 35);
-    
-    pdf.setFontSize(9);
-    addCenteredText('TalebEdu - Mazen Khanfar', pageHeight - 25);
-    addCenteredText('Muscat, Sultanate of Oman - 2026', pageHeight - 16);
-
-    pdf.save('TalebEdu_Feasibility_Study_AR_2026.pdf');
     setIsGeneratingAr(false);
+  };
+
+  // Common styles for PDF pages
+  const pageStyle = {
+    width: '210mm',
+    minHeight: '297mm',
+    padding: '15mm',
+    boxSizing: 'border-box' as const,
+    pageBreakAfter: 'always' as const,
+    fontFamily: 'Arial, sans-serif',
+  };
+
+  const headerStyle = {
+    backgroundColor: '#0f172a',
+    color: 'white',
+    padding: '15px 20px',
+    marginBottom: '20px',
+    borderRadius: '8px',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900" dir="rtl">
+      {/* Hidden Arabic PDF Content */}
+      <div style={{ position: 'absolute', left: '-9999px', top: 0 }}>
+        <div ref={arabicPdfRef} dir="rtl" style={{ fontFamily: 'Arial, sans-serif', backgroundColor: 'white' }}>
+          {/* Cover Page */}
+          <div style={{
+            ...pageStyle,
+            background: 'linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%)',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'white',
+            textAlign: 'center',
+          }}>
+            <img src={logoImage} alt="TalebEdu Logo" style={{ width: '100px', height: '100px', marginBottom: '30px' }} />
+            <h1 style={{ fontSize: '48px', fontWeight: 'bold', marginBottom: '10px' }}>TalebEdu</h1>
+            <h2 style={{ fontSize: '28px', marginBottom: '20px', color: '#60a5fa' }}>دراسة جدوى</h2>
+            <p style={{ fontSize: '16px', marginBottom: '10px' }}>تطبيق شامل لإدارة المدارس</p>
+            <p style={{ fontSize: '14px', color: '#94a3b8' }}>المحفظة الإلكترونية | البوابات الذكية | المتجر الرقمي</p>
+            
+            <div style={{ 
+              backgroundColor: '#3b82f6', 
+              padding: '20px 40px', 
+              borderRadius: '12px', 
+              marginTop: '40px',
+              marginBottom: '40px'
+            }}>
+              <p style={{ fontSize: '14px', marginBottom: '5px' }}>مقدم إلى</p>
+              <p style={{ fontSize: '20px', fontWeight: 'bold' }}>بنك التنمية العماني</p>
+            </div>
+            
+            <p style={{ fontSize: '14px' }}>مقدم من: مازن خنفر - TalebEdu</p>
+            <p style={{ fontSize: '14px', marginTop: '10px' }}>السنة: 2026</p>
+            <p style={{ fontSize: '14px', marginTop: '20px', color: '#94a3b8' }}>مسقط، سلطنة عمان</p>
+          </div>
+
+          {/* Page 2: Executive Summary */}
+          <div style={{ ...pageStyle, backgroundColor: 'white' }}>
+            <div style={headerStyle}>
+              <span style={{ fontSize: '20px', fontWeight: 'bold' }}>الملخص التنفيذي</span>
+              <img src={logoImage} alt="Logo" style={{ width: '40px', height: '40px' }} />
+            </div>
+            
+            <div style={{ color: '#1e293b', lineHeight: '1.8' }}>
+              <p style={{ fontSize: '16px', fontWeight: 'bold', color: '#3b82f6', marginBottom: '15px' }}>
+                TalebEdu هو التطبيق الوحيد في العالم الذي يجمع في منصة واحدة:
+              </p>
+              
+              <ul style={{ fontSize: '14px', paddingRight: '20px', marginBottom: '20px' }}>
+                <li style={{ marginBottom: '8px' }}>✓ إدارة المدرسة: الحضور، الدرجات، الواجبات، الجداول</li>
+                <li style={{ marginBottom: '8px' }}>✓ إدارة الباصات: 6 باصات كحد أدنى لكل مدرسة مع تتبع مباشر</li>
+                <li style={{ marginBottom: '8px' }}>✓ البوابات الذكية والمقصف بتقنية NFC</li>
+                <li style={{ marginBottom: '8px' }}>✓ المحفظة الإلكترونية للطلاب</li>
+                <li style={{ marginBottom: '8px' }}>✓ المتجر الرقمي: أساور NFC + قرطاسية بعلامة تجارية خاصة</li>
+                <li style={{ marginBottom: '8px' }}>✓ نظام تواصل متكامل: رسائل، مكالمات صوتية ومرئية، مشاركة ملفات</li>
+              </ul>
+
+              <p style={{ fontSize: '16px', fontWeight: 'bold', color: '#10b981', marginBottom: '15px' }}>
+                المزايا الفريدة:
+              </p>
+              
+              <ul style={{ fontSize: '14px', paddingRight: '20px', marginBottom: '20px' }}>
+                <li style={{ marginBottom: '8px' }}>✓ السوار الذكي: مقاوم لجميع العوامل عدا النار، لا يحتاج شحن</li>
+                <li style={{ marginBottom: '8px' }}>✓ دعم متعدد اللغات: العربية، الإنجليزية، الهندية</li>
+                <li style={{ marginBottom: '8px' }}>✓ أمان كامل للطلاب وأولياء الأمور</li>
+                <li style={{ marginBottom: '8px' }}>✓ قابلية التوسع المحلي والدولي (دول الخليج في السنة 3)</li>
+                <li style={{ marginBottom: '8px' }}>✓ إدارة مالية متكاملة: جميع الاشتراكات عبر المحفظة</li>
+              </ul>
+
+              <div style={{ 
+                backgroundColor: '#f0fdf4', 
+                padding: '15px', 
+                borderRadius: '8px', 
+                borderRight: '4px solid #10b981' 
+              }}>
+                <p style={{ fontSize: '14px', fontWeight: 'bold', color: '#166534' }}>هدف المشروع:</p>
+                <p style={{ fontSize: '14px', color: '#166534' }}>
+                  إنشاء منصة موثوقة وشاملة لحل مشاكل إدارة المدارس والأمان والتواصل والشراء الرقمي بطريقة مستدامة.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Page 3: Project Scope */}
+          <div style={{ ...pageStyle, backgroundColor: 'white' }}>
+            <div style={headerStyle}>
+              <span style={{ fontSize: '20px', fontWeight: 'bold' }}>نطاق المشروع</span>
+              <img src={logoImage} alt="Logo" style={{ width: '40px', height: '40px' }} />
+            </div>
+            
+            <div style={{ color: '#1e293b' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '30px' }}>
+                <tbody>
+                  {[
+                    ['الشريحة المستهدفة', 'المدارس الخاصة + شراكة حكومية'],
+                    ['الموقع', 'مسقط والداخلية'],
+                    ['مدارس السنة الأولى', '50 مدرسة'],
+                    ['متوسط الطلاب لكل مدرسة', '500 طالب'],
+                    ['الباصات لكل مدرسة', '6 باصات'],
+                    ['البوابات لكل مدرسة', 'بوابتان'],
+                    ['المقصف لكل مدرسة', 'مقصف واحد'],
+                  ].map(([label, value], i) => (
+                    <tr key={i} style={{ backgroundColor: i % 2 === 0 ? '#f0f9ff' : 'white' }}>
+                      <td style={{ padding: '12px 15px', fontWeight: 'bold', color: '#3b82f6' }}>{label}</td>
+                      <td style={{ padding: '12px 15px', textAlign: 'left' }}>{value}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '15px', color: '#1e293b' }}>
+                الخدمات المقدمة:
+              </h3>
+              <ol style={{ fontSize: '14px', paddingRight: '20px' }}>
+                <li style={{ marginBottom: '10px' }}>اشتراك سنوي للطالب (الباص، البوابة، المقصف، المحفظة، متابعة الدرجات)</li>
+                <li style={{ marginBottom: '10px' }}>بيع أساور NFC إضافية</li>
+                <li style={{ marginBottom: '10px' }}>متجر قرطاسية بعلامة تجارية خاصة</li>
+                <li style={{ marginBottom: '10px' }}>نظام مراسلة داخلي للتواصل بين الأهل والمعلمين والإدارة</li>
+              </ol>
+            </div>
+          </div>
+
+          {/* Page 4: Competitive Advantages */}
+          <div style={{ ...pageStyle, backgroundColor: 'white' }}>
+            <div style={headerStyle}>
+              <span style={{ fontSize: '20px', fontWeight: 'bold' }}>المزايا التنافسية</span>
+              <img src={logoImage} alt="Logo" style={{ width: '40px', height: '40px' }} />
+            </div>
+            
+            <div style={{ color: '#1e293b' }}>
+              {[
+                ['تقنية السوار الذكي', 'لا يحتاج شحن أو صيانة'],
+                ['متابعة شاملة', 'الدرجات، الواجبات، الحضور في مكان واحد'],
+                ['تحكم الوالدين', 'الأهل يتحكمون في مشتريات المقصف والحدود'],
+                ['تواصل متكامل', 'رسائل، مكالمات صوتية/مرئية، مشاركة ملفات'],
+                ['سوق رقمي', 'أساور + قرطاسية بعلامة تجارية خاصة'],
+                ['دعم متعدد اللغات', 'العربية، الإنجليزية، الهندية'],
+                ['جاهز للتوسع الخليجي', 'بنية قابلة للتوسع إقليمياً'],
+                ['أمان كامل للطلاب', 'تتبع مباشر ودخول آمن'],
+                ['الأول في عمان', 'السوار الذكي كهوية مدرسية رقمية'],
+                ['رائد المحفظة الإلكترونية', 'مصروف الطالب عبر السوار'],
+                ['نظام دفع مباشر', 'الرسوم تُدفع مباشرة عبر المحفظة'],
+              ].map(([title, desc], i) => (
+                <div key={i} style={{ 
+                  backgroundColor: '#f0fdf4', 
+                  padding: '12px 15px', 
+                  marginBottom: '8px', 
+                  borderRadius: '6px',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center'
+                }}>
+                  <span style={{ color: '#10b981', fontWeight: 'bold' }}>✓ {title}</span>
+                  <span style={{ color: '#6b7280', fontSize: '13px' }}>{desc}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Page 5: Financial Study - Revenue */}
+          <div style={{ ...pageStyle, backgroundColor: 'white' }}>
+            <div style={headerStyle}>
+              <span style={{ fontSize: '20px', fontWeight: 'bold' }}>الدراسة المالية - الإيرادات</span>
+              <img src={logoImage} alt="Logo" style={{ width: '40px', height: '40px' }} />
+            </div>
+            
+            <div style={{ color: '#1e293b' }}>
+              <h3 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '15px' }}>
+                أ) الإيرادات السنوية - المدارس الخاصة فقط (ر.ع)
+              </h3>
+              
+              <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '25px', fontSize: '12px' }}>
+                <thead>
+                  <tr style={{ backgroundColor: '#3b82f6', color: 'white' }}>
+                    <th style={{ padding: '10px', textAlign: 'center' }}>السنة</th>
+                    <th style={{ padding: '10px', textAlign: 'center' }}>الطلاب</th>
+                    <th style={{ padding: '10px', textAlign: 'center' }}>المدارس</th>
+                    <th style={{ padding: '10px', textAlign: 'center' }}>اشتراك الطالب</th>
+                    <th style={{ padding: '10px', textAlign: 'center' }}>الباصات</th>
+                    <th style={{ padding: '10px', textAlign: 'center' }}>NFC</th>
+                    <th style={{ padding: '10px', textAlign: 'center' }}>القرطاسية</th>
+                    <th style={{ padding: '10px', textAlign: 'center' }}>الإجمالي</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    ['1', '25,000', '50', '625,000', '30,000', '42,500', '312,500', '1,010,000'],
+                    ['2', '50,000', '100', '1,250,000', '60,000', '85,000', '625,000', '2,020,000'],
+                    ['3', '100,000', '200', '2,500,000', '120,000', '170,000', '1,250,000', '4,040,000'],
+                  ].map((row, i) => (
+                    <tr key={i} style={{ backgroundColor: i % 2 === 0 ? '#f8fafc' : 'white' }}>
+                      {row.map((cell, j) => (
+                        <td key={j} style={{ padding: '8px', textAlign: 'center', borderBottom: '1px solid #e2e8f0' }}>
+                          {cell}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              <h3 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '15px' }}>
+                ب) سيناريو المدارس الحكومية + الخاصة (ر.ع)
+              </h3>
+              
+              <ul style={{ fontSize: '14px', paddingRight: '20px', marginBottom: '20px' }}>
+                <li style={{ marginBottom: '8px' }}>إجمالي الطلاب: 242,000 (192,000 حكومي + 50,000 خاص)</li>
+                <li style={{ marginBottom: '8px' }}>اشتراكات الطلاب: 6,050,000 ر.ع</li>
+                <li style={{ marginBottom: '8px' }}>اشتراكات الباصات: 290,400 ر.ع</li>
+                <li style={{ marginBottom: '8px' }}>أرباح NFC: 411,400 ر.ع</li>
+                <li style={{ marginBottom: '8px' }}>أرباح القرطاسية: 3,025,000 ر.ع</li>
+              </ul>
+
+              <div style={{ 
+                backgroundColor: '#10b981', 
+                color: 'white', 
+                padding: '15px', 
+                borderRadius: '8px', 
+                textAlign: 'center',
+                fontSize: '18px',
+                fontWeight: 'bold'
+              }}>
+                إجمالي الإيرادات = 9,776,800 ر.ع
+              </div>
+            </div>
+          </div>
+
+          {/* Page 6: CAPEX & OPEX */}
+          <div style={{ ...pageStyle, backgroundColor: 'white' }}>
+            <div style={headerStyle}>
+              <span style={{ fontSize: '20px', fontWeight: 'bold' }}>التكاليف الرأسمالية والتشغيلية</span>
+              <img src={logoImage} alt="Logo" style={{ width: '40px', height: '40px' }} />
+            </div>
+            
+            <div style={{ color: '#1e293b' }}>
+              <h3 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '10px' }}>
+                التكاليف الرأسمالية (CAPEX)
+              </h3>
+              
+              <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '20px', fontSize: '12px' }}>
+                <thead>
+                  <tr style={{ backgroundColor: '#3b82f6', color: 'white' }}>
+                    <th style={{ padding: '8px', textAlign: 'right' }}>البند</th>
+                    <th style={{ padding: '8px', textAlign: 'center' }}>سعر الوحدة</th>
+                    <th style={{ padding: '8px', textAlign: 'center' }}>الإجمالي (ر.ع)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    ['أجهزة الباصات (300 وحدة)', '290', '87,000'],
+                    ['البوابات الذكية (100 وحدة)', '290', '29,000'],
+                    ['أنظمة المقاصف (50 وحدة)', '370', '18,500'],
+                    ['سيارات كهربائية (5 وحدات)', '8,000', '40,000'],
+                    ['أجهزة الموظفين (10 وحدات)', '1,000', '10,000'],
+                    ['الخوادم وغرفة البيانات', '-', '35,000'],
+                    ['أثاث الشركة', '-', '30,000'],
+                    ['التراخيص والتسجيل', '-', '7,000'],
+                    ['استيراد القرطاسية الأولي', '-', '30,000'],
+                    ['تطوير التطبيق', '-', '25,000'],
+                    ['الأمن السيبراني', '-', '18,000'],
+                  ].map((row, i) => (
+                    <tr key={i} style={{ backgroundColor: i % 2 === 0 ? '#f8fafc' : 'white' }}>
+                      <td style={{ padding: '6px 8px', borderBottom: '1px solid #e2e8f0' }}>{row[0]}</td>
+                      <td style={{ padding: '6px 8px', textAlign: 'center', borderBottom: '1px solid #e2e8f0' }}>{row[1]}</td>
+                      <td style={{ padding: '6px 8px', textAlign: 'center', borderBottom: '1px solid #e2e8f0' }}>{row[2]}</td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr style={{ backgroundColor: '#0f172a', color: 'white', fontWeight: 'bold' }}>
+                    <td colSpan={2} style={{ padding: '10px' }}>إجمالي CAPEX</td>
+                    <td style={{ padding: '10px', textAlign: 'center' }}>329,500 ر.ع</td>
+                  </tr>
+                </tfoot>
+              </table>
+
+              <h3 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '10px' }}>
+                التكاليف التشغيلية (OPEX)
+              </h3>
+              
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+                <thead>
+                  <tr style={{ backgroundColor: '#f59e0b', color: 'white' }}>
+                    <th style={{ padding: '8px', textAlign: 'right' }}>البند</th>
+                    <th style={{ padding: '8px', textAlign: 'center' }}>شهرياً</th>
+                    <th style={{ padding: '8px', textAlign: 'center' }}>سنوياً (ر.ع)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr style={{ backgroundColor: '#fffbeb' }}>
+                    <td style={{ padding: '8px' }}>رواتب الموظفين + المدير</td>
+                    <td style={{ padding: '8px', textAlign: 'center' }}>8,500</td>
+                    <td style={{ padding: '8px', textAlign: 'center' }}>102,000</td>
+                  </tr>
+                  <tr style={{ backgroundColor: 'white' }}>
+                    <td style={{ padding: '8px' }}>إيجار المكتب</td>
+                    <td style={{ padding: '8px', textAlign: 'center' }}>2,000</td>
+                    <td style={{ padding: '8px', textAlign: 'center' }}>24,000</td>
+                  </tr>
+                </tbody>
+                <tfoot>
+                  <tr style={{ backgroundColor: '#f59e0b', color: 'white', fontWeight: 'bold' }}>
+                    <td colSpan={2} style={{ padding: '10px' }}>إجمالي OPEX</td>
+                    <td style={{ padding: '10px', textAlign: 'center' }}>126,000 ر.ع / سنة</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+
+          {/* Page 7: Cash Flow */}
+          <div style={{ ...pageStyle, backgroundColor: 'white' }}>
+            <div style={headerStyle}>
+              <span style={{ fontSize: '20px', fontWeight: 'bold' }}>تحليل التدفق النقدي - السنة الأولى</span>
+              <img src={logoImage} alt="Logo" style={{ width: '40px', height: '40px' }} />
+            </div>
+            
+            <div style={{ color: '#1e293b' }}>
+              {[
+                { label: 'إجمالي الإيرادات', value: '1,010,000 ر.ع', color: '#10b981' },
+                { label: 'التكاليف الرأسمالية (CAPEX)', value: '329,500 ر.ع', color: '#ef4444' },
+                { label: 'التكاليف التشغيلية (OPEX)', value: '126,000 ر.ع', color: '#f59e0b' },
+                { label: 'صافي الدخل قبل القرض', value: '554,500 ر.ع', color: '#3b82f6' },
+              ].map((item, i) => (
+                <div key={i} style={{ 
+                  backgroundColor: item.color, 
+                  color: 'white', 
+                  padding: '15px 20px', 
+                  marginBottom: '15px', 
+                  borderRadius: '8px',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  fontSize: '16px'
+                }}>
+                  <span>{item.label}</span>
+                  <span style={{ fontWeight: 'bold' }}>{item.value}</span>
+                </div>
+              ))}
+
+              <div style={{ 
+                backgroundColor: '#f0fdf4', 
+                padding: '25px', 
+                borderRadius: '12px', 
+                marginTop: '30px',
+                border: '2px solid #10b981'
+              }}>
+                <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#10b981', marginBottom: '15px' }}>
+                  تحليل تغطية القرض
+                </h3>
+                <p style={{ fontSize: '14px', marginBottom: '8px' }}>القرض المطلوب: 420,000 ر.ع</p>
+                <p style={{ fontSize: '14px', marginBottom: '8px' }}>صافي دخل السنة الأولى: 554,500 ر.ع</p>
+                <p style={{ fontSize: '16px', fontWeight: 'bold', color: '#10b981', marginTop: '15px' }}>
+                  نسبة التغطية: 132% - القرض مغطى بالكامل في السنة الأولى
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Page 8: Expansion Plan */}
+          <div style={{ ...pageStyle, backgroundColor: 'white' }}>
+            <div style={headerStyle}>
+              <span style={{ fontSize: '20px', fontWeight: 'bold' }}>خطة التوسع المستقبلية</span>
+              <img src={logoImage} alt="Logo" style={{ width: '40px', height: '40px' }} />
+            </div>
+            
+            <div style={{ color: '#1e293b' }}>
+              {[
+                {
+                  phase: 'السنة الأولى - التأسيس',
+                  items: ['50 مدرسة خاصة في مسقط والداخلية', '25,000 طالب', 'تأسيس الحضور في السوق'],
+                  color: '#3b82f6'
+                },
+                {
+                  phase: 'السنة الثانية - النمو',
+                  items: ['التوسع إلى 100+ مدرسة خاصة', 'تغطية جميع المدن الرئيسية', '50,000 طالب'],
+                  color: '#10b981'
+                },
+                {
+                  phase: 'السنة الثالثة - التوسع',
+                  items: ['دمج المدارس الحكومية', 'دخول سوق دول الخليج', '100,000+ طالب'],
+                  color: '#f59e0b'
+                },
+              ].map((phase, i) => (
+                <div key={i} style={{ 
+                  backgroundColor: phase.color, 
+                  color: 'white', 
+                  padding: '20px', 
+                  borderRadius: '12px', 
+                  marginBottom: '20px' 
+                }}>
+                  <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '12px' }}>{phase.phase}</h3>
+                  <ul style={{ paddingRight: '15px' }}>
+                    {phase.items.map((item, j) => (
+                      <li key={j} style={{ marginBottom: '6px' }}>• {item}</li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Page 9: Risk Analysis */}
+          <div style={{ ...pageStyle, backgroundColor: 'white' }}>
+            <div style={headerStyle}>
+              <span style={{ fontSize: '20px', fontWeight: 'bold' }}>تحليل المخاطر والتخفيف</span>
+              <img src={logoImage} alt="Logo" style={{ width: '40px', height: '40px' }} />
+            </div>
+            
+            <div style={{ color: '#1e293b' }}>
+              {[
+                { risk: 'انخفاض معدلات الاشتراك', mitigation: 'تجربة مجانية لمدة شهر للمدارس' },
+                { risk: 'تأخر الدفع', mitigation: 'عقود ملزمة مع إمكانية تعليق الخدمة' },
+                { risk: 'أعطال تقنية', mitigation: 'دعم 24/7 وخوادم محلية' },
+                { risk: 'المنافسة في السوق', mitigation: 'ميزات فريدة تخلق تمايزاً' },
+                { risk: 'تغييرات السياسات الحكومية', mitigation: 'نموذج عمل مرن وقابل للتكيف' },
+              ].map((item, i) => (
+                <div key={i} style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
+                  <div style={{ 
+                    flex: 1, 
+                    backgroundColor: '#fef2f2', 
+                    padding: '15px', 
+                    borderRadius: '8px' 
+                  }}>
+                    <p style={{ fontSize: '12px', color: '#ef4444', fontWeight: 'bold', marginBottom: '5px' }}>المخاطر:</p>
+                    <p style={{ fontSize: '14px' }}>{item.risk}</p>
+                  </div>
+                  <div style={{ 
+                    flex: 1, 
+                    backgroundColor: '#f0fdf4', 
+                    padding: '15px', 
+                    borderRadius: '8px' 
+                  }}>
+                    <p style={{ fontSize: '12px', color: '#10b981', fontWeight: 'bold', marginBottom: '5px' }}>التخفيف:</p>
+                    <p style={{ fontSize: '14px' }}>{item.mitigation}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Page 10: Conclusion */}
+          <div style={{
+            ...pageStyle,
+            background: 'linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%)',
+            color: 'white',
+            pageBreakAfter: 'avoid',
+          }}>
+            <div style={{ textAlign: 'center', marginBottom: '30px' }}>
+              <img src={logoImage} alt="TalebEdu Logo" style={{ width: '80px', height: '80px', marginBottom: '20px' }} />
+              <h1 style={{ fontSize: '28px', fontWeight: 'bold', marginBottom: '10px' }}>الخلاصة والتوصية</h1>
+            </div>
+            
+            <div style={{ marginBottom: '30px' }}>
+              {[
+                'TalebEdu مشروع مبتكر وفريد في عمان',
+                'قادر على توليد دخل مستقر يغطي القرض',
+                'قرض 420,000 ر.ع قابل للاسترداد خلال 3 سنوات',
+                'إمكانية قوية للتوسع محلياً ودولياً',
+                'ميزة الريادة في إدارة المدارس الذكية',
+                'نموذج إيرادات مستدام ومتكرر'
+              ].map((point, i) => (
+                <p key={i} style={{ fontSize: '16px', marginBottom: '12px', paddingRight: '20px' }}>
+                  ✓ {point}
+                </p>
+              ))}
+            </div>
+
+            <div style={{ 
+              backgroundColor: '#10b981', 
+              padding: '25px', 
+              borderRadius: '12px', 
+              textAlign: 'center',
+              marginBottom: '40px'
+            }}>
+              <h2 style={{ fontSize: '22px', fontWeight: 'bold', marginBottom: '15px' }}>التوصية</h2>
+              <p style={{ fontSize: '16px' }}>
+                الموافقة على تمويل المشروع لدعم هذا الحل التعليمي والأمني الرقمي المتكامل
+              </p>
+            </div>
+
+            <div style={{ textAlign: 'center', marginTop: '40px' }}>
+              <p style={{ fontSize: '14px' }}>TalebEdu - مازن خنفر</p>
+              <p style={{ fontSize: '14px', color: '#94a3b8', marginTop: '10px' }}>مسقط، سلطنة عمان - 2026</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Hidden English PDF Content */}
+        <div ref={englishPdfRef} style={{ fontFamily: 'Arial, sans-serif', backgroundColor: 'white' }}>
+          {/* Cover Page */}
+          <div style={{
+            ...pageStyle,
+            background: 'linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%)',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'white',
+            textAlign: 'center',
+          }}>
+            <img src={logoImage} alt="TalebEdu Logo" style={{ width: '100px', height: '100px', marginBottom: '30px' }} />
+            <h1 style={{ fontSize: '48px', fontWeight: 'bold', marginBottom: '10px' }}>TalebEdu</h1>
+            <h2 style={{ fontSize: '28px', marginBottom: '20px', color: '#60a5fa' }}>Feasibility Study</h2>
+            <p style={{ fontSize: '16px', marginBottom: '10px' }}>Comprehensive School Management Application</p>
+            <p style={{ fontSize: '14px', color: '#94a3b8' }}>Electronic Wallet | Smart Gates | Digital Stores</p>
+            
+            <div style={{ 
+              backgroundColor: '#3b82f6', 
+              padding: '20px 40px', 
+              borderRadius: '12px', 
+              marginTop: '40px',
+              marginBottom: '40px'
+            }}>
+              <p style={{ fontSize: '14px', marginBottom: '5px' }}>Submitted to</p>
+              <p style={{ fontSize: '20px', fontWeight: 'bold' }}>Oman Development Bank</p>
+            </div>
+            
+            <p style={{ fontSize: '14px' }}>Submitted by: Mazen Khanfar - TalebEdu</p>
+            <p style={{ fontSize: '14px', marginTop: '10px' }}>Year: 2026</p>
+            <p style={{ fontSize: '14px', marginTop: '20px', color: '#94a3b8' }}>Muscat, Sultanate of Oman</p>
+          </div>
+
+          {/* Page 2: Executive Summary */}
+          <div style={{ ...pageStyle, backgroundColor: 'white' }}>
+            <div style={headerStyle}>
+              <span style={{ fontSize: '20px', fontWeight: 'bold' }}>Executive Summary</span>
+              <img src={logoImage} alt="Logo" style={{ width: '40px', height: '40px' }} />
+            </div>
+            
+            <div style={{ color: '#1e293b', lineHeight: '1.8' }}>
+              <p style={{ fontSize: '16px', fontWeight: 'bold', color: '#3b82f6', marginBottom: '15px' }}>
+                TalebEdu is the ONLY application in the world that combines in one platform:
+              </p>
+              
+              <ul style={{ fontSize: '14px', paddingLeft: '20px', marginBottom: '20px' }}>
+                <li style={{ marginBottom: '8px' }}>✓ School Management: Attendance, Grades, Homework, Schedules</li>
+                <li style={{ marginBottom: '8px' }}>✓ Bus Management: 6 buses minimum per school with real-time tracking</li>
+                <li style={{ marginBottom: '8px' }}>✓ Smart Gates & Canteen with NFC technology</li>
+                <li style={{ marginBottom: '8px' }}>✓ Electronic Wallet for students</li>
+                <li style={{ marginBottom: '8px' }}>✓ Digital Store: NFC wristbands + Private Label stationery</li>
+                <li style={{ marginBottom: '8px' }}>✓ Integrated Communication: Messages, Voice/Video calls, File sharing</li>
+              </ul>
+
+              <p style={{ fontSize: '16px', fontWeight: 'bold', color: '#10b981', marginBottom: '15px' }}>
+                Unique Advantages:
+              </p>
+              
+              <ul style={{ fontSize: '14px', paddingLeft: '20px', marginBottom: '20px' }}>
+                <li style={{ marginBottom: '8px' }}>✓ Smart Wristband: Resistant to all elements except fire, NO charging needed</li>
+                <li style={{ marginBottom: '8px' }}>✓ Multi-language Support: Arabic, English, Hindi</li>
+                <li style={{ marginBottom: '8px' }}>✓ Complete Security for students and parents</li>
+                <li style={{ marginBottom: '8px' }}>✓ Local and International Scalability (GCC countries in Year 3)</li>
+                <li style={{ marginBottom: '8px' }}>✓ Complete Financial Management: All subscriptions paid via wallet</li>
+              </ul>
+
+              <div style={{ 
+                backgroundColor: '#f0fdf4', 
+                padding: '15px', 
+                borderRadius: '8px', 
+                borderLeft: '4px solid #10b981' 
+              }}>
+                <p style={{ fontSize: '14px', fontWeight: 'bold', color: '#166534' }}>Project Goal:</p>
+                <p style={{ fontSize: '14px', color: '#166534' }}>
+                  Create a reliable and comprehensive platform to solve school management, security, communication, and digital purchasing problems in a sustainable way.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Page 3: Project Scope */}
+          <div style={{ ...pageStyle, backgroundColor: 'white' }}>
+            <div style={headerStyle}>
+              <span style={{ fontSize: '20px', fontWeight: 'bold' }}>Project Scope</span>
+              <img src={logoImage} alt="Logo" style={{ width: '40px', height: '40px' }} />
+            </div>
+            
+            <div style={{ color: '#1e293b' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '30px' }}>
+                <tbody>
+                  {[
+                    ['Target Segment', 'Private Schools + Government Partnership'],
+                    ['Location', 'Muscat & Ad Dakhiliyah'],
+                    ['Year 1 Schools', '50 Schools'],
+                    ['Avg. Students/School', '500 Students'],
+                    ['Buses per School', '6 Buses'],
+                    ['Gates per School', '2 Gates'],
+                    ['Canteen per School', '1 Canteen'],
+                  ].map(([label, value], i) => (
+                    <tr key={i} style={{ backgroundColor: i % 2 === 0 ? '#f0f9ff' : 'white' }}>
+                      <td style={{ padding: '12px 15px', fontWeight: 'bold', color: '#3b82f6' }}>{label}</td>
+                      <td style={{ padding: '12px 15px', textAlign: 'right' }}>{value}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '15px', color: '#1e293b' }}>
+                Services Offered:
+              </h3>
+              <ol style={{ fontSize: '14px', paddingLeft: '20px' }}>
+                <li style={{ marginBottom: '10px' }}>Annual Student Subscription (Bus, Gate, Canteen, Wallet, Grades tracking)</li>
+                <li style={{ marginBottom: '10px' }}>Additional NFC Wristband Sales</li>
+                <li style={{ marginBottom: '10px' }}>Private Label Stationery Store</li>
+                <li style={{ marginBottom: '10px' }}>Internal Messaging System for Parent-Teacher-Admin Communication</li>
+              </ol>
+            </div>
+          </div>
+
+          {/* Page 4: Competitive Advantages */}
+          <div style={{ ...pageStyle, backgroundColor: 'white' }}>
+            <div style={headerStyle}>
+              <span style={{ fontSize: '20px', fontWeight: 'bold' }}>Competitive Advantages</span>
+              <img src={logoImage} alt="Logo" style={{ width: '40px', height: '40px' }} />
+            </div>
+            
+            <div style={{ color: '#1e293b' }}>
+              {[
+                ['Smart Wristband Technology', 'No charging or maintenance required'],
+                ['Comprehensive Tracking', 'Grades, Homework, Attendance in one place'],
+                ['Parental Control', 'Parents control canteen purchases & limits'],
+                ['Integrated Communication', 'Messages, Voice/Video calls, File sharing'],
+                ['Digital Marketplace', 'Wristbands + Private Label Stationery'],
+                ['Multi-Language Support', 'Arabic, English, Hindi'],
+                ['GCC Expansion Ready', 'Scalable architecture for regional growth'],
+                ['Complete Student Safety', 'Real-time tracking and secure access'],
+                ['FIRST in Oman', 'Smart Wristband as digital school ID'],
+                ['Electronic Wallet Pioneer', 'Student pocket money via wristband'],
+                ['Direct Payment System', 'Fees paid directly through wallet'],
+              ].map(([title, desc], i) => (
+                <div key={i} style={{ 
+                  backgroundColor: '#f0fdf4', 
+                  padding: '12px 15px', 
+                  marginBottom: '8px', 
+                  borderRadius: '6px',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center'
+                }}>
+                  <span style={{ color: '#10b981', fontWeight: 'bold' }}>✓ {title}</span>
+                  <span style={{ color: '#6b7280', fontSize: '13px' }}>{desc}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Page 5: Financial Study - Revenue */}
+          <div style={{ ...pageStyle, backgroundColor: 'white' }}>
+            <div style={headerStyle}>
+              <span style={{ fontSize: '20px', fontWeight: 'bold' }}>Financial Study - Revenue Projections</span>
+              <img src={logoImage} alt="Logo" style={{ width: '40px', height: '40px' }} />
+            </div>
+            
+            <div style={{ color: '#1e293b' }}>
+              <h3 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '15px' }}>
+                A) Annual Revenue - Private Schools Only (OMR)
+              </h3>
+              
+              <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '25px', fontSize: '12px' }}>
+                <thead>
+                  <tr style={{ backgroundColor: '#3b82f6', color: 'white' }}>
+                    <th style={{ padding: '10px', textAlign: 'center' }}>Year</th>
+                    <th style={{ padding: '10px', textAlign: 'center' }}>Students</th>
+                    <th style={{ padding: '10px', textAlign: 'center' }}>Schools</th>
+                    <th style={{ padding: '10px', textAlign: 'center' }}>Student</th>
+                    <th style={{ padding: '10px', textAlign: 'center' }}>Bus</th>
+                    <th style={{ padding: '10px', textAlign: 'center' }}>NFC</th>
+                    <th style={{ padding: '10px', textAlign: 'center' }}>Stationery</th>
+                    <th style={{ padding: '10px', textAlign: 'center' }}>TOTAL</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    ['1', '25,000', '50', '625,000', '30,000', '42,500', '312,500', '1,010,000'],
+                    ['2', '50,000', '100', '1,250,000', '60,000', '85,000', '625,000', '2,020,000'],
+                    ['3', '100,000', '200', '2,500,000', '120,000', '170,000', '1,250,000', '4,040,000'],
+                  ].map((row, i) => (
+                    <tr key={i} style={{ backgroundColor: i % 2 === 0 ? '#f8fafc' : 'white' }}>
+                      {row.map((cell, j) => (
+                        <td key={j} style={{ padding: '8px', textAlign: 'center', borderBottom: '1px solid #e2e8f0' }}>
+                          {cell}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              <h3 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '15px' }}>
+                B) Government + Private Schools Scenario (OMR)
+              </h3>
+              
+              <ul style={{ fontSize: '14px', paddingLeft: '20px', marginBottom: '20px' }}>
+                <li style={{ marginBottom: '8px' }}>Total Students: 242,000 (192,000 Government + 50,000 Private)</li>
+                <li style={{ marginBottom: '8px' }}>Student Subscriptions: 6,050,000 OMR</li>
+                <li style={{ marginBottom: '8px' }}>Bus Subscriptions: 290,400 OMR</li>
+                <li style={{ marginBottom: '8px' }}>NFC Profit: 411,400 OMR</li>
+                <li style={{ marginBottom: '8px' }}>Stationery Profit: 3,025,000 OMR</li>
+              </ul>
+
+              <div style={{ 
+                backgroundColor: '#10b981', 
+                color: 'white', 
+                padding: '15px', 
+                borderRadius: '8px', 
+                textAlign: 'center',
+                fontSize: '18px',
+                fontWeight: 'bold'
+              }}>
+                TOTAL REVENUE = 9,776,800 OMR
+              </div>
+            </div>
+          </div>
+
+          {/* Page 6: CAPEX & OPEX */}
+          <div style={{ ...pageStyle, backgroundColor: 'white' }}>
+            <div style={headerStyle}>
+              <span style={{ fontSize: '20px', fontWeight: 'bold' }}>Capital & Operating Expenditure</span>
+              <img src={logoImage} alt="Logo" style={{ width: '40px', height: '40px' }} />
+            </div>
+            
+            <div style={{ color: '#1e293b' }}>
+              <h3 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '10px' }}>
+                Capital Expenditure (CAPEX)
+              </h3>
+              
+              <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '20px', fontSize: '12px' }}>
+                <thead>
+                  <tr style={{ backgroundColor: '#3b82f6', color: 'white' }}>
+                    <th style={{ padding: '8px', textAlign: 'left' }}>Item</th>
+                    <th style={{ padding: '8px', textAlign: 'center' }}>Unit Price</th>
+                    <th style={{ padding: '8px', textAlign: 'center' }}>Total (OMR)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    ['Bus Devices (300 units)', '290', '87,000'],
+                    ['Smart Gates (100 units)', '290', '29,000'],
+                    ['Canteen Systems (50 units)', '370', '18,500'],
+                    ['Electric Vehicles (5 units)', '8,000', '40,000'],
+                    ['Employee Devices (10 units)', '1,000', '10,000'],
+                    ['Servers & Data Room', '-', '35,000'],
+                    ['Company Furniture', '-', '30,000'],
+                    ['Licenses & Registration', '-', '7,000'],
+                    ['Initial Stationery Import', '-', '30,000'],
+                    ['App Development', '-', '25,000'],
+                    ['Cybersecurity', '-', '18,000'],
+                  ].map((row, i) => (
+                    <tr key={i} style={{ backgroundColor: i % 2 === 0 ? '#f8fafc' : 'white' }}>
+                      <td style={{ padding: '6px 8px', borderBottom: '1px solid #e2e8f0' }}>{row[0]}</td>
+                      <td style={{ padding: '6px 8px', textAlign: 'center', borderBottom: '1px solid #e2e8f0' }}>{row[1]}</td>
+                      <td style={{ padding: '6px 8px', textAlign: 'center', borderBottom: '1px solid #e2e8f0' }}>{row[2]}</td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr style={{ backgroundColor: '#0f172a', color: 'white', fontWeight: 'bold' }}>
+                    <td colSpan={2} style={{ padding: '10px' }}>TOTAL CAPEX</td>
+                    <td style={{ padding: '10px', textAlign: 'center' }}>329,500 OMR</td>
+                  </tr>
+                </tfoot>
+              </table>
+
+              <h3 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '10px' }}>
+                Operating Expenses (OPEX)
+              </h3>
+              
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+                <thead>
+                  <tr style={{ backgroundColor: '#f59e0b', color: 'white' }}>
+                    <th style={{ padding: '8px', textAlign: 'left' }}>Item</th>
+                    <th style={{ padding: '8px', textAlign: 'center' }}>Monthly</th>
+                    <th style={{ padding: '8px', textAlign: 'center' }}>Annual (OMR)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr style={{ backgroundColor: '#fffbeb' }}>
+                    <td style={{ padding: '8px' }}>Staff Salaries + Manager</td>
+                    <td style={{ padding: '8px', textAlign: 'center' }}>8,500</td>
+                    <td style={{ padding: '8px', textAlign: 'center' }}>102,000</td>
+                  </tr>
+                  <tr style={{ backgroundColor: 'white' }}>
+                    <td style={{ padding: '8px' }}>Office Rent</td>
+                    <td style={{ padding: '8px', textAlign: 'center' }}>2,000</td>
+                    <td style={{ padding: '8px', textAlign: 'center' }}>24,000</td>
+                  </tr>
+                </tbody>
+                <tfoot>
+                  <tr style={{ backgroundColor: '#f59e0b', color: 'white', fontWeight: 'bold' }}>
+                    <td colSpan={2} style={{ padding: '10px' }}>TOTAL OPEX</td>
+                    <td style={{ padding: '10px', textAlign: 'center' }}>126,000 OMR / Year</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+
+          {/* Page 7: Cash Flow */}
+          <div style={{ ...pageStyle, backgroundColor: 'white' }}>
+            <div style={headerStyle}>
+              <span style={{ fontSize: '20px', fontWeight: 'bold' }}>Cash Flow Analysis - Year 1</span>
+              <img src={logoImage} alt="Logo" style={{ width: '40px', height: '40px' }} />
+            </div>
+            
+            <div style={{ color: '#1e293b' }}>
+              {[
+                { label: 'Total Revenue', value: '1,010,000 OMR', color: '#10b981' },
+                { label: 'CAPEX', value: '329,500 OMR', color: '#ef4444' },
+                { label: 'OPEX', value: '126,000 OMR', color: '#f59e0b' },
+                { label: 'Net Income Before Loan', value: '554,500 OMR', color: '#3b82f6' },
+              ].map((item, i) => (
+                <div key={i} style={{ 
+                  backgroundColor: item.color, 
+                  color: 'white', 
+                  padding: '15px 20px', 
+                  marginBottom: '15px', 
+                  borderRadius: '8px',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  fontSize: '16px'
+                }}>
+                  <span>{item.label}</span>
+                  <span style={{ fontWeight: 'bold' }}>{item.value}</span>
+                </div>
+              ))}
+
+              <div style={{ 
+                backgroundColor: '#f0fdf4', 
+                padding: '25px', 
+                borderRadius: '12px', 
+                marginTop: '30px',
+                border: '2px solid #10b981'
+              }}>
+                <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#10b981', marginBottom: '15px' }}>
+                  Loan Coverage Analysis
+                </h3>
+                <p style={{ fontSize: '14px', marginBottom: '8px' }}>Requested Loan: 420,000 OMR</p>
+                <p style={{ fontSize: '14px', marginBottom: '8px' }}>Year 1 Net Income: 554,500 OMR</p>
+                <p style={{ fontSize: '16px', fontWeight: 'bold', color: '#10b981', marginTop: '15px' }}>
+                  Coverage Ratio: 132% - LOAN FULLY COVERED IN YEAR 1
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Page 8: Expansion Plan */}
+          <div style={{ ...pageStyle, backgroundColor: 'white' }}>
+            <div style={headerStyle}>
+              <span style={{ fontSize: '20px', fontWeight: 'bold' }}>Future Expansion Plan</span>
+              <img src={logoImage} alt="Logo" style={{ width: '40px', height: '40px' }} />
+            </div>
+            
+            <div style={{ color: '#1e293b' }}>
+              {[
+                {
+                  phase: 'Year 1 - Foundation',
+                  items: ['50 Private Schools in Muscat & Ad Dakhiliyah', '25,000 Students', 'Establish brand presence'],
+                  color: '#3b82f6'
+                },
+                {
+                  phase: 'Year 2 - Growth',
+                  items: ['Expand to 100+ Private Schools', 'Cover all major cities', '50,000 Students'],
+                  color: '#10b981'
+                },
+                {
+                  phase: 'Year 3 - Expansion',
+                  items: ['Government school integration', 'GCC market entry', '100,000+ Students'],
+                  color: '#f59e0b'
+                },
+              ].map((phase, i) => (
+                <div key={i} style={{ 
+                  backgroundColor: phase.color, 
+                  color: 'white', 
+                  padding: '20px', 
+                  borderRadius: '12px', 
+                  marginBottom: '20px' 
+                }}>
+                  <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '12px' }}>{phase.phase}</h3>
+                  <ul style={{ paddingLeft: '15px' }}>
+                    {phase.items.map((item, j) => (
+                      <li key={j} style={{ marginBottom: '6px' }}>• {item}</li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Page 9: Risk Analysis */}
+          <div style={{ ...pageStyle, backgroundColor: 'white' }}>
+            <div style={headerStyle}>
+              <span style={{ fontSize: '20px', fontWeight: 'bold' }}>Risk Analysis & Mitigation</span>
+              <img src={logoImage} alt="Logo" style={{ width: '40px', height: '40px' }} />
+            </div>
+            
+            <div style={{ color: '#1e293b' }}>
+              {[
+                { risk: 'Low Subscription Rates', mitigation: 'Free 1-month trial for schools' },
+                { risk: 'Payment Delays', mitigation: 'Binding contracts; service suspension' },
+                { risk: 'Technical Failures', mitigation: '24/7 support and local servers' },
+                { risk: 'Market Competition', mitigation: 'Unique features create differentiation' },
+                { risk: 'Government Policy Changes', mitigation: 'Flexible adaptable business model' },
+              ].map((item, i) => (
+                <div key={i} style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
+                  <div style={{ 
+                    flex: 1, 
+                    backgroundColor: '#fef2f2', 
+                    padding: '15px', 
+                    borderRadius: '8px' 
+                  }}>
+                    <p style={{ fontSize: '12px', color: '#ef4444', fontWeight: 'bold', marginBottom: '5px' }}>RISK:</p>
+                    <p style={{ fontSize: '14px' }}>{item.risk}</p>
+                  </div>
+                  <div style={{ 
+                    flex: 1, 
+                    backgroundColor: '#f0fdf4', 
+                    padding: '15px', 
+                    borderRadius: '8px' 
+                  }}>
+                    <p style={{ fontSize: '12px', color: '#10b981', fontWeight: 'bold', marginBottom: '5px' }}>MITIGATION:</p>
+                    <p style={{ fontSize: '14px' }}>{item.mitigation}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Page 10: Conclusion */}
+          <div style={{
+            ...pageStyle,
+            background: 'linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%)',
+            color: 'white',
+            pageBreakAfter: 'avoid',
+          }}>
+            <div style={{ textAlign: 'center', marginBottom: '30px' }}>
+              <img src={logoImage} alt="TalebEdu Logo" style={{ width: '80px', height: '80px', marginBottom: '20px' }} />
+              <h1 style={{ fontSize: '28px', fontWeight: 'bold', marginBottom: '10px' }}>Conclusion & Recommendation</h1>
+            </div>
+            
+            <div style={{ marginBottom: '30px' }}>
+              {[
+                'TalebEdu is an innovative and unique project in Oman',
+                'Capable of generating stable income covering the loan',
+                'Loan of 420,000 OMR recoverable within 3 years',
+                'Strong potential for local and international expansion',
+                'First-mover advantage in smart school management',
+                'Sustainable recurring revenue model'
+              ].map((point, i) => (
+                <p key={i} style={{ fontSize: '16px', marginBottom: '12px', paddingLeft: '20px' }}>
+                  ✓ {point}
+                </p>
+              ))}
+            </div>
+
+            <div style={{ 
+              backgroundColor: '#10b981', 
+              padding: '25px', 
+              borderRadius: '12px', 
+              textAlign: 'center',
+              marginBottom: '40px'
+            }}>
+              <h2 style={{ fontSize: '22px', fontWeight: 'bold', marginBottom: '15px' }}>RECOMMENDATION</h2>
+              <p style={{ fontSize: '16px' }}>
+                Approve the project financing to support this integrated educational and digital security solution.
+              </p>
+            </div>
+
+            <div style={{ textAlign: 'center', marginTop: '40px' }}>
+              <p style={{ fontSize: '14px' }}>TalebEdu - Mazen Khanfar</p>
+              <p style={{ fontSize: '14px', color: '#94a3b8', marginTop: '10px' }}>Muscat, Sultanate of Oman - 2026</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Animated Background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <motion.div
@@ -1178,31 +1102,6 @@ const FeasibilityStudy = () => {
           transition={{ delay: 0.2 }}
           className="flex flex-col md:flex-row items-center justify-center gap-4 mb-12"
         >
-          {/* English PDF */}
-          <Button
-            onClick={generateEnglishPDF}
-            disabled={isGeneratingEn}
-            size="lg"
-            className="bg-gradient-to-l from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white text-lg px-10 py-7 rounded-2xl shadow-2xl shadow-blue-500/30 transition-all hover:scale-105"
-          >
-            {isGeneratingEn ? (
-              <>
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                >
-                  <Sparkles className="w-5 h-5 ml-2" />
-                </motion.div>
-                جاري الإنشاء...
-              </>
-            ) : (
-              <>
-                <Download className="w-5 h-5 ml-2" />
-                تحميل النسخة الإنجليزية
-              </>
-            )}
-          </Button>
-
           {/* Arabic PDF */}
           <Button
             onClick={generateArabicPDF}
@@ -1224,6 +1123,31 @@ const FeasibilityStudy = () => {
               <>
                 <Download className="w-5 h-5 ml-2" />
                 تحميل النسخة العربية
+              </>
+            )}
+          </Button>
+
+          {/* English PDF */}
+          <Button
+            onClick={generateEnglishPDF}
+            disabled={isGeneratingEn}
+            size="lg"
+            className="bg-gradient-to-l from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white text-lg px-10 py-7 rounded-2xl shadow-2xl shadow-blue-500/30 transition-all hover:scale-105"
+          >
+            {isGeneratingEn ? (
+              <>
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                >
+                  <Sparkles className="w-5 h-5 ml-2" />
+                </motion.div>
+                جاري الإنشاء...
+              </>
+            ) : (
+              <>
+                <Download className="w-5 h-5 ml-2" />
+                تحميل النسخة الإنجليزية
               </>
             )}
           </Button>
@@ -1404,8 +1328,8 @@ const FeasibilityStudy = () => {
           transition={{ delay: 1 }}
           className="text-center mt-16 text-white/50"
         >
-          <p>TalebEdu © 2026 - مازن خانفار</p>
-          <p className="mt-2">مسقط، سلطنة عُمان</p>
+          <p>TalebEdu - مازن خنفر</p>
+          <p className="mt-2">مسقط، سلطنة عمان - 2026</p>
         </motion.div>
       </div>
     </div>
