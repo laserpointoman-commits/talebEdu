@@ -16,13 +16,12 @@ const FeasibilityPrint = () => {
 
   const pageStyle: React.CSSProperties = {
     width: "210mm",
-    minHeight: "297mm",
+    height: "297mm",
     padding: "15mm",
     boxSizing: "border-box",
     backgroundColor: "white",
     margin: "0 auto 20px auto",
     boxShadow: "0 4px 20px rgba(0, 0, 0, 0.15)",
-    pageBreakAfter: "always",
     overflow: "hidden",
   };
 
@@ -78,12 +77,53 @@ const FeasibilityPrint = () => {
     />
   );
 
+  // Print-specific styles
+  const printStyles = `
+    @media print {
+      @page {
+        size: A4;
+        margin: 0;
+      }
+      body {
+        margin: 0;
+        padding: 0;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      .print-page {
+        width: 210mm !important;
+        height: 297mm !important;
+        margin: 0 !important;
+        padding: 15mm !important;
+        box-shadow: none !important;
+        page-break-after: always !important;
+        page-break-inside: avoid !important;
+        break-after: page !important;
+        break-inside: avoid !important;
+      }
+      .print-page:last-child {
+        page-break-after: auto !important;
+        break-after: auto !important;
+      }
+      .print\\:hidden {
+        display: none !important;
+      }
+      .print-container {
+        padding: 0 !important;
+        margin: 0 !important;
+        background: white !important;
+      }
+    }
+  `;
+
   return (
-    <div
-      className="min-h-screen bg-gray-200 print:bg-white"
-      dir={language === "ar" ? "rtl" : "ltr"}
-      style={{ fontFamily: language === "ar" ? "Geeza Pro, Noto Naskh Arabic, Arial, sans-serif" : "Arial, sans-serif" }}
-    >
+    <>
+      <style>{printStyles}</style>
+      <div
+        className="min-h-screen bg-gray-200 print:bg-white print-container"
+        dir={language === "ar" ? "rtl" : "ltr"}
+        style={{ fontFamily: language === "ar" ? "Geeza Pro, Noto Naskh Arabic, Arial, sans-serif" : "Arial, sans-serif" }}
+      >
       {/* Controls - Hidden when printing */}
       <div className="print:hidden sticky top-0 z-50 bg-slate-900 p-4 shadow-lg">
         <div className="container mx-auto flex flex-wrap items-center justify-between gap-4">
@@ -126,6 +166,7 @@ const FeasibilityPrint = () => {
           <>
             {/* Arabic Cover Page */}
             <div
+              className="print-page"
               style={{
                 ...pageStyle,
                 background: "linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%)",
@@ -165,7 +206,7 @@ const FeasibilityPrint = () => {
             </div>
 
             {/* Arabic Page 2: Executive Summary */}
-            <div style={{ ...pageStyle, backgroundColor: "white" }}>
+            <div className="print-page" style={{ ...pageStyle, backgroundColor: "white" }}>
               <div style={headerStyle}>
                 <span style={{ fontSize: "20px", fontWeight: "bold" }}>الملخص التنفيذي</span>
                 <HeaderLogo />
@@ -212,7 +253,7 @@ const FeasibilityPrint = () => {
             </div>
 
             {/* Arabic Page 3: Project Scope */}
-            <div style={{ ...pageStyle, backgroundColor: "white" }}>
+            <div className="print-page" style={{ ...pageStyle, backgroundColor: "white" }}>
               <div style={headerStyle}>
                 <span style={{ fontSize: "20px", fontWeight: "bold" }}>نطاق المشروع</span>
                 <HeaderLogo />
@@ -249,7 +290,7 @@ const FeasibilityPrint = () => {
             </div>
 
             {/* Arabic Page 4: Competitive Advantages */}
-            <div style={{ ...pageStyle, backgroundColor: "white" }}>
+            <div className="print-page" style={{ ...pageStyle, backgroundColor: "white" }}>
               <div style={headerStyle}>
                 <span style={{ fontSize: "20px", fontWeight: "bold" }}>المزايا التنافسية</span>
                 <HeaderLogo />
@@ -289,7 +330,7 @@ const FeasibilityPrint = () => {
             </div>
 
             {/* Arabic Page 5: Revenue */}
-            <div style={{ ...pageStyle, backgroundColor: "white" }}>
+            <div className="print-page" style={{ ...pageStyle, backgroundColor: "white" }}>
               <div style={headerStyle}>
                 <span style={{ fontSize: "20px", fontWeight: "bold" }}>الدراسة المالية - الإيرادات</span>
                 <HeaderLogo />
@@ -358,7 +399,7 @@ const FeasibilityPrint = () => {
             </div>
 
             {/* Arabic Page 6: Costs */}
-            <div style={{ ...pageStyle, backgroundColor: "white" }}>
+            <div className="print-page" style={{ ...pageStyle, backgroundColor: "white" }}>
               <div style={headerStyle}>
                 <span style={{ fontSize: "20px", fontWeight: "bold" }}>الدراسة المالية - التكاليف</span>
                 <HeaderLogo />
@@ -434,7 +475,7 @@ const FeasibilityPrint = () => {
             </div>
 
             {/* Arabic Page 7: Profitability */}
-            <div style={{ ...pageStyle, backgroundColor: "white" }}>
+            <div className="print-page" style={{ ...pageStyle, backgroundColor: "white" }}>
               <div style={headerStyle}>
                 <span style={{ fontSize: "20px", fontWeight: "bold" }}>الربحية والتدفق النقدي</span>
                 <HeaderLogo />
@@ -500,7 +541,7 @@ const FeasibilityPrint = () => {
             </div>
 
             {/* Arabic Page 8: Loan Repayment */}
-            <div style={{ ...pageStyle, backgroundColor: "white" }}>
+            <div className="print-page" style={{ ...pageStyle, backgroundColor: "white" }}>
               <div style={headerStyle}>
                 <span style={{ fontSize: "20px", fontWeight: "bold" }}>سيناريو سداد القرض</span>
                 <HeaderLogo />
@@ -587,7 +628,7 @@ const FeasibilityPrint = () => {
             </div>
 
             {/* Arabic Page 9: Risk Analysis */}
-            <div style={{ ...pageStyle, backgroundColor: "white" }}>
+            <div className="print-page" style={{ ...pageStyle, backgroundColor: "white" }}>
               <div style={headerStyle}>
                 <span style={{ fontSize: "20px", fontWeight: "bold" }}>تحليل المخاطر والتخفيف</span>
                 <HeaderLogo />
@@ -639,11 +680,11 @@ const FeasibilityPrint = () => {
 
             {/* Arabic Page 10: Conclusion */}
             <div
+              className="print-page"
               style={{
                 ...pageStyle,
                 background: "linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%)",
                 color: "white",
-                pageBreakAfter: "avoid",
               }}
             >
               <div style={{ textAlign: "center", marginBottom: "30px" }}>
@@ -693,6 +734,7 @@ const FeasibilityPrint = () => {
           <>
             {/* English Cover Page */}
             <div
+              className="print-page"
               style={{
                 ...pageStyle,
                 background: "linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%)",
@@ -730,7 +772,7 @@ const FeasibilityPrint = () => {
             </div>
 
             {/* English Page 2: Executive Summary */}
-            <div style={{ ...pageStyle, backgroundColor: "white" }}>
+            <div className="print-page" style={{ ...pageStyle, backgroundColor: "white" }}>
               <div style={headerStyle}>
                 <HeaderLogo />
                 <span style={{ fontSize: "20px", fontWeight: "bold" }}>Executive Summary</span>
@@ -767,7 +809,7 @@ const FeasibilityPrint = () => {
             </div>
 
             {/* English Page 3: Project Scope */}
-            <div style={{ ...pageStyle, backgroundColor: "white" }}>
+            <div className="print-page" style={{ ...pageStyle, backgroundColor: "white" }}>
               <div style={headerStyle}>
                 <HeaderLogo />
                 <span style={{ fontSize: "20px", fontWeight: "bold" }}>Project Scope</span>
@@ -793,7 +835,7 @@ const FeasibilityPrint = () => {
             </div>
 
             {/* English Page 4: Competitive Advantages */}
-            <div style={{ ...pageStyle, backgroundColor: "white" }}>
+            <div className="print-page" style={{ ...pageStyle, backgroundColor: "white" }}>
               <div style={headerStyle}>
                 <HeaderLogo />
                 <span style={{ fontSize: "20px", fontWeight: "bold" }}>Competitive Advantages</span>
@@ -826,7 +868,7 @@ const FeasibilityPrint = () => {
             </div>
 
             {/* English Page 5: Revenue */}
-            <div style={{ ...pageStyle, backgroundColor: "white" }}>
+            <div className="print-page" style={{ ...pageStyle, backgroundColor: "white" }}>
               <div style={headerStyle}>
                 <HeaderLogo />
                 <span style={{ fontSize: "20px", fontWeight: "bold" }}>Financial Study - Revenue</span>
@@ -864,7 +906,7 @@ const FeasibilityPrint = () => {
             </div>
 
             {/* English Page 6: Costs */}
-            <div style={{ ...pageStyle, backgroundColor: "white" }}>
+            <div className="print-page" style={{ ...pageStyle, backgroundColor: "white" }}>
               <div style={headerStyle}>
                 <HeaderLogo />
                 <span style={{ fontSize: "20px", fontWeight: "bold" }}>Financial Study - Costs</span>
@@ -900,7 +942,7 @@ const FeasibilityPrint = () => {
             </div>
 
             {/* English Page 7: Profitability */}
-            <div style={{ ...pageStyle, backgroundColor: "white" }}>
+            <div className="print-page" style={{ ...pageStyle, backgroundColor: "white" }}>
               <div style={headerStyle}>
                 <HeaderLogo />
                 <span style={{ fontSize: "20px", fontWeight: "bold" }}>Profitability & Cash Flow</span>
@@ -939,7 +981,7 @@ const FeasibilityPrint = () => {
             </div>
 
             {/* English Page 8: Loan Repayment */}
-            <div style={{ ...pageStyle, backgroundColor: "white" }}>
+            <div className="print-page" style={{ ...pageStyle, backgroundColor: "white" }}>
               <div style={headerStyle}>
                 <HeaderLogo />
                 <span style={{ fontSize: "20px", fontWeight: "bold" }}>Loan Repayment Scenario</span>
@@ -966,7 +1008,7 @@ const FeasibilityPrint = () => {
             </div>
 
             {/* English Page 9: Risk Analysis */}
-            <div style={{ ...pageStyle, backgroundColor: "white" }}>
+            <div className="print-page" style={{ ...pageStyle, backgroundColor: "white" }}>
               <div style={headerStyle}>
                 <HeaderLogo />
                 <span style={{ fontSize: "20px", fontWeight: "bold" }}>Risk Analysis & Mitigation</span>
@@ -988,11 +1030,11 @@ const FeasibilityPrint = () => {
 
             {/* English Page 10: Conclusion */}
             <div
+              className="print-page"
               style={{
                 ...pageStyle,
                 background: "linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%)",
                 color: "white",
-                pageBreakAfter: "avoid",
               }}
             >
               <div style={{ textAlign: "center", marginBottom: "30px" }}>
@@ -1039,35 +1081,8 @@ const FeasibilityPrint = () => {
         )}
       </div>
 
-      {/* Print Styles */}
-      <style>{`
-        @media print {
-          body {
-            background: white !important;
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-          }
-          
-          @page {
-            size: A4;
-            margin: 0;
-          }
-          
-          .print\\:hidden {
-            display: none !important;
-          }
-          
-          .print\\:py-0 {
-            padding-top: 0 !important;
-            padding-bottom: 0 !important;
-          }
-          
-          .print\\:bg-white {
-            background: white !important;
-          }
-        }
-      `}</style>
     </div>
+    </>
   );
 };
 
