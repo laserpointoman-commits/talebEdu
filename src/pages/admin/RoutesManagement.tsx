@@ -79,6 +79,15 @@ export default function RoutesManagement() {
   const [stops, setStops] = useState<(string | RouteStop)[]>([]);
   const [newStop, setNewStop] = useState('');
 
+  // Duplicate assignment dialog state
+  const [duplicateDialogOpen, setDuplicateDialogOpen] = useState(false);
+  const [duplicateInfo, setDuplicateInfo] = useState<{
+    type: 'student' | 'driver' | 'supervisor';
+    name: string;
+    routeName: string;
+    busNumber: string;
+  } | null>(null);
+
   // Helper function to get stop name from string or RouteStop object
   const getStopName = (stop: string | RouteStop, lang: string = language): string => {
     if (typeof stop === 'string') return stop;
@@ -309,13 +318,17 @@ export default function RoutesManagement() {
     if (!selectedStudents.includes(studentId)) {
       const assignment = getStudentAssignment(studentId);
       if (assignment) {
-        toast({
-          variant: 'destructive',
-          title: language === 'ar' ? 'الطالب مسجل بالفعل' : 'Student Already Assigned',
-          description: language === 'ar' 
-            ? `هذا الطالب مسجل في المسار "${assignment.routeName}" (الحافلة: ${assignment.busNumber})`
-            : `This student is already assigned to route "${assignment.routeName}" (Bus: ${assignment.busNumber})`,
+        const student = students.find(s => s.id === studentId);
+        const studentName = student 
+          ? (language === 'en' ? `${student.firstName} ${student.lastName}` : `${student.firstNameAr} ${student.lastNameAr}`)
+          : '';
+        setDuplicateInfo({
+          type: 'student',
+          name: studentName,
+          routeName: assignment.routeName,
+          busNumber: assignment.busNumber,
         });
+        setDuplicateDialogOpen(true);
         return;
       }
       
@@ -763,13 +776,17 @@ export default function RoutesManagement() {
                     if (value !== 'none') {
                       const assignment = getDriverAssignment(value);
                       if (assignment) {
-                        toast({
-                          variant: 'destructive',
-                          title: language === 'ar' ? 'السائق معين بالفعل' : 'Driver Already Assigned',
-                          description: language === 'ar' 
-                            ? `هذا السائق معين في المسار "${assignment.routeName}" (الحافلة: ${assignment.busNumber})`
-                            : `This driver is already assigned to route "${assignment.routeName}" (Bus: ${assignment.busNumber})`,
+                        const driver = drivers.find(d => d.id === value);
+                        const driverName = driver 
+                          ? (language === 'en' ? driver.name : driver.nameAr)
+                          : '';
+                        setDuplicateInfo({
+                          type: 'driver',
+                          name: driverName,
+                          routeName: assignment.routeName,
+                          busNumber: assignment.busNumber,
                         });
+                        setDuplicateDialogOpen(true);
                         return;
                       }
                     }
@@ -817,13 +834,17 @@ export default function RoutesManagement() {
                     if (value !== 'none') {
                       const assignment = getSupervisorAssignment(value);
                       if (assignment) {
-                        toast({
-                          variant: 'destructive',
-                          title: language === 'ar' ? 'المشرف معين بالفعل' : 'Supervisor Already Assigned',
-                          description: language === 'ar' 
-                            ? `هذا المشرف معين في المسار "${assignment.routeName}" (الحافلة: ${assignment.busNumber})`
-                            : `This supervisor is already assigned to route "${assignment.routeName}" (Bus: ${assignment.busNumber})`,
+                        const supervisor = teachers.find(t => t.id === value);
+                        const supervisorName = supervisor 
+                          ? (language === 'en' ? supervisor.name : supervisor.nameAr)
+                          : '';
+                        setDuplicateInfo({
+                          type: 'supervisor',
+                          name: supervisorName,
+                          routeName: assignment.routeName,
+                          busNumber: assignment.busNumber,
                         });
+                        setDuplicateDialogOpen(true);
                         return;
                       }
                     }
@@ -1021,6 +1042,69 @@ export default function RoutesManagement() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Duplicate Assignment Dialog */}
+      <Dialog open={duplicateDialogOpen} onOpenChange={setDuplicateDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              {language === 'ar' ? 'تعيين مكرر' : 'Duplicate Assignment'}
+            </DialogTitle>
+          </DialogHeader>
+          {duplicateInfo && (
+            <div className="space-y-4 py-4">
+              <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4 space-y-3">
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-destructive">
+                    {duplicateInfo.type === 'student' && (language === 'ar' ? 'الطالب:' : 'Student:')}
+                    {duplicateInfo.type === 'driver' && (language === 'ar' ? 'السائق:' : 'Driver:')}
+                    {duplicateInfo.type === 'supervisor' && (language === 'ar' ? 'المشرف:' : 'Supervisor:')}
+                  </span>
+                  <span className="font-bold">{duplicateInfo.name}</span>
+                </div>
+                
+                <div className="border-t border-destructive/20 pt-3 space-y-2">
+                  <p className="text-sm text-muted-foreground">
+                    {language === 'ar' ? 'معين حالياً في:' : 'Currently assigned to:'}
+                  </p>
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div className="flex items-center gap-2">
+                      <MapPin className="h-4 w-4 text-muted-foreground" />
+                      <span>{language === 'ar' ? 'المسار:' : 'Route:'}</span>
+                      <span className="font-medium">{duplicateInfo.routeName}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Bus className="h-4 w-4 text-muted-foreground" />
+                      <span>{language === 'ar' ? 'الحافلة:' : 'Bus:'}</span>
+                      <span className="font-medium">{duplicateInfo.busNumber}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <p className="text-sm text-muted-foreground text-center">
+                {duplicateInfo.type === 'student' && (language === 'ar' 
+                  ? 'لا يمكن تعيين الطالب في أكثر من مسار واحد.'
+                  : 'A student cannot be assigned to more than one route.')}
+                {duplicateInfo.type === 'driver' && (language === 'ar' 
+                  ? 'لا يمكن تعيين السائق في أكثر من مسار واحد.'
+                  : 'A driver cannot be assigned to more than one route.')}
+                {duplicateInfo.type === 'supervisor' && (language === 'ar' 
+                  ? 'لا يمكن تعيين المشرف في أكثر من مسار واحد.'
+                  : 'A supervisor cannot be assigned to more than one route.')}
+              </p>
+            </div>
+          )}
+          <DialogFooter>
+            <Button onClick={() => setDuplicateDialogOpen(false)} className="w-full">
+              {language === 'ar' ? 'حسناً' : 'OK'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
