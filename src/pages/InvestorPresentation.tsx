@@ -180,7 +180,7 @@ const IntroAnimation = ({ onComplete }: { onComplete: () => void }) => {
         </motion.div>
 
         {/* Title with letter-by-letter animation */}
-        <motion.div className="relative mb-4">
+        <motion.div className="relative mb-4" dir="ltr">
           <motion.h1
             className="text-5xl md:text-7xl font-bold"
             initial={{ opacity: 0 }}
@@ -1052,13 +1052,20 @@ const InvestorPresentation = () => {
   const nextSlide = () => {
     if (currentSlide < slides.length - 1) {
       setCurrentSlide(currentSlide + 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
   const prevSlide = () => {
     if (currentSlide > 0) {
       setCurrentSlide(currentSlide - 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
+  };
+
+  const goToSlide = (index: number) => {
+    setCurrentSlide(index);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
@@ -1109,7 +1116,7 @@ const InvestorPresentation = () => {
             {slides.map((_, index) => (
               <button
                 key={index}
-                onClick={() => setCurrentSlide(index)}
+                onClick={() => goToSlide(index)}
                 className={`w-2 h-2 rounded-full transition-all ${
                   index === currentSlide 
                     ? 'bg-primary w-6' 
