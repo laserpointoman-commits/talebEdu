@@ -38,6 +38,7 @@ import PresentationManual from "./pages/PresentationManual";
 import PresentationSales from "./pages/PresentationSales";
 import InvestorPresentation from "./pages/InvestorPresentation";
 import FeasibilityStudy from "./pages/FeasibilityStudy";
+import FeasibilityPrint from "./pages/FeasibilityPrint";
 import ScreenshotManager from "./pages/admin/ScreenshotManager";
 import DemoRoutes from "./pages/screenshot-demo/DemoRoutes";
 import StudentDetails from "./pages/parent/StudentDetails";
@@ -122,7 +123,8 @@ function App() {
                         <Route path="/presentation-manual" element={<PresentationManual />} />
                         <Route path="/presentation-sales" element={<PresentationSales />} />
                         <Route path="/investor" element={<InvestorPresentation />} />
-                        <Route path="/feasibility" element={<FeasibilityStudy />} />
+<Route path="/feasibility" element={<FeasibilityStudy />} />
+                        <Route path="/feasibility-print" element={<FeasibilityPrint />} />
                         <Route path="/admin/screenshot-manager" element={<ScreenshotManager />} />
                         <Route path="/screenshot-demo/en/*" element={<DemoRoutes language="en" />} />
                         <Route path="/screenshot-demo/ar/*" element={<DemoRoutes language="ar" />} />

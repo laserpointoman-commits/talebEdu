@@ -1125,6 +1125,18 @@ const FeasibilityStudy = () => {
           </div>
         </Card>
 
+        {/* Print View Button */}
+        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col sm:flex-row gap-4 justify-center mb-6">
+          <Button
+            onClick={() => window.location.href = "/feasibility-print"}
+            className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-6 text-lg"
+            size="lg"
+          >
+            <FileText className="w-5 h-5 ml-2" />
+            عرض للطباعة (A4)
+          </Button>
+        </motion.div>
+
         {/* Download Buttons */}
         <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col sm:flex-row gap-4 justify-center">
           <Button
