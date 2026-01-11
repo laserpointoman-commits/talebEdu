@@ -13,6 +13,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2, CheckCircle2, GraduationCap, Users, Heart, User } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import HomeLocationPicker from './HomeLocationPicker';
 
 export default function StudentRegistrationWizard() {
   const navigate = useNavigate();
@@ -42,6 +43,10 @@ export default function StudentRegistrationWizard() {
     emergencyPhone: '',
     medicalConditions: '',
     allergies: '',
+    homeLatitude: 0,
+    homeLongitude: 0,
+    homeArea: '',
+    homeAreaAr: '',
   });
 
   useEffect(() => {
@@ -336,6 +341,27 @@ export default function StudentRegistrationWizard() {
               </TabsContent>
 
               <TabsContent value="contact" className="space-y-4">
+                {/* Home Location Picker */}
+                <HomeLocationPicker
+                  value={{
+                    latitude: formData.homeLatitude,
+                    longitude: formData.homeLongitude,
+                    area: formData.homeArea,
+                    areaAr: formData.homeAreaAr,
+                    address: formData.address,
+                  }}
+                  onChange={(location) => {
+                    setFormData({
+                      ...formData,
+                      homeLatitude: location.latitude,
+                      homeLongitude: location.longitude,
+                      homeArea: location.area,
+                      homeAreaAr: location.areaAr,
+                      address: location.address,
+                    });
+                  }}
+                />
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>{language === 'en' ? 'Student Phone' : 'هاتف الطالب'}</Label>
@@ -346,11 +372,11 @@ export default function StudentRegistrationWizard() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>{language === 'en' ? 'Address' : 'العنوان'}</Label>
+                    <Label>{language === 'en' ? 'Detailed Address' : 'العنوان التفصيلي'}</Label>
                     <Input
                       value={formData.address}
                       onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                      placeholder={language === 'en' ? 'Home address' : 'عنوان المنزل'}
+                      placeholder={language === 'en' ? 'Building, Street, etc.' : 'المبنى، الشارع، إلخ'}
                     />
                   </div>
                 </div>

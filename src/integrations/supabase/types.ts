@@ -3981,6 +3981,10 @@ export type Database = {
           first_name_ar: string | null
           gender: string | null
           grade: string | null
+          home_area: string | null
+          home_area_ar: string | null
+          home_latitude: number | null
+          home_longitude: number | null
           id: string
           last_name: string | null
           last_name_ar: string | null
@@ -4031,6 +4035,10 @@ export type Database = {
           first_name_ar?: string | null
           gender?: string | null
           grade?: string | null
+          home_area?: string | null
+          home_area_ar?: string | null
+          home_latitude?: number | null
+          home_longitude?: number | null
           id?: string
           last_name?: string | null
           last_name_ar?: string | null
@@ -4081,6 +4089,10 @@ export type Database = {
           first_name_ar?: string | null
           gender?: string | null
           grade?: string | null
+          home_area?: string | null
+          home_area_ar?: string | null
+          home_latitude?: number | null
+          home_longitude?: number | null
           id?: string
           last_name?: string | null
           last_name_ar?: string | null

@@ -318,6 +318,31 @@ export default function RoutesManagement() {
         });
         return;
       }
+      
+      // Auto-add stop based on student's home area
+      const student = students.find(s => s.id === studentId);
+      if (student?.homeArea) {
+        const stopExists = stops.some(stop => {
+          const stopName = typeof stop === 'string' ? stop : stop.name;
+          return stopName === student.homeArea;
+        });
+        
+        if (!stopExists) {
+          const newStopObj: RouteStop = {
+            name: student.homeArea,
+            name_ar: student.homeAreaAr,
+            lat: student.homeLatitude,
+            lng: student.homeLongitude,
+          };
+          setStops(prev => [...prev, newStopObj]);
+          toast({
+            title: language === 'ar' ? 'تمت إضافة المحطة' : 'Stop Added',
+            description: language === 'ar' 
+              ? `تمت إضافة "${student.homeAreaAr || student.homeArea}" كمحطة`
+              : `"${student.homeArea}" added as a stop`,
+          });
+        }
+      }
     }
     setSelectedStudents(prev => 
       prev.includes(studentId) 
