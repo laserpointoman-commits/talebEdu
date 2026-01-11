@@ -12,6 +12,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { EnhancedMessageBubble } from './EnhancedMessageBubble';
 import { ChatInput } from './ChatInput';
 import { MessengerSettingsWithTheme } from './MessengerSettingsWithTheme';
+import { MessengerContacts } from './MessengerContacts';
 import { DesktopChatItem } from './DesktopChatItem';
 import { TypingIndicator } from './TypingIndicator';
 import { OnlineStatusBadge } from './OnlineStatusBadge';
@@ -28,7 +29,8 @@ import {
   Archive,
   Filter,
   Plus,
-  PhoneCall
+  PhoneCall,
+  UserCircle
 } from 'lucide-react';
 
 interface MessengerDesktopLayoutProps {
@@ -62,7 +64,7 @@ interface MessengerDesktopLayoutProps {
   isArabic?: boolean;
 }
 
-type SidebarTab = 'chats' | 'groups' | 'calls' | 'settings';
+type SidebarTab = 'chats' | 'groups' | 'contacts' | 'calls' | 'settings';
 
 export function MessengerDesktopLayout({
   profile,
@@ -276,6 +278,16 @@ export function MessengerDesktopLayout({
               <Users className="h-5 w-5" />
             </TabsTrigger>
             <TabsTrigger 
+              value="contacts" 
+              className="flex-1 h-full rounded-none border-b-2 data-[state=active]:border-b-2 data-[state=active]:shadow-none transition-colors"
+              style={{ 
+                borderColor: activeTab === 'contacts' ? colors.accent : 'transparent',
+                color: activeTab === 'contacts' ? colors.accent : colors.textSecondary 
+              }}
+            >
+              <UserCircle className="h-5 w-5" />
+            </TabsTrigger>
+            <TabsTrigger 
               value="calls" 
               className="flex-1 h-full rounded-none border-b-2 data-[state=active]:border-b-2 data-[state=active]:shadow-none transition-colors"
               style={{ 
@@ -302,6 +314,24 @@ export function MessengerDesktopLayout({
         <ScrollArea className="flex-1">
           {activeTab === 'settings' ? (
             <MessengerSettingsWithTheme profile={profile} isArabic={isArabic} />
+          ) : activeTab === 'contacts' ? (
+            <MessengerContacts
+              onSelectContact={(contact) => {
+                const newConv: Conversation = {
+                  id: contact.id,
+                  recipient_id: contact.id,
+                  recipient_name: contact.full_name,
+                  recipient_image: contact.profile_image,
+                  last_message: null,
+                  last_message_time: null,
+                  unread_count: 0,
+                  is_group: false,
+                  is_online: false
+                };
+                onSelectConversation(newConv);
+              }}
+              isArabic={isArabic}
+            />
           ) : activeTab === 'calls' ? (
             <div className="py-4">
               {callLogs.length === 0 ? (

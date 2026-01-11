@@ -379,14 +379,13 @@ function MessengerContent() {
           isArabic={isArabic}
         />
 
-        <Dialog open={showNewChat} onOpenChange={(open) => {
-          setShowNewChat(open);
-          if (!open) {
-            setNewChatSearchQuery('');
-            setNewChatSearchResults([]);
-          }
-        }}>
-          <DialogContent className="max-w-md border-0 p-0 overflow-hidden z-[200]" style={{ backgroundColor: colors.bgSecondary }}>
+        <Dialog open={showNewChat} onOpenChange={setShowNewChat}>
+          <DialogContent 
+            className="max-w-md border-0 p-0 overflow-hidden z-[9999]" 
+            style={{ backgroundColor: colors.bgSecondary }}
+            onInteractOutside={(e) => e.preventDefault()}
+            onPointerDownOutside={(e) => e.preventDefault()}
+          >
             <div className="p-4 flex items-center gap-3" style={{ backgroundColor: colors.headerBg }}>
               <Button variant="ghost" size="icon" className="rounded-full" onClick={() => setShowNewChat(false)}>
                 <X className="h-5 w-5" style={{ color: colors.textPrimary }} />
@@ -842,8 +841,13 @@ function MessengerContent() {
         {showChatView ? renderChatView() : renderMessengerMain()}
       </AnimatePresence>
 
-      <Dialog open={showNewChat} onOpenChange={(open) => { setShowNewChat(open); if (!open) { setNewChatSearchQuery(''); setNewChatSearchResults([]); } }}>
-        <DialogContent className="max-w-md border-0 p-0 overflow-hidden z-[200]" style={{ backgroundColor: colors.bgSecondary }}>
+      <Dialog open={showNewChat} onOpenChange={setShowNewChat}>
+        <DialogContent 
+          className="max-w-md border-0 p-0 overflow-hidden z-[9999]" 
+          style={{ backgroundColor: colors.bgSecondary }}
+          onInteractOutside={(e) => e.preventDefault()}
+          onPointerDownOutside={(e) => e.preventDefault()}
+        >
           <div className="p-4 flex items-center gap-3" style={{ backgroundColor: colors.headerBg }}>
             <Button variant="ghost" size="icon" className="rounded-full" onClick={() => setShowNewChat(false)}>
               <X className="h-5 w-5" style={{ color: colors.textPrimary }} />
