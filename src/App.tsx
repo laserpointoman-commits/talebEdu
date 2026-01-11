@@ -47,6 +47,7 @@ import StudentBusTracking from "./pages/parent/StudentBusTracking";
 import DeviceLogin from "./pages/device/DeviceLogin";
 import BusAttendanceDevice from "./pages/device/BusAttendanceDevice";
 import SchoolAttendanceDevice from "./pages/device/SchoolAttendanceDevice";
+import AccountCredentials from "./pages/admin/AccountCredentials";
 
 // Create a stable QueryClient instance
 const createQueryClient = () => new QueryClient({
@@ -126,6 +127,7 @@ function App() {
 <Route path="/feasibility" element={<FeasibilityStudy />} />
                         <Route path="/feasibility-print" element={<FeasibilityPrint />} />
                         <Route path="/admin/screenshot-manager" element={<ScreenshotManager />} />
+                        <Route path="/admin/credentials" element={<AccountCredentials />} />
                         <Route path="/screenshot-demo/en/*" element={<DemoRoutes language="en" />} />
                         <Route path="/screenshot-demo/ar/*" element={<DemoRoutes language="ar" />} />
                         <Route path="*" element={<NotFound />} />
