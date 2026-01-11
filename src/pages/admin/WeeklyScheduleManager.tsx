@@ -546,12 +546,15 @@ export default function WeeklyScheduleManager() {
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label>{language === 'en' ? 'Teacher' : 'المعلم'}</Label>
-          <Select value={formData.teacher_id} onValueChange={(v) => setFormData(prev => ({ ...prev, teacher_id: v }))}>
+          <Select 
+            value={formData.teacher_id || 'none'} 
+            onValueChange={(v) => setFormData(prev => ({ ...prev, teacher_id: v === 'none' ? '' : v }))}
+          >
             <SelectTrigger>
               <SelectValue placeholder={language === 'en' ? 'Select teacher' : 'اختر المعلم'} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">
+              <SelectItem value="none">
                 {language === 'en' ? 'No teacher assigned' : 'لم يتم تعيين معلم'}
               </SelectItem>
               {teachers.map(t => (
