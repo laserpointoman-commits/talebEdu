@@ -1,0 +1,815 @@
+import { useState, useEffect, useCallback } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { supabase } from '@/integrations/supabase/client';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { PageHeader } from '@/components/ui/page-header';
+import { toast } from '@/hooks/use-toast';
+import LogoLoader from '@/components/LogoLoader';
+import { 
+  Calendar, 
+  Clock, 
+  Plus, 
+  Edit2, 
+  Trash2, 
+  BookOpen, 
+  User, 
+  MapPin,
+  Filter,
+  Download,
+  RefreshCw
+} from 'lucide-react';
+
+interface ClassInfo {
+  id: string;
+  name: string;
+  grade: string;
+  section: string;
+  room: string | null;
+}
+
+interface Teacher {
+  id: string;
+  employee_id: string;
+  profiles: {
+    full_name: string;
+    full_name_ar: string | null;
+  } | null;
+}
+
+interface ScheduleEntry {
+  id: string;
+  class_id: string;
+  day: string;
+  time: string;
+  subject: string;
+  teacher_id: string | null;
+  room: string | null;
+  classes?: ClassInfo;
+  teachers?: Teacher;
+}
+
+const DAYS_EN = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const DAYS_AR = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+const WORK_DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'];
+
+const TIME_SLOTS = [
+  '07:00 - 07:45',
+  '07:45 - 08:30',
+  '08:30 - 09:15',
+  '09:15 - 10:00',
+  '10:00 - 10:30', // Break
+  '10:30 - 11:15',
+  '11:15 - 12:00',
+  '12:00 - 12:45',
+  '12:45 - 13:30',
+  '13:30 - 14:15',
+];
+
+const SUBJECTS = [
+  'Mathematics', 'Arabic', 'English', 'Science', 'Islamic Studies',
+  'Social Studies', 'Physical Education', 'Art', 'Music', 'Computer Science',
+  'Physics', 'Chemistry', 'Biology', 'History', 'Geography'
+];
+
+export default function WeeklyScheduleManager() {
+  const { profile } = useAuth();
+  const { language } = useLanguage();
+  const [loading, setLoading] = useState(true);
+  const [schedules, setSchedules] = useState<ScheduleEntry[]>([]);
+  const [classes, setClasses] = useState<ClassInfo[]>([]);
+  const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const [selectedClass, setSelectedClass] = useState<string>('all');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  
+  // Dialog states
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [selectedSchedule, setSelectedSchedule] = useState<ScheduleEntry | null>(null);
+  
+  // Form state
+  const [formData, setFormData] = useState({
+    class_id: '',
+    day: '',
+    time: '',
+    subject: '',
+    teacher_id: '',
+    room: '',
+  });
+
+  const effectiveRole = profile?.role === 'developer'
+    ? (sessionStorage.getItem('developerViewRole') as any) || 'developer'
+    : profile?.role;
+
+  const fetchData = useCallback(async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch all schedules with class and teacher info
+      const { data: schedulesData, error: schedulesError } = await supabase
+        .from('class_schedules')
+        .select(`
+          *,
+          classes (
+            id,
+            name,
+            grade,
+            section,
+            room
+          ),
+          teachers (
+            id,
+            employee_id,
+            profiles (
+              full_name,
+              full_name_ar
+            )
+          )
+        `)
+        .order('time', { ascending: true });
+
+      if (schedulesError) throw schedulesError;
+      setSchedules(schedulesData || []);
+
+      // Fetch all classes
+      const { data: classesData, error: classesError } = await supabase
+        .from('classes')
+        .select('id, name, grade, section, room')
+        .order('grade', { ascending: true });
+
+      if (classesError) throw classesError;
+      setClasses(classesData || []);
+
+      // Fetch all teachers
+      const { data: teachersData, error: teachersError } = await supabase
+        .from('teachers')
+        .select(`
+          id,
+          employee_id,
+          profiles (
+            full_name,
+            full_name_ar
+          )
+        `)
+        .order('created_at', { ascending: false });
+
+      if (teachersError) throw teachersError;
+      setTeachers(teachersData || []);
+
+    } catch (error: any) {
+      console.error('Error fetching data:', error);
+      toast({
+        title: language === 'en' ? 'Error' : 'خطأ',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [language]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  const handleAddSchedule = async () => {
+    if (!formData.class_id || !formData.day || !formData.time || !formData.subject) {
+      toast({
+        title: language === 'en' ? 'Missing Fields' : 'حقول مفقودة',
+        description: language === 'en' ? 'Please fill all required fields' : 'يرجى ملء جميع الحقول المطلوبة',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('class_schedules')
+        .insert([{
+          class_id: formData.class_id,
+          day: formData.day,
+          time: formData.time,
+          subject: formData.subject,
+          teacher_id: formData.teacher_id || null,
+          room: formData.room || null,
+        }]);
+
+      if (error) throw error;
+
+      toast({
+        title: language === 'en' ? 'Success' : 'نجاح',
+        description: language === 'en' ? 'Schedule entry added successfully' : 'تم إضافة الجدول بنجاح',
+      });
+
+      setIsAddDialogOpen(false);
+      resetForm();
+      fetchData();
+    } catch (error: any) {
+      toast({
+        title: language === 'en' ? 'Error' : 'خطأ',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleUpdateSchedule = async () => {
+    if (!selectedSchedule) return;
+
+    try {
+      const { error } = await supabase
+        .from('class_schedules')
+        .update({
+          class_id: formData.class_id,
+          day: formData.day,
+          time: formData.time,
+          subject: formData.subject,
+          teacher_id: formData.teacher_id || null,
+          room: formData.room || null,
+        })
+        .eq('id', selectedSchedule.id);
+
+      if (error) throw error;
+
+      toast({
+        title: language === 'en' ? 'Success' : 'نجاح',
+        description: language === 'en' ? 'Schedule updated successfully' : 'تم تحديث الجدول بنجاح',
+      });
+
+      setIsEditDialogOpen(false);
+      setSelectedSchedule(null);
+      resetForm();
+      fetchData();
+    } catch (error: any) {
+      toast({
+        title: language === 'en' ? 'Error' : 'خطأ',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleDeleteSchedule = async () => {
+    if (!selectedSchedule) return;
+
+    try {
+      const { error } = await supabase
+        .from('class_schedules')
+        .delete()
+        .eq('id', selectedSchedule.id);
+
+      if (error) throw error;
+
+      toast({
+        title: language === 'en' ? 'Success' : 'نجاح',
+        description: language === 'en' ? 'Schedule entry deleted' : 'تم حذف الجدول',
+      });
+
+      setIsDeleteDialogOpen(false);
+      setSelectedSchedule(null);
+      fetchData();
+    } catch (error: any) {
+      toast({
+        title: language === 'en' ? 'Error' : 'خطأ',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const openEditDialog = (schedule: ScheduleEntry) => {
+    setSelectedSchedule(schedule);
+    setFormData({
+      class_id: schedule.class_id,
+      day: schedule.day,
+      time: schedule.time,
+      subject: schedule.subject,
+      teacher_id: schedule.teacher_id || '',
+      room: schedule.room || '',
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const openDeleteDialog = (schedule: ScheduleEntry) => {
+    setSelectedSchedule(schedule);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const resetForm = () => {
+    setFormData({
+      class_id: '',
+      day: '',
+      time: '',
+      subject: '',
+      teacher_id: '',
+      room: '',
+    });
+  };
+
+  const filteredSchedules = selectedClass === 'all' 
+    ? schedules 
+    : schedules.filter(s => s.class_id === selectedClass);
+
+  const getSchedulesByDayAndTime = (day: string, time: string) => {
+    return filteredSchedules.filter(s => s.day === day && s.time === time);
+  };
+
+  const exportSchedule = () => {
+    const headers = ['Day', 'Time', 'Class', 'Subject', 'Teacher', 'Room'];
+    const rows = filteredSchedules.map(s => [
+      s.day,
+      s.time,
+      s.classes ? `${s.classes.grade}-${s.classes.section}` : '',
+      s.subject,
+      s.teachers?.profiles?.full_name || '',
+      s.room || ''
+    ]);
+
+    const csvContent = [headers, ...rows].map(row => row.join(',')).join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `weekly_schedule_${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+
+    toast({
+      title: language === 'en' ? 'Exported' : 'تم التصدير',
+      description: language === 'en' ? 'Schedule exported successfully' : 'تم تصدير الجدول بنجاح',
+    });
+  };
+
+  if (effectiveRole !== 'admin' && effectiveRole !== 'developer') {
+    return (
+      <div className="flex items-center justify-center h-[50vh]">
+        <p className="text-muted-foreground">
+          {language === 'en' ? "You don't have permission to view this page" : 'ليس لديك إذن لعرض هذه الصفحة'}
+        </p>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return <LogoLoader size="large" text={true} fullScreen={true} />;
+  }
+
+  const ScheduleForm = () => (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label>{language === 'en' ? 'Class' : 'الصف'} *</Label>
+          <Select value={formData.class_id} onValueChange={(v) => setFormData(prev => ({ ...prev, class_id: v }))}>
+            <SelectTrigger>
+              <SelectValue placeholder={language === 'en' ? 'Select class' : 'اختر الصف'} />
+            </SelectTrigger>
+            <SelectContent>
+              {classes.map(c => (
+                <SelectItem key={c.id} value={c.id}>
+                  {c.name} ({c.grade}-{c.section})
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label>{language === 'en' ? 'Day' : 'اليوم'} *</Label>
+          <Select value={formData.day} onValueChange={(v) => setFormData(prev => ({ ...prev, day: v }))}>
+            <SelectTrigger>
+              <SelectValue placeholder={language === 'en' ? 'Select day' : 'اختر اليوم'} />
+            </SelectTrigger>
+            <SelectContent>
+              {WORK_DAYS.map((day, idx) => (
+                <SelectItem key={day} value={day}>
+                  {language === 'en' ? day : DAYS_AR[DAYS_EN.indexOf(day)]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label>{language === 'en' ? 'Time' : 'الوقت'} *</Label>
+          <Select value={formData.time} onValueChange={(v) => setFormData(prev => ({ ...prev, time: v }))}>
+            <SelectTrigger>
+              <SelectValue placeholder={language === 'en' ? 'Select time' : 'اختر الوقت'} />
+            </SelectTrigger>
+            <SelectContent>
+              {TIME_SLOTS.map(time => (
+                <SelectItem key={time} value={time}>
+                  {time}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label>{language === 'en' ? 'Subject' : 'المادة'} *</Label>
+          <Select value={formData.subject} onValueChange={(v) => setFormData(prev => ({ ...prev, subject: v }))}>
+            <SelectTrigger>
+              <SelectValue placeholder={language === 'en' ? 'Select subject' : 'اختر المادة'} />
+            </SelectTrigger>
+            <SelectContent>
+              {SUBJECTS.map(subject => (
+                <SelectItem key={subject} value={subject}>
+                  {subject}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label>{language === 'en' ? 'Teacher' : 'المعلم'}</Label>
+          <Select value={formData.teacher_id} onValueChange={(v) => setFormData(prev => ({ ...prev, teacher_id: v }))}>
+            <SelectTrigger>
+              <SelectValue placeholder={language === 'en' ? 'Select teacher' : 'اختر المعلم'} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">
+                {language === 'en' ? 'No teacher assigned' : 'لم يتم تعيين معلم'}
+              </SelectItem>
+              {teachers.map(t => (
+                <SelectItem key={t.id} value={t.id}>
+                  {language === 'ar' && t.profiles?.full_name_ar 
+                    ? t.profiles.full_name_ar 
+                    : t.profiles?.full_name || t.employee_id}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label>{language === 'en' ? 'Room' : 'الغرفة'}</Label>
+          <Input
+            value={formData.room}
+            onChange={(e) => setFormData(prev => ({ ...prev, room: e.target.value }))}
+            placeholder={language === 'en' ? 'e.g., Room 101' : 'مثال: غرفة 101'}
+          />
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="space-y-6 p-4 md:p-6" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+      <PageHeader
+        showBackButton
+        title="Weekly Schedule"
+        titleAr="الجدول الأسبوعي"
+        subtitle="View and manage class schedules across all classes"
+        subtitleAr="عرض وإدارة جداول الحصص لجميع الصفوف"
+      />
+
+      {/* Actions Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4 text-muted-foreground" />
+            <Select value={selectedClass} onValueChange={setSelectedClass}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder={language === 'en' ? 'Filter by class' : 'تصفية حسب الصف'} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">
+                  {language === 'en' ? 'All Classes' : 'جميع الصفوف'}
+                </SelectItem>
+                {classes.map(c => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.name} ({c.grade}-{c.section})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as 'grid' | 'list')}>
+            <TabsList className="grid grid-cols-2 w-[160px]">
+              <TabsTrigger value="grid">{language === 'en' ? 'Grid' : 'شبكة'}</TabsTrigger>
+              <TabsTrigger value="list">{language === 'en' ? 'List' : 'قائمة'}</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={fetchData}>
+            <RefreshCw className="h-4 w-4 mr-2" />
+            {language === 'en' ? 'Refresh' : 'تحديث'}
+          </Button>
+          <Button variant="outline" size="sm" onClick={exportSchedule}>
+            <Download className="h-4 w-4 mr-2" />
+            {language === 'en' ? 'Export' : 'تصدير'}
+          </Button>
+          <Button onClick={() => setIsAddDialogOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            {language === 'en' ? 'Add Schedule' : 'إضافة جدول'}
+          </Button>
+        </div>
+      </div>
+
+      {/* Grid View */}
+      {viewMode === 'grid' && (
+        <Card>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse min-w-[900px]">
+                <thead>
+                  <tr className="bg-muted/50">
+                    <th className="border p-3 text-left font-medium w-[120px]">
+                      {language === 'en' ? 'Time' : 'الوقت'}
+                    </th>
+                    {WORK_DAYS.map((day, idx) => (
+                      <th key={day} className="border p-3 text-center font-medium">
+                        {language === 'en' ? day : DAYS_AR[DAYS_EN.indexOf(day)]}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {TIME_SLOTS.map(time => (
+                    <tr key={time} className={time === '10:00 - 10:30' ? 'bg-muted/30' : ''}>
+                      <td className="border p-2 font-medium text-sm text-muted-foreground">
+                        <div className="flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          {time}
+                        </div>
+                        {time === '10:00 - 10:30' && (
+                          <Badge variant="outline" className="mt-1 text-xs">
+                            {language === 'en' ? 'Break' : 'استراحة'}
+                          </Badge>
+                        )}
+                      </td>
+                      {WORK_DAYS.map(day => {
+                        const daySchedules = getSchedulesByDayAndTime(day, time);
+                        return (
+                          <td key={`${day}-${time}`} className="border p-1 align-top min-h-[80px]">
+                            <div className="space-y-1">
+                              {daySchedules.map(schedule => (
+                                <div
+                                  key={schedule.id}
+                                  className="group relative p-2 rounded-md bg-primary/10 hover:bg-primary/20 transition-colors cursor-pointer text-xs"
+                                  onClick={() => openEditDialog(schedule)}
+                                >
+                                  <div className="font-medium text-primary truncate">
+                                    {schedule.subject}
+                                  </div>
+                                  <div className="text-muted-foreground truncate">
+                                    {schedule.classes?.grade}-{schedule.classes?.section}
+                                  </div>
+                                  {schedule.teachers?.profiles?.full_name && (
+                                    <div className="text-muted-foreground truncate flex items-center gap-1">
+                                      <User className="h-2.5 w-2.5" />
+                                      {schedule.teachers.profiles.full_name}
+                                    </div>
+                                  )}
+                                  {schedule.room && (
+                                    <div className="text-muted-foreground truncate flex items-center gap-1">
+                                      <MapPin className="h-2.5 w-2.5" />
+                                      {schedule.room}
+                                    </div>
+                                  )}
+                                  
+                                  {/* Quick actions on hover */}
+                                  <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+                                    <Button
+                                      size="icon"
+                                      variant="ghost"
+                                      className="h-5 w-5"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        openDeleteDialog(schedule);
+                                      }}
+                                    >
+                                      <Trash2 className="h-3 w-3 text-destructive" />
+                                    </Button>
+                                  </div>
+                                </div>
+                              ))}
+                              
+                              {/* Add button for empty slots */}
+                              {daySchedules.length === 0 && time !== '10:00 - 10:30' && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="w-full h-full min-h-[60px] opacity-30 hover:opacity-100 transition-opacity"
+                                  onClick={() => {
+                                    setFormData(prev => ({ ...prev, day, time }));
+                                    setIsAddDialogOpen(true);
+                                  }}
+                                >
+                                  <Plus className="h-4 w-4" />
+                                </Button>
+                              )}
+                            </div>
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* List View */}
+      {viewMode === 'list' && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5" />
+              {language === 'en' ? 'All Schedules' : 'جميع الجداول'}
+              <Badge variant="secondary" className="ml-2">
+                {filteredSchedules.length}
+              </Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ScrollArea className="h-[600px]">
+              <div className="space-y-3">
+                {WORK_DAYS.map(day => {
+                  const daySchedules = filteredSchedules.filter(s => s.day === day);
+                  if (daySchedules.length === 0) return null;
+
+                  return (
+                    <div key={day} className="space-y-2">
+                      <h3 className="font-semibold text-lg flex items-center gap-2">
+                        <Calendar className="h-4 w-4" />
+                        {language === 'en' ? day : DAYS_AR[DAYS_EN.indexOf(day)]}
+                        <Badge variant="outline">{daySchedules.length}</Badge>
+                      </h3>
+                      <div className="grid gap-2 pl-6">
+                        {daySchedules
+                          .sort((a, b) => a.time.localeCompare(b.time))
+                          .map(schedule => (
+                            <div
+                              key={schedule.id}
+                              className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors"
+                            >
+                              <div className="flex items-center gap-4">
+                                <div className="flex flex-col items-center min-w-[80px]">
+                                  <Clock className="h-4 w-4 text-muted-foreground mb-1" />
+                                  <span className="text-xs font-medium">{schedule.time.split(' - ')[0]}</span>
+                                  <span className="text-xs text-muted-foreground">{schedule.time.split(' - ')[1]}</span>
+                                </div>
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2">
+                                    <BookOpen className="h-4 w-4 text-primary" />
+                                    <span className="font-medium">{schedule.subject}</span>
+                                    <Badge variant="secondary">
+                                      {schedule.classes?.grade}-{schedule.classes?.section}
+                                    </Badge>
+                                  </div>
+                                  <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
+                                    {schedule.teachers?.profiles?.full_name && (
+                                      <span className="flex items-center gap-1">
+                                        <User className="h-3 w-3" />
+                                        {schedule.teachers.profiles.full_name}
+                                      </span>
+                                    )}
+                                    {schedule.room && (
+                                      <span className="flex items-center gap-1">
+                                        <MapPin className="h-3 w-3" />
+                                        {schedule.room}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  onClick={() => openEditDialog(schedule)}
+                                >
+                                  <Edit2 className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  onClick={() => openDeleteDialog(schedule)}
+                                >
+                                  <Trash2 className="h-4 w-4 text-destructive" />
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {filteredSchedules.length === 0 && (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p>{language === 'en' ? 'No schedules found' : 'لم يتم العثور على جداول'}</p>
+                    <Button className="mt-4" onClick={() => setIsAddDialogOpen(true)}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      {language === 'en' ? 'Create First Schedule' : 'إنشاء أول جدول'}
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </ScrollArea>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Add Schedule Dialog */}
+      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>
+              {language === 'en' ? 'Add Schedule Entry' : 'إضافة جدول'}
+            </DialogTitle>
+            <DialogDescription>
+              {language === 'en' 
+                ? 'Create a new schedule entry for a class' 
+                : 'إنشاء جدول جديد لصف'}
+            </DialogDescription>
+          </DialogHeader>
+          <ScheduleForm />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setIsAddDialogOpen(false); resetForm(); }}>
+              {language === 'en' ? 'Cancel' : 'إلغاء'}
+            </Button>
+            <Button onClick={handleAddSchedule}>
+              {language === 'en' ? 'Add Schedule' : 'إضافة الجدول'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Schedule Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>
+              {language === 'en' ? 'Edit Schedule Entry' : 'تعديل الجدول'}
+            </DialogTitle>
+            <DialogDescription>
+              {language === 'en' 
+                ? 'Update the schedule entry details' 
+                : 'تحديث تفاصيل الجدول'}
+            </DialogDescription>
+          </DialogHeader>
+          <ScheduleForm />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setIsEditDialogOpen(false); resetForm(); setSelectedSchedule(null); }}>
+              {language === 'en' ? 'Cancel' : 'إلغاء'}
+            </Button>
+            <Button onClick={handleUpdateSchedule}>
+              {language === 'en' ? 'Save Changes' : 'حفظ التغييرات'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {language === 'en' ? 'Delete Schedule Entry' : 'حذف الجدول'}
+            </DialogTitle>
+            <DialogDescription>
+              {language === 'en' 
+                ? 'Are you sure you want to delete this schedule entry? This action cannot be undone.' 
+                : 'هل أنت متأكد من حذف هذا الجدول؟ لا يمكن التراجع عن هذا الإجراء.'}
+            </DialogDescription>
+          </DialogHeader>
+          {selectedSchedule && (
+            <div className="p-4 bg-muted rounded-lg">
+              <p><strong>{language === 'en' ? 'Subject:' : 'المادة:'}</strong> {selectedSchedule.subject}</p>
+              <p><strong>{language === 'en' ? 'Day:' : 'اليوم:'}</strong> {selectedSchedule.day}</p>
+              <p><strong>{language === 'en' ? 'Time:' : 'الوقت:'}</strong> {selectedSchedule.time}</p>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setIsDeleteDialogOpen(false); setSelectedSchedule(null); }}>
+              {language === 'en' ? 'Cancel' : 'إلغاء'}
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteSchedule}>
+              {language === 'en' ? 'Delete' : 'حذف'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
