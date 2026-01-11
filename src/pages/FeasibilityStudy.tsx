@@ -51,6 +51,7 @@ const FeasibilityStudy = () => {
   ) => {
     if (!ref.current) return;
     setLoading(true);
+    let container: HTMLDivElement | null = null;
 
     try {
       container = document.createElement("div");
@@ -68,9 +69,9 @@ const FeasibilityStudy = () => {
       container.appendChild(clone);
       document.body.appendChild(container);
 
-      const images = container.querySelectorAll("img");
+      const images = Array.from(container.querySelectorAll("img")) as HTMLImageElement[];
       await Promise.all(
-        Array.from(images).map(
+        images.map(
           (img) =>
             new Promise<void>((resolve) => {
               if (img.complete) return resolve();
@@ -100,11 +101,12 @@ const FeasibilityStudy = () => {
       };
 
       await html2pdf().set(opt).from(clone).save();
-      document.body.removeChild(container);
+      if (container.parentNode) container.parentNode.removeChild(container);
     } catch (error) {
       console.error("PDF generation failed:", error);
     } finally {
-      setLoading(false); if (container?.parentNode) container.parentNode.removeChild(container);
+      setLoading(false);
+      if (container?.parentNode) container.parentNode.removeChild(container);
     }
   };
 
