@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -14,61 +14,49 @@ import {
   FileText,
   ArrowUpRight,
   Sparkles,
-  Award
+  Award,
+  Phone
 } from "lucide-react";
 import html2pdf from "html2pdf.js";
-import logoImage from "@/assets/talebedu-logo-hq.png";
+
+// Use the app icon from public folder
+const APP_ICON_URL = "/app-icon.jpg";
 
 const FeasibilityStudy = () => {
   const [isGeneratingEn, setIsGeneratingEn] = useState(false);
   const [isGeneratingAr, setIsGeneratingAr] = useState(false);
+  const [logoBase64, setLogoBase64] = useState<string>("");
   const arabicPdfRef = useRef<HTMLDivElement>(null);
   const englishPdfRef = useRef<HTMLDivElement>(null);
 
-  const waitForNextPaint = () =>
-    new Promise<void>((resolve) =>
-      requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
-    );
-
-  const revealForCapture = (el: HTMLDivElement) => {
-    const container = el.parentElement as HTMLElement | null;
-    if (!container) return () => {};
-
-    const prev = {
-      position: container.style.position,
-      left: container.style.left,
-      top: container.style.top,
-      zIndex: container.style.zIndex,
-      opacity: container.style.opacity,
-      pointerEvents: container.style.pointerEvents,
-      width: container.style.width,
-      height: container.style.height,
-      overflow: container.style.overflow,
+  // Preload and convert logo to base64 for reliable PDF embedding
+  useEffect(() => {
+    const loadLogo = async () => {
+      try {
+        const response = await fetch(APP_ICON_URL);
+        const blob = await response.blob();
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setLogoBase64(reader.result as string);
+        };
+        reader.readAsDataURL(blob);
+      } catch (error) {
+        console.error("Failed to load logo:", error);
+      }
     };
+    loadLogo();
+  }, []);
 
-    // IMPORTANT: html2canvas may render a blank image if the target is behind other elements.
-    // So we temporarily bring the PDF container to the very top.
-    container.style.position = "fixed";
-    container.style.left = "0";
-    container.style.top = "0";
-    container.style.zIndex = "2147483647";
-    container.style.opacity = "1";
-    container.style.pointerEvents = "none";
-    container.style.overflow = "visible";
-    container.style.width = "auto";
-    container.style.height = "auto";
-
-    return () => {
-      container.style.position = prev.position;
-      container.style.left = prev.left;
-      container.style.top = prev.top;
-      container.style.zIndex = prev.zIndex;
-      container.style.opacity = prev.opacity;
-      container.style.pointerEvents = prev.pointerEvents;
-      container.style.width = prev.width;
-      container.style.height = prev.height;
-      container.style.overflow = prev.overflow;
-    };
+  const waitForImages = (element: HTMLElement): Promise<void> => {
+    const images = element.querySelectorAll("img");
+    const promises = Array.from(images).map((img) => {
+      if (img.complete) return Promise.resolve();
+      return new Promise<void>((resolve) => {
+        img.onload = () => resolve();
+        img.onerror = () => resolve();
+      });
+    });
+    return Promise.all(promises).then(() => {});
   };
 
   const buildPdfOptions = (filename: string) => ({
@@ -81,6 +69,8 @@ const FeasibilityStudy = () => {
       logging: false,
       allowTaint: true,
       backgroundColor: "#ffffff",
+      windowWidth: 794, // A4 width in pixels at 96 DPI
+      windowHeight: 1123, // A4 height in pixels at 96 DPI
     },
     jsPDF: {
       unit: "mm" as const,
@@ -91,37 +81,61 @@ const FeasibilityStudy = () => {
   });
 
   const generateEnglishPDF = async () => {
-    if (!englishPdfRef.current) return;
+    if (!englishPdfRef.current || !logoBase64) return;
 
     setIsGeneratingEn(true);
-    const restore = revealForCapture(englishPdfRef.current);
 
     try {
-      await waitForNextPaint();
+      // Clone the element for capture
+      const clone = englishPdfRef.current.cloneNode(true) as HTMLDivElement;
+      clone.style.position = "absolute";
+      clone.style.left = "0";
+      clone.style.top = "0";
+      clone.style.width = "210mm";
+      clone.style.zIndex = "9999";
+      clone.style.background = "white";
+      document.body.appendChild(clone);
+
+      await waitForImages(clone);
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
       const opt = buildPdfOptions("TalebEdu_Feasibility_Study_EN_2026.pdf");
-      await html2pdf().set(opt).from(englishPdfRef.current).save();
+      await html2pdf().set(opt).from(clone).save();
+
+      document.body.removeChild(clone);
     } catch (error) {
       console.error("English PDF generation failed:", error);
     } finally {
-      restore();
       setIsGeneratingEn(false);
     }
   };
 
   const generateArabicPDF = async () => {
-    if (!arabicPdfRef.current) return;
+    if (!arabicPdfRef.current || !logoBase64) return;
 
     setIsGeneratingAr(true);
-    const restore = revealForCapture(arabicPdfRef.current);
 
     try {
-      await waitForNextPaint();
+      // Clone the element for capture
+      const clone = arabicPdfRef.current.cloneNode(true) as HTMLDivElement;
+      clone.style.position = "absolute";
+      clone.style.left = "0";
+      clone.style.top = "0";
+      clone.style.width = "210mm";
+      clone.style.zIndex = "9999";
+      clone.style.background = "white";
+      document.body.appendChild(clone);
+
+      await waitForImages(clone);
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
       const opt = buildPdfOptions("TalebEdu_Feasibility_Study_AR_2026.pdf");
-      await html2pdf().set(opt).from(arabicPdfRef.current).save();
+      await html2pdf().set(opt).from(clone).save();
+
+      document.body.removeChild(clone);
     } catch (error) {
       console.error("Arabic PDF generation failed:", error);
     } finally {
-      restore();
       setIsGeneratingAr(false);
     }
   };
@@ -134,6 +148,7 @@ const FeasibilityStudy = () => {
     boxSizing: 'border-box' as const,
     pageBreakAfter: 'always' as const,
     fontFamily: 'Arial, sans-serif',
+    backgroundColor: 'white',
   };
 
   const headerStyle = {
@@ -147,10 +162,55 @@ const FeasibilityStudy = () => {
     alignItems: 'center',
   };
 
+  // Glowing TalebEdu title component for PDF
+  const GlowingTitle = ({ size = '48px' }: { size?: string }) => (
+    <div style={{ textAlign: 'center', marginBottom: '10px' }}>
+      <span style={{
+        fontSize: size,
+        fontWeight: 'bold',
+        background: 'linear-gradient(90deg, #3b82f6, #60a5fa, #3b82f6)',
+        WebkitBackgroundClip: 'text',
+        WebkitTextFillColor: 'transparent',
+        backgroundClip: 'text',
+        textShadow: '0 0 30px rgba(59, 130, 246, 0.5)',
+        letterSpacing: '2px',
+      }}>
+        TalebEdu
+      </span>
+    </div>
+  );
+
+  // Logo component with base64 for reliable PDF embedding
+  const LogoImage = ({ size = '100px', style = {} }: { size?: string; style?: React.CSSProperties }) => (
+    <img 
+      src={logoBase64 || APP_ICON_URL} 
+      alt="TalebEdu Logo" 
+      style={{ 
+        width: size, 
+        height: size, 
+        borderRadius: '20%',
+        boxShadow: '0 4px 20px rgba(59, 130, 246, 0.3)',
+        ...style 
+      }} 
+    />
+  );
+
+  const HeaderLogo = () => (
+    <img 
+      src={logoBase64 || APP_ICON_URL} 
+      alt="Logo" 
+      style={{ 
+        width: '40px', 
+        height: '40px',
+        borderRadius: '8px',
+      }} 
+    />
+  );
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900" dir="rtl">
       {/* Hidden Arabic PDF Content */}
-      <div style={{ position: 'absolute', left: '-9999px', top: 0 }}>
+      <div style={{ position: 'absolute', left: '-9999px', top: 0, overflow: 'hidden' }}>
         <div ref={arabicPdfRef} dir="rtl" style={{ fontFamily: 'Arial, sans-serif', backgroundColor: 'white' }}>
           {/* Cover Page */}
           <div style={{
@@ -163,8 +223,8 @@ const FeasibilityStudy = () => {
             color: 'white',
             textAlign: 'center',
           }}>
-            <img src={logoImage} alt="TalebEdu Logo" style={{ width: '100px', height: '100px', marginBottom: '30px' }} />
-            <h1 style={{ fontSize: '48px', fontWeight: 'bold', marginBottom: '10px' }}>TalebEdu</h1>
+            <LogoImage size="120px" style={{ marginBottom: '30px' }} />
+            <GlowingTitle size="52px" />
             <h2 style={{ fontSize: '28px', marginBottom: '20px', color: '#60a5fa' }}>دراسة جدوى</h2>
             <p style={{ fontSize: '16px', marginBottom: '10px' }}>تطبيق شامل لإدارة المدارس</p>
             <p style={{ fontSize: '14px', color: '#94a3b8' }}>المحفظة الإلكترونية | البوابات الذكية | المتجر الرقمي</p>
@@ -181,6 +241,7 @@ const FeasibilityStudy = () => {
             </div>
             
             <p style={{ fontSize: '14px' }}>مقدم من: مازن خنفر - TalebEdu</p>
+            <p style={{ fontSize: '14px', marginTop: '10px' }}>هاتف: +968 9656 4540</p>
             <p style={{ fontSize: '14px', marginTop: '10px' }}>السنة: 2026</p>
             <p style={{ fontSize: '14px', marginTop: '20px', color: '#94a3b8' }}>مسقط، سلطنة عمان</p>
           </div>
@@ -189,7 +250,7 @@ const FeasibilityStudy = () => {
           <div style={{ ...pageStyle, backgroundColor: 'white' }}>
             <div style={headerStyle}>
               <span style={{ fontSize: '20px', fontWeight: 'bold' }}>الملخص التنفيذي</span>
-              <img src={logoImage} alt="Logo" style={{ width: '40px', height: '40px' }} />
+              <HeaderLogo />
             </div>
             
             <div style={{ color: '#1e293b', lineHeight: '1.8' }}>
@@ -236,7 +297,7 @@ const FeasibilityStudy = () => {
           <div style={{ ...pageStyle, backgroundColor: 'white' }}>
             <div style={headerStyle}>
               <span style={{ fontSize: '20px', fontWeight: 'bold' }}>نطاق المشروع</span>
-              <img src={logoImage} alt="Logo" style={{ width: '40px', height: '40px' }} />
+              <HeaderLogo />
             </div>
             
             <div style={{ color: '#1e293b' }}>
@@ -275,7 +336,7 @@ const FeasibilityStudy = () => {
           <div style={{ ...pageStyle, backgroundColor: 'white' }}>
             <div style={headerStyle}>
               <span style={{ fontSize: '20px', fontWeight: 'bold' }}>المزايا التنافسية</span>
-              <img src={logoImage} alt="Logo" style={{ width: '40px', height: '40px' }} />
+              <HeaderLogo />
             </div>
             
             <div style={{ color: '#1e293b' }}>
@@ -312,7 +373,7 @@ const FeasibilityStudy = () => {
           <div style={{ ...pageStyle, backgroundColor: 'white' }}>
             <div style={headerStyle}>
               <span style={{ fontSize: '20px', fontWeight: 'bold' }}>الدراسة المالية - الإيرادات</span>
-              <img src={logoImage} alt="Logo" style={{ width: '40px', height: '40px' }} />
+              <HeaderLogo />
             </div>
             
             <div style={{ color: '#1e293b' }}>
@@ -380,7 +441,7 @@ const FeasibilityStudy = () => {
           <div style={{ ...pageStyle, backgroundColor: 'white' }}>
             <div style={headerStyle}>
               <span style={{ fontSize: '20px', fontWeight: 'bold' }}>التكاليف الرأسمالية والتشغيلية</span>
-              <img src={logoImage} alt="Logo" style={{ width: '40px', height: '40px' }} />
+              <HeaderLogo />
             </div>
             
             <div style={{ color: '#1e293b' }}>
@@ -463,7 +524,7 @@ const FeasibilityStudy = () => {
           <div style={{ ...pageStyle, backgroundColor: 'white' }}>
             <div style={headerStyle}>
               <span style={{ fontSize: '20px', fontWeight: 'bold' }}>تحليل التدفق النقدي - السنة الأولى</span>
-              <img src={logoImage} alt="Logo" style={{ width: '40px', height: '40px' }} />
+              <HeaderLogo />
             </div>
             
             <div style={{ color: '#1e293b' }}>
@@ -512,7 +573,7 @@ const FeasibilityStudy = () => {
           <div style={{ ...pageStyle, backgroundColor: 'white' }}>
             <div style={headerStyle}>
               <span style={{ fontSize: '20px', fontWeight: 'bold' }}>خطة التوسع المستقبلية</span>
-              <img src={logoImage} alt="Logo" style={{ width: '40px', height: '40px' }} />
+              <HeaderLogo />
             </div>
             
             <div style={{ color: '#1e293b' }}>
@@ -555,7 +616,7 @@ const FeasibilityStudy = () => {
           <div style={{ ...pageStyle, backgroundColor: 'white' }}>
             <div style={headerStyle}>
               <span style={{ fontSize: '20px', fontWeight: 'bold' }}>تحليل المخاطر والتخفيف</span>
-              <img src={logoImage} alt="Logo" style={{ width: '40px', height: '40px' }} />
+              <HeaderLogo />
             </div>
             
             <div style={{ color: '#1e293b' }}>
@@ -598,7 +659,7 @@ const FeasibilityStudy = () => {
             pageBreakAfter: 'avoid',
           }}>
             <div style={{ textAlign: 'center', marginBottom: '30px' }}>
-              <img src={logoImage} alt="TalebEdu Logo" style={{ width: '80px', height: '80px', marginBottom: '20px' }} />
+              <LogoImage size="80px" style={{ marginBottom: '20px' }} />
               <h1 style={{ fontSize: '28px', fontWeight: 'bold', marginBottom: '10px' }}>الخلاصة والتوصية</h1>
             </div>
             
@@ -631,7 +692,9 @@ const FeasibilityStudy = () => {
             </div>
 
             <div style={{ textAlign: 'center', marginTop: '40px' }}>
-              <p style={{ fontSize: '14px' }}>TalebEdu - مازن خنفر</p>
+              <GlowingTitle size="32px" />
+              <p style={{ fontSize: '14px', marginTop: '15px' }}>مازن خنفر</p>
+              <p style={{ fontSize: '14px', marginTop: '8px' }}>هاتف: +968 9656 4540</p>
               <p style={{ fontSize: '14px', color: '#94a3b8', marginTop: '10px' }}>مسقط، سلطنة عمان - 2026</p>
             </div>
           </div>
@@ -650,8 +713,8 @@ const FeasibilityStudy = () => {
             color: 'white',
             textAlign: 'center',
           }}>
-            <img src={logoImage} alt="TalebEdu Logo" style={{ width: '100px', height: '100px', marginBottom: '30px' }} />
-            <h1 style={{ fontSize: '48px', fontWeight: 'bold', marginBottom: '10px' }}>TalebEdu</h1>
+            <LogoImage size="120px" style={{ marginBottom: '30px' }} />
+            <GlowingTitle size="52px" />
             <h2 style={{ fontSize: '28px', marginBottom: '20px', color: '#60a5fa' }}>Feasibility Study</h2>
             <p style={{ fontSize: '16px', marginBottom: '10px' }}>Comprehensive School Management Application</p>
             <p style={{ fontSize: '14px', color: '#94a3b8' }}>Electronic Wallet | Smart Gates | Digital Stores</p>
@@ -668,6 +731,7 @@ const FeasibilityStudy = () => {
             </div>
             
             <p style={{ fontSize: '14px' }}>Submitted by: Mazen Khanfar - TalebEdu</p>
+            <p style={{ fontSize: '14px', marginTop: '10px' }}>Phone: +968 9656 4540</p>
             <p style={{ fontSize: '14px', marginTop: '10px' }}>Year: 2026</p>
             <p style={{ fontSize: '14px', marginTop: '20px', color: '#94a3b8' }}>Muscat, Sultanate of Oman</p>
           </div>
@@ -676,7 +740,7 @@ const FeasibilityStudy = () => {
           <div style={{ ...pageStyle, backgroundColor: 'white' }}>
             <div style={headerStyle}>
               <span style={{ fontSize: '20px', fontWeight: 'bold' }}>Executive Summary</span>
-              <img src={logoImage} alt="Logo" style={{ width: '40px', height: '40px' }} />
+              <HeaderLogo />
             </div>
             
             <div style={{ color: '#1e293b', lineHeight: '1.8' }}>
@@ -723,7 +787,7 @@ const FeasibilityStudy = () => {
           <div style={{ ...pageStyle, backgroundColor: 'white' }}>
             <div style={headerStyle}>
               <span style={{ fontSize: '20px', fontWeight: 'bold' }}>Project Scope</span>
-              <img src={logoImage} alt="Logo" style={{ width: '40px', height: '40px' }} />
+              <HeaderLogo />
             </div>
             
             <div style={{ color: '#1e293b' }}>
@@ -762,7 +826,7 @@ const FeasibilityStudy = () => {
           <div style={{ ...pageStyle, backgroundColor: 'white' }}>
             <div style={headerStyle}>
               <span style={{ fontSize: '20px', fontWeight: 'bold' }}>Competitive Advantages</span>
-              <img src={logoImage} alt="Logo" style={{ width: '40px', height: '40px' }} />
+              <HeaderLogo />
             </div>
             
             <div style={{ color: '#1e293b' }}>
@@ -799,7 +863,7 @@ const FeasibilityStudy = () => {
           <div style={{ ...pageStyle, backgroundColor: 'white' }}>
             <div style={headerStyle}>
               <span style={{ fontSize: '20px', fontWeight: 'bold' }}>Financial Study - Revenue Projections</span>
-              <img src={logoImage} alt="Logo" style={{ width: '40px', height: '40px' }} />
+              <HeaderLogo />
             </div>
             
             <div style={{ color: '#1e293b' }}>
@@ -867,7 +931,7 @@ const FeasibilityStudy = () => {
           <div style={{ ...pageStyle, backgroundColor: 'white' }}>
             <div style={headerStyle}>
               <span style={{ fontSize: '20px', fontWeight: 'bold' }}>Capital & Operating Expenditure</span>
-              <img src={logoImage} alt="Logo" style={{ width: '40px', height: '40px' }} />
+              <HeaderLogo />
             </div>
             
             <div style={{ color: '#1e293b' }}>
@@ -950,7 +1014,7 @@ const FeasibilityStudy = () => {
           <div style={{ ...pageStyle, backgroundColor: 'white' }}>
             <div style={headerStyle}>
               <span style={{ fontSize: '20px', fontWeight: 'bold' }}>Cash Flow Analysis - Year 1</span>
-              <img src={logoImage} alt="Logo" style={{ width: '40px', height: '40px' }} />
+              <HeaderLogo />
             </div>
             
             <div style={{ color: '#1e293b' }}>
@@ -999,7 +1063,7 @@ const FeasibilityStudy = () => {
           <div style={{ ...pageStyle, backgroundColor: 'white' }}>
             <div style={headerStyle}>
               <span style={{ fontSize: '20px', fontWeight: 'bold' }}>Future Expansion Plan</span>
-              <img src={logoImage} alt="Logo" style={{ width: '40px', height: '40px' }} />
+              <HeaderLogo />
             </div>
             
             <div style={{ color: '#1e293b' }}>
@@ -1042,7 +1106,7 @@ const FeasibilityStudy = () => {
           <div style={{ ...pageStyle, backgroundColor: 'white' }}>
             <div style={headerStyle}>
               <span style={{ fontSize: '20px', fontWeight: 'bold' }}>Risk Analysis & Mitigation</span>
-              <img src={logoImage} alt="Logo" style={{ width: '40px', height: '40px' }} />
+              <HeaderLogo />
             </div>
             
             <div style={{ color: '#1e293b' }}>
@@ -1085,7 +1149,7 @@ const FeasibilityStudy = () => {
             pageBreakAfter: 'avoid',
           }}>
             <div style={{ textAlign: 'center', marginBottom: '30px' }}>
-              <img src={logoImage} alt="TalebEdu Logo" style={{ width: '80px', height: '80px', marginBottom: '20px' }} />
+              <LogoImage size="80px" style={{ marginBottom: '20px' }} />
               <h1 style={{ fontSize: '28px', fontWeight: 'bold', marginBottom: '10px' }}>Conclusion & Recommendation</h1>
             </div>
             
@@ -1118,7 +1182,9 @@ const FeasibilityStudy = () => {
             </div>
 
             <div style={{ textAlign: 'center', marginTop: '40px' }}>
-              <p style={{ fontSize: '14px' }}>TalebEdu - Mazen Khanfar</p>
+              <GlowingTitle size="32px" />
+              <p style={{ fontSize: '14px', marginTop: '15px' }}>Mazen Khanfar</p>
+              <p style={{ fontSize: '14px', marginTop: '8px' }}>Phone: +968 9656 4540</p>
               <p style={{ fontSize: '14px', color: '#94a3b8', marginTop: '10px' }}>Muscat, Sultanate of Oman - 2026</p>
             </div>
           </div>
@@ -1156,6 +1222,10 @@ const FeasibilityStudy = () => {
           <p className="text-xl text-white/70 max-w-2xl mx-auto">
             تطبيق شامل لإدارة المدارس والمحفظة الإلكترونية والبوابات الذكية
           </p>
+          <p className="text-white/50 mt-4 flex items-center justify-center gap-2">
+            <Phone className="w-4 h-4" />
+            +968 9656 4540
+          </p>
         </motion.div>
 
         {/* Download Buttons */}
@@ -1168,7 +1238,7 @@ const FeasibilityStudy = () => {
           {/* Arabic PDF */}
           <Button
             onClick={generateArabicPDF}
-            disabled={isGeneratingAr}
+            disabled={isGeneratingAr || !logoBase64}
             size="lg"
             className="bg-gradient-to-l from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white text-lg px-10 py-7 rounded-2xl shadow-2xl shadow-emerald-500/30 transition-all hover:scale-105"
           >
@@ -1193,7 +1263,7 @@ const FeasibilityStudy = () => {
           {/* English PDF */}
           <Button
             onClick={generateEnglishPDF}
-            disabled={isGeneratingEn}
+            disabled={isGeneratingEn || !logoBase64}
             size="lg"
             className="bg-gradient-to-l from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white text-lg px-10 py-7 rounded-2xl shadow-2xl shadow-blue-500/30 transition-all hover:scale-105"
           >
@@ -1392,6 +1462,7 @@ const FeasibilityStudy = () => {
           className="text-center mt-16 text-white/50"
         >
           <p>TalebEdu - مازن خنفر</p>
+          <p className="mt-2">+968 9656 4540</p>
           <p className="mt-2">مسقط، سلطنة عمان - 2026</p>
         </motion.div>
       </div>
