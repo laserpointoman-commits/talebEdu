@@ -471,7 +471,7 @@ export function useMessenger() {
       }, { onConflict: 'user_id' });
   }, [user]);
 
-  // Search users - for admin show all accounts, for others filter by role
+  // Search users - for admin show all accounts, for teachers show relevant contacts
   const searchUsers = useCallback(async (query: string): Promise<UserSearchResult[]> => {
     if (!user || !query.trim()) return [];
     
@@ -482,21 +482,86 @@ export function useMessenger() {
       .eq('id', user.id)
       .single();
 
-    let queryBuilder = supabase
+    const currentRole = currentProfile?.role;
+
+    // Admin can see ALL registered accounts
+    if (currentRole === 'admin') {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, full_name, profile_image, role')
+        .ilike('full_name', `%${query}%`)
+        .neq('id', user.id)
+        .limit(50);
+      
+      return error ? [] : (data as UserSearchResult[]);
+    }
+
+    // Teacher can see: admins, other teachers, and parents whose kids are in their classes
+    if (currentRole === 'teacher') {
+      // Get teacher record to find assigned classes
+      const { data: teacherData } = await supabase
+        .from('teachers')
+        .select('id')
+        .eq('profile_id', user.id)
+        .single();
+
+      // Get classes assigned to this teacher
+      const { data: assignedClasses } = await supabase
+        .from('classes')
+        .select('id')
+        .eq('class_teacher_id', teacherData?.id || '');
+
+      const classIds = assignedClasses?.map(c => c.id) || [];
+
+      // Get students in those classes
+      const { data: studentsInClasses } = classIds.length > 0 
+        ? await supabase
+            .from('students')
+            .select('parent_id')
+            .in('class_id', classIds)
+        : { data: [] };
+
+      const parentIds = [...new Set(studentsInClasses?.map(s => s.parent_id).filter(Boolean) || [])];
+
+      // Get admins, teachers, and relevant parents
+      const { data: adminsAndTeachers } = await supabase
+        .from('profiles')
+        .select('id, full_name, profile_image, role')
+        .ilike('full_name', `%${query}%`)
+        .neq('id', user.id)
+        .in('role', ['admin', 'teacher'])
+        .limit(30);
+
+      // Get parents whose kids are in teacher's classes
+      let relevantParents: UserSearchResult[] = [];
+      if (parentIds.length > 0) {
+        const { data: parentsData } = await supabase
+          .from('profiles')
+          .select('id, full_name, profile_image, role')
+          .ilike('full_name', `%${query}%`)
+          .in('id', parentIds)
+          .limit(20);
+        
+        relevantParents = (parentsData || []) as UserSearchResult[];
+      }
+
+      // Combine results and remove duplicates
+      const allResults = [...(adminsAndTeachers || []), ...relevantParents];
+      const uniqueResults = Array.from(
+        new Map(allResults.map(item => [item.id, item])).values()
+      );
+
+      return uniqueResults.slice(0, 50) as UserSearchResult[];
+    }
+
+    // Default for other roles: filter out device-linked roles
+    const { data, error } = await supabase
       .from('profiles')
       .select('id, full_name, profile_image, role')
       .ilike('full_name', `%${query}%`)
-      .neq('id', user.id);
-    
-    // Admin can see ALL users without any filter
-    if (currentProfile?.role === 'admin') {
-      // No filter - admin sees everyone
-    } else {
-      // Non-admins: Filter out device-linked roles
-      queryBuilder = queryBuilder.not('role', 'in', '(device,school_gate)');
-    }
-
-    const { data, error } = await queryBuilder.limit(50);
+      .neq('id', user.id)
+      .not('role', 'in', '(device,school_gate)')
+      .limit(50);
 
     return error ? [] : (data as UserSearchResult[]);
   }, [user]);
