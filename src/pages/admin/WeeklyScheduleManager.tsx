@@ -25,8 +25,10 @@ import {
   MapPin,
   Filter,
   Download,
-  RefreshCw
+  RefreshCw,
+  AlertTriangle
 } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 interface ClassInfo {
   id: string;
@@ -81,7 +83,10 @@ export default function WeeklyScheduleManager() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isConflictDialogOpen, setIsConflictDialogOpen] = useState(false);
   const [selectedSchedule, setSelectedSchedule] = useState<ScheduleEntry | null>(null);
+  const [conflicts, setConflicts] = useState<{ type: 'teacher' | 'room'; details: ScheduleEntry }[]>([]);
+  const [pendingAction, setPendingAction] = useState<'add' | 'update' | null>(null);
   
   // Form state
   const [formData, setFormData] = useState({
@@ -193,7 +198,37 @@ export default function WeeklyScheduleManager() {
     fetchData();
   }, [fetchData]);
 
-  const handleAddSchedule = async () => {
+  // Check for conflicts (teacher or room double-booking)
+  const checkConflicts = useCallback((
+    day: string, 
+    time: string, 
+    teacherId: string | null, 
+    room: string | null,
+    excludeId?: string
+  ) => {
+    const foundConflicts: { type: 'teacher' | 'room'; details: ScheduleEntry }[] = [];
+    
+    schedules.forEach(schedule => {
+      // Skip the current schedule when editing
+      if (excludeId && schedule.id === excludeId) return;
+      
+      // Check if same day and time
+      if (schedule.day === day && schedule.time === time) {
+        // Check teacher conflict
+        if (teacherId && schedule.teacher_id === teacherId) {
+          foundConflicts.push({ type: 'teacher', details: schedule });
+        }
+        // Check room conflict
+        if (room && schedule.room && schedule.room.toLowerCase() === room.toLowerCase()) {
+          foundConflicts.push({ type: 'room', details: schedule });
+        }
+      }
+    });
+    
+    return foundConflicts;
+  }, [schedules]);
+
+  const handleAddSchedule = async (force = false) => {
     if (!formData.class_id || !formData.day || !formData.time || !formData.subject) {
       toast({
         title: language === 'en' ? 'Missing Fields' : 'حقول مفقودة',
@@ -201,6 +236,23 @@ export default function WeeklyScheduleManager() {
         variant: 'destructive',
       });
       return;
+    }
+
+    // Check for conflicts if not forcing
+    if (!force) {
+      const foundConflicts = checkConflicts(
+        formData.day, 
+        formData.time, 
+        formData.teacher_id || null, 
+        formData.room || null
+      );
+      
+      if (foundConflicts.length > 0) {
+        setConflicts(foundConflicts);
+        setPendingAction('add');
+        setIsConflictDialogOpen(true);
+        return;
+      }
     }
 
     try {
@@ -223,6 +275,9 @@ export default function WeeklyScheduleManager() {
       });
 
       setIsAddDialogOpen(false);
+      setIsConflictDialogOpen(false);
+      setPendingAction(null);
+      setConflicts([]);
       resetForm();
       fetchData();
     } catch (error: any) {
@@ -234,8 +289,26 @@ export default function WeeklyScheduleManager() {
     }
   };
 
-  const handleUpdateSchedule = async () => {
+  const handleUpdateSchedule = async (force = false) => {
     if (!selectedSchedule) return;
+
+    // Check for conflicts if not forcing
+    if (!force) {
+      const foundConflicts = checkConflicts(
+        formData.day, 
+        formData.time, 
+        formData.teacher_id || null, 
+        formData.room || null,
+        selectedSchedule.id
+      );
+      
+      if (foundConflicts.length > 0) {
+        setConflicts(foundConflicts);
+        setPendingAction('update');
+        setIsConflictDialogOpen(true);
+        return;
+      }
+    }
 
     try {
       const { error } = await supabase
@@ -258,6 +331,9 @@ export default function WeeklyScheduleManager() {
       });
 
       setIsEditDialogOpen(false);
+      setIsConflictDialogOpen(false);
+      setPendingAction(null);
+      setConflicts([]);
       setSelectedSchedule(null);
       resetForm();
       fetchData();
@@ -268,6 +344,20 @@ export default function WeeklyScheduleManager() {
         variant: 'destructive',
       });
     }
+  };
+
+  const handleForceAction = () => {
+    if (pendingAction === 'add') {
+      handleAddSchedule(true);
+    } else if (pendingAction === 'update') {
+      handleUpdateSchedule(true);
+    }
+  };
+
+  const cancelConflictAction = () => {
+    setIsConflictDialogOpen(false);
+    setConflicts([]);
+    setPendingAction(null);
   };
 
   const handleDeleteSchedule = async () => {
@@ -770,7 +860,7 @@ export default function WeeklyScheduleManager() {
             <Button variant="outline" onClick={() => { setIsAddDialogOpen(false); resetForm(); }}>
               {language === 'en' ? 'Cancel' : 'إلغاء'}
             </Button>
-            <Button onClick={handleAddSchedule}>
+            <Button onClick={() => handleAddSchedule()}>
               {language === 'en' ? 'Add Schedule' : 'إضافة الجدول'}
             </Button>
           </DialogFooter>
@@ -795,7 +885,7 @@ export default function WeeklyScheduleManager() {
             <Button variant="outline" onClick={() => { setIsEditDialogOpen(false); resetForm(); setSelectedSchedule(null); }}>
               {language === 'en' ? 'Cancel' : 'إلغاء'}
             </Button>
-            <Button onClick={handleUpdateSchedule}>
+            <Button onClick={() => handleUpdateSchedule()}>
               {language === 'en' ? 'Save Changes' : 'حفظ التغييرات'}
             </Button>
           </DialogFooter>
@@ -828,6 +918,74 @@ export default function WeeklyScheduleManager() {
             </Button>
             <Button variant="destructive" onClick={handleDeleteSchedule}>
               {language === 'en' ? 'Delete' : 'حذف'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Conflict Warning Dialog */}
+      <Dialog open={isConflictDialogOpen} onOpenChange={(open) => { if (!open) cancelConflictAction(); }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="h-5 w-5" />
+              {language === 'en' ? 'Schedule Conflict Detected' : 'تم اكتشاف تعارض في الجدول'}
+            </DialogTitle>
+            <DialogDescription>
+              {language === 'en' 
+                ? 'The schedule you are trying to create conflicts with existing entries.' 
+                : 'الجدول الذي تحاول إنشاءه يتعارض مع إدخالات موجودة.'}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-3 max-h-[300px] overflow-y-auto">
+            {conflicts.map((conflict, index) => (
+              <Alert key={index} variant="destructive">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>
+                  {conflict.type === 'teacher' 
+                    ? (language === 'en' ? 'Teacher Conflict' : 'تعارض المعلم')
+                    : (language === 'en' ? 'Room Conflict' : 'تعارض الغرفة')}
+                </AlertTitle>
+                <AlertDescription className="mt-2 space-y-1 text-sm">
+                  {conflict.type === 'teacher' ? (
+                    <p>
+                      <strong>{conflict.details.teachers?.profiles?.full_name || language === 'en' ? 'Teacher' : 'المعلم'}</strong>
+                      {' '}
+                      {language === 'en' 
+                        ? 'is already teaching at this time:' 
+                        : 'يُدرّس بالفعل في هذا الوقت:'}
+                    </p>
+                  ) : (
+                    <p>
+                      <strong>{conflict.details.room}</strong>
+                      {' '}
+                      {language === 'en' 
+                        ? 'is already in use at this time:' 
+                        : 'مستخدمة بالفعل في هذا الوقت:'}
+                    </p>
+                  )}
+                  <div className="mt-2 p-2 bg-background/50 rounded text-xs">
+                    <p><strong>{language === 'en' ? 'Class:' : 'الصف:'}</strong> {conflict.details.classes?.name || `${conflict.details.classes?.grade}-${conflict.details.classes?.section}`}</p>
+                    <p><strong>{language === 'en' ? 'Subject:' : 'المادة:'}</strong> {conflict.details.subject}</p>
+                    <p><strong>{language === 'en' ? 'Day:' : 'اليوم:'}</strong> {conflict.details.day}</p>
+                    <p><strong>{language === 'en' ? 'Time:' : 'الوقت:'}</strong> {conflict.details.time}</p>
+                  </div>
+                </AlertDescription>
+              </Alert>
+            ))}
+          </div>
+
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button variant="outline" onClick={cancelConflictAction} className="w-full sm:w-auto">
+              {language === 'en' ? 'Go Back & Edit' : 'العودة والتعديل'}
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={handleForceAction}
+              className="w-full sm:w-auto"
+            >
+              {language === 'en' ? 'Create Anyway' : 'إنشاء على أي حال'}
             </Button>
           </DialogFooter>
         </DialogContent>
