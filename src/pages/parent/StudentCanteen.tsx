@@ -5,19 +5,19 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { ArrowLeft, ShoppingBag, Ban, Check, AlertCircle } from 'lucide-react';
+import { ArrowLeft, ShoppingBag, Ban, Check, Save } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import LogoLoader from '@/components/LogoLoader';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
-interface Category {
+interface CanteenItem {
   id: string;
   name: string;
   name_ar: string | null;
+  category: string;
+  icon: string | null;
+  price: number;
 }
 
 interface Order {
@@ -35,13 +35,9 @@ export default function StudentCanteen() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [student, setStudent] = useState<any>(null);
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [canteenItems, setCanteenItems] = useState<CanteenItem[]>([]);
   const [recentOrders, setRecentOrders] = useState<Order[]>([]);
-  const [settings, setSettings] = useState<any>({
-    daily_limit: 5,
-    blocked_categories: [],
-    is_active: true
-  });
+  const [blockedItems, setBlockedItems] = useState<string[]>([]);
 
   useEffect(() => {
     if (studentId && user) {
@@ -66,29 +62,26 @@ export default function StudentCanteen() {
 
       setStudent(studentData);
 
-      // Load categories
-      const { data: categoriesData } = await supabase
-        .from('canteen_categories')
-        .select('*')
-        .eq('is_active', true)
-        .order('display_order');
+      // Load canteen items
+      const { data: items } = await supabase
+        .from('canteen_items')
+        .select('id, name, name_ar, category, icon, price')
+        .eq('available', true)
+        .order('category');
 
-      setCategories(categoriesData || []);
+      setCanteenItems(items || []);
 
-      // Load existing settings
-      const { data: settingsData } = await supabase
-        .from('allowance_settings')
-        .select('*')
+      // Load existing restrictions
+      const { data: restrictions } = await supabase
+        .from('canteen_restrictions')
+        .select('allowed_items')
         .eq('student_id', studentId)
         .eq('parent_id', user?.id)
         .maybeSingle();
 
-      if (settingsData) {
-        setSettings({
-          daily_limit: settingsData.daily_limit || 5,
-          blocked_categories: settingsData.blocked_categories || [],
-          is_active: settingsData.is_active !== false
-        });
+      // allowed_items contains blocked items (inverted logic for this use case)
+      if (restrictions?.allowed_items) {
+        setBlockedItems(restrictions.allowed_items);
       }
 
       // Load recent orders
@@ -107,44 +100,36 @@ export default function StudentCanteen() {
     }
   };
 
-  const saveSettings = async () => {
+  const toggleItemBlock = (itemId: string) => {
+    setBlockedItems(prev => {
+      if (prev.includes(itemId)) {
+        return prev.filter(id => id !== itemId);
+      }
+      return [...prev, itemId];
+    });
+  };
+
+  const saveRestrictions = async () => {
     setSaving(true);
     try {
       const { error } = await supabase
-        .from('allowance_settings')
+        .from('canteen_restrictions')
         .upsert({
           student_id: studentId,
           parent_id: user?.id,
-          daily_limit: settings.daily_limit,
-          blocked_categories: settings.blocked_categories,
-          is_active: settings.is_active,
+          allowed_items: blockedItems, // storing blocked items in allowed_items field
           updated_at: new Date().toISOString()
         }, {
           onConflict: 'student_id'
         });
 
       if (error) throw error;
-      toast.success(language === 'ar' ? 'تم حفظ الإعدادات' : 'Settings saved');
+      toast.success(language === 'ar' ? 'تم حفظ القيود' : 'Restrictions saved');
     } catch (error) {
-      console.error('Error saving settings:', error);
+      console.error('Error saving restrictions:', error);
       toast.error(language === 'ar' ? 'فشل في الحفظ' : 'Failed to save');
     } finally {
       setSaving(false);
-    }
-  };
-
-  const toggleCategory = (categoryId: string) => {
-    const blocked = settings.blocked_categories || [];
-    if (blocked.includes(categoryId)) {
-      setSettings({
-        ...settings,
-        blocked_categories: blocked.filter((id: string) => id !== categoryId)
-      });
-    } else {
-      setSettings({
-        ...settings,
-        blocked_categories: [...blocked, categoryId]
-      });
     }
   };
 
@@ -153,6 +138,13 @@ export default function StudentCanteen() {
   const studentName = language === 'ar' 
     ? `${student?.first_name_ar || student?.first_name} ${student?.last_name_ar || student?.last_name}`
     : `${student?.first_name} ${student?.last_name}`;
+
+  // Group items by category
+  const groupedItems = canteenItems.reduce((acc, item) => {
+    if (!acc[item.category]) acc[item.category] = [];
+    acc[item.category].push(item);
+    return acc;
+  }, {} as Record<string, CanteenItem[]>);
 
   return (
     <div className="space-y-6 p-4 md:p-6 max-w-4xl mx-auto pb-24">
@@ -169,106 +161,115 @@ export default function StudentCanteen() {
         </div>
       </div>
 
-      {/* Main Toggle */}
-      <Card>
+      {/* Info Card */}
+      <Card className="bg-gradient-to-br from-orange-500/10 to-orange-500/5 border-orange-200 dark:border-orange-900/30">
         <CardContent className="py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className={`p-2 rounded-full ${settings.is_active ? 'bg-green-100 dark:bg-green-900/30' : 'bg-red-100 dark:bg-red-900/30'}`}>
-                {settings.is_active ? (
-                  <Check className="h-5 w-5 text-green-600" />
-                ) : (
-                  <Ban className="h-5 w-5 text-red-600" />
-                )}
-              </div>
-              <div>
-                <p className="font-semibold">
-                  {language === 'ar' ? 'السماح بالشراء من المقصف' : 'Allow Canteen Purchases'}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  {settings.is_active 
-                    ? (language === 'ar' ? 'يمكن للطالب الشراء' : 'Student can make purchases')
-                    : (language === 'ar' ? 'الشراء موقوف' : 'Purchases disabled')}
-                </p>
-              </div>
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-orange-500/20 rounded-full">
+              <Ban className="h-6 w-6 text-orange-600" />
             </div>
-            <Switch 
-              checked={settings.is_active}
-              onCheckedChange={(checked) => setSettings({ ...settings, is_active: checked })}
-            />
+            <div>
+              <p className="font-semibold">
+                {language === 'ar' ? 'حظر المنتجات' : 'Block Products'}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {language === 'ar' 
+                  ? 'حدد المنتجات التي لا تريد للطالب شراءها'
+                  : 'Select products you want to restrict from the student'}
+              </p>
+            </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Daily Limit */}
-      <Card>
-        <CardHeader className="py-4">
-          <CardTitle className="text-base">
-            {language === 'ar' ? 'الحد اليومي' : 'Daily Spending Limit'}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="pt-0">
-          <div className="flex items-center gap-3">
-            <Input
-              type="number"
-              value={settings.daily_limit}
-              onChange={(e) => setSettings({ ...settings, daily_limit: Number(e.target.value) })}
-              className="w-32"
-              min={0}
-              step={0.5}
-            />
-            <span className="text-muted-foreground">{language === 'ar' ? 'ر.ع' : 'OMR'}</span>
-          </div>
-          <p className="text-sm text-muted-foreground mt-2">
-            {language === 'ar' 
-              ? 'الحد الأقصى للمشتريات اليومية'
-              : 'Maximum daily purchase amount'}
-          </p>
-        </CardContent>
-      </Card>
+      {/* Items to Block */}
+      <div className="space-y-4">
+        {Object.keys(groupedItems).length === 0 ? (
+          <Card>
+            <CardContent className="py-12 text-center">
+              <ShoppingBag className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <p className="text-muted-foreground">
+                {language === 'ar' ? 'لا توجد منتجات' : 'No products available'}
+              </p>
+            </CardContent>
+          </Card>
+        ) : (
+          Object.entries(groupedItems).map(([category, items]) => (
+            <Card key={category}>
+              <CardHeader className="py-3 px-4">
+                <CardTitle className="text-sm text-muted-foreground uppercase flex items-center gap-2">
+                  <span>{items[0]?.icon || '📦'}</span>
+                  {category}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0 space-y-2">
+                {items.map((item) => {
+                  const isBlocked = blockedItems.includes(item.id);
+                  return (
+                    <div 
+                      key={item.id} 
+                      className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors ${
+                        isBlocked 
+                          ? 'bg-red-500/10 border border-red-500/30' 
+                          : 'bg-accent/50 hover:bg-accent'
+                      }`}
+                      onClick={() => toggleItemBlock(item.id)}
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="text-xl">{item.icon || '📦'}</span>
+                        <div>
+                          <p className="font-medium">
+                            {language === 'ar' ? item.name_ar || item.name : item.name}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {Number(item.price).toFixed(3)} {language === 'ar' ? 'ر.ع' : 'OMR'}
+                          </p>
+                        </div>
+                      </div>
+                      <Badge 
+                        variant={isBlocked ? 'destructive' : 'secondary'}
+                        className="cursor-pointer"
+                      >
+                        {isBlocked ? (
+                          <>
+                            <Ban className="h-3 w-3 mr-1" />
+                            {language === 'ar' ? 'محظور' : 'Blocked'}
+                          </>
+                        ) : (
+                          <>
+                            <Check className="h-3 w-3 mr-1" />
+                            {language === 'ar' ? 'مسموح' : 'Allowed'}
+                          </>
+                        )}
+                      </Badge>
+                    </div>
+                  );
+                })}
+              </CardContent>
+            </Card>
+          ))
+        )}
+      </div>
 
-      {/* Category Restrictions */}
-      <Card>
-        <CardHeader className="py-4">
-          <CardTitle className="text-base flex items-center gap-2">
-            <Ban className="h-4 w-4" />
-            {language === 'ar' ? 'حظر الفئات' : 'Block Categories'}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="pt-0 space-y-3">
-          {categories.map((cat) => {
-            const isBlocked = settings.blocked_categories?.includes(cat.id);
-            return (
-              <div key={cat.id} className="flex items-center justify-between p-3 bg-accent/50 rounded-lg">
-                <span className="font-medium">
-                  {language === 'ar' ? cat.name_ar || cat.name : cat.name}
-                </span>
-                <Badge 
-                  variant={isBlocked ? 'destructive' : 'secondary'}
-                  className="cursor-pointer"
-                  onClick={() => toggleCategory(cat.id)}
-                >
-                  {isBlocked 
-                    ? (language === 'ar' ? 'محظور' : 'Blocked')
-                    : (language === 'ar' ? 'مسموح' : 'Allowed')}
-                </Badge>
-              </div>
-            );
-          })}
-          
-          {categories.length === 0 && (
-            <p className="text-sm text-muted-foreground text-center py-4">
-              {language === 'ar' ? 'لا توجد فئات' : 'No categories available'}
+      {/* Summary */}
+      {blockedItems.length > 0 && (
+        <Card className="bg-red-500/5 border-red-200 dark:border-red-900/30">
+          <CardContent className="py-4">
+            <p className="text-sm font-medium text-red-600 dark:text-red-400">
+              {language === 'ar' 
+                ? `${blockedItems.length} منتجات محظورة`
+                : `${blockedItems.length} products blocked`}
             </p>
-          )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Save Button */}
-      <Button onClick={saveSettings} disabled={saving} className="w-full">
+      <Button onClick={saveRestrictions} disabled={saving} className="w-full" size="lg">
+        <Save className="h-4 w-4 mr-2" />
         {saving 
           ? (language === 'ar' ? 'جاري الحفظ...' : 'Saving...') 
-          : (language === 'ar' ? 'حفظ الإعدادات' : 'Save Settings')}
+          : (language === 'ar' ? 'حفظ القيود' : 'Save Restrictions')}
       </Button>
 
       {/* Recent Orders */}
