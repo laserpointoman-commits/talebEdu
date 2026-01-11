@@ -305,6 +305,20 @@ export default function RoutesManagement() {
   };
 
   const toggleStudentSelection = (studentId: string) => {
+    // Check if trying to add (not remove)
+    if (!selectedStudents.includes(studentId)) {
+      const assignment = getStudentAssignment(studentId);
+      if (assignment) {
+        toast({
+          variant: 'destructive',
+          title: language === 'ar' ? 'الطالب مسجل بالفعل' : 'Student Already Assigned',
+          description: language === 'ar' 
+            ? `هذا الطالب مسجل في المسار "${assignment.routeName}" (الحافلة: ${assignment.busNumber})`
+            : `This student is already assigned to route "${assignment.routeName}" (Bus: ${assignment.busNumber})`,
+        });
+        return;
+      }
+    }
     setSelectedStudents(prev => 
       prev.includes(studentId) 
         ? prev.filter(id => id !== studentId)
@@ -336,6 +350,48 @@ export default function RoutesManagement() {
   const getSupervisorName = (supervisorId?: string) => {
     const supervisor = teachers.find(t => t.id === supervisorId);
     return supervisor ? (language === 'en' ? supervisor.name : supervisor.nameAr) : (language === 'en' ? 'Not Assigned' : 'غير مخصص');
+  };
+
+  // Check if student is already assigned to another route
+  const getStudentAssignment = (studentId: string): { routeName: string; busNumber: string } | null => {
+    const currentRouteId = selectedRoute?.id;
+    for (const route of routes) {
+      if (route.id !== currentRouteId && route.studentIds.includes(studentId)) {
+        return {
+          routeName: language === 'en' ? route.name : route.nameAr,
+          busNumber: getBusNumber(route.busId)
+        };
+      }
+    }
+    return null;
+  };
+
+  // Check if driver is already assigned to another route
+  const getDriverAssignment = (driverId: string): { routeName: string; busNumber: string } | null => {
+    const currentRouteId = selectedRoute?.id;
+    for (const route of routes) {
+      if (route.id !== currentRouteId && route.driverId === driverId) {
+        return {
+          routeName: language === 'en' ? route.name : route.nameAr,
+          busNumber: getBusNumber(route.busId)
+        };
+      }
+    }
+    return null;
+  };
+
+  // Check if supervisor is already assigned to another route
+  const getSupervisorAssignment = (supervisorId: string): { routeName: string; busNumber: string } | null => {
+    const currentRouteId = selectedRoute?.id;
+    for (const route of routes) {
+      if (route.id !== currentRouteId && route.supervisorId === supervisorId) {
+        return {
+          routeName: language === 'en' ? route.name : route.nameAr,
+          busNumber: getBusNumber(route.busId)
+        };
+      }
+    }
+    return null;
   };
 
   const getStudentNames = (studentIds: string[]) => {
@@ -678,7 +734,22 @@ export default function RoutesManagement() {
                 <Label>{language === 'en' ? 'Assign Driver' : 'تعيين سائق'}</Label>
                 <Select
                   value={formData.driverId || 'none'}
-                  onValueChange={(value) => setFormData({ ...formData, driverId: value === 'none' ? undefined : value })}
+                  onValueChange={(value) => {
+                    if (value !== 'none') {
+                      const assignment = getDriverAssignment(value);
+                      if (assignment) {
+                        toast({
+                          variant: 'destructive',
+                          title: language === 'ar' ? 'السائق معين بالفعل' : 'Driver Already Assigned',
+                          description: language === 'ar' 
+                            ? `هذا السائق معين في المسار "${assignment.routeName}" (الحافلة: ${assignment.busNumber})`
+                            : `This driver is already assigned to route "${assignment.routeName}" (Bus: ${assignment.busNumber})`,
+                        });
+                        return;
+                      }
+                    }
+                    setFormData({ ...formData, driverId: value === 'none' ? undefined : value });
+                  }}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder={language === 'en' ? 'Select a driver' : 'اختر سائق'} />
@@ -717,7 +788,22 @@ export default function RoutesManagement() {
                 <Label>{language === 'en' ? 'Assign Supervisor' : 'تعيين مشرف'}</Label>
                 <Select
                   value={formData.supervisorId || 'none'}
-                  onValueChange={(value) => setFormData({ ...formData, supervisorId: value === 'none' ? undefined : value })}
+                  onValueChange={(value) => {
+                    if (value !== 'none') {
+                      const assignment = getSupervisorAssignment(value);
+                      if (assignment) {
+                        toast({
+                          variant: 'destructive',
+                          title: language === 'ar' ? 'المشرف معين بالفعل' : 'Supervisor Already Assigned',
+                          description: language === 'ar' 
+                            ? `هذا المشرف معين في المسار "${assignment.routeName}" (الحافلة: ${assignment.busNumber})`
+                            : `This supervisor is already assigned to route "${assignment.routeName}" (Bus: ${assignment.busNumber})`,
+                        });
+                        return;
+                      }
+                    }
+                    setFormData({ ...formData, supervisorId: value === 'none' ? undefined : value });
+                  }}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder={language === 'en' ? 'Select a supervisor' : 'اختر مشرف'} />
