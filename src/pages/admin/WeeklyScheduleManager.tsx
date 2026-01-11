@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -61,23 +61,10 @@ const DAYS_EN = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday
 const DAYS_AR = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
 const WORK_DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'];
 
-const TIME_SLOTS = [
-  '07:00 - 07:45',
-  '07:45 - 08:30',
-  '08:30 - 09:15',
-  '09:15 - 10:00',
-  '10:00 - 10:30', // Break
-  '10:30 - 11:15',
-  '11:15 - 12:00',
-  '12:00 - 12:45',
-  '12:45 - 13:30',
-  '13:30 - 14:15',
-];
-
-const SUBJECTS = [
-  'Mathematics', 'Arabic', 'English', 'Science', 'Islamic Studies',
-  'Social Studies', 'Physical Education', 'Art', 'Music', 'Computer Science',
-  'Physics', 'Chemistry', 'Biology', 'History', 'Geography'
+const DEFAULT_TIME_SLOTS = [
+  '07:00', '07:30', '07:45', '08:00', '08:30', '09:00', '09:15', '09:30',
+  '10:00', '10:30', '11:00', '11:15', '11:30', '12:00', '12:30', '12:45',
+  '13:00', '13:30', '14:00', '14:15', '14:30'
 ];
 
 export default function WeeklyScheduleManager() {
@@ -109,6 +96,31 @@ export default function WeeklyScheduleManager() {
   const effectiveRole = profile?.role === 'developer'
     ? (sessionStorage.getItem('developerViewRole') as any) || 'developer'
     : profile?.role;
+
+  // Dynamically extract unique time slots from schedules
+  const timeSlots = useMemo(() => {
+    const scheduleTimes = schedules.map(s => s.time);
+    const allTimes = [...new Set([...DEFAULT_TIME_SLOTS, ...scheduleTimes])];
+    // Sort times chronologically
+    return allTimes.sort((a, b) => {
+      const timeA = a.split(' - ')[0] || a;
+      const timeB = b.split(' - ')[0] || b;
+      return timeA.localeCompare(timeB);
+    });
+  }, [schedules]);
+
+  // Extract unique subjects from schedules
+  const subjects = useMemo(() => {
+    const defaultSubjects = [
+      'Mathematics', 'Arabic', 'English', 'Science', 'Islamic Studies',
+      'Social Studies', 'Physical Education', 'Art', 'Music', 'Computer Science',
+      'Physics', 'Chemistry', 'Biology', 'History', 'Geography',
+      'رياضيات', 'اللغة العربية', 'اللغة الإنجليزية', 'العلوم', 'التربية الإسلامية',
+      'الدراسات الاجتماعية', 'التربية الرياضية', 'الفنون', 'الموسيقى', 'الحاسوب'
+    ];
+    const scheduleSubjects = schedules.map(s => s.subject);
+    return [...new Set([...defaultSubjects, ...scheduleSubjects])];
+  }, [schedules]);
 
   const fetchData = useCallback(async () => {
     try {
@@ -323,6 +335,16 @@ export default function WeeklyScheduleManager() {
     return filteredSchedules.filter(s => s.day === day && s.time === time);
   };
 
+  // Get unique times from filtered schedules for grid display
+  const gridTimeSlots = useMemo(() => {
+    const times = [...new Set(filteredSchedules.map(s => s.time))];
+    return times.sort((a, b) => {
+      const timeA = a.split(' - ')[0] || a;
+      const timeB = b.split(' - ')[0] || b;
+      return timeA.localeCompare(timeB);
+    });
+  }, [filteredSchedules]);
+
   const exportSchedule = () => {
     const headers = ['Day', 'Time', 'Class', 'Subject', 'Teacher', 'Room'];
     const rows = filteredSchedules.map(s => [
@@ -387,7 +409,7 @@ export default function WeeklyScheduleManager() {
               <SelectValue placeholder={language === 'en' ? 'Select day' : 'اختر اليوم'} />
             </SelectTrigger>
             <SelectContent>
-              {WORK_DAYS.map((day, idx) => (
+              {WORK_DAYS.map((day) => (
                 <SelectItem key={day} value={day}>
                   {language === 'en' ? day : DAYS_AR[DAYS_EN.indexOf(day)]}
                 </SelectItem>
@@ -400,34 +422,34 @@ export default function WeeklyScheduleManager() {
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label>{language === 'en' ? 'Time' : 'الوقت'} *</Label>
-          <Select value={formData.time} onValueChange={(v) => setFormData(prev => ({ ...prev, time: v }))}>
-            <SelectTrigger>
-              <SelectValue placeholder={language === 'en' ? 'Select time' : 'اختر الوقت'} />
-            </SelectTrigger>
-            <SelectContent>
-              {TIME_SLOTS.map(time => (
-                <SelectItem key={time} value={time}>
-                  {time}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Input
+            type="text"
+            value={formData.time}
+            onChange={(e) => setFormData(prev => ({ ...prev, time: e.target.value }))}
+            placeholder={language === 'en' ? 'e.g., 08:30 or 08:30 - 09:15' : 'مثال: 08:30'}
+            list="time-suggestions"
+          />
+          <datalist id="time-suggestions">
+            {timeSlots.map(time => (
+              <option key={time} value={time} />
+            ))}
+          </datalist>
         </div>
 
         <div className="space-y-2">
           <Label>{language === 'en' ? 'Subject' : 'المادة'} *</Label>
-          <Select value={formData.subject} onValueChange={(v) => setFormData(prev => ({ ...prev, subject: v }))}>
-            <SelectTrigger>
-              <SelectValue placeholder={language === 'en' ? 'Select subject' : 'اختر المادة'} />
-            </SelectTrigger>
-            <SelectContent>
-              {SUBJECTS.map(subject => (
-                <SelectItem key={subject} value={subject}>
-                  {subject}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Input
+            type="text"
+            value={formData.subject}
+            onChange={(e) => setFormData(prev => ({ ...prev, subject: e.target.value }))}
+            placeholder={language === 'en' ? 'Enter subject name' : 'أدخل اسم المادة'}
+            list="subject-suggestions"
+          />
+          <datalist id="subject-suggestions">
+            {subjects.map(subject => (
+              <option key={subject} value={subject} />
+            ))}
+          </datalist>
         </div>
       </div>
 
@@ -525,104 +547,100 @@ export default function WeeklyScheduleManager() {
       {viewMode === 'grid' && (
         <Card>
           <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse min-w-[900px]">
-                <thead>
-                  <tr className="bg-muted/50">
-                    <th className="border p-3 text-left font-medium w-[120px]">
-                      {language === 'en' ? 'Time' : 'الوقت'}
-                    </th>
-                    {WORK_DAYS.map((day, idx) => (
-                      <th key={day} className="border p-3 text-center font-medium">
-                        {language === 'en' ? day : DAYS_AR[DAYS_EN.indexOf(day)]}
+            {gridTimeSlots.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground">
+                <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>{language === 'en' ? 'No schedules found' : 'لم يتم العثور على جداول'}</p>
+                <p className="text-sm mt-1">
+                  {language === 'en' 
+                    ? 'Add schedules from the Classes page or click "Add Schedule" above' 
+                    : 'أضف جداول من صفحة الصفوف أو اضغط "إضافة جدول" أعلاه'}
+                </p>
+                <Button className="mt-4" onClick={() => setIsAddDialogOpen(true)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  {language === 'en' ? 'Add First Schedule' : 'إضافة أول جدول'}
+                </Button>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse min-w-[900px]">
+                  <thead>
+                    <tr className="bg-muted/50">
+                      <th className="border p-3 text-left font-medium w-[120px]">
+                        {language === 'en' ? 'Time' : 'الوقت'}
                       </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {TIME_SLOTS.map(time => (
-                    <tr key={time} className={time === '10:00 - 10:30' ? 'bg-muted/30' : ''}>
-                      <td className="border p-2 font-medium text-sm text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          {time}
-                        </div>
-                        {time === '10:00 - 10:30' && (
-                          <Badge variant="outline" className="mt-1 text-xs">
-                            {language === 'en' ? 'Break' : 'استراحة'}
-                          </Badge>
-                        )}
-                      </td>
-                      {WORK_DAYS.map(day => {
-                        const daySchedules = getSchedulesByDayAndTime(day, time);
-                        return (
-                          <td key={`${day}-${time}`} className="border p-1 align-top min-h-[80px]">
-                            <div className="space-y-1">
-                              {daySchedules.map(schedule => (
-                                <div
-                                  key={schedule.id}
-                                  className="group relative p-2 rounded-md bg-primary/10 hover:bg-primary/20 transition-colors cursor-pointer text-xs"
-                                  onClick={() => openEditDialog(schedule)}
-                                >
-                                  <div className="font-medium text-primary truncate">
-                                    {schedule.subject}
-                                  </div>
-                                  <div className="text-muted-foreground truncate">
-                                    {schedule.classes?.grade}-{schedule.classes?.section}
-                                  </div>
-                                  {schedule.teachers?.profiles?.full_name && (
-                                    <div className="text-muted-foreground truncate flex items-center gap-1">
-                                      <User className="h-2.5 w-2.5" />
-                                      {schedule.teachers.profiles.full_name}
-                                    </div>
-                                  )}
-                                  {schedule.room && (
-                                    <div className="text-muted-foreground truncate flex items-center gap-1">
-                                      <MapPin className="h-2.5 w-2.5" />
-                                      {schedule.room}
-                                    </div>
-                                  )}
-                                  
-                                  {/* Quick actions on hover */}
-                                  <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
-                                    <Button
-                                      size="icon"
-                                      variant="ghost"
-                                      className="h-5 w-5"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        openDeleteDialog(schedule);
-                                      }}
-                                    >
-                                      <Trash2 className="h-3 w-3 text-destructive" />
-                                    </Button>
-                                  </div>
-                                </div>
-                              ))}
-                              
-                              {/* Add button for empty slots */}
-                              {daySchedules.length === 0 && time !== '10:00 - 10:30' && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="w-full h-full min-h-[60px] opacity-30 hover:opacity-100 transition-opacity"
-                                  onClick={() => {
-                                    setFormData(prev => ({ ...prev, day, time }));
-                                    setIsAddDialogOpen(true);
-                                  }}
-                                >
-                                  <Plus className="h-4 w-4" />
-                                </Button>
-                              )}
-                            </div>
-                          </td>
-                        );
-                      })}
+                      {WORK_DAYS.map((day) => (
+                        <th key={day} className="border p-3 text-center font-medium">
+                          {language === 'en' ? day : DAYS_AR[DAYS_EN.indexOf(day)]}
+                        </th>
+                      ))}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {gridTimeSlots.map(time => (
+                      <tr key={time}>
+                        <td className="border p-2 font-medium text-sm text-muted-foreground">
+                          <div className="flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            {time}
+                          </div>
+                        </td>
+                        {WORK_DAYS.map(day => {
+                          const daySchedules = getSchedulesByDayAndTime(day, time);
+                          return (
+                            <td key={`${day}-${time}`} className="border p-1 align-top min-h-[80px]">
+                              <div className="space-y-1">
+                                {daySchedules.map(schedule => (
+                                  <div
+                                    key={schedule.id}
+                                    className="group relative p-2 rounded-md bg-primary/10 hover:bg-primary/20 transition-colors cursor-pointer text-xs"
+                                    onClick={() => openEditDialog(schedule)}
+                                  >
+                                    <div className="font-medium text-primary truncate">
+                                      {schedule.subject}
+                                    </div>
+                                    <div className="text-muted-foreground truncate">
+                                      {schedule.classes?.name || `${schedule.classes?.grade}-${schedule.classes?.section}`}
+                                    </div>
+                                    {schedule.teachers?.profiles?.full_name && (
+                                      <div className="text-muted-foreground truncate flex items-center gap-1">
+                                        <User className="h-2.5 w-2.5" />
+                                        {schedule.teachers.profiles.full_name}
+                                      </div>
+                                    )}
+                                    {schedule.room && (
+                                      <div className="text-muted-foreground truncate flex items-center gap-1">
+                                        <MapPin className="h-2.5 w-2.5" />
+                                        {schedule.room}
+                                      </div>
+                                    )}
+                                    
+                                    {/* Quick actions on hover */}
+                                    <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+                                      <Button
+                                        size="icon"
+                                        variant="ghost"
+                                        className="h-5 w-5"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          openDeleteDialog(schedule);
+                                        }}
+                                      >
+                                        <Trash2 className="h-3 w-3 text-destructive" />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
@@ -664,15 +682,14 @@ export default function WeeklyScheduleManager() {
                               <div className="flex items-center gap-4">
                                 <div className="flex flex-col items-center min-w-[80px]">
                                   <Clock className="h-4 w-4 text-muted-foreground mb-1" />
-                                  <span className="text-xs font-medium">{schedule.time.split(' - ')[0]}</span>
-                                  <span className="text-xs text-muted-foreground">{schedule.time.split(' - ')[1]}</span>
+                                  <span className="text-xs font-medium">{schedule.time}</span>
                                 </div>
                                 <div className="flex-1">
                                   <div className="flex items-center gap-2">
                                     <BookOpen className="h-4 w-4 text-primary" />
                                     <span className="font-medium">{schedule.subject}</span>
                                     <Badge variant="secondary">
-                                      {schedule.classes?.grade}-{schedule.classes?.section}
+                                      {schedule.classes?.name || `${schedule.classes?.grade}-${schedule.classes?.section}`}
                                     </Badge>
                                   </div>
                                   <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
@@ -718,6 +735,11 @@ export default function WeeklyScheduleManager() {
                   <div className="text-center py-12 text-muted-foreground">
                     <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
                     <p>{language === 'en' ? 'No schedules found' : 'لم يتم العثور على جداول'}</p>
+                    <p className="text-sm mt-1">
+                      {language === 'en' 
+                        ? 'Add schedules from the Classes page or click "Add Schedule" above' 
+                        : 'أضف جداول من صفحة الصفوف أو اضغط "إضافة جدول" أعلاه'}
+                    </p>
                     <Button className="mt-4" onClick={() => setIsAddDialogOpen(true)}>
                       <Plus className="h-4 w-4 mr-2" />
                       {language === 'en' ? 'Create First Schedule' : 'إنشاء أول جدول'}
