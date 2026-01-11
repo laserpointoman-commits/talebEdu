@@ -18,7 +18,7 @@ import {
   Phone,
 } from "lucide-react";
 import html2pdf from "html2pdf.js";
-import talebEduBlueLogo from "@/assets/talebedu-logo-blue.png";
+import talebEduBlueLogo from "@/assets/talebedu-app-icon.jpg";
 
 const PHONE_NUMBER = "+968 9656 4540";
 
