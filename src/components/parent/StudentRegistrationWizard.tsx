@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { format } from 'date-fns';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -11,8 +12,11 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, CheckCircle2, GraduationCap, Users, Heart, User } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { Loader2, CheckCircle2, GraduationCap, Users, Heart, User, CalendarIcon } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 import HomeLocationPicker from './HomeLocationPicker';
 
 export default function StudentRegistrationWizard() {
@@ -262,11 +266,43 @@ export default function StudentRegistrationWizard() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-2">
                     <Label>{language === 'en' ? 'Date of Birth *' : 'تاريخ الميلاد *'}</Label>
-                    <Input
-                      type="date"
-                      value={formData.dateOfBirth}
-                      onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
-                    />
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !formData.dateOfBirth && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {formData.dateOfBirth ? (
+                            format(new Date(formData.dateOfBirth), "PPP")
+                          ) : (
+                            <span>{language === 'en' ? 'Pick a date' : 'اختر تاريخ'}</span>
+                          )}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={formData.dateOfBirth ? new Date(formData.dateOfBirth) : undefined}
+                          onSelect={(date) => {
+                            if (date) {
+                              setFormData({ ...formData, dateOfBirth: format(date, 'yyyy-MM-dd') });
+                            }
+                          }}
+                          disabled={(date) =>
+                            date > new Date() || date < new Date("1990-01-01")
+                          }
+                          initialFocus
+                          captionLayout="dropdown-buttons"
+                          fromYear={1990}
+                          toYear={new Date().getFullYear()}
+                          className={cn("p-3 pointer-events-auto")}
+                        />
+                      </PopoverContent>
+                    </Popover>
                   </div>
                   <div className="space-y-2">
                     <Label>{language === 'en' ? 'Gender *' : 'الجنس *'}</Label>
