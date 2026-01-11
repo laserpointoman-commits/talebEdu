@@ -7,9 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { 
   Wallet, 
   GraduationCap, 
-  MessageSquare, 
   TrendingUp,
-  ArrowUpRight,
   UserPlus,
   Clock
 } from "lucide-react";
@@ -161,30 +159,7 @@ export default function ParentDashboard() {
         </CardContent>
       </Card>
 
-      {/* Messenger Quick Access */}
-      <Card 
-        className="cursor-pointer hover:shadow-md transition-all border-2 hover:border-primary/50"
-        onClick={() => navigate('/dashboard/messages')}
-      >
-        <CardContent className="py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-accent rounded-full">
-                <MessageSquare className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <p className="font-semibold">
-                  {language === 'ar' ? 'الرسائل' : 'Messages'}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  {language === 'ar' ? 'تواصل مع المعلمين والإدارة' : 'Chat with teachers & administration'}
-                </p>
-              </div>
-            </div>
-            <ArrowUpRight className="h-5 w-5 text-muted-foreground" />
-          </div>
-        </CardContent>
-      </Card>
+      {/* Section Title */}
 
       {/* Section Title */}
       <div className="flex items-center justify-between pt-2">

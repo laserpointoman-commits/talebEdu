@@ -44,6 +44,13 @@ import DemoRoutes from "./pages/screenshot-demo/DemoRoutes";
 import StudentDetails from "./pages/parent/StudentDetails";
 import StudentWalletControl from "./pages/parent/StudentWalletControl";
 import StudentBusTracking from "./pages/parent/StudentBusTracking";
+import StudentSchedule from "./pages/parent/StudentSchedule";
+import StudentGrades from "./pages/parent/StudentGrades";
+import StudentExams from "./pages/parent/StudentExams";
+import StudentFees from "./pages/parent/StudentFees";
+import StudentAttendance from "./pages/parent/StudentAttendance";
+import StudentCanteen from "./pages/parent/StudentCanteen";
+import StudentStore from "./pages/parent/StudentStore";
 import DeviceLogin from "./pages/device/DeviceLogin";
 import BusAttendanceDevice from "./pages/device/BusAttendanceDevice";
 import SchoolAttendanceDevice from "./pages/device/SchoolAttendanceDevice";
@@ -111,6 +118,13 @@ function App() {
                         <Route path="/student/:studentId" element={<StudentDetails />} />
                         <Route path="/student/:studentId/wallet" element={<StudentWalletControl />} />
                         <Route path="/student/:studentId/bus" element={<StudentBusTracking />} />
+                        <Route path="/student/:studentId/schedule" element={<StudentSchedule />} />
+                        <Route path="/student/:studentId/grades" element={<StudentGrades />} />
+                        <Route path="/student/:studentId/exams" element={<StudentExams />} />
+                        <Route path="/student/:studentId/fees" element={<StudentFees />} />
+                        <Route path="/student/:studentId/attendance" element={<StudentAttendance />} />
+                        <Route path="/student/:studentId/canteen" element={<StudentCanteen />} />
+                        <Route path="/student/:studentId/store" element={<StudentStore />} />
                         <Route path="/create-admin" element={<CreateAdmin />} />
                         {/* Device Login Pages - No Authentication Required */}
                         <Route path="/device/login" element={<DeviceLogin />} />
