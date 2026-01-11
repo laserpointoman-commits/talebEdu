@@ -7,37 +7,31 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   ArrowLeft,
   Wallet,
-  ShoppingBag,
-  Ban,
-  Check,
   Save,
-  AlertTriangle
+  ArrowDownToLine,
+  Zap,
+  Send
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import LogoLoader from '@/components/LogoLoader';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 interface AllowanceSettings {
   id?: string;
-  daily_limit: number;
-  weekly_limit: number;
   auto_deduct_on_entry: boolean;
   entry_allowance_amount: number;
-  blocked_categories: string[];
-  allowed_categories: string[];
-  is_active: boolean;
-}
-
-interface CanteenCategory {
-  id: string;
-  name: string;
-  name_ar: string;
 }
 
 export default function StudentWalletControl() {
@@ -47,17 +41,15 @@ export default function StudentWalletControl() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [transferring, setTransferring] = useState(false);
   const [student, setStudent] = useState<any>(null);
-  const [walletBalance, setWalletBalance] = useState(0);
-  const [categories, setCategories] = useState<CanteenCategory[]>([]);
+  const [studentWalletBalance, setStudentWalletBalance] = useState(0);
+  const [parentWalletBalance, setParentWalletBalance] = useState(0);
+  const [transferAmount, setTransferAmount] = useState('');
+  const [showTransferDialog, setShowTransferDialog] = useState(false);
   const [settings, setSettings] = useState<AllowanceSettings>({
-    daily_limit: 5.000,
-    weekly_limit: 25.000,
     auto_deduct_on_entry: false,
-    entry_allowance_amount: 1.000,
-    blocked_categories: [],
-    allowed_categories: [],
-    is_active: true
+    entry_allowance_amount: 1.000
   });
 
   useEffect(() => {
@@ -83,43 +75,38 @@ export default function StudentWalletControl() {
 
       setStudent(studentData);
 
-      // Load wallet balance
-      const { data: wallet } = await supabase
+      // Load student wallet balance
+      const { data: studentWallet } = await supabase
         .from('wallet_balances')
         .select('balance')
         .eq('user_id', studentId)
-        .single();
+        .maybeSingle();
       
-      setWalletBalance(wallet?.balance || 0);
+      setStudentWalletBalance(studentWallet?.balance || 0);
+
+      // Load parent wallet balance
+      const { data: parentWallet } = await supabase
+        .from('wallet_balances')
+        .select('balance')
+        .eq('user_id', user?.id)
+        .maybeSingle();
+      
+      setParentWalletBalance(parentWallet?.balance || 0);
 
       // Load existing allowance settings
       const { data: existingSettings } = await supabase
         .from('allowance_settings')
         .select('*')
         .eq('student_id', studentId)
-        .single();
+        .maybeSingle();
 
       if (existingSettings) {
         setSettings({
           id: existingSettings.id,
-          daily_limit: existingSettings.daily_limit || 5.000,
-          weekly_limit: existingSettings.weekly_limit || 25.000,
           auto_deduct_on_entry: existingSettings.auto_deduct_on_entry || false,
-          entry_allowance_amount: existingSettings.entry_allowance_amount || 1.000,
-          blocked_categories: existingSettings.blocked_categories || [],
-          allowed_categories: existingSettings.allowed_categories || [],
-          is_active: existingSettings.is_active !== false
+          entry_allowance_amount: existingSettings.entry_allowance_amount || 1.000
         });
       }
-
-      // Load canteen categories
-      const { data: categoriesData } = await supabase
-        .from('canteen_categories')
-        .select('id, name, name_ar')
-        .eq('is_active', true)
-        .order('display_order');
-
-      setCategories(categoriesData || []);
 
     } catch (error) {
       console.error('Error loading data:', error);
@@ -134,13 +121,8 @@ export default function StudentWalletControl() {
       const settingsData = {
         student_id: studentId,
         parent_id: user?.id,
-        daily_limit: settings.daily_limit,
-        weekly_limit: settings.weekly_limit,
         auto_deduct_on_entry: settings.auto_deduct_on_entry,
-        entry_allowance_amount: settings.entry_allowance_amount,
-        blocked_categories: settings.blocked_categories,
-        allowed_categories: settings.allowed_categories,
-        is_active: settings.is_active
+        entry_allowance_amount: settings.entry_allowance_amount
       };
 
       if (settings.id) {
@@ -163,30 +145,81 @@ export default function StudentWalletControl() {
     }
   };
 
-  const toggleBlockedCategory = (categoryId: string) => {
-    setSettings(prev => {
-      const blocked = prev.blocked_categories.includes(categoryId)
-        ? prev.blocked_categories.filter(c => c !== categoryId)
-        : [...prev.blocked_categories, categoryId];
-      
-      // Remove from allowed if added to blocked
-      const allowed = prev.allowed_categories.filter(c => !blocked.includes(c));
-      
-      return { ...prev, blocked_categories: blocked, allowed_categories: allowed };
-    });
-  };
+  const handleTransfer = async () => {
+    const amount = parseFloat(transferAmount);
+    if (!amount || amount <= 0) {
+      toast.error(language === 'ar' ? 'أدخل مبلغًا صحيحًا' : 'Enter a valid amount');
+      return;
+    }
 
-  const toggleAllowedCategory = (categoryId: string) => {
-    setSettings(prev => {
-      const allowed = prev.allowed_categories.includes(categoryId)
-        ? prev.allowed_categories.filter(c => c !== categoryId)
-        : [...prev.allowed_categories, categoryId];
+    if (amount > parentWalletBalance) {
+      toast.error(language === 'ar' ? 'رصيد غير كافي' : 'Insufficient balance');
+      return;
+    }
+
+    setTransferring(true);
+    try {
+      // Deduct from parent wallet
+      const { error: parentError } = await supabase
+        .from('wallet_balances')
+        .update({ balance: parentWalletBalance - amount })
+        .eq('user_id', user?.id);
+
+      if (parentError) throw parentError;
+
+      // Check if student has a wallet, create if not
+      const { data: existingWallet } = await supabase
+        .from('wallet_balances')
+        .select('id, balance')
+        .eq('user_id', studentId)
+        .maybeSingle();
+
+      if (existingWallet) {
+        // Update existing wallet
+        await supabase
+          .from('wallet_balances')
+          .update({ balance: existingWallet.balance + amount })
+          .eq('user_id', studentId);
+      } else {
+        // Create new wallet for student
+        await supabase
+          .from('wallet_balances')
+          .insert({ user_id: studentId, balance: amount });
+      }
+
+      // Record transactions
+      const newParentBalance = parentWalletBalance - amount;
+      const newStudentBalance = (existingWallet?.balance || 0) + amount;
       
-      // Remove from blocked if added to allowed
-      const blocked = prev.blocked_categories.filter(c => !allowed.includes(c));
-      
-      return { ...prev, allowed_categories: allowed, blocked_categories: blocked };
-    });
+      await supabase.from('wallet_transactions').insert([
+        {
+          user_id: user?.id,
+          amount: -amount,
+          balance_after: newParentBalance,
+          type: 'transfer',
+          description: language === 'ar' 
+            ? `تحويل إلى ${student?.first_name}` 
+            : `Transfer to ${student?.first_name}`
+        },
+        {
+          user_id: studentId,
+          amount: amount,
+          balance_after: newStudentBalance,
+          type: 'transfer',
+          description: language === 'ar' ? 'تحويل من ولي الأمر' : 'Transfer from parent'
+        }
+      ]);
+
+      toast.success(language === 'ar' ? 'تم التحويل بنجاح' : 'Transfer successful');
+      setTransferAmount('');
+      setShowTransferDialog(false);
+      loadData();
+    } catch (error) {
+      console.error('Error transferring:', error);
+      toast.error(language === 'ar' ? 'فشل التحويل' : 'Transfer failed');
+    } finally {
+      setTransferring(false);
+    }
   };
 
   if (loading) {
@@ -198,83 +231,147 @@ export default function StudentWalletControl() {
     : `${student?.first_name} ${student?.last_name}`;
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6 p-4 md:p-6 max-w-4xl mx-auto pb-24">
       {/* Header */}
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" onClick={() => navigate(`/student/${studentId}`)}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div className="flex-1">
-          <h1 className="text-2xl font-bold">
+          <h1 className="text-xl md:text-2xl font-bold">
             {language === 'ar' ? 'إدارة المحفظة' : 'Wallet Management'}
           </h1>
-          <p className="text-muted-foreground">{studentName}</p>
+          <p className="text-sm text-muted-foreground">{studentName}</p>
         </div>
       </div>
 
-      {/* Current Balance */}
+      {/* Student Wallet Balance */}
       <Card className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground">
         <CardContent className="p-6">
           <div className="flex items-center gap-4">
             <Wallet className="h-12 w-12" />
             <div>
               <p className="text-sm opacity-80">
-                {language === 'ar' ? 'الرصيد الحالي' : 'Current Balance'}
+                {language === 'ar' ? 'رصيد الطالب' : 'Student Balance'}
               </p>
               <p className="text-3xl font-bold">
-                {walletBalance.toFixed(3)} {language === 'ar' ? 'ر.ع' : 'OMR'}
+                {studentWalletBalance.toFixed(3)} {language === 'ar' ? 'ر.ع' : 'OMR'}
               </p>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Spending Limits */}
+      {/* Parent Wallet Balance */}
+      <Card className="bg-accent/50">
+        <CardContent className="py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-background rounded-full">
+                <Wallet className="h-5 w-5 text-muted-foreground" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">
+                  {language === 'ar' ? 'رصيدك' : 'Your Balance'}
+                </p>
+                <p className="font-bold">
+                  {parentWalletBalance.toFixed(3)} {language === 'ar' ? 'ر.ع' : 'OMR'}
+                </p>
+              </div>
+            </div>
+            <Dialog open={showTransferDialog} onOpenChange={setShowTransferDialog}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Send className="h-4 w-4 mr-2" />
+                  {language === 'ar' ? 'شحن' : 'Charge'}
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>
+                    {language === 'ar' ? 'شحن محفظة الطالب' : 'Charge Student Wallet'}
+                  </DialogTitle>
+                  <DialogDescription>
+                    {language === 'ar' 
+                      ? `تحويل من رصيدك إلى محفظة ${student?.first_name}`
+                      : `Transfer from your balance to ${student?.first_name}'s wallet`}
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div>
+                    <Label>{language === 'ar' ? 'المبلغ (ر.ع)' : 'Amount (OMR)'}</Label>
+                    <Input
+                      type="number"
+                      step="0.100"
+                      min="0.100"
+                      max={parentWalletBalance}
+                      value={transferAmount}
+                      onChange={(e) => setTransferAmount(e.target.value)}
+                      placeholder="0.000"
+                      className="text-lg"
+                    />
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {language === 'ar' ? 'المتاح:' : 'Available:'} {parentWalletBalance.toFixed(3)} {language === 'ar' ? 'ر.ع' : 'OMR'}
+                    </p>
+                  </div>
+                  {/* Quick amounts */}
+                  <div className="flex flex-wrap gap-2">
+                    {[1, 2, 5, 10].map((amt) => (
+                      <Button
+                        key={amt}
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setTransferAmount(amt.toString())}
+                        disabled={amt > parentWalletBalance}
+                      >
+                        {amt.toFixed(3)} {language === 'ar' ? 'ر.ع' : 'OMR'}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setShowTransferDialog(false)}>
+                    {language === 'ar' ? 'إلغاء' : 'Cancel'}
+                  </Button>
+                  <Button onClick={handleTransfer} disabled={transferring}>
+                    {transferring 
+                      ? (language === 'ar' ? 'جاري التحويل...' : 'Transferring...')
+                      : (language === 'ar' ? 'تحويل' : 'Transfer')}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Auto Deduct on Entry */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <AlertTriangle className="h-5 w-5" />
-            {language === 'ar' ? 'حدود الإنفاق' : 'Spending Limits'}
+            <Zap className="h-5 w-5" />
+            {language === 'ar' ? 'المصروف التلقائي' : 'Auto Allowance'}
           </CardTitle>
           <CardDescription>
             {language === 'ar' 
-              ? 'تعيين حدود الإنفاق اليومية والأسبوعية'
-              : 'Set daily and weekly spending limits'}
+              ? 'خصم المصروف تلقائياً من محفظتك وإضافته لمحفظة الطالب عند دخول المدرسة'
+              : 'Automatically deduct from your wallet and add to student wallet on school entry'}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label>{language === 'ar' ? 'الحد اليومي (ر.ع)' : 'Daily Limit (OMR)'}</Label>
-              <Input
-                type="number"
-                step="0.100"
-                value={settings.daily_limit}
-                onChange={(e) => setSettings(prev => ({ ...prev, daily_limit: parseFloat(e.target.value) || 0 }))}
-              />
-            </div>
-            <div>
-              <Label>{language === 'ar' ? 'الحد الأسبوعي (ر.ع)' : 'Weekly Limit (OMR)'}</Label>
-              <Input
-                type="number"
-                step="0.100"
-                value={settings.weekly_limit}
-                onChange={(e) => setSettings(prev => ({ ...prev, weekly_limit: parseFloat(e.target.value) || 0 }))}
-              />
-            </div>
-          </div>
-
-          {/* Auto Deduct on Entry */}
           <div className="flex items-center justify-between p-4 rounded-lg border">
-            <div>
-              <p className="font-medium">
-                {language === 'ar' ? 'خصم تلقائي عند الدخول' : 'Auto-deduct on School Entry'}
-              </p>
-              <p className="text-sm text-muted-foreground">
-                {language === 'ar' 
-                  ? 'خصم المصروف تلقائياً عند مسح NFC عند البوابة'
-                  : 'Automatically deduct allowance when NFC is scanned at gate'}
-              </p>
+            <div className="flex items-center gap-3">
+              <ArrowDownToLine className="h-5 w-5 text-primary" />
+              <div>
+                <p className="font-medium">
+                  {language === 'ar' ? 'خصم تلقائي عند الدخول' : 'Auto-deduct on Entry'}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {language === 'ar' 
+                    ? 'عند مسح بطاقة NFC عند بوابة المدرسة'
+                    : 'When NFC card is scanned at school gate'}
+                </p>
+              </div>
             </div>
             <Switch
               checked={settings.auto_deduct_on_entry}
@@ -283,82 +380,25 @@ export default function StudentWalletControl() {
           </div>
 
           {settings.auto_deduct_on_entry && (
-            <div>
-              <Label>{language === 'ar' ? 'مبلغ المصروف اليومي (ر.ع)' : 'Daily Allowance Amount (OMR)'}</Label>
+            <div className="p-4 rounded-lg bg-primary/5 border border-primary/20">
+              <Label className="text-primary">
+                {language === 'ar' ? 'مبلغ المصروف اليومي (ر.ع)' : 'Daily Allowance Amount (OMR)'}
+              </Label>
               <Input
                 type="number"
                 step="0.100"
+                min="0.100"
                 value={settings.entry_allowance_amount}
                 onChange={(e) => setSettings(prev => ({ ...prev, entry_allowance_amount: parseFloat(e.target.value) || 0 }))}
+                className="mt-2 text-lg"
               />
+              <p className="text-sm text-muted-foreground mt-2">
+                {language === 'ar' 
+                  ? 'سيتم خصم هذا المبلغ من محفظتك وإضافته لمحفظة الطالب يومياً عند الدخول'
+                  : 'This amount will be deducted from your wallet and added to student wallet daily on entry'}
+              </p>
             </div>
           )}
-        </CardContent>
-      </Card>
-
-      {/* Product Restrictions */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <ShoppingBag className="h-5 w-5" />
-            {language === 'ar' ? 'صلاحيات المنتجات' : 'Product Permissions'}
-          </CardTitle>
-          <CardDescription>
-            {language === 'ar' 
-              ? 'حدد المنتجات المسموحة أو المحظورة'
-              : 'Select which products are allowed or blocked'}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ScrollArea className="h-[300px]">
-            <div className="space-y-3">
-              {categories.map((category) => {
-                const isBlocked = settings.blocked_categories.includes(category.id);
-                const isAllowed = settings.allowed_categories.includes(category.id);
-                
-                return (
-                  <div 
-                    key={category.id}
-                    className={`p-4 rounded-lg border flex items-center justify-between ${
-                      isBlocked ? 'bg-red-500/10 border-red-500/30' :
-                      isAllowed ? 'bg-green-500/10 border-green-500/30' : ''
-                    }`}
-                  >
-                    <span className="font-medium">
-                      {language === 'ar' ? category.name_ar || category.name : category.name}
-                    </span>
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant={isAllowed ? 'default' : 'outline'}
-                        className={isAllowed ? 'bg-green-600 hover:bg-green-700' : ''}
-                        onClick={() => toggleAllowedCategory(category.id)}
-                      >
-                        <Check className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant={isBlocked ? 'destructive' : 'outline'}
-                        onClick={() => toggleBlockedCategory(category.id)}
-                      >
-                        <Ban className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </ScrollArea>
-          
-          <div className="mt-4 p-4 bg-muted/50 rounded-lg">
-            <p className="text-sm text-muted-foreground">
-              <Check className="h-4 w-4 inline-block text-green-600 mr-1" />
-              {language === 'ar' ? 'مسموح' : 'Allowed'} | 
-              <Ban className="h-4 w-4 inline-block text-red-600 mx-1" />
-              {language === 'ar' ? 'محظور' : 'Blocked'} | 
-              {language === 'ar' ? ' فارغ = كل المنتجات مسموحة' : ' Empty = All products allowed'}
-            </p>
-          </div>
         </CardContent>
       </Card>
 
