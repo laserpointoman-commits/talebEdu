@@ -117,7 +117,9 @@ export default function Students() {
     name: `${student.firstName} ${student.lastName}`,
     nameAr: `${student.firstNameAr} ${student.lastNameAr}`,
     email: student.email,
-    class: student.class,
+    class: student.className || student.class || '',
+    classId: student.classId,
+    className: student.className,
     grade: student.grade,
     nfcId: student.nfcId || '',
     barcode: student.barcode || '',
@@ -199,6 +201,8 @@ export default function Students() {
             nameAr: `${dbStudent.first_name_ar ?? dbStudent.first_name ?? ''} ${dbStudent.last_name_ar ?? dbStudent.last_name ?? ''}`.trim(),
             email: dbStudent.email,
             class: dbStudent.class ?? '',
+            classId: (dbStudent as any).class_id ?? '',
+            className: '',
             grade: dbStudent.grade ?? '',
             nfcId: dbStudent.nfc_id ?? nfcId,
             barcode: dbStudent.barcode ?? '',
@@ -455,7 +459,15 @@ export default function Students() {
                     <CardTitle className="text-base">
                       {language === 'en' ? student.name : student.nameAr}
                     </CardTitle>
-                    <p className="text-sm text-muted-foreground">{student.class}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      {student.classId ? (
+                        <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium bg-primary/10 text-primary rounded-full">
+                          {student.class}
+                        </span>
+                      ) : (
+                        <span className="text-sm text-muted-foreground">{student.grade || 'No class'}</span>
+                      )}
+                    </div>
                   </div>
                 </div>
                 {canEdit && (
