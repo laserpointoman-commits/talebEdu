@@ -37,6 +37,11 @@ export interface Student {
   nfcId?: string;
   barcode?: string;
   status?: 'active' | 'inactive';
+  // Home location fields
+  homeLatitude?: number;
+  homeLongitude?: number;
+  homeArea?: string;
+  homeAreaAr?: string;
 }
 
 interface StudentsContextType {
@@ -109,7 +114,11 @@ export function StudentsProvider({ children }: { children: React.ReactNode }) {
           profileImage: student.profile_image,
           nfcId: student.nfc_id,
           barcode: student.barcode,
-          status: (student.status as 'active' | 'inactive') || 'active'
+          status: (student.status as 'active' | 'inactive') || 'active',
+          homeLatitude: (student as any).home_latitude,
+          homeLongitude: (student as any).home_longitude,
+          homeArea: (student as any).home_area,
+          homeAreaAr: (student as any).home_area_ar,
         }));
         setStudents(mappedStudents);
       }

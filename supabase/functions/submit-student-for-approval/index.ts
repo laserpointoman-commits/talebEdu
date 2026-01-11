@@ -84,6 +84,11 @@ const handler = async (req: Request): Promise<Response> => {
         emergency_contact: studentData.emergencyPhone || studentData.emergency_contact,
         address: studentData.address,
         phone: studentData.phone,
+        // Home location fields
+        home_latitude: studentData.homeLatitude || studentData.home_latitude || null,
+        home_longitude: studentData.homeLongitude || studentData.home_longitude || null,
+        home_area: studentData.homeArea || studentData.home_area || null,
+        home_area_ar: studentData.homeAreaAr || studentData.home_area_ar || null,
         student_id: `STU-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`,
         approval_status: "pending",
         visible_to_parent: false,
