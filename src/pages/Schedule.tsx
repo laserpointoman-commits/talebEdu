@@ -38,9 +38,37 @@ export default function Schedule() {
 
     try {
       const dayOfWeek = selectedDate 
-        ? selectedDate.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase()
-        : new Date().toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+        ? selectedDate.toLocaleDateString('en-US', { weekday: 'long' })
+        : new Date().toLocaleDateString('en-US', { weekday: 'long' });
 
+      // If user is a parent, get their children's class IDs
+      let childClassIds: string[] = [];
+      if (profile.role === 'parent') {
+        const { data: children } = await supabase
+          .from('students')
+          .select('class_id, first_name, last_name')
+          .eq('parent_id', user.id)
+          .eq('approval_status', 'approved')
+          .not('class_id', 'is', null);
+
+        if (children && children.length > 0) {
+          childClassIds = children.map(c => c.class_id).filter(Boolean) as string[];
+        }
+      }
+
+      // If user is a student, get their class_id
+      let studentClassId: string | null = null;
+      if (profile.role === 'student') {
+        const { data: studentData } = await supabase
+          .from('students')
+          .select('class_id')
+          .eq('profile_id', user.id)
+          .single();
+
+        studentClassId = studentData?.class_id || null;
+      }
+
+      // Build the query
       let query = supabase
         .from('class_schedules')
         .select(`
@@ -49,6 +77,7 @@ export default function Schedule() {
           time,
           subject,
           room,
+          class_id,
           classes (
             name,
             grade,
@@ -64,29 +93,12 @@ export default function Schedule() {
         .eq('day', dayOfWeek)
         .order('time', { ascending: true });
 
-      // If user is a student, filter by their class
-      if (profile.role === 'student') {
-        const { data: studentData } = await supabase
-          .from('students')
-          .select('class')
-          .eq('profile_id', user.id)
-          .single();
-
-        if (studentData?.class) {
-          const { data: classData } = await supabase
-            .from('classes')
-            .select('id')
-            .eq('name', studentData.class)
-            .single();
-
-          if (classData) {
-            query = query.eq('class_id', classData.id);
-          }
-        }
-      }
-
-      // If user is a teacher, filter by their assigned schedules
-      if (profile.role === 'teacher') {
+      // Filter by role
+      if (profile.role === 'student' && studentClassId) {
+        query = query.eq('class_id', studentClassId);
+      } else if (profile.role === 'parent' && childClassIds.length > 0) {
+        query = query.in('class_id', childClassIds);
+      } else if (profile.role === 'teacher') {
         const { data: teacherData } = await supabase
           .from('teachers')
           .select('id')
