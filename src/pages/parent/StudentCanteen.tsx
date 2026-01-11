@@ -10,6 +10,16 @@ import { supabase } from '@/integrations/supabase/client';
 import LogoLoader from '@/components/LogoLoader';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface CanteenItem {
   id: string;
@@ -38,6 +48,11 @@ export default function StudentCanteen() {
   const [canteenItems, setCanteenItems] = useState<CanteenItem[]>([]);
   const [recentOrders, setRecentOrders] = useState<Order[]>([]);
   const [blockedItems, setBlockedItems] = useState<string[]>([]);
+  const [confirmDialog, setConfirmDialog] = useState<{ open: boolean; item: CanteenItem | null; action: 'block' | 'unblock' }>({
+    open: false,
+    item: null,
+    action: 'block'
+  });
 
   useEffect(() => {
     if (studentId && user) {
@@ -98,6 +113,27 @@ export default function StudentCanteen() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleItemClick = (item: CanteenItem) => {
+    const isCurrentlyBlocked = blockedItems.includes(item.id);
+    setConfirmDialog({
+      open: true,
+      item,
+      action: isCurrentlyBlocked ? 'unblock' : 'block'
+    });
+  };
+
+  const confirmToggle = () => {
+    if (confirmDialog.item) {
+      setBlockedItems(prev => {
+        if (prev.includes(confirmDialog.item!.id)) {
+          return prev.filter(id => id !== confirmDialog.item!.id);
+        }
+        return [...prev, confirmDialog.item!.id];
+      });
+    }
+    setConfirmDialog({ open: false, item: null, action: 'block' });
   };
 
   const toggleItemBlock = (itemId: string) => {
@@ -213,7 +249,7 @@ export default function StudentCanteen() {
                           ? 'bg-red-500/10 border border-red-500/30' 
                           : 'bg-accent/50 hover:bg-accent'
                       }`}
-                      onClick={() => toggleItemBlock(item.id)}
+                      onClick={() => handleItemClick(item)}
                     >
                       <div className="flex items-center gap-3">
                         <span className="text-xl">{item.icon || '📦'}</span>
@@ -297,6 +333,44 @@ export default function StudentCanteen() {
           </CardContent>
         </Card>
       )}
+
+      {/* Confirmation Dialog */}
+      <AlertDialog open={confirmDialog.open} onOpenChange={(open) => !open && setConfirmDialog({ open: false, item: null, action: 'block' })}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {confirmDialog.action === 'block' 
+                ? (language === 'ar' ? 'حظر المنتج؟' : 'Block Product?')
+                : (language === 'ar' ? 'إلغاء الحظر؟' : 'Unblock Product?')}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="flex items-center gap-3 pt-2">
+              <span className="text-2xl">{confirmDialog.item?.icon || '📦'}</span>
+              <span>
+                {confirmDialog.action === 'block' 
+                  ? (language === 'ar' 
+                      ? `هل تريد حظر "${confirmDialog.item?.name_ar || confirmDialog.item?.name}" من المقصف؟`
+                      : `Do you want to block "${confirmDialog.item?.name}" from the canteen?`)
+                  : (language === 'ar' 
+                      ? `هل تريد إلغاء حظر "${confirmDialog.item?.name_ar || confirmDialog.item?.name}"؟`
+                      : `Do you want to unblock "${confirmDialog.item?.name}"?`)}
+              </span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>
+              {language === 'ar' ? 'إلغاء' : 'Cancel'}
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmToggle}
+              className={confirmDialog.action === 'block' ? 'bg-destructive hover:bg-destructive/90' : ''}
+            >
+              {confirmDialog.action === 'block' 
+                ? (language === 'ar' ? 'حظر' : 'Block')
+                : (language === 'ar' ? 'إلغاء الحظر' : 'Unblock')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
