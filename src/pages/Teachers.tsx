@@ -1587,30 +1587,21 @@ export default function Teachers() {
           </DialogHeader>
           <ScrollArea className="h-[400px] pr-4">
             <div className="space-y-2">
-              {availableClasses.map((classInfo) => {
-                const isAssignedToOther = classInfo.class_teacher_id && classInfo.class_teacher_id !== selectedTeacher?.id;
-                return (
-                  <div
-                    key={classInfo.id}
-                    className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-colors ${
-                      selectedClassIds.includes(classInfo.id) ? 'bg-primary/10 border-primary' : 
-                      isAssignedToOther ? 'bg-orange-50 border-orange-200' : 'hover:bg-muted'
-                    }`}
-                    onClick={() => handleToggleClass(classInfo.id)}
-                  >
-                    <Checkbox checked={selectedClassIds.includes(classInfo.id)} />
-                    <div className="flex-1">
-                      <p className="font-medium">{classInfo.name}</p>
-                      <p className="text-sm text-muted-foreground">{classInfo.grade} - {classInfo.section}</p>
-                    </div>
-                    {isAssignedToOther && (
-                      <Badge variant="outline" className="text-orange-600 border-orange-300">
-                        {language === 'en' ? 'Assigned' : 'معين'}
-                      </Badge>
-                    )}
+              {availableClasses.map((classInfo) => (
+                <div
+                  key={classInfo.id}
+                  className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-colors ${
+                    selectedClassIds.includes(classInfo.id) ? 'bg-primary/10 border-primary' : 'hover:bg-muted'
+                  }`}
+                  onClick={() => handleToggleClass(classInfo.id)}
+                >
+                  <Checkbox checked={selectedClassIds.includes(classInfo.id)} />
+                  <div className="flex-1">
+                    <p className="font-medium">{classInfo.name}</p>
+                    <p className="text-sm text-muted-foreground">{classInfo.grade} - {classInfo.section}</p>
                   </div>
-                );
-              })}
+                </div>
+              ))}
             </div>
           </ScrollArea>
           <DialogFooter>
