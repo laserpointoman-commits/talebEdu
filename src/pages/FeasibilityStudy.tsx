@@ -37,7 +37,6 @@ import jsPDF from "jspdf";
 
 const FeasibilityStudy = () => {
   const [isGenerating, setIsGenerating] = useState(false);
-  const contentRef = useRef<HTMLDivElement>(null);
 
   const generatePDF = async () => {
     setIsGenerating(true);
@@ -48,7 +47,6 @@ const FeasibilityStudy = () => {
       format: 'a4',
     });
 
-    // Add Arabic font support - we'll use a simple approach
     const pageWidth = pdf.internal.pageSize.getWidth();
     const pageHeight = pdf.internal.pageSize.getHeight();
     const margin = 20;
@@ -68,310 +66,323 @@ const FeasibilityStudy = () => {
       return false;
     };
 
-    // Helper function to add centered text
     const addCenteredText = (text: string, y: number, size: number = 12) => {
       pdf.setFontSize(size);
       const textWidth = pdf.getTextWidth(text);
       pdf.text(text, (pageWidth - textWidth) / 2, y);
     };
 
-    // Helper for RTL text (reverse for display)
-    const rtlText = (text: string) => text.split('').reverse().join('');
-
-    // === COVER PAGE ===
-    // Background gradient effect (simulated with rectangles)
-    pdf.setFillColor(15, 23, 42); // Dark blue
+    // === صفحة الغلاف ===
+    pdf.setFillColor(15, 23, 42);
     pdf.rect(0, 0, pageWidth, pageHeight, 'F');
     
-    // Decorative elements
-    pdf.setFillColor(59, 130, 246); // Blue accent
+    pdf.setFillColor(59, 130, 246);
     pdf.circle(pageWidth - 30, 40, 60, 'F');
-    pdf.setFillColor(16, 185, 129); // Green accent
+    pdf.setFillColor(16, 185, 129);
     pdf.circle(30, pageHeight - 50, 40, 'F');
     
-    // Logo area
     pdf.setFillColor(255, 255, 255);
     pdf.roundedRect(pageWidth/2 - 40, 50, 80, 30, 5, 5, 'F');
     pdf.setTextColor(15, 23, 42);
     pdf.setFontSize(28);
     addCenteredText('TalebEdu', 70);
     
-    // Main title
     pdf.setTextColor(255, 255, 255);
-    pdf.setFontSize(24);
-    addCenteredText('Feasibility Study', 110);
-    addCenteredText('ىودج ةسارد', 125); // دراسة جدوى RTL
+    pdf.setFontSize(22);
+    addCenteredText('Feasibility Study', 105);
+    addCenteredText('ىودج ةسارد', 120);
     
-    pdf.setFontSize(14);
-    addCenteredText('Comprehensive School Management Application', 145);
-    addCenteredText('Electronic Wallet & Smart Gates & Digital Stores', 155);
+    pdf.setFontSize(13);
+    addCenteredText('Comprehensive School Management Application', 142);
+    addCenteredText('قيبطت لماش ةرادلإ سرادملا ةظفحملاو ةينورتكللإا', 155);
+    addCenteredText('تاباوبلاو ةيكذلا رجاتملاو ةيمقرلا', 165);
     
-    // Submitted to
-    pdf.setFillColor(59, 130, 246, 0.3);
-    pdf.roundedRect(margin + 20, 175, contentWidth - 40, 40, 5, 5, 'F');
+    pdf.setFillColor(59, 130, 246);
+    pdf.roundedRect(margin + 20, 180, contentWidth - 40, 35, 5, 5, 'F');
+    pdf.setFontSize(11);
+    addCenteredText('Submitted to / :ىلإ مدقم', 193);
+    pdf.setFontSize(15);
+    addCenteredText('Oman Development Bank / ينامعلا ةيمنتلا كنب', 205);
+    
     pdf.setFontSize(12);
-    addCenteredText('Submitted to:', 190);
-    pdf.setFontSize(16);
-    addCenteredText('Oman Development Bank', 202);
+    addCenteredText('Submitted by / :نم مدقملا', 230);
+    addCenteredText('Mazen Khanfar - TalebEdu / رفناخ نزام', 242);
+    addCenteredText('2026 :ةنسلا / Year: 2026', 255);
     
-    // Submitted by
-    pdf.setFontSize(12);
-    addCenteredText('Submitted by: Mazen Khanfar - TalebEdu', 235);
-    addCenteredText('Year: 2026', 248);
-    
-    // Contact info
     pdf.setFontSize(10);
-    addCenteredText('Muscat, Sultanate of Oman', 270);
+    addCenteredText('Muscat, Sultanate of Oman / نامع ةنطلس ،طقسم', 275);
 
-    // === PAGE 2: EXECUTIVE SUMMARY ===
+    // === صفحة 2: الملخص التنفيذي ===
     addNewPage();
     pdf.setFillColor(255, 255, 255);
     pdf.rect(0, 0, pageWidth, pageHeight, 'F');
     
-    // Header
     pdf.setFillColor(15, 23, 42);
     pdf.rect(0, 0, pageWidth, 35, 'F');
     pdf.setTextColor(255, 255, 255);
-    pdf.setFontSize(18);
-    addCenteredText('Executive Summary', 22);
+    pdf.setFontSize(16);
+    addCenteredText('Executive Summary / يذيفنتلا صخلملا', 22);
     
     pdf.setTextColor(15, 23, 42);
     yPosition = 50;
     
-    // Intro text
     pdf.setFontSize(11);
     const execSummary = [
-      'TalebEdu is the ONLY application in the world that combines in one platform:',
+      'TalebEdu is the ONLY application in the world that combines:',
+      'ملاعلا يف ديحولا قيبطتلا وه TalebEdu :عمجي يذلا',
       '',
       '• School Management: Attendance, Grades, Homework, Schedules',
-      '• Bus Management: Minimum 6 buses per school with real-time tracking',
+      '  ةسردملا ةرادإ: روضحلا ،تاجردلا ،تابجاولا ،لوادجلا',
+      '',
+      '• Bus Management: 6 buses per school with real-time tracking',
+      '  تاصابلا ةرادإ: 6 ةسردم لكل تاصاب عم رشابم عبتت',
+      '',
       '• Smart Gates & Canteen with NFC technology',
+      '  ةيكذلا تاباوبلا فصقملاو ةينقتب NFC',
+      '',
       '• Electronic Wallet for students',
-      '• Digital Store for NFC wristbands + Private Label stationery',
+      '  ةينورتكللإا ةظفحملا بلاطلل',
+      '',
+      '• Digital Store: NFC wristbands + Private Label stationery',
+      '  يمقرلا رجتملا: ةيكذ رواسأ + ةيساترق صاخ مسا',
+      '',
       '• Integrated Communication: Messages, Voice/Video calls, File sharing',
-      '',
-      'UNIQUE ADVANTAGES:',
-      '',
-      '• Smart Wristband: Resistant to all elements except fire, NO charging or maintenance needed',
-      '• Multi-language Support: Arabic, English, Hindi',
-      '• Complete Security for students and parents',
-      '• Local and International Scalability (GCC countries in Year 3)',
-      '• Complete Financial Management: All subscriptions paid directly via wallet to school',
-      '',
-      'PROJECT GOAL: Create a reliable and comprehensive platform to solve school management,',
-      'security, communication, and digital purchasing problems in a sustainable and profitable way.'
+      '  لماكتم لصاوت: لئاسر ،تاملاكم ةيتوص/ويديف ،ةكراشم تافلم',
     ];
     
     execSummary.forEach(line => {
-      checkPageBreak(8);
+      checkPageBreak(7);
       pdf.text(line, margin, yPosition);
-      yPosition += 7;
+      yPosition += 6;
     });
 
-    // === PAGE 3: PROJECT SCOPE ===
+    yPosition += 5;
+    pdf.setFontSize(12);
+    pdf.setTextColor(16, 185, 129);
+    pdf.text('Unique Advantages / ةديرفلا ايازملا:', margin, yPosition);
+    yPosition += 8;
+    
+    pdf.setFontSize(10);
+    pdf.setTextColor(15, 23, 42);
+    const advantages = [
+      '• Smart Wristband: No charging or maintenance needed',
+      '  يكذلا راوسلا: نحش وأ ةنايص نودب',
+      '• Multi-language: Arabic, English, Hindi',
+      '  تاغللا ددعتم: ةيبرعلا ،ةيزيلجنلإا ،ةيدنهلا',
+      '• GCC Expansion in Year 3',
+      '  جيلخلا لود ىلإ عسوتلا ةثلاثلا ةنسلا يف',
+    ];
+    
+    advantages.forEach(line => {
+      pdf.text(line, margin + 5, yPosition);
+      yPosition += 6;
+    });
+
+    // === صفحة 3: نطاق المشروع ===
     addNewPage();
     pdf.setFillColor(15, 23, 42);
     pdf.rect(0, 0, pageWidth, 35, 'F');
     pdf.setTextColor(255, 255, 255);
-    pdf.setFontSize(18);
-    addCenteredText('Project Scope', 22);
+    pdf.setFontSize(16);
+    addCenteredText('Project Scope / عورشملا قاطن', 22);
     
     pdf.setTextColor(15, 23, 42);
     yPosition = 50;
     
-    // Key metrics boxes
     const metrics = [
-      { label: 'Target Segment', value: 'Private Schools + Government Partnership' },
-      { label: 'Location', value: 'Muscat & Ad Dakhiliyah' },
-      { label: 'Year 1 Schools', value: '50 Schools' },
-      { label: 'Avg. Students/School', value: '500 Students' },
-      { label: 'Buses per School', value: '6 Buses' },
-      { label: 'Gates per School', value: '2 Gates' },
-      { label: 'Canteen per School', value: '1 Canteen' },
+      { labelEn: 'Target', labelAr: 'فدهتسملا', value: 'Private Schools / ةصاخ سرادم' },
+      { labelEn: 'Location', labelAr: 'عقوملا', value: 'Muscat & Dakhiliyah / ةيلخادلاو طقسم' },
+      { labelEn: 'Year 1 Schools', labelAr: 'ىلولأا ةنسلا سرادم', value: '50' },
+      { labelEn: 'Students/School', labelAr: 'ةسردم/بلاط', value: '500' },
+      { labelEn: 'Buses/School', labelAr: 'ةسردم/صاب', value: '6' },
+      { labelEn: 'Gates/School', labelAr: 'ةسردم/ةباوب', value: '2' },
+      { labelEn: 'Canteen/School', labelAr: 'ةسردم/فصقم', value: '1' },
     ];
     
-    pdf.setFontSize(11);
+    pdf.setFontSize(10);
     metrics.forEach((metric, i) => {
       const x = i % 2 === 0 ? margin : margin + contentWidth/2;
-      const y = yPosition + Math.floor(i/2) * 20;
+      const y = yPosition + Math.floor(i/2) * 22;
       
       pdf.setFillColor(240, 249, 255);
-      pdf.roundedRect(x, y - 5, contentWidth/2 - 5, 16, 3, 3, 'F');
+      pdf.roundedRect(x, y - 5, contentWidth/2 - 5, 18, 3, 3, 'F');
       pdf.setTextColor(59, 130, 246);
-      pdf.text(metric.label + ':', x + 5, y + 4);
+      pdf.text(metric.labelEn + ' / ' + metric.labelAr + ':', x + 3, y + 4);
       pdf.setTextColor(15, 23, 42);
-      pdf.text(metric.value, x + 5, y + 11);
+      pdf.setFontSize(11);
+      pdf.text(metric.value, x + 3, y + 12);
+      pdf.setFontSize(10);
     });
     
-    yPosition += 90;
+    yPosition += 95;
     
-    // Services offered
-    pdf.setFontSize(14);
+    pdf.setFontSize(13);
     pdf.setTextColor(15, 23, 42);
-    pdf.text('Services Offered:', margin, yPosition);
+    pdf.text('Services Offered / ةمدقملا تامدخلا:', margin, yPosition);
     yPosition += 10;
     
     const services = [
-      '1. Annual Student Subscription (Includes: Bus, Gate, Canteen, Wallet, Grades & Homework tracking)',
-      '2. Additional NFC Wristband Sales',
-      '3. Private Label Stationery Store',
-      '4. Internal Messaging System for Parent-Teacher-Admin Communication'
+      '1. Annual Student Subscription / يونسلا بلاطلا كارتشا',
+      '   (Bus, Gate, Canteen, Wallet, Grades tracking)',
+      '   (صابلا ،ةباوبلا ،فصقملا ،ةظفحملا ،تاجردلا عبتت)',
+      '',
+      '2. NFC Wristband Sales / ةيكذلا رواسلأا عيب',
+      '',
+      '3. Private Label Stationery Store / ةيساترقلا رجتم',
+      '',
+      '4. Internal Messaging System / ةيلخادلا لئاسرلا ماظن',
     ];
     
     pdf.setFontSize(10);
     services.forEach(service => {
       pdf.text(service, margin + 5, yPosition);
-      yPosition += 8;
+      yPosition += 7;
     });
 
-    // === PAGE 4: COMPETITIVE ADVANTAGES ===
+    // === صفحة 4: المزايا التنافسية ===
     addNewPage();
     pdf.setFillColor(15, 23, 42);
     pdf.rect(0, 0, pageWidth, 35, 'F');
     pdf.setTextColor(255, 255, 255);
-    pdf.setFontSize(18);
-    addCenteredText('Competitive Advantages', 22);
+    pdf.setFontSize(16);
+    addCenteredText('Competitive Advantages / ةيسفانتلا ايازملا', 22);
     
     pdf.setTextColor(15, 23, 42);
     yPosition = 50;
     
-    const advantages = [
-      { title: 'Smart Wristband Technology', desc: 'Resistant to water, dust, impact - No charging or maintenance required' },
-      { title: 'Comprehensive Tracking', desc: 'Grades, Homework, Attendance - All in one place' },
-      { title: 'Parental Control', desc: 'Parents can control canteen purchases and spending limits' },
-      { title: 'Integrated Communication', desc: 'Messages, Voice/Video calls, File sharing between all stakeholders' },
-      { title: 'Digital Marketplace', desc: 'Wristbands + Private Label Stationery store' },
-      { title: 'Multi-Language Support', desc: 'Arabic, English, Hindi - Serving diverse communities' },
-      { title: 'GCC Expansion Ready', desc: 'Scalable architecture for regional growth' },
-      { title: 'Complete Student Safety', desc: 'Real-time tracking and secure access control' },
-      { title: 'FIRST in Oman', desc: 'Only platform using Smart Wristband as digital school ID' },
-      { title: 'Electronic Wallet Pioneer', desc: 'First to enable student pocket money via wristband' },
-      { title: 'Direct Payment System', desc: 'All fees paid directly through wallet to school' },
+    const competitiveAdvantages = [
+      { en: 'Smart Wristband - No charging needed', ar: 'نحش نودب - يكذلا راوسلا' },
+      { en: 'Comprehensive Tracking (Grades, Homework)', ar: '(تابجاولا ،تاجردلا) لماش عبتت' },
+      { en: 'Parental Canteen Control', ar: 'فصقملاب يوبأ مكحت' },
+      { en: 'Integrated Communication System', ar: 'لماكتم لصاوت ماظن' },
+      { en: 'Digital Marketplace', ar: 'يمقر قوس' },
+      { en: 'Multi-Language Support (AR/EN/HI)', ar: '(يدنه/يزيلجنإ/يبرع) تاغللا ددعتم' },
+      { en: 'GCC Expansion Ready', ar: 'جيلخلا لودل عسوتلل زهاج' },
+      { en: 'Complete Student Safety', ar: 'بلاطلل لماك نامأ' },
+      { en: 'FIRST in Oman - Smart Wristband as ID', ar: 'ةيوهك يكذلا راوسلا - نامع يف لولأا' },
+      { en: 'Electronic Wallet Pioneer', ar: 'ةينورتكللإا ةظفحملا يف دئار' },
+      { en: 'Direct Payment to Schools', ar: 'سرادملل رشابم عفد' },
     ];
     
-    pdf.setFontSize(10);
-    advantages.forEach((adv, i) => {
-      checkPageBreak(15);
+    pdf.setFontSize(9);
+    competitiveAdvantages.forEach((adv, i) => {
+      checkPageBreak(14);
       pdf.setFillColor(240, 253, 244);
-      pdf.roundedRect(margin, yPosition - 3, contentWidth, 14, 2, 2, 'F');
+      pdf.roundedRect(margin, yPosition - 3, contentWidth, 12, 2, 2, 'F');
       pdf.setTextColor(16, 185, 129);
-      pdf.text('✓ ' + adv.title + ':', margin + 3, yPosition + 4);
-      pdf.setTextColor(75, 85, 99);
-      pdf.text(adv.desc, margin + 55, yPosition + 4);
-      yPosition += 16;
+      pdf.text('✓', margin + 3, yPosition + 4);
+      pdf.setTextColor(15, 23, 42);
+      pdf.text(adv.en + ' / ' + adv.ar, margin + 10, yPosition + 4);
+      yPosition += 14;
     });
 
-    // === PAGE 5: FINANCIAL STUDY - REVENUE ===
+    // === صفحة 5: الدراسة المالية - الإيرادات ===
     addNewPage();
     pdf.setFillColor(15, 23, 42);
     pdf.rect(0, 0, pageWidth, 35, 'F');
     pdf.setTextColor(255, 255, 255);
-    pdf.setFontSize(18);
-    addCenteredText('Financial Study - Revenue Projections', 22);
+    pdf.setFontSize(16);
+    addCenteredText('Financial Study - Revenue / تاداريلإا - ةيلاملا ةساردلا', 22);
     
     yPosition = 50;
     pdf.setTextColor(15, 23, 42);
-    pdf.setFontSize(12);
-    pdf.text('A) Annual Revenue - Private Schools Only (OMR)', margin, yPosition);
-    yPosition += 10;
+    pdf.setFontSize(11);
+    pdf.text('A) Annual Revenue - Private Schools (OMR) / ةصاخلا سرادملا - ةيونسلا تاداريلإا', margin, yPosition);
+    yPosition += 12;
     
-    // Revenue table
-    const tableHeaders = ['Scenario', 'Students', 'Schools', 'Student Sub.', 'Bus Sub.', 'NFC Profit', 'Stationery', 'TOTAL'];
+    const tableHeaders = ['Year/ةنسلا', 'Students/بلاط', 'Schools/سرادم', 'Student/بلاط', 'Bus/صاب', 'NFC', 'Stationery/ةيساترق', 'Total/عومجم'];
     const tableData = [
-      ['Year 1', '25,000', '50', '625,000', '30,000', '42,500', '312,500', '1,010,000'],
-      ['Year 2', '50,000', '100', '1,250,000', '60,000', '85,000', '625,000', '2,020,000'],
-      ['Year 3', '100,000', '200', '2,500,000', '120,000', '170,000', '1,250,000', '4,040,000'],
+      ['1', '25,000', '50', '625,000', '30,000', '42,500', '312,500', '1,010,000'],
+      ['2', '50,000', '100', '1,250,000', '60,000', '85,000', '625,000', '2,020,000'],
+      ['3', '100,000', '200', '2,500,000', '120,000', '170,000', '1,250,000', '4,040,000'],
     ];
     
-    const colWidths = [20, 20, 18, 25, 22, 22, 22, 28];
+    const colWidths = [18, 18, 18, 22, 20, 18, 28, 28];
     let xPos = margin;
     
-    // Header row
     pdf.setFillColor(59, 130, 246);
     pdf.rect(margin, yPosition, contentWidth, 8, 'F');
     pdf.setTextColor(255, 255, 255);
-    pdf.setFontSize(8);
+    pdf.setFontSize(7);
     tableHeaders.forEach((header, i) => {
-      pdf.text(header, xPos + 2, yPosition + 5);
+      pdf.text(header, xPos + 1, yPosition + 5);
       xPos += colWidths[i];
     });
     yPosition += 8;
     
-    // Data rows
     pdf.setTextColor(15, 23, 42);
+    pdf.setFontSize(8);
     tableData.forEach((row, rowIndex) => {
       xPos = margin;
       pdf.setFillColor(rowIndex % 2 === 0 ? 248 : 255, rowIndex % 2 === 0 ? 250 : 255, rowIndex % 2 === 0 ? 252 : 255);
       pdf.rect(margin, yPosition, contentWidth, 8, 'F');
       row.forEach((cell, i) => {
-        pdf.text(cell, xPos + 2, yPosition + 5);
+        pdf.text(cell, xPos + 1, yPosition + 5);
         xPos += colWidths[i];
       });
       yPosition += 8;
     });
     
     yPosition += 15;
-    pdf.setFontSize(12);
-    pdf.text('B) Government + Private Schools Scenario (OMR)', margin, yPosition);
+    pdf.setFontSize(11);
+    pdf.text('B) Government + Private Scenario (OMR) / ةصاخلاو ةيموكحلا سرادملا ويرانيس', margin, yPosition);
     yPosition += 10;
     
     pdf.setFontSize(10);
     const govScenario = [
-      '• Total Students: 242,000 (192,000 Government + 50,000 Private)',
-      '• Student Subscriptions: 6,050,000 OMR',
-      '• Bus Subscriptions: 290,400 OMR',
-      '• NFC Profit: 411,400 OMR',
-      '• Stationery Profit: 3,025,000 OMR',
+      '• Total Students / بلاطلا عومجم: 242,000',
+      '  (192,000 Government / ةيموكح + 50,000 Private / ةصاخ)',
       '',
-      'TOTAL REVENUE = 9,776,800 OMR'
+      '• Student Subscriptions / بلاطلا تاكارتشا: 6,050,000 OMR',
+      '• Bus Subscriptions / صابلا تاكارتشا: 290,400 OMR',
+      '• NFC Profit / NFC حبر: 411,400 OMR',
+      '• Stationery Profit / ةيساترقلا حبر: 3,025,000 OMR',
     ];
     
     govScenario.forEach(line => {
-      if (line.includes('TOTAL')) {
-        pdf.setFillColor(16, 185, 129);
-        pdf.roundedRect(margin, yPosition - 4, contentWidth, 12, 2, 2, 'F');
-        pdf.setTextColor(255, 255, 255);
-        pdf.setFontSize(12);
-      }
-      pdf.text(line, margin + 5, yPosition + 3);
-      yPosition += 10;
-      pdf.setTextColor(15, 23, 42);
-      pdf.setFontSize(10);
+      pdf.text(line, margin + 5, yPosition);
+      yPosition += 7;
     });
+    
+    yPosition += 5;
+    pdf.setFillColor(16, 185, 129);
+    pdf.roundedRect(margin, yPosition - 4, contentWidth, 14, 2, 2, 'F');
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFontSize(12);
+    pdf.text('TOTAL REVENUE / تاداريلإا عومجم = 9,776,800 OMR', margin + 20, yPosition + 5);
 
-    // === PAGE 6: CAPEX ===
+    // === صفحة 6: التكاليف الرأسمالية ===
     addNewPage();
     pdf.setFillColor(15, 23, 42);
     pdf.rect(0, 0, pageWidth, 35, 'F');
     pdf.setTextColor(255, 255, 255);
-    pdf.setFontSize(18);
-    addCenteredText('Capital Expenditure (CAPEX)', 22);
+    pdf.setFontSize(16);
+    addCenteredText('Capital Expenditure (CAPEX) / ةيلامسأرلا فيلاكتلا', 22);
     
     yPosition = 50;
     
     const capexItems = [
-      { item: 'Bus Devices (50 schools × 6)', qty: '300', price: '290', total: '87,000' },
-      { item: 'Smart Gates (50 schools × 2)', qty: '100', price: '290', total: '29,000' },
-      { item: 'Canteen Systems (50 schools × 1)', qty: '50', price: '370', total: '18,500' },
-      { item: 'Electric Vehicles', qty: '5', price: '8,000', total: '40,000' },
-      { item: 'Employee Devices', qty: '10', price: '1,000', total: '10,000' },
-      { item: 'Servers & Data Room', qty: '1', price: '35,000', total: '35,000' },
-      { item: 'Company Furniture', qty: '1', price: '30,000', total: '30,000' },
-      { item: 'Licenses & Commercial Registration', qty: '1', price: '7,000', total: '7,000' },
-      { item: 'Initial Stationery Import', qty: '-', price: '-', total: '30,000' },
-      { item: 'App Development & Maintenance', qty: '-', price: '-', total: '25,000' },
-      { item: 'Technical Support & Cybersecurity', qty: '-', price: '-', total: '18,000' },
+      { item: 'Bus Devices / صابلا ةزهجأ (300)', qty: '300', price: '290', total: '87,000' },
+      { item: 'Smart Gates / ةيكذلا تاباوبلا (100)', qty: '100', price: '290', total: '29,000' },
+      { item: 'Canteen Systems / فصقملا ةمظنأ (50)', qty: '50', price: '370', total: '18,500' },
+      { item: 'Electric Vehicles / ةيئابرهك تارايس', qty: '5', price: '8,000', total: '40,000' },
+      { item: 'Employee Devices / نيفظوملا ةزهجأ', qty: '10', price: '1,000', total: '10,000' },
+      { item: 'Servers & Data Room / تانايبلا ةفرغو مداوخ', qty: '1', price: '35,000', total: '35,000' },
+      { item: 'Company Furniture / ةكرشلا ثاثأ', qty: '1', price: '30,000', total: '30,000' },
+      { item: 'Licenses / صيخارتلا', qty: '1', price: '7,000', total: '7,000' },
+      { item: 'Initial Stationery / ةيلوأ ةيساترق', qty: '-', price: '-', total: '30,000' },
+      { item: 'App Development / قيبطتلا ريوطت', qty: '-', price: '-', total: '25,000' },
+      { item: 'Tech Support & Security / ينقت معد', qty: '-', price: '-', total: '18,000' },
     ];
     
-    // Table header
-    const capexHeaders = ['Item', 'Quantity', 'Unit Price (OMR)', 'Total (OMR)'];
-    const capexColWidths = [75, 25, 35, 35];
+    const capexHeaders = ['Item / دنبلا', 'Qty / ةيمك', 'Price / رعس', 'Total / عومجم'];
+    const capexColWidths = [85, 20, 30, 35];
     xPos = margin;
     
     pdf.setFillColor(59, 130, 246);
     pdf.rect(margin, yPosition, contentWidth, 8, 'F');
     pdf.setTextColor(255, 255, 255);
-    pdf.setFontSize(9);
+    pdf.setFontSize(8);
     capexHeaders.forEach((header, i) => {
       pdf.text(header, xPos + 2, yPosition + 5);
       xPos += capexColWidths[i];
@@ -379,6 +390,7 @@ const FeasibilityStudy = () => {
     yPosition += 8;
     
     pdf.setTextColor(15, 23, 42);
+    pdf.setFontSize(8);
     capexItems.forEach((row, rowIndex) => {
       xPos = margin;
       pdf.setFillColor(rowIndex % 2 === 0 ? 248 : 255, rowIndex % 2 === 0 ? 250 : 255, rowIndex % 2 === 0 ? 252 : 255);
@@ -393,24 +405,23 @@ const FeasibilityStudy = () => {
       yPosition += 7;
     });
     
-    // Total
     pdf.setFillColor(15, 23, 42);
     pdf.rect(margin, yPosition, contentWidth, 10, 'F');
     pdf.setTextColor(255, 255, 255);
-    pdf.setFontSize(11);
-    pdf.text('TOTAL CAPEX', margin + 5, yPosition + 7);
+    pdf.setFontSize(10);
+    pdf.text('TOTAL CAPEX / ةيلامسأرلا فيلاكتلا عومجم', margin + 5, yPosition + 7);
     pdf.text('329,500 OMR', margin + contentWidth - 40, yPosition + 7);
     
-    yPosition += 25;
+    yPosition += 20;
     
-    // OPEX Section
+    // OPEX
     pdf.setTextColor(15, 23, 42);
-    pdf.setFontSize(14);
-    pdf.text('Operating Expenses (OPEX)', margin, yPosition);
+    pdf.setFontSize(13);
+    pdf.text('Operating Expenses (OPEX) / ةيليغشتلا فيلاكتلا', margin, yPosition);
     yPosition += 10;
     
-    const opexHeaders = ['Item', 'Monthly (OMR)', 'Annual (OMR)'];
-    const opexColWidths = [80, 45, 45];
+    const opexHeaders = ['Item / دنبلا', 'Monthly / يرهش', 'Annual / يونس'];
+    const opexColWidths = [90, 40, 40];
     xPos = margin;
     
     pdf.setFillColor(245, 158, 11);
@@ -424,256 +435,251 @@ const FeasibilityStudy = () => {
     yPosition += 8;
     
     const opexItems = [
-      { item: 'Staff Salaries + Manager', monthly: '8,500', annual: '102,000' },
-      { item: 'Office Rent', monthly: '2,000', annual: '24,000' },
+      { item: 'Staff Salaries + Manager / بتاورلا', monthly: '8,500', annual: '102,000' },
+      { item: 'Office Rent / راجيلإا', monthly: '2,000', annual: '24,000' },
     ];
     
     pdf.setTextColor(15, 23, 42);
+    pdf.setFontSize(9);
     opexItems.forEach((row, rowIndex) => {
       xPos = margin;
       pdf.setFillColor(rowIndex % 2 === 0 ? 255 : 248, rowIndex % 2 === 0 ? 251 : 250, rowIndex % 2 === 0 ? 235 : 252);
-      pdf.rect(margin, yPosition, contentWidth, 7, 'F');
+      pdf.rect(margin, yPosition, contentWidth, 8, 'F');
       pdf.text(row.item, xPos + 2, yPosition + 5);
       xPos += opexColWidths[0];
       pdf.text(row.monthly, xPos + 2, yPosition + 5);
       xPos += opexColWidths[1];
       pdf.text(row.annual, xPos + 2, yPosition + 5);
-      yPosition += 7;
+      yPosition += 8;
     });
     
     pdf.setFillColor(245, 158, 11);
     pdf.rect(margin, yPosition, contentWidth, 10, 'F');
     pdf.setTextColor(255, 255, 255);
-    pdf.setFontSize(11);
-    pdf.text('TOTAL OPEX', margin + 5, yPosition + 7);
+    pdf.setFontSize(10);
+    pdf.text('TOTAL OPEX / ةيليغشتلا فيلاكتلا عومجم', margin + 5, yPosition + 7);
     pdf.text('126,000 OMR / Year', margin + contentWidth - 55, yPosition + 7);
 
-    // === PAGE 7: CASH FLOW & LOAN ANALYSIS ===
+    // === صفحة 7: التدفق النقدي ===
     addNewPage();
     pdf.setFillColor(15, 23, 42);
     pdf.rect(0, 0, pageWidth, 35, 'F');
     pdf.setTextColor(255, 255, 255);
-    pdf.setFontSize(18);
-    addCenteredText('Cash Flow Analysis - Year 1', 22);
+    pdf.setFontSize(16);
+    addCenteredText('Cash Flow Analysis / يدقنلا قفدتلا ليلحت', 22);
     
     yPosition = 55;
     pdf.setTextColor(15, 23, 42);
+    pdf.setFontSize(12);
+    pdf.text('Year 1 - 50 Schools - 25,000 Students', margin, yPosition);
+    pdf.text('بلاط 25,000 - ةسردم 50 - ىلولأا ةنسلا', margin + contentWidth - 70, yPosition);
+    yPosition += 15;
     
-    // Cash flow summary box
     const cashFlowData = [
-      { label: 'Total Revenue', value: '1,010,000 OMR', color: [16, 185, 129] },
-      { label: 'CAPEX', value: '329,500 OMR', color: [239, 68, 68] },
-      { label: 'OPEX', value: '126,000 OMR', color: [245, 158, 11] },
-      { label: 'Net Income Before Loan', value: '554,500 OMR', color: [59, 130, 246] },
+      { labelEn: 'Total Revenue', labelAr: 'تاداريلإا عومجم', value: '1,010,000 OMR', color: [16, 185, 129] },
+      { labelEn: 'CAPEX', labelAr: 'ةيلامسأرلا فيلاكتلا', value: '329,500 OMR', color: [239, 68, 68] },
+      { labelEn: 'OPEX', labelAr: 'ةيليغشتلا فيلاكتلا', value: '126,000 OMR', color: [245, 158, 11] },
+      { labelEn: 'Net Income', labelAr: 'يفاصلا لخدلا', value: '554,500 OMR', color: [59, 130, 246] },
     ];
     
     cashFlowData.forEach((item, i) => {
       pdf.setFillColor(item.color[0], item.color[1], item.color[2]);
-      pdf.roundedRect(margin, yPosition, contentWidth, 15, 3, 3, 'F');
+      pdf.roundedRect(margin, yPosition, contentWidth, 16, 3, 3, 'F');
       pdf.setTextColor(255, 255, 255);
-      pdf.setFontSize(12);
-      pdf.text(item.label, margin + 10, yPosition + 10);
-      pdf.text(item.value, margin + contentWidth - 50, yPosition + 10);
+      pdf.setFontSize(11);
+      pdf.text(item.labelEn + ' / ' + item.labelAr, margin + 10, yPosition + 10);
+      pdf.text(item.value, margin + contentWidth - 45, yPosition + 10);
       yPosition += 20;
     });
     
-    yPosition += 10;
-    
-    // Loan coverage analysis
-    pdf.setFillColor(240, 253, 244);
-    pdf.roundedRect(margin, yPosition, contentWidth, 50, 5, 5, 'F');
-    pdf.setTextColor(16, 185, 129);
-    pdf.setFontSize(14);
-    pdf.text('LOAN COVERAGE ANALYSIS', margin + 10, yPosition + 15);
-    pdf.setTextColor(15, 23, 42);
-    pdf.setFontSize(11);
-    pdf.text('Requested Loan: 420,000 OMR', margin + 10, yPosition + 28);
-    pdf.text('Year 1 Net Income: 554,500 OMR', margin + 10, yPosition + 38);
-    pdf.setTextColor(16, 185, 129);
-    pdf.setFontSize(12);
-    pdf.text('Coverage Ratio: 132% - LOAN FULLY COVERED IN YEAR 1', margin + 10, yPosition + 48);
-    
-    yPosition += 65;
-    
-    // 3-year projection
-    pdf.setTextColor(15, 23, 42);
-    pdf.setFontSize(14);
-    pdf.text('3-Year Revenue Projection', margin, yPosition);
     yPosition += 15;
     
-    // Simple bar chart representation
-    const years = [
-      { year: 'Year 1', revenue: 1010000, height: 30 },
-      { year: 'Year 2', revenue: 2020000, height: 60 },
-      { year: 'Year 3', revenue: 4040000, height: 90 },
-    ];
-    
-    const barWidth = 40;
-    const barGap = 20;
-    const startX = margin + 30;
-    const baseY = yPosition + 95;
-    
-    years.forEach((item, i) => {
-      const x = startX + (barWidth + barGap) * i;
-      pdf.setFillColor(59, 130, 246);
-      pdf.roundedRect(x, baseY - item.height, barWidth, item.height, 3, 3, 'F');
-      pdf.setTextColor(15, 23, 42);
-      pdf.setFontSize(10);
-      pdf.text(item.year, x + 8, baseY + 10);
-      pdf.setFontSize(8);
-      pdf.text((item.revenue / 1000000).toFixed(2) + 'M', x + 8, baseY - item.height - 5);
-    });
+    pdf.setFillColor(240, 253, 244);
+    pdf.roundedRect(margin, yPosition, contentWidth, 55, 5, 5, 'F');
+    pdf.setTextColor(16, 185, 129);
+    pdf.setFontSize(13);
+    pdf.text('LOAN COVERAGE ANALYSIS / ضرقلا ةيطغت ليلحت', margin + 30, yPosition + 15);
+    pdf.setTextColor(15, 23, 42);
+    pdf.setFontSize(10);
+    pdf.text('Requested Loan / بولطملا ضرقلا: 420,000 OMR', margin + 10, yPosition + 28);
+    pdf.text('Year 1 Net Income / ىلولأا ةنسلا يفاص: 554,500 OMR', margin + 10, yPosition + 38);
+    pdf.setTextColor(16, 185, 129);
+    pdf.setFontSize(11);
+    pdf.text('Coverage: 132% - FULLY COVERED IN YEAR 1', margin + 10, yPosition + 50);
+    pdf.text('ىلولأا ةنسلا يف لماكلاب ىطغم ضرقلا', margin + contentWidth - 70, yPosition + 50);
 
-    // === PAGE 8: EXPANSION PLAN ===
+    // === صفحة 8: خطة التوسع ===
     addNewPage();
     pdf.setFillColor(15, 23, 42);
     pdf.rect(0, 0, pageWidth, 35, 'F');
     pdf.setTextColor(255, 255, 255);
-    pdf.setFontSize(18);
-    addCenteredText('Future Expansion Plan', 22);
+    pdf.setFontSize(16);
+    addCenteredText('Future Expansion Plan / يلبقتسملا عسوتلا ةطخ', 22);
     
     yPosition = 55;
     
     const expansionPhases = [
       {
-        phase: 'Year 1 - Foundation',
-        items: ['50 Private Schools in Muscat & Ad Dakhiliyah', '25,000 Students', 'Establish brand presence']
+        phaseEn: 'Year 1 - Foundation',
+        phaseAr: 'سيسأتلا - ىلولأا ةنسلا',
+        items: [
+          '50 Private Schools in Muscat & Dakhiliyah / ةيلخادلاو طقسم يف ةصاخ ةسردم 50',
+          '25,000 Students / بلاط 25,000',
+          'Establish brand presence / ةيراجتلا ةمالعلا خيسرت'
+        ]
       },
       {
-        phase: 'Year 2 - Growth',
-        items: ['Expand to 100+ Private Schools', 'Cover all major cities in Oman', '50,000 Students']
+        phaseEn: 'Year 2 - Growth',
+        phaseAr: 'ومنلا - ةيناثلا ةنسلا',
+        items: [
+          'Expand to 100+ Schools / ةسردم 100+ ىلإ عسوتلا',
+          'Cover all major cities / ةيسيئرلا ندملا لك ةيطغت',
+          '50,000 Students / بلاط 50,000'
+        ]
       },
       {
-        phase: 'Year 3 - Expansion',
-        items: ['Government school integration', 'GCC market entry (UAE, Saudi, Bahrain)', '100,000+ Students', 'Stationery market expansion']
+        phaseEn: 'Year 3 - Expansion',
+        phaseAr: 'عسوتلا - ةثلاثلا ةنسلا',
+        items: [
+          'Government school integration / ةيموكحلا سرادملا جمد',
+          'GCC market entry / جيلخلا قاوسأ لوخد',
+          '100,000+ Students / بلاط +100,000'
+        ]
       },
     ];
     
+    const phaseColors = [[59, 130, 246], [16, 185, 129], [245, 158, 11]];
+    
     expansionPhases.forEach((phase, i) => {
-      const colors = [[59, 130, 246], [16, 185, 129], [245, 158, 11]];
-      pdf.setFillColor(colors[i][0], colors[i][1], colors[i][2]);
-      pdf.roundedRect(margin, yPosition, contentWidth, 45, 5, 5, 'F');
+      pdf.setFillColor(phaseColors[i][0], phaseColors[i][1], phaseColors[i][2]);
+      pdf.roundedRect(margin, yPosition, contentWidth, 50, 5, 5, 'F');
       pdf.setTextColor(255, 255, 255);
-      pdf.setFontSize(14);
-      pdf.text(phase.phase, margin + 10, yPosition + 15);
-      pdf.setFontSize(10);
+      pdf.setFontSize(12);
+      pdf.text(phase.phaseEn + ' / ' + phase.phaseAr, margin + 10, yPosition + 12);
+      pdf.setFontSize(9);
       phase.items.forEach((item, j) => {
-        pdf.text('• ' + item, margin + 15, yPosition + 25 + (j * 7));
+        pdf.text('• ' + item, margin + 15, yPosition + 22 + (j * 9));
       });
-      yPosition += 55;
+      yPosition += 58;
     });
 
-    // === PAGE 9: RISKS & MITIGATION ===
+    // === صفحة 9: المخاطر ===
     addNewPage();
     pdf.setFillColor(15, 23, 42);
     pdf.rect(0, 0, pageWidth, 35, 'F');
     pdf.setTextColor(255, 255, 255);
-    pdf.setFontSize(18);
-    addCenteredText('Risk Analysis & Mitigation', 22);
+    pdf.setFontSize(16);
+    addCenteredText('Risk Analysis / رطاخملا ليلحت', 22);
     
     yPosition = 55;
     
     const risks = [
       {
-        risk: 'Low Subscription Rates',
-        mitigation: 'Free 1-month trial for schools to experience full platform value'
+        riskEn: 'Low Subscriptions',
+        riskAr: 'تاكارتشلاا ضافخنا',
+        mitEn: 'Free 1-month trial',
+        mitAr: 'رهش ةدمل ةيناجم ةبرجت'
       },
       {
-        risk: 'Payment Delays',
-        mitigation: 'Binding contracts with schools; service suspension for non-payment'
+        riskEn: 'Payment Delays',
+        riskAr: 'عفدلا رخأت',
+        mitEn: 'Binding contracts + service suspension',
+        mitAr: 'ةمدخلا فاقيإ + ةمزلم دوقع'
       },
       {
-        risk: 'Technical Failures',
-        mitigation: '24/7 technical support and local server infrastructure'
+        riskEn: 'Technical Failures',
+        riskAr: 'ةينقت لاطعأ',
+        mitEn: '24/7 support + local servers',
+        mitAr: 'ةيلحم مداوخ + 24/7 معد'
       },
       {
-        risk: 'Market Competition',
-        mitigation: 'Unique features (smart wristband, wallet) create strong differentiation'
+        riskEn: 'Competition',
+        riskAr: 'ةسفانملا',
+        mitEn: 'Unique features create differentiation',
+        mitAr: 'زيمتلا ققحت ةديرف ايازم'
       },
       {
-        risk: 'Government Policy Changes',
-        mitigation: 'Flexible business model adaptable to regulatory requirements'
+        riskEn: 'Policy Changes',
+        riskAr: 'تاسايسلا ريغت',
+        mitEn: 'Flexible adaptable model',
+        mitAr: 'فيكتلل لباق نرم جذومن'
       },
     ];
     
     risks.forEach((item, i) => {
       pdf.setFillColor(254, 242, 242);
-      pdf.roundedRect(margin, yPosition, contentWidth/2 - 5, 30, 3, 3, 'F');
+      pdf.roundedRect(margin, yPosition, contentWidth/2 - 5, 28, 3, 3, 'F');
       pdf.setFillColor(240, 253, 244);
-      pdf.roundedRect(margin + contentWidth/2 + 5, yPosition, contentWidth/2 - 5, 30, 3, 3, 'F');
+      pdf.roundedRect(margin + contentWidth/2 + 5, yPosition, contentWidth/2 - 5, 28, 3, 3, 'F');
       
       pdf.setTextColor(239, 68, 68);
-      pdf.setFontSize(9);
-      pdf.text('RISK:', margin + 5, yPosition + 8);
-      pdf.setTextColor(15, 23, 42);
       pdf.setFontSize(8);
-      const riskLines = pdf.splitTextToSize(item.risk, contentWidth/2 - 20);
-      pdf.text(riskLines, margin + 5, yPosition + 16);
+      pdf.text('RISK / رطخلا:', margin + 3, yPosition + 8);
+      pdf.setTextColor(15, 23, 42);
+      pdf.setFontSize(9);
+      pdf.text(item.riskEn, margin + 3, yPosition + 16);
+      pdf.text(item.riskAr, margin + 3, yPosition + 23);
       
       pdf.setTextColor(16, 185, 129);
-      pdf.setFontSize(9);
-      pdf.text('MITIGATION:', margin + contentWidth/2 + 10, yPosition + 8);
-      pdf.setTextColor(15, 23, 42);
       pdf.setFontSize(8);
-      const mitLines = pdf.splitTextToSize(item.mitigation, contentWidth/2 - 20);
-      pdf.text(mitLines, margin + contentWidth/2 + 10, yPosition + 16);
+      pdf.text('MITIGATION / فيفختلا:', margin + contentWidth/2 + 8, yPosition + 8);
+      pdf.setTextColor(15, 23, 42);
+      pdf.setFontSize(9);
+      pdf.text(item.mitEn, margin + contentWidth/2 + 8, yPosition + 16);
+      pdf.text(item.mitAr, margin + contentWidth/2 + 8, yPosition + 23);
       
-      yPosition += 35;
+      yPosition += 32;
     });
 
-    // === PAGE 10: CONCLUSION ===
+    // === صفحة 10: الخاتمة ===
     addNewPage();
     pdf.setFillColor(15, 23, 42);
     pdf.rect(0, 0, pageWidth, pageHeight, 'F');
     
-    // Decorative elements
     pdf.setFillColor(59, 130, 246);
     pdf.circle(pageWidth - 20, 30, 50, 'F');
     pdf.setFillColor(16, 185, 129);
     pdf.circle(20, pageHeight - 40, 35, 'F');
     
     pdf.setTextColor(255, 255, 255);
-    pdf.setFontSize(22);
-    addCenteredText('Conclusion & Recommendation', 60);
+    pdf.setFontSize(18);
+    addCenteredText('Conclusion & Recommendation', 55);
+    addCenteredText('ةيصوتلاو ةصلاخلا', 70);
     
-    yPosition = 90;
+    yPosition = 95;
     
-    // Summary points
     const summaryPoints = [
-      'TalebEdu is an innovative and unique project in the Sultanate',
-      'Capable of generating stable income covering the requested loan',
-      'Loan of 420,000 OMR fully recoverable within 3 years',
-      'Strong potential for local and international expansion',
-      'First-mover advantage in smart school management',
-      'Sustainable recurring revenue model'
+      { en: 'Innovative and unique project in Oman', ar: 'نامع يف ديرف و ركتبم عورشم' },
+      { en: 'Stable income covering the loan', ar: 'ضرقلا يطغي تباث لخد' },
+      { en: 'Loan fully recoverable in 3 years', ar: 'تاونس 3 للاخ لماك دادرتسا' },
+      { en: 'Strong local & international expansion potential', ar: 'يلودو يلحم عسوتلل يوق لامتحا' },
+      { en: 'First-mover advantage', ar: 'قبسلا ةزيم' },
+      { en: 'Sustainable recurring revenue', ar: 'ةمادتسم ةرركتم تاداريإ' },
     ];
     
-    pdf.setFontSize(12);
+    pdf.setFontSize(11);
     summaryPoints.forEach((point, i) => {
       pdf.setFillColor(255, 255, 255, 0.1);
-      pdf.roundedRect(margin + 10, yPosition - 3, contentWidth - 20, 12, 2, 2, 'F');
-      pdf.text('✓ ' + point, margin + 15, yPosition + 5);
+      pdf.roundedRect(margin + 10, yPosition - 3, contentWidth - 20, 14, 2, 2, 'F');
+      pdf.text('✓ ' + point.en + ' / ' + point.ar, margin + 15, yPosition + 6);
       yPosition += 18;
     });
     
-    yPosition += 20;
+    yPosition += 15;
     
-    // Final recommendation box
     pdf.setFillColor(16, 185, 129);
-    pdf.roundedRect(margin, yPosition, contentWidth, 45, 5, 5, 'F');
+    pdf.roundedRect(margin, yPosition, contentWidth, 50, 5, 5, 'F');
     pdf.setTextColor(255, 255, 255);
     pdf.setFontSize(14);
-    addCenteredText('RECOMMENDATION', yPosition + 15);
-    pdf.setFontSize(11);
-    addCenteredText('Approve the project financing to support this integrated', yPosition + 28);
-    addCenteredText('educational and digital security solution.', yPosition + 38);
-    
-    // Footer
+    addCenteredText('RECOMMENDATION / ةيصوتلا', yPosition + 15);
     pdf.setFontSize(10);
-    addCenteredText('TalebEdu - Mazen Khanfar', pageHeight - 30);
-    addCenteredText('Muscat, Sultanate of Oman - 2026', pageHeight - 20);
+    addCenteredText('Approve the project financing', yPosition + 30);
+    addCenteredText('لماكتملا يميلعتلا لحلا اذه معدل عورشملا ليومت ىلع ةقفاوملا', yPosition + 42);
+    
+    pdf.setFontSize(10);
+    addCenteredText('TalebEdu - Mazen Khanfar / رفناخ نزام', pageHeight - 30);
+    addCenteredText('Muscat, Sultanate of Oman - 2026 / نامع ةنطلس ،طقسم', pageHeight - 20);
 
-    // Save the PDF
     pdf.save('TalebEdu_Feasibility_Study_2026.pdf');
     setIsGenerating(false);
   };
@@ -743,7 +749,7 @@ const FeasibilityStudy = () => {
               </>
             )}
           </Button>
-          <p className="text-white/50 mt-4">ملف PDF احترافي جاهز للتقديم لبنك التنمية</p>
+          <p className="text-white/50 mt-4">ملف PDF احترافي جاهز للتقديم لبنك التنمية العماني</p>
         </motion.div>
 
         {/* Preview Cards */}
@@ -919,7 +925,7 @@ const FeasibilityStudy = () => {
           transition={{ delay: 1 }}
           className="text-center mt-16 text-white/50"
         >
-          <p>TalebEdu - مازن خانفار</p>
+          <p>TalebEdu - مازن خانفر</p>
           <p>مسقط، سلطنة عمان - 2026</p>
         </motion.div>
       </div>
