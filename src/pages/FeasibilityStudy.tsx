@@ -25,88 +25,105 @@ const FeasibilityStudy = () => {
   const arabicPdfRef = useRef<HTMLDivElement>(null);
   const englishPdfRef = useRef<HTMLDivElement>(null);
 
+  const waitForNextPaint = () =>
+    new Promise<void>((resolve) =>
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
+    );
+
+  const revealForCapture = (el: HTMLDivElement) => {
+    const container = el.parentElement as HTMLElement | null;
+    if (!container) return () => {};
+
+    const prev = {
+      position: container.style.position,
+      left: container.style.left,
+      top: container.style.top,
+      zIndex: container.style.zIndex,
+      opacity: container.style.opacity,
+      pointerEvents: container.style.pointerEvents,
+      width: container.style.width,
+      height: container.style.height,
+      overflow: container.style.overflow,
+    };
+
+    // IMPORTANT: html2canvas may render a blank image if the target is behind other elements.
+    // So we temporarily bring the PDF container to the very top.
+    container.style.position = "fixed";
+    container.style.left = "0";
+    container.style.top = "0";
+    container.style.zIndex = "2147483647";
+    container.style.opacity = "1";
+    container.style.pointerEvents = "none";
+    container.style.overflow = "visible";
+    container.style.width = "auto";
+    container.style.height = "auto";
+
+    return () => {
+      container.style.position = prev.position;
+      container.style.left = prev.left;
+      container.style.top = prev.top;
+      container.style.zIndex = prev.zIndex;
+      container.style.opacity = prev.opacity;
+      container.style.pointerEvents = prev.pointerEvents;
+      container.style.width = prev.width;
+      container.style.height = prev.height;
+      container.style.overflow = prev.overflow;
+    };
+  };
+
+  const buildPdfOptions = (filename: string) => ({
+    margin: 0,
+    filename,
+    image: { type: "jpeg" as const, quality: 0.98 },
+    html2canvas: {
+      scale: 2,
+      useCORS: true,
+      logging: false,
+      allowTaint: true,
+      backgroundColor: "#ffffff",
+    },
+    jsPDF: {
+      unit: "mm" as const,
+      format: "a4" as const,
+      orientation: "portrait" as const,
+    },
+    pagebreak: { mode: ["css", "legacy"] as const },
+  });
+
   const generateEnglishPDF = async () => {
+    if (!englishPdfRef.current) return;
+
     setIsGeneratingEn(true);
-    
-    if (englishPdfRef.current) {
-      // Temporarily make the element visible for html2canvas
-      const container = englishPdfRef.current.parentElement;
-      if (container) {
-        container.style.position = 'fixed';
-        container.style.left = '0';
-        container.style.top = '0';
-        container.style.zIndex = '-1';
-        container.style.opacity = '1';
-      }
+    const restore = revealForCapture(englishPdfRef.current);
 
-      const opt = {
-        margin: 0,
-        filename: 'TalebEdu_Feasibility_Study_EN_2026.pdf',
-        image: { type: 'jpeg' as const, quality: 0.98 },
-        html2canvas: { 
-          scale: 2, 
-          useCORS: true,
-          logging: false,
-          allowTaint: true,
-        },
-        jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const },
-        pagebreak: { mode: ['css', 'legacy'] as const }
-      };
-      
+    try {
+      await waitForNextPaint();
+      const opt = buildPdfOptions("TalebEdu_Feasibility_Study_EN_2026.pdf");
       await html2pdf().set(opt).from(englishPdfRef.current).save();
-
-      // Hide it again
-      if (container) {
-        container.style.position = 'absolute';
-        container.style.left = '-9999px';
-        container.style.zIndex = '';
-        container.style.opacity = '';
-      }
+    } catch (error) {
+      console.error("English PDF generation failed:", error);
+    } finally {
+      restore();
+      setIsGeneratingEn(false);
     }
-    
-    setIsGeneratingEn(false);
   };
 
   const generateArabicPDF = async () => {
+    if (!arabicPdfRef.current) return;
+
     setIsGeneratingAr(true);
-    
-    if (arabicPdfRef.current) {
-      // Temporarily make the element visible for html2canvas
-      const container = arabicPdfRef.current.parentElement;
-      if (container) {
-        container.style.position = 'fixed';
-        container.style.left = '0';
-        container.style.top = '0';
-        container.style.zIndex = '-1';
-        container.style.opacity = '1';
-      }
+    const restore = revealForCapture(arabicPdfRef.current);
 
-      const opt = {
-        margin: 0,
-        filename: 'TalebEdu_Feasibility_Study_AR_2026.pdf',
-        image: { type: 'jpeg' as const, quality: 0.98 },
-        html2canvas: { 
-          scale: 2, 
-          useCORS: true,
-          logging: false,
-          allowTaint: true,
-        },
-        jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const },
-        pagebreak: { mode: ['css', 'legacy'] as const }
-      };
-      
+    try {
+      await waitForNextPaint();
+      const opt = buildPdfOptions("TalebEdu_Feasibility_Study_AR_2026.pdf");
       await html2pdf().set(opt).from(arabicPdfRef.current).save();
-
-      // Hide it again
-      if (container) {
-        container.style.position = 'absolute';
-        container.style.left = '-9999px';
-        container.style.zIndex = '';
-        container.style.opacity = '';
-      }
+    } catch (error) {
+      console.error("Arabic PDF generation failed:", error);
+    } finally {
+      restore();
+      setIsGeneratingAr(false);
     }
-    
-    setIsGeneratingAr(false);
   };
 
   // Common styles for PDF pages
