@@ -230,21 +230,42 @@ const IntroAnimation = ({ onComplete }: { onComplete: () => void }) => {
           مستقبل الإدارة المدرسية الذكية
         </motion.p>
 
-        {/* Investment badge with pulse */}
+        {/* Investment badge with beautiful styling */}
         <motion.div
           className="relative"
           initial={{ opacity: 0, scale: 0.5 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 3, type: "spring", stiffness: 200 }}
         >
+          {/* Outer glow */}
           <motion.div
-            className="absolute -inset-2 bg-gradient-to-r from-amber-500/50 to-orange-500/50 rounded-2xl blur-lg"
-            animate={{ opacity: [0.5, 0.8, 0.5], scale: [1, 1.05, 1] }}
+            className="absolute -inset-4 bg-gradient-to-r from-amber-500/30 via-orange-500/40 to-amber-500/30 rounded-3xl blur-2xl"
+            animate={{ opacity: [0.4, 0.7, 0.4], scale: [0.95, 1.05, 0.95] }}
+            transition={{ duration: 3, repeat: Infinity }}
+          />
+          {/* Inner glow */}
+          <motion.div
+            className="absolute -inset-1 bg-gradient-to-r from-amber-400 via-orange-500 to-amber-400 rounded-2xl blur-sm"
+            animate={{ opacity: [0.6, 0.9, 0.6] }}
             transition={{ duration: 2, repeat: Infinity }}
           />
-          <div className="relative bg-gradient-to-l from-amber-500 to-orange-500 text-white px-8 py-4 rounded-2xl text-lg md:text-xl font-bold shadow-xl" dir="rtl">
-            عرض استثماري - 200,000 ريال عماني
-          </div>
+          {/* Main badge */}
+          <motion.div 
+            className="relative bg-gradient-to-l from-amber-500 via-orange-500 to-amber-500 text-white px-10 py-5 rounded-2xl shadow-2xl overflow-hidden"
+            dir="rtl"
+          >
+            {/* Shimmer effect */}
+            <motion.div
+              className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-12"
+              animate={{ x: ["-200%", "200%"] }}
+              transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 1 }}
+            />
+            <span className="relative text-xl md:text-2xl font-bold tracking-wide flex items-center gap-3 justify-center">
+              <Sparkles className="w-6 h-6" />
+              عرض استثماري
+              <Sparkles className="w-6 h-6" />
+            </span>
+          </motion.div>
         </motion.div>
 
         {/* Loading indicator */}
@@ -350,9 +371,32 @@ const InvestorPresentation = () => {
             initial={{ y: 30, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.7, duration: 0.6 }}
-            className="bg-gradient-to-l from-amber-500 to-orange-500 text-white px-8 py-4 rounded-2xl text-xl font-bold shadow-lg"
+            className="relative"
           >
-            عرض استثماري - 200,000 ريال عماني
+            {/* Glow effect */}
+            <motion.div
+              className="absolute -inset-3 bg-gradient-to-r from-amber-500/40 via-orange-500/50 to-amber-500/40 rounded-3xl blur-xl"
+              animate={{ opacity: [0.4, 0.7, 0.4], scale: [0.98, 1.02, 0.98] }}
+              transition={{ duration: 3, repeat: Infinity }}
+            />
+            <motion.div
+              className="absolute -inset-1 bg-gradient-to-r from-amber-400 via-orange-500 to-amber-400 rounded-2xl blur-sm"
+              animate={{ opacity: [0.5, 0.8, 0.5] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            />
+            <div className="relative bg-gradient-to-l from-amber-500 via-orange-500 to-amber-500 text-white px-10 py-5 rounded-2xl shadow-2xl overflow-hidden">
+              {/* Shimmer effect */}
+              <motion.div
+                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent skew-x-12"
+                animate={{ x: ["-200%", "200%"] }}
+                transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 1.5 }}
+              />
+              <span className="relative text-xl md:text-2xl font-bold tracking-wide flex items-center gap-3 justify-center">
+                <Sparkles className="w-6 h-6" />
+                عرض استثماري
+                <Sparkles className="w-6 h-6" />
+              </span>
+            </div>
           </motion.div>
           <motion.p
             initial={{ y: 20, opacity: 0 }}
