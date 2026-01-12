@@ -21,7 +21,8 @@ import {
   UserX,
   Loader2,
   ShieldAlert,
-  X
+  X,
+  GraduationCap
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -545,7 +546,7 @@ export default function SupervisorDashboard() {
       <div className="p-4 space-y-4 pb-28">
         
         {/* Trip Selection */}
-        {!isTripActive ? (
+        {!isTripActive && (
           <Card className="border-2 border-dashed">
             <CardContent className="p-6">
               <div className="text-center mb-6">
@@ -575,7 +576,9 @@ export default function SupervisorDashboard() {
               </div>
             </CardContent>
           </Card>
-        ) : (
+        )}
+        
+        {isTripActive && (
           <>
             {/* NFC Scanner Card with Visual Feedback */}
             <Card className={`transition-all ${isScanning ? 'border-primary border-2 bg-primary/5' : ''}`}>
@@ -752,6 +755,61 @@ export default function SupervisorDashboard() {
               </CardContent>
             </Card>
           </>
+        )}
+
+        {/* Students List - Always visible even when trip not active */}
+        {!isTripActive && students.length > 0 && (
+          <Card>
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  {language === 'ar' ? 'طلاب الحافلة' : 'Bus Students'} ({students.length})
+                </CardTitle>
+              </div>
+              <div className="relative mt-2">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input 
+                  placeholder={language === 'ar' ? 'بحث...' : 'Search...'}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 h-9"
+                />
+              </div>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <ScrollArea className="h-[400px]">
+                <div className="space-y-1">
+                  {filteredStudents.map((student) => (
+                    <div
+                      key={student.id}
+                      className="flex items-center gap-3 p-3 rounded-xl bg-muted/50 border"
+                    >
+                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                        <GraduationCap className="h-5 w-5 text-primary" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm truncate">
+                          {language === 'ar' ? student.nameAr : student.name}
+                        </p>
+                        <p className="text-xs text-muted-foreground">{student.class}</p>
+                      </div>
+                      {student.nfcId && (
+                        <Badge variant="outline" className="text-[10px]">
+                          NFC
+                        </Badge>
+                      )}
+                    </div>
+                  ))}
+                  {filteredStudents.length === 0 && (
+                    <div className="text-center py-8 text-muted-foreground">
+                      {language === 'ar' ? 'لا توجد نتائج' : 'No results'}
+                    </div>
+                  )}
+                </div>
+              </ScrollArea>
+            </CardContent>
+          </Card>
         )}
       </div>
 
