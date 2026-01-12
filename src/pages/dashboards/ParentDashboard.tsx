@@ -9,7 +9,10 @@ import {
   GraduationCap, 
   TrendingUp,
   UserPlus,
-  Clock
+  Clock,
+  Bus,
+  LogIn,
+  LogOut
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -44,6 +47,32 @@ export default function ParentDashboard() {
       }, () => {
         loadParentData();
         toast.success(language === 'ar' ? 'تم تحديث البيانات' : 'Data updated');
+      })
+      .on('postgres_changes', { 
+        event: 'INSERT', 
+        schema: 'public', 
+        table: 'notification_history',
+        filter: `user_id=eq.${user?.id}`
+      }, (payload: any) => {
+        const notification = payload.new;
+        // Show toast for bus boarding/exit notifications
+        if (notification.notification_type === 'bus_boarding' || notification.notification_type === 'bus_exit') {
+          const isBoardingAr = notification.notification_type === 'bus_boarding';
+          const icon = isBoardingAr ? '🚌' : '✅';
+          toast(
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">{icon}</span>
+              <div>
+                <p className="font-semibold">{notification.title}</p>
+                <p className="text-sm text-muted-foreground">{notification.message}</p>
+              </div>
+            </div>,
+            {
+              duration: 5000,
+              position: 'top-center',
+            }
+          );
+        }
       })
       .subscribe();
 
