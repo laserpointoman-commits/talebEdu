@@ -64,6 +64,7 @@ export default function RoutesManagement() {
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [buses, setBuses] = useState<BusData[]>([]);
   const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const [supervisors, setSupervisors] = useState<{ id: string; name: string; nameAr: string }[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -110,21 +111,33 @@ export default function RoutesManagement() {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        // Fetch routes
+        // Fetch routes with bus info (including driver and supervisor)
         const { data: routesData } = await supabase
           .from('bus_routes')
-          .select('*');
+          .select(`
+            *,
+            buses:bus_id (driver_id, supervisor_id)
+          `);
         
         // Fetch all student bus assignments to map students to routes
         const { data: assignmentsData } = await supabase
           .from('student_bus_assignments')
-          .select('student_id, bus_id')
+          .select('student_id, bus_id, route_id')
           .eq('is_active', true);
         
-        // Create a map of bus_id -> student_ids
+        // Create a map of route_id -> student_ids (primary) and bus_id -> student_ids (fallback)
+        const routeStudentMap: Record<string, string[]> = {};
         const busStudentMap: Record<string, string[]> = {};
         if (assignmentsData) {
           assignmentsData.forEach(a => {
+            // Map by route_id (preferred)
+            if (a.route_id) {
+              if (!routeStudentMap[a.route_id]) {
+                routeStudentMap[a.route_id] = [];
+              }
+              routeStudentMap[a.route_id].push(a.student_id);
+            }
+            // Also map by bus_id as fallback
             if (a.bus_id) {
               if (!busStudentMap[a.bus_id]) {
                 busStudentMap[a.bus_id] = [];
@@ -140,8 +153,11 @@ export default function RoutesManagement() {
             name: r.route_name,
             nameAr: r.route_name_ar || r.route_name,
             busId: r.bus_id || undefined,
+            driverId: (r.buses as any)?.driver_id || undefined,
+            supervisorId: (r.buses as any)?.supervisor_id || undefined,
             stops: Array.isArray(r.stops) ? r.stops as string[] : [],
-            studentIds: r.bus_id ? (busStudentMap[r.bus_id] || []) : [],
+            // Use route_id map first, then fall back to bus_id map
+            studentIds: routeStudentMap[r.id] || (r.bus_id ? busStudentMap[r.bus_id] : []) || [],
             departureTime: (r.morning_schedule as any)?.departure || '06:30',
             arrivalTime: (r.morning_schedule as any)?.arrival || '07:30',
             distance: '25 km',
@@ -194,6 +210,20 @@ export default function RoutesManagement() {
             nameAr: (t.profiles as any)?.full_name_ar || (t.profiles as any)?.full_name || 'غير معروف',
           })));
         }
+        
+        // Fetch supervisors from profiles table
+        const { data: supervisorsData } = await supabase
+          .from('profiles')
+          .select('id, full_name, full_name_ar')
+          .eq('role', 'supervisor');
+        
+        if (supervisorsData) {
+          setSupervisors(supervisorsData.map(s => ({
+            id: s.id,
+            name: s.full_name || 'Unknown',
+            nameAr: s.full_name_ar || s.full_name || 'غير معروف',
+          })));
+        }
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
@@ -238,11 +268,30 @@ export default function RoutesManagement() {
       
       if (routeError) throw routeError;
       
-      // Create student bus assignments if bus is assigned
-      if (newRoute.busId && selectedStudents.length > 0) {
+      // Update bus with driver and supervisor if assigned
+      if (newRoute.busId && (newRoute.driverId || newRoute.supervisorId)) {
+        await supabase
+          .from('buses')
+          .update({
+            driver_id: newRoute.driverId || null,
+            supervisor_id: newRoute.supervisorId || null,
+          })
+          .eq('id', newRoute.busId);
+      }
+      
+      // Create student bus assignments if students are selected
+      if (selectedStudents.length > 0) {
+        // First, deactivate any existing active assignments for these students
+        await supabase
+          .from('student_bus_assignments')
+          .update({ is_active: false })
+          .in('student_id', selectedStudents);
+        
+        // Insert new assignments
         const assignmentInserts = selectedStudents.map(studentId => ({
           student_id: studentId,
-          bus_id: newRoute.busId!,
+          bus_id: newRoute.busId || null,
+          route_id: savedRoute.id,
           pickup_stop: 'Home',
           dropoff_stop: 'School',
           is_active: true,
@@ -250,12 +299,15 @@ export default function RoutesManagement() {
         
         const { error: assignError } = await supabase
           .from('student_bus_assignments')
-          .upsert(assignmentInserts, { 
-            onConflict: 'student_id'
-          });
+          .insert(assignmentInserts);
         
         if (assignError) {
           console.error('Error creating student assignments:', assignError);
+          toast({
+            variant: 'destructive',
+            title: language === 'ar' ? 'تحذير' : 'Warning',
+            description: language === 'ar' ? 'تم حفظ المسار لكن فشل تعيين بعض الطلاب' : 'Route saved but some student assignments failed',
+          });
         }
       }
       
@@ -300,39 +352,72 @@ export default function RoutesManagement() {
       
       if (routeError) throw routeError;
       
-      // Update student bus assignments
+      // Update bus with driver and supervisor if bus is assigned
       if (formData.busId) {
-        // First, deactivate old assignments for this bus that are not in the new list
-        const previousStudentIds = selectedRoute.studentIds || [];
-        const studentsToRemove = previousStudentIds.filter(id => !selectedStudents.includes(id));
+        await supabase
+          .from('buses')
+          .update({
+            driver_id: formData.driverId || null,
+            supervisor_id: formData.supervisorId || null,
+          })
+          .eq('id', formData.busId);
+      }
+      
+      // Handle student bus assignments
+      const previousStudentIds = selectedRoute.studentIds || [];
+      const newStudentIds = selectedStudents;
+      
+      // Students to remove (were assigned but now aren't)
+      const studentsToRemove = previousStudentIds.filter(id => !newStudentIds.includes(id));
+      
+      // Students to add (weren't assigned but now are)
+      const studentsToAdd = newStudentIds.filter(id => !previousStudentIds.includes(id));
+      
+      // Deactivate assignments for removed students
+      if (studentsToRemove.length > 0) {
+        await supabase
+          .from('student_bus_assignments')
+          .update({ is_active: false })
+          .in('student_id', studentsToRemove)
+          .eq('route_id', selectedRoute.id);
+      }
+      
+      // Add new assignments for new students
+      if (studentsToAdd.length > 0) {
+        // First deactivate any existing active assignments for these students
+        await supabase
+          .from('student_bus_assignments')
+          .update({ is_active: false })
+          .in('student_id', studentsToAdd);
         
-        if (studentsToRemove.length > 0) {
+        // Insert new assignments
+        const assignmentInserts = studentsToAdd.map(studentId => ({
+          student_id: studentId,
+          bus_id: formData.busId || null,
+          route_id: selectedRoute.id,
+          pickup_stop: 'Home',
+          dropoff_stop: 'School',
+          is_active: true,
+        }));
+        
+        const { error: assignError } = await supabase
+          .from('student_bus_assignments')
+          .insert(assignmentInserts);
+        
+        if (assignError) {
+          console.error('Error adding student assignments:', assignError);
+        }
+      }
+      
+      // Update existing assignments if bus changed
+      if (formData.busId !== selectedRoute.busId) {
+        const studentsToUpdate = newStudentIds.filter(id => previousStudentIds.includes(id));
+        if (studentsToUpdate.length > 0) {
           await supabase
             .from('student_bus_assignments')
-            .update({ is_active: false })
-            .in('student_id', studentsToRemove)
-            .eq('bus_id', formData.busId);
-        }
-        
-        // Add/update new student assignments
-        if (selectedStudents.length > 0) {
-          const assignmentUpserts = selectedStudents.map(studentId => ({
-            student_id: studentId,
-            bus_id: formData.busId!,
-            pickup_stop: 'Home',
-            dropoff_stop: 'School',
-            is_active: true,
-          }));
-          
-          const { error: assignError } = await supabase
-            .from('student_bus_assignments')
-            .upsert(assignmentUpserts, { 
-              onConflict: 'student_id'
-            });
-          
-          if (assignError) {
-            console.error('Error updating student assignments:', assignError);
-          }
+            .update({ bus_id: formData.busId || null })
+            .in('student_id', studentsToUpdate)
+            .eq('route_id', selectedRoute.id);
         }
       }
       
@@ -366,16 +451,39 @@ export default function RoutesManagement() {
     setDeleteConfirmOpen(true);
   };
   
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (routeToDelete) {
-      setRoutes(routes.filter(r => r.id !== routeToDelete));
-      setSelectedRoutes(prev => prev.filter(routeId => routeId !== routeToDelete));
-      
-      toast({
-        variant: 'success',
-        title: language === 'ar' ? 'تم الحذف بنجاح' : 'Deleted Successfully',
-        description: language === 'ar' ? 'تم حذف المسار بنجاح' : 'Route has been deleted successfully',
-      });
+      try {
+        // Delete student assignments for this route
+        await supabase
+          .from('student_bus_assignments')
+          .delete()
+          .eq('route_id', routeToDelete);
+        
+        // Delete route from database
+        const { error } = await supabase
+          .from('bus_routes')
+          .delete()
+          .eq('id', routeToDelete);
+        
+        if (error) throw error;
+        
+        setRoutes(routes.filter(r => r.id !== routeToDelete));
+        setSelectedRoutes(prev => prev.filter(routeId => routeId !== routeToDelete));
+        
+        toast({
+          variant: 'success',
+          title: language === 'ar' ? 'تم الحذف بنجاح' : 'Deleted Successfully',
+          description: language === 'ar' ? 'تم حذف المسار بنجاح' : 'Route has been deleted successfully',
+        });
+      } catch (error) {
+        console.error('Error deleting route:', error);
+        toast({
+          variant: 'destructive',
+          title: language === 'ar' ? 'خطأ' : 'Error',
+          description: language === 'ar' ? 'فشل في حذف المسار' : 'Failed to delete route',
+        });
+      }
       
       setRouteToDelete(null);
     }
@@ -386,18 +494,41 @@ export default function RoutesManagement() {
     setBulkDeleteConfirmOpen(true);
   };
   
-  const confirmBulkDelete = () => {
-    setRoutes(routes.filter(r => !selectedRoutes.includes(r.id)));
-    const count = selectedRoutes.length;
-    setSelectedRoutes([]);
-    
-    toast({
-      variant: 'success',
-      title: language === 'ar' ? 'تم الحذف بنجاح' : 'Deleted Successfully',
-      description: language === 'ar' 
-        ? `تم حذف ${count} مسار بنجاح` 
-        : `${count} routes have been deleted successfully`,
-    });
+  const confirmBulkDelete = async () => {
+    try {
+      // Delete student assignments for all selected routes
+      await supabase
+        .from('student_bus_assignments')
+        .delete()
+        .in('route_id', selectedRoutes);
+      
+      // Delete routes from database
+      const { error } = await supabase
+        .from('bus_routes')
+        .delete()
+        .in('id', selectedRoutes);
+      
+      if (error) throw error;
+      
+      const count = selectedRoutes.length;
+      setRoutes(routes.filter(r => !selectedRoutes.includes(r.id)));
+      setSelectedRoutes([]);
+      
+      toast({
+        variant: 'success',
+        title: language === 'ar' ? 'تم الحذف بنجاح' : 'Deleted Successfully',
+        description: language === 'ar' 
+          ? `تم حذف ${count} مسار بنجاح` 
+          : `${count} routes have been deleted successfully`,
+      });
+    } catch (error) {
+      console.error('Error deleting routes:', error);
+      toast({
+        variant: 'destructive',
+        title: language === 'ar' ? 'خطأ' : 'Error',
+        description: language === 'ar' ? 'فشل في حذف المسارات' : 'Failed to delete routes',
+      });
+    }
     
     setBulkDeleteConfirmOpen(false);
   };
@@ -515,7 +646,7 @@ export default function RoutesManagement() {
   };
 
   const getSupervisorName = (supervisorId?: string) => {
-    const supervisor = teachers.find(t => t.id === supervisorId);
+    const supervisor = supervisors.find(s => s.id === supervisorId);
     return supervisor ? (language === 'en' ? supervisor.name : supervisor.nameAr) : (language === 'en' ? 'Not Assigned' : 'غير مخصص');
   };
 
