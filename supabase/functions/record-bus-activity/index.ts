@@ -79,25 +79,32 @@ serve(async (req) => {
       );
     }
 
-    // Check for duplicate boarding today
+    // Check for duplicate - student must exit before boarding again
     const today = new Date().toISOString().split('T')[0];
-    if (action === 'board') {
-      const { data: existingBoard } = await supabase
-        .from('bus_boarding_logs')
-        .select('id, action')
-        .eq('student_id', student.id)
-        .eq('bus_id', busId)
-        .gte('timestamp', `${today}T00:00:00`)
-        .order('timestamp', { ascending: false })
-        .limit(1)
-        .single();
+    const { data: lastActivity } = await supabase
+      .from('bus_boarding_logs')
+      .select('id, action, timestamp')
+      .eq('student_id', student.id)
+      .eq('bus_id', busId)
+      .gte('timestamp', `${today}T00:00:00`)
+      .order('timestamp', { ascending: false })
+      .limit(1)
+      .single();
 
-      if (existingBoard && existingBoard.action === 'boarded') {
-        console.log('Student already boarded today on this bus');
+    // Prevent duplicate consecutive actions (can't board twice or exit twice in a row)
+    if (lastActivity) {
+      const lastAction = lastActivity.action;
+      const requestedDbAction = action === 'board' ? 'boarded' : 'exited';
+      
+      if (lastAction === requestedDbAction) {
+        const actionWord = action === 'board' ? 'boarded' : 'exited';
+        console.log(`Student already ${actionWord} - last action was ${lastAction}`);
         return new Response(
           JSON.stringify({ 
-            error: 'Student already boarded', 
-            student: { id: student.id, name: `${student.first_name} ${student.last_name}` }
+            error: `Student already ${actionWord}`, 
+            student: { id: student.id, name: `${student.first_name} ${student.last_name}` },
+            lastAction: lastAction,
+            suggestion: action === 'board' ? 'exit' : 'board'
           }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
