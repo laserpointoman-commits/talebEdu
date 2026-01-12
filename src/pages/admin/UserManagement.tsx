@@ -27,7 +27,7 @@ interface UserProfile {
   email: string;
   full_name: string;
   full_name_ar?: string;
-  role: 'admin' | 'teacher' | 'student' | 'parent' | 'driver' | 'developer' | 'finance' | 'canteen' | 'school_attendance' | 'bus_attendance';
+  role: 'admin' | 'teacher' | 'student' | 'parent' | 'driver' | 'developer' | 'finance' | 'canteen' | 'school_attendance' | 'bus_attendance' | 'supervisor';
   phone?: string;
   address?: string;
   created_at: string;
@@ -376,7 +376,7 @@ export default function UserManagement() {
           nfcId = student.nfc_id || '';
           entityId = student.student_id;
         }
-      } else if (user.role === 'driver' || user.role === 'bus_attendance' || user.role === 'school_attendance') {
+      } else if (user.role === 'driver' || user.role === 'bus_attendance' || user.role === 'school_attendance' || user.role === 'supervisor') {
         // Check employees table for staff roles
         const { data: employee } = await supabase
           .from('employees')
@@ -442,7 +442,7 @@ export default function UserManagement() {
           .from('students')
           .update({ nfc_id: nfcId })
           .eq('profile_id', selectedUserForNfc.id);
-      } else if (selectedUserForNfc.role === 'driver' || selectedUserForNfc.role === 'bus_attendance' || selectedUserForNfc.role === 'school_attendance') {
+      } else if (selectedUserForNfc.role === 'driver' || selectedUserForNfc.role === 'bus_attendance' || selectedUserForNfc.role === 'school_attendance' || selectedUserForNfc.role === 'supervisor') {
         await supabase
           .from('employees')
           .update({ nfc_id: nfcId })
@@ -1170,7 +1170,7 @@ export default function UserManagement() {
                       >
                         <Edit className="h-3 w-3" />
                       </Button>
-                      {(user.role === 'teacher' || user.role === 'student' || user.role === 'bus_attendance' || user.role === 'school_attendance' || user.role === 'driver') && (
+                      {(user.role === 'teacher' || user.role === 'student' || user.role === 'bus_attendance' || user.role === 'school_attendance' || user.role === 'driver' || user.role === 'supervisor') && (
                         <Button
                           size="sm"
                           variant="ghost"
@@ -1296,7 +1296,7 @@ export default function UserManagement() {
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
-                        {(user.role === 'teacher' || user.role === 'student' || user.role === 'bus_attendance' || user.role === 'school_attendance' || user.role === 'driver') && (
+                        {(user.role === 'teacher' || user.role === 'student' || user.role === 'bus_attendance' || user.role === 'school_attendance' || user.role === 'driver' || user.role === 'supervisor') && (
                           <Button
                             size="sm"
                             variant="ghost"
