@@ -578,25 +578,29 @@ export default function SupervisorDashboard() {
         ) : (
           <>
             {/* NFC Scanner Card with Visual Feedback */}
-            <Card className={`transition-all ${isScanning ? 'border-primary border-2 bg-primary/5 animate-pulse' : ''}`}>
+            <Card className={`transition-all ${isScanning ? 'border-primary border-2 bg-primary/5' : ''}`}>
               <CardContent className="p-4">
                 {isScanning ? (
                   <div className="text-center space-y-3">
-                    {/* Animated scanning indicator */}
-                    <motion.div 
-                      className="w-20 h-20 mx-auto rounded-full bg-primary/20 flex items-center justify-center"
-                      animate={{ 
-                        scale: [1, 1.1, 1],
-                        boxShadow: [
-                          '0 0 0 0 rgba(59, 130, 246, 0.4)',
-                          '0 0 0 20px rgba(59, 130, 246, 0)',
-                          '0 0 0 0 rgba(59, 130, 246, 0)'
-                        ]
-                      }}
-                      transition={{ duration: 1.5, repeat: Infinity }}
-                    >
-                      <Scan className="h-10 w-10 text-primary" />
-                    </motion.div>
+                    {/* Animated scanning indicator with rotating ring */}
+                    <div className="relative w-24 h-24 mx-auto flex items-center justify-center">
+                      {/* Rotating ring */}
+                      <motion.div
+                        className="absolute inset-0 rounded-full border-4 border-transparent border-t-primary border-r-primary/30"
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                      />
+                      {/* Second rotating ring (opposite direction) */}
+                      <motion.div
+                        className="absolute inset-2 rounded-full border-4 border-transparent border-b-primary/60 border-l-primary/20"
+                        animate={{ rotate: -360 }}
+                        transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                      />
+                      {/* Static center with NFC icon */}
+                      <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
+                        <Scan className="h-8 w-8 text-primary" />
+                      </div>
+                    </div>
                     
                     <div>
                       <p className="font-bold text-lg text-primary">
