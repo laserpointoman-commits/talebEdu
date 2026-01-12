@@ -269,7 +269,7 @@ export default function RoutesManagement() {
       if (routeError) throw routeError;
       
       // Update bus with driver and supervisor if assigned
-      if (newRoute.busId && (newRoute.driverId || newRoute.supervisorId)) {
+      if (newRoute.busId) {
         await supabase
           .from('buses')
           .update({
@@ -277,6 +277,14 @@ export default function RoutesManagement() {
             supervisor_id: newRoute.supervisorId || null,
           })
           .eq('id', newRoute.busId);
+        
+        // Also update supervisors table if supervisor is assigned
+        if (newRoute.supervisorId) {
+          await supabase
+            .from('supervisors')
+            .update({ bus_id: newRoute.busId })
+            .eq('profile_id', newRoute.supervisorId);
+        }
       }
       
       // Create student bus assignments if students are selected
@@ -361,6 +369,14 @@ export default function RoutesManagement() {
             supervisor_id: formData.supervisorId || null,
           })
           .eq('id', formData.busId);
+        
+        // Also update supervisors table if supervisor is assigned
+        if (formData.supervisorId) {
+          await supabase
+            .from('supervisors')
+            .update({ bus_id: formData.busId })
+            .eq('profile_id', formData.supervisorId);
+        }
       }
       
       // Handle student bus assignments
