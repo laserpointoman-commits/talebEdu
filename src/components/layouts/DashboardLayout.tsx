@@ -46,6 +46,10 @@ function DashboardLayout({ children }: DashboardLayoutProps) {
   
   // Check if kiosk mode (attendance devices)
   const isKioskMode = profile?.role === 'school_attendance' || profile?.role === 'bus_attendance';
+
+  // Supervisor dashboard should be a focused, single-purpose experience on mobile
+  const isSupervisorMode = profile?.role === 'supervisor';
+  const showBottomNav = isMobile && !isSupervisorMode;
   
   // If kiosk mode or full-screen mobile messenger, render without layout wrapper
   if (isKioskMode || isFullScreenMobile) {
@@ -320,9 +324,8 @@ function DashboardLayout({ children }: DashboardLayoutProps) {
           </main>
         </div>
       </div>
-      
       {/* Bottom Navigation for Mobile */}
-      <BottomNavigation />
+      {showBottomNav && <BottomNavigation />}
     </div>
   );
 }
