@@ -87,8 +87,17 @@ export default function Auth() {
     
     try {
       const nfcData = await nfcService.readOnce();
+      console.log('NFC Data received:', nfcData);
       
-      // Find employee by NFC ID (includes supervisors, teachers, drivers, etc.)
+      // Check if email is directly available in additionalData (from programmed card)
+      const additionalData = nfcData.additionalData as { email?: string } | undefined;
+      if (additionalData?.email) {
+        setSignInEmail(additionalData.email);
+        toast.success(language === 'ar' ? 'تم التعرف على البطاقة - أدخل كلمة المرور' : 'Card recognized - Enter password');
+        return;
+      }
+      
+      // Fallback: Find employee by NFC ID in database
       const { data: employee, error } = await supabase
         .from('employees')
         .select('profile_id, nfc_id')
