@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { LogOut, User, Settings, Menu, X, Home, Shield, School, Users, GraduationCap, Car } from 'lucide-react';
+import { LogOut, User, Settings, Menu, X, Home, Shield, School, Users, GraduationCap, Car, ArrowLeft } from 'lucide-react';
 import Sidebar from './Sidebar';
 import BottomNavigation from './BottomNavigation';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -101,16 +101,36 @@ function DashboardLayout({ children }: DashboardLayoutProps) {
 
 
 
+  // Check if we're on the main dashboard (no back button needed)
+  const isMainDashboard = location.pathname === '/dashboard';
+
+  const handleBack = () => {
+    navigate(-1);
+  };
+
   return (
-    <div className="min-h-screen bg-background" dir={dir}>
-      {/* Top Bar - iOS Safe Area Aware */}
+    <div className="min-h-screen bg-background">
+      {/* Top Bar - iOS Safe Area Aware - Always LTR */}
       <header 
         className="fixed left-0 right-0 top-0 z-50 ios-header"
+        dir="ltr"
       >
         <div className="h-16 md:h-20 border-b border-border/40 bg-background/95 backdrop-blur-sm flex items-center justify-between px-3 md:px-6">
 
-        {/* Left Section - Menu, Home, Language */}
+        {/* Left Section - Back/Menu, Home, Language */}
         <div className="flex items-center gap-2 md:gap-3 w-auto">
+          {/* Back Button - Show on all pages except main dashboard */}
+          {!isMainDashboard && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleBack}
+              className="h-10 w-10 md:h-11 md:w-11"
+              aria-label="Go back"
+            >
+              <ArrowLeft className="h-6 w-6" />
+            </Button>
+          )}
           {/* Desktop Toggle */}
           <Button
             variant="ghost"
