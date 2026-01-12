@@ -5019,6 +5019,8 @@ export type Database = {
         | "student_pickup"
         | "emergency_alerts"
         | "vehicle_maintenance"
+        | "bus_boarding"
+        | "bus_exit"
       user_role:
         | "admin"
         | "teacher"
@@ -5203,6 +5205,8 @@ export const Constants = {
         "student_pickup",
         "emergency_alerts",
         "vehicle_maintenance",
+        "bus_boarding",
+        "bus_exit",
       ],
       user_role: [
         "admin",
