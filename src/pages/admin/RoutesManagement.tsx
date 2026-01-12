@@ -115,6 +115,25 @@ export default function RoutesManagement() {
           .from('bus_routes')
           .select('*');
         
+        // Fetch all student bus assignments to map students to routes
+        const { data: assignmentsData } = await supabase
+          .from('student_bus_assignments')
+          .select('student_id, bus_id')
+          .eq('is_active', true);
+        
+        // Create a map of bus_id -> student_ids
+        const busStudentMap: Record<string, string[]> = {};
+        if (assignmentsData) {
+          assignmentsData.forEach(a => {
+            if (a.bus_id) {
+              if (!busStudentMap[a.bus_id]) {
+                busStudentMap[a.bus_id] = [];
+              }
+              busStudentMap[a.bus_id].push(a.student_id);
+            }
+          });
+        }
+        
         if (routesData) {
           setRoutes(routesData.map(r => ({
             id: r.id,
@@ -122,7 +141,7 @@ export default function RoutesManagement() {
             nameAr: r.route_name_ar || r.route_name,
             busId: r.bus_id || undefined,
             stops: Array.isArray(r.stops) ? r.stops as string[] : [],
-            studentIds: [],
+            studentIds: r.bus_id ? (busStudentMap[r.bus_id] || []) : [],
             departureTime: (r.morning_schedule as any)?.departure || '06:30',
             arrivalTime: (r.morning_schedule as any)?.arrival || '07:30',
             distance: '25 km',
@@ -185,7 +204,7 @@ export default function RoutesManagement() {
     fetchData();
   }, []);
 
-  const handleAddRoute = () => {
+  const handleAddRoute = async () => {
     const newRoute: Route = {
       id: `r-${Date.now()}`,
       name: formData.name || '',
@@ -202,34 +221,144 @@ export default function RoutesManagement() {
       description: formData.description,
     };
     
-    setRoutes([...routes, newRoute]);
+    // Save route to database
+    try {
+      const { data: savedRoute, error: routeError } = await supabase
+        .from('bus_routes')
+        .insert({
+          route_name: newRoute.name,
+          route_name_ar: newRoute.nameAr,
+          bus_id: newRoute.busId || null,
+          stops: JSON.parse(JSON.stringify(stops)),
+          is_active: newRoute.status === 'active',
+          morning_schedule: { departure: newRoute.departureTime, arrival: newRoute.arrivalTime },
+        })
+        .select()
+        .single();
+      
+      if (routeError) throw routeError;
+      
+      // Create student bus assignments if bus is assigned
+      if (newRoute.busId && selectedStudents.length > 0) {
+        const assignmentInserts = selectedStudents.map(studentId => ({
+          student_id: studentId,
+          bus_id: newRoute.busId!,
+          pickup_stop: 'Home',
+          dropoff_stop: 'School',
+          is_active: true,
+        }));
+        
+        const { error: assignError } = await supabase
+          .from('student_bus_assignments')
+          .upsert(assignmentInserts, { 
+            onConflict: 'student_id'
+          });
+        
+        if (assignError) {
+          console.error('Error creating student assignments:', assignError);
+        }
+      }
+      
+      // Update local state with saved route ID
+      newRoute.id = savedRoute.id;
+      setRoutes([...routes, newRoute]);
+      
+      toast({
+        variant: 'success',
+        title: language === 'ar' ? 'تمت الإضافة بنجاح' : 'Added Successfully',
+        description: language === 'ar' ? 'تم إضافة المسار بنجاح' : 'Route has been added successfully',
+      });
+    } catch (error) {
+      console.error('Error saving route:', error);
+      toast({
+        variant: 'destructive',
+        title: language === 'ar' ? 'خطأ' : 'Error',
+        description: language === 'ar' ? 'فشل في حفظ المسار' : 'Failed to save route',
+      });
+    }
+    
     setIsAddDialogOpen(false);
     resetForm();
-    
-    toast({
-      variant: 'success',
-      title: language === 'ar' ? 'تمت الإضافة بنجاح' : 'Added Successfully',
-      description: language === 'ar' ? 'تم إضافة المسار بنجاح' : 'Route has been added successfully',
-    });
   };
 
-  const handleEditRoute = () => {
+  const handleEditRoute = async () => {
     if (!selectedRoute) return;
     
-    setRoutes(routes.map(r => 
-      r.id === selectedRoute.id 
-        ? { ...r, ...formData, stops, studentIds: selectedStudents } as Route
-        : r
-    ));
+    try {
+      // Update route in database
+      const { error: routeError } = await supabase
+        .from('bus_routes')
+        .update({
+          route_name: formData.name,
+          route_name_ar: formData.nameAr,
+          bus_id: formData.busId || null,
+          stops: JSON.parse(JSON.stringify(stops)),
+          is_active: formData.status === 'active',
+          morning_schedule: { departure: formData.departureTime, arrival: formData.arrivalTime },
+        })
+        .eq('id', selectedRoute.id);
+      
+      if (routeError) throw routeError;
+      
+      // Update student bus assignments
+      if (formData.busId) {
+        // First, deactivate old assignments for this bus that are not in the new list
+        const previousStudentIds = selectedRoute.studentIds || [];
+        const studentsToRemove = previousStudentIds.filter(id => !selectedStudents.includes(id));
+        
+        if (studentsToRemove.length > 0) {
+          await supabase
+            .from('student_bus_assignments')
+            .update({ is_active: false })
+            .in('student_id', studentsToRemove)
+            .eq('bus_id', formData.busId);
+        }
+        
+        // Add/update new student assignments
+        if (selectedStudents.length > 0) {
+          const assignmentUpserts = selectedStudents.map(studentId => ({
+            student_id: studentId,
+            bus_id: formData.busId!,
+            pickup_stop: 'Home',
+            dropoff_stop: 'School',
+            is_active: true,
+          }));
+          
+          const { error: assignError } = await supabase
+            .from('student_bus_assignments')
+            .upsert(assignmentUpserts, { 
+              onConflict: 'student_id'
+            });
+          
+          if (assignError) {
+            console.error('Error updating student assignments:', assignError);
+          }
+        }
+      }
+      
+      // Update local state
+      setRoutes(routes.map(r => 
+        r.id === selectedRoute.id 
+          ? { ...r, ...formData, stops, studentIds: selectedStudents } as Route
+          : r
+      ));
+      
+      toast({
+        variant: 'success',
+        title: language === 'ar' ? 'تم التحديث بنجاح' : 'Updated Successfully',
+        description: language === 'ar' ? 'تم تحديث المسار بنجاح' : 'Route has been updated successfully',
+      });
+    } catch (error) {
+      console.error('Error updating route:', error);
+      toast({
+        variant: 'destructive',
+        title: language === 'ar' ? 'خطأ' : 'Error',
+        description: language === 'ar' ? 'فشل في تحديث المسار' : 'Failed to update route',
+      });
+    }
     
     setIsEditDialogOpen(false);
     resetForm();
-    
-    toast({
-      variant: 'success',
-      title: language === 'ar' ? 'تم التحديث بنجاح' : 'Updated Successfully',
-      description: language === 'ar' ? 'تم تحديث المسار بنجاح' : 'Route has been updated successfully',
-    });
   };
 
   const handleDeleteRoute = (id: string) => {
