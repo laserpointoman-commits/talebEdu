@@ -312,7 +312,7 @@ export default function SupervisorDashboard() {
         newStatus = 'boarded';
       }
 
-      await supabase.functions.invoke('record-bus-activity', {
+      const { data, error } = await supabase.functions.invoke('record-bus-activity', {
         body: {
           studentId: selectedStudentForManual.id,
           busId: busData?.id,
@@ -323,6 +323,20 @@ export default function SupervisorDashboard() {
           manual_entry_by: user?.id
         }
       });
+
+      if (error || data?.error) {
+        const errorMsg = data?.error || error?.message || 'Failed to record attendance';
+        console.error('Manual attendance error:', errorMsg);
+        toast.error(errorMsg);
+        setProcessingManual(false);
+        setShowConfirmManual(false);
+        setSelectedStudentForManual(null);
+        // Refresh student list to get correct statuses
+        if (busData?.id) {
+          loadBusStudents(busData.id);
+        }
+        return;
+      }
 
       const currentTime = new Date().toLocaleTimeString();
       setStudents(prev => prev.map(s => 
