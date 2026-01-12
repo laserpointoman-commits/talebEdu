@@ -65,15 +65,23 @@ export default function SupervisorDashboard() {
 
   const loadSupervisorData = async () => {
     try {
-      // Get supervisor info
+      let busId: string | null = null;
+      let busInfo: any = null;
+
+      // First check supervisors table
       const { data: supervisor } = await supabase
         .from('supervisors')
         .select('*, buses(*)')
         .eq('profile_id', user?.id)
         .single();
 
-      if (!supervisor?.bus_id) {
-        // Also check if supervisor is assigned directly to a bus
+      if (supervisor?.bus_id && supervisor.buses) {
+        busId = supervisor.bus_id;
+        busInfo = supervisor.buses;
+      }
+
+      // If not found in supervisors table, check buses.supervisor_id
+      if (!busId) {
         const { data: bus } = await supabase
           .from('buses')
           .select('*')
@@ -81,22 +89,25 @@ export default function SupervisorDashboard() {
           .single();
         
         if (bus) {
-          setBusData(bus);
-          await loadBusStudents(bus.id);
+          busId = bus.id;
+          busInfo = bus;
         }
+      }
+
+      if (!busId || !busInfo) {
         setLoading(false);
         return;
       }
 
-      setBusData(supervisor.buses);
-      await loadBusStudents(supervisor.bus_id);
+      setBusData(busInfo);
+      await loadBusStudents(busId);
 
       // Check for active trip
       const today = new Date().toISOString().split('T')[0];
       const { data: activeTrip } = await supabase
         .from('bus_trips')
         .select('*')
-        .eq('bus_id', supervisor.bus_id)
+        .eq('bus_id', busId)
         .eq('status', 'in_progress')
         .gte('created_at', `${today}T00:00:00`)
         .single();
