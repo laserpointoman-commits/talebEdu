@@ -617,6 +617,60 @@ Deno.serve(async (req) => {
 
     console.log('✅ Created classes');
 
+    // ========== SCHOOL ATTENDANCE ACCOUNT ==========
+    const schoolAttEmail = 'schoolattendance@talebschool.om';
+    const schoolAttPassword = 'SchoolAtt@2024';
+
+    const { data: existingSchoolAtt } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('email', schoolAttEmail)
+      .maybeSingle();
+
+    if (!existingSchoolAtt) {
+      const { data: schoolAttAuth, error: schoolAttError } = await supabase.auth.admin.createUser({
+        email: schoolAttEmail,
+        password: schoolAttPassword,
+        email_confirm: true,
+        user_metadata: { full_name: 'School Gate Attendance', role: 'school_attendance' }
+      });
+
+      if (!schoolAttError && schoolAttAuth.user) {
+        await supabase.from('profiles').upsert({
+          id: schoolAttAuth.user.id,
+          email: schoolAttEmail,
+          full_name: 'School Gate Attendance',
+          full_name_ar: 'حضور بوابة المدرسة',
+          role: 'school_attendance',
+          linked_entity_type: 'device'
+        });
+
+        // Create employee record for NFC login
+        const nfcId = generateNfcId('ATT', 1);
+        await supabase.from('employees').insert({
+          profile_id: schoolAttAuth.user.id,
+          employee_id: 'ATT-0001',
+          position: 'security',
+          nfc_id: nfcId,
+          employment_status: 'active',
+          join_date: '2024-01-01'
+        });
+
+        createdAccounts.push({
+          email: schoolAttEmail,
+          password: schoolAttPassword,
+          role: 'school_attendance',
+          name: 'School Gate Attendance',
+          nameAr: 'حضور بوابة المدرسة',
+          phone: '+968 90000001'
+        });
+
+        console.log(`✅ School Attendance: ${schoolAttEmail} (NFC: ${nfcId})`);
+      }
+    }
+
+    console.log('✅ School attendance account ready');
+
     // ========== ADMIN ACCOUNT ==========
     const adminEmail = 'admin@talebschool.om';
     const adminPassword = 'Admin@2024';
