@@ -332,7 +332,7 @@ export default function StudentStore() {
         </Button>
         <div className="flex-1">
           <h1 className="text-xl md:text-2xl font-bold">
-            {language === 'ar' ? 'متجر المدرسة' : 'School Store'}
+            {language === 'ar' ? 'المتجر الخاص' : 'Private Store'}
           </h1>
           <p className="text-sm text-muted-foreground">{studentName}</p>
         </div>
@@ -348,7 +348,7 @@ export default function StudentStore() {
             <div className="flex-1 space-y-2">
               <div>
                 <p className="font-semibold text-lg">
-                  {language === 'ar' ? 'متجر مدرسة السلام' : 'Al-Salam School Store'}
+                  {language === 'ar' ? 'المتجر الخاص' : 'Private Store'}
                 </p>
                 <p className="text-sm text-muted-foreground">
                   {language === 'ar' 
@@ -384,7 +384,7 @@ export default function StudentStore() {
             </div>
             <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-200">
               <Check className="h-3 w-3 mr-1" />
-              {language === 'ar' ? 'متجر رسمي' : 'Official Store'}
+              {language === 'ar' ? 'متجر معتمد' : 'Verified Store'}
             </Badge>
           </div>
         </CardContent>
@@ -577,10 +577,10 @@ export default function StudentStore() {
 
       {/* Checkout Dialog */}
       <Dialog open={showCheckout} onOpenChange={setShowCheckout}>
-        <DialogContent className="max-w-md max-h-[90vh] overflow-hidden flex flex-col">
+        <DialogContent className="max-w-md p-0 gap-0 max-h-[85vh] flex flex-col">
           {checkoutStep === 'cart' && (
-            <>
-              <DialogHeader>
+            <div className="flex flex-col h-full">
+              <DialogHeader className="p-6 pb-2 flex-shrink-0">
                 <DialogTitle className="flex items-center gap-2">
                   <ShoppingCart className="h-5 w-5" />
                   {language === 'ar' ? 'سلة التسوق' : 'Shopping Cart'}
@@ -589,7 +589,7 @@ export default function StudentStore() {
                   {cartItemCount} {language === 'ar' ? 'منتج' : 'items'}
                 </DialogDescription>
               </DialogHeader>
-              <ScrollArea className="flex-1 -mx-6 px-6">
+              <div className="flex-1 overflow-y-auto px-6">
                 <div className="space-y-3 py-2">
                   {cart.map((item, idx) => (
                     <div key={`${item.id}-${item.size}-${idx}`} className="flex items-center gap-3 p-3 bg-accent/50 rounded-lg">
@@ -613,7 +613,7 @@ export default function StudentStore() {
                       <Button 
                         size="icon" 
                         variant="ghost" 
-                        className="h-7 w-7 text-destructive"
+                        className="h-7 w-7 text-destructive flex-shrink-0"
                         onClick={() => removeItemCompletely(item.id, item.size)}
                       >
                         <X className="h-4 w-4" />
@@ -621,10 +621,9 @@ export default function StudentStore() {
                     </div>
                   ))}
                 </div>
-              </ScrollArea>
-              <Separator />
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
+              </div>
+              <div className="p-6 pt-2 border-t bg-background flex-shrink-0">
+                <div className="flex justify-between items-center mb-3">
                   <span className="text-muted-foreground">{language === 'ar' ? 'المجموع' : 'Total'}</span>
                   <span className="text-xl font-bold">{cartTotal.toFixed(3)} {language === 'ar' ? 'ر.ع' : 'OMR'}</span>
                 </div>
@@ -633,153 +632,168 @@ export default function StudentStore() {
                   <ChevronRight className="h-4 w-4 ml-2" />
                 </Button>
               </div>
-            </>
+            </div>
           )}
 
           {checkoutStep === 'details' && (
-            <>
-              <DialogHeader>
+            <div className="flex flex-col h-full">
+              <DialogHeader className="p-6 pb-2 flex-shrink-0">
                 <DialogTitle>{language === 'ar' ? 'تفاصيل الطلب' : 'Order Details'}</DialogTitle>
                 <DialogDescription>
                   {language === 'ar' ? 'اختر طريقة الاستلام' : 'Choose delivery method'}
                 </DialogDescription>
               </DialogHeader>
-              <div className="space-y-4 py-2">
-                <div>
-                  <Label className="text-sm font-medium mb-3 block">
-                    {language === 'ar' ? 'طريقة الاستلام' : 'Delivery Method'}
-                  </Label>
-                  <RadioGroup value={deliveryMethod} onValueChange={(v) => setDeliveryMethod(v as any)}>
-                    <div className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${deliveryMethod === 'pickup' ? 'border-primary bg-primary/5' : 'hover:bg-accent'}`}>
-                      <RadioGroupItem value="pickup" id="pickup" className="mt-1" />
-                      <div className="flex-1">
-                        <Label htmlFor="pickup" className="font-medium cursor-pointer flex items-center gap-2">
-                          <Building2 className="h-4 w-4" />
-                          {language === 'ar' ? 'استلام من المتجر' : 'Store Pickup'}
-                        </Label>
-                        <p className="text-sm text-muted-foreground">
-                          {language === 'ar' 
-                            ? 'استلم طلبك من متجر المدرسة'
-                            : 'Pick up your order from the school store'}
-                        </p>
+              <div className="flex-1 overflow-y-auto px-6 pb-4">
+                <div className="space-y-4">
+                  <div>
+                    <Label className="text-sm font-medium mb-3 block">
+                      {language === 'ar' ? 'طريقة الاستلام' : 'Delivery Method'}
+                    </Label>
+                    <div className="space-y-2">
+                      <div 
+                        className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${deliveryMethod === 'pickup' ? 'border-primary bg-primary/5' : 'hover:bg-accent'}`}
+                        onClick={() => setDeliveryMethod('pickup')}
+                      >
+                        <div className={`w-4 h-4 mt-1 rounded-full border-2 flex items-center justify-center ${deliveryMethod === 'pickup' ? 'border-primary' : 'border-muted-foreground'}`}>
+                          {deliveryMethod === 'pickup' && <div className="w-2 h-2 rounded-full bg-primary" />}
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-medium flex items-center gap-2">
+                            <Building2 className="h-4 w-4" />
+                            {language === 'ar' ? 'استلام من المتجر' : 'Store Pickup'}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {language === 'ar' 
+                              ? 'استلم طلبك من المتجر الخاص'
+                              : 'Pick up your order from the private store'}
+                          </p>
+                        </div>
+                      </div>
+                      <div 
+                        className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${deliveryMethod === 'classroom' ? 'border-primary bg-primary/5' : 'hover:bg-accent'}`}
+                        onClick={() => setDeliveryMethod('classroom')}
+                      >
+                        <div className={`w-4 h-4 mt-1 rounded-full border-2 flex items-center justify-center ${deliveryMethod === 'classroom' ? 'border-primary' : 'border-muted-foreground'}`}>
+                          {deliveryMethod === 'classroom' && <div className="w-2 h-2 rounded-full bg-primary" />}
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-medium flex items-center gap-2">
+                            <Truck className="h-4 w-4" />
+                            {language === 'ar' ? 'توصيل للفصل' : 'Classroom Delivery'}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {language === 'ar' 
+                              ? `سيتم توصيل الطلب لـ ${student?.first_name} في فصله`
+                              : `Order will be delivered to ${student?.first_name}'s classroom`}
+                          </p>
+                        </div>
                       </div>
                     </div>
-                    <div className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${deliveryMethod === 'classroom' ? 'border-primary bg-primary/5' : 'hover:bg-accent'}`}>
-                      <RadioGroupItem value="classroom" id="classroom" className="mt-1" />
-                      <div className="flex-1">
-                        <Label htmlFor="classroom" className="font-medium cursor-pointer flex items-center gap-2">
-                          <Truck className="h-4 w-4" />
-                          {language === 'ar' ? 'توصيل للفصل' : 'Classroom Delivery'}
-                        </Label>
-                        <p className="text-sm text-muted-foreground">
-                          {language === 'ar' 
-                            ? `سيتم توصيل الطلب لـ ${student?.first_name} في فصله`
-                            : `Order will be delivered to ${student?.first_name}'s classroom`}
-                        </p>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="notes" className="text-sm font-medium mb-2 block">
+                      {language === 'ar' ? 'ملاحظات (اختياري)' : 'Notes (Optional)'}
+                    </Label>
+                    <Textarea 
+                      id="notes"
+                      placeholder={language === 'ar' ? 'أي ملاحظات خاصة بالطلب...' : 'Any special notes for your order...'}
+                      value={orderNotes}
+                      onChange={(e) => setOrderNotes(e.target.value)}
+                      className="resize-none"
+                      rows={2}
+                    />
+                  </div>
+
+                  <Card className="bg-accent/50">
+                    <CardContent className="py-3">
+                      <div className="flex items-center gap-2 text-sm">
+                        <Clock className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-muted-foreground">
+                          {language === 'ar' ? 'وقت التجهيز المتوقع:' : 'Estimated preparation:'}
+                        </span>
+                        <span className="font-medium">
+                          {language === 'ar' ? '1-2 أيام عمل' : '1-2 business days'}
+                        </span>
                       </div>
-                    </div>
-                  </RadioGroup>
-                </div>
+                    </CardContent>
+                  </Card>
 
-                <div>
-                  <Label htmlFor="notes" className="text-sm font-medium mb-2 block">
-                    {language === 'ar' ? 'ملاحظات (اختياري)' : 'Notes (Optional)'}
-                  </Label>
-                  <Textarea 
-                    id="notes"
-                    placeholder={language === 'ar' ? 'أي ملاحظات خاصة بالطلب...' : 'Any special notes for your order...'}
-                    value={orderNotes}
-                    onChange={(e) => setOrderNotes(e.target.value)}
-                    className="resize-none"
-                    rows={3}
-                  />
-                </div>
-
-                <Card className="bg-accent/50">
-                  <CardContent className="py-3">
-                    <div className="flex items-center gap-2 text-sm">
-                      <Clock className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-muted-foreground">
-                        {language === 'ar' ? 'وقت التجهيز المتوقع:' : 'Estimated preparation:'}
-                      </span>
-                      <span className="font-medium">
-                        {language === 'ar' ? '1-2 أيام عمل' : '1-2 business days'}
-                      </span>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Separator />
-
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">{language === 'ar' ? 'المنتجات' : 'Items'}</span>
-                    <span>{cartTotal.toFixed(3)} {language === 'ar' ? 'ر.ع' : 'OMR'}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">{language === 'ar' ? 'التوصيل' : 'Delivery'}</span>
-                    <span className="text-green-600">{language === 'ar' ? 'مجاني' : 'Free'}</span>
-                  </div>
                   <Separator />
-                  <div className="flex justify-between font-bold">
-                    <span>{language === 'ar' ? 'الإجمالي' : 'Total'}</span>
-                    <span>{cartTotal.toFixed(3)} {language === 'ar' ? 'ر.ع' : 'OMR'}</span>
-                  </div>
-                </div>
 
-                {cartTotal > parentWalletBalance && (
-                  <div className="flex items-center gap-2 p-3 bg-destructive/10 rounded-lg text-destructive text-sm">
-                    <AlertCircle className="h-4 w-4" />
-                    {language === 'ar' ? 'رصيد المحفظة غير كافي' : 'Insufficient wallet balance'}
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">{language === 'ar' ? 'المنتجات' : 'Items'}</span>
+                      <span>{cartTotal.toFixed(3)} {language === 'ar' ? 'ر.ع' : 'OMR'}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">{language === 'ar' ? 'التوصيل' : 'Delivery'}</span>
+                      <span className="text-green-600">{language === 'ar' ? 'مجاني' : 'Free'}</span>
+                    </div>
+                    <Separator />
+                    <div className="flex justify-between font-bold text-lg">
+                      <span>{language === 'ar' ? 'الإجمالي' : 'Total'}</span>
+                      <span>{cartTotal.toFixed(3)} {language === 'ar' ? 'ر.ع' : 'OMR'}</span>
+                    </div>
                   </div>
-                )}
+
+                  {cartTotal > parentWalletBalance && (
+                    <div className="flex items-center gap-2 p-3 bg-destructive/10 rounded-lg text-destructive text-sm">
+                      <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                      {language === 'ar' ? 'رصيد المحفظة غير كافي' : 'Insufficient wallet balance'}
+                    </div>
+                  )}
+                </div>
               </div>
-              <DialogFooter className="gap-2">
-                <Button variant="outline" onClick={() => setCheckoutStep('cart')}>
-                  {language === 'ar' ? 'رجوع' : 'Back'}
-                </Button>
-                <Button 
-                  onClick={handlePurchase} 
-                  disabled={purchasing || cartTotal > parentWalletBalance}
-                  className="flex-1"
-                >
-                  {purchasing 
-                    ? (language === 'ar' ? 'جاري الطلب...' : 'Placing Order...')
-                    : (language === 'ar' ? 'تأكيد الطلب' : 'Confirm Order')}
-                </Button>
-              </DialogFooter>
-            </>
+              <div className="p-6 pt-2 border-t bg-background flex-shrink-0">
+                <div className="flex gap-2">
+                  <Button variant="outline" onClick={() => setCheckoutStep('cart')} className="flex-shrink-0">
+                    {language === 'ar' ? 'رجوع' : 'Back'}
+                  </Button>
+                  <Button 
+                    onClick={handlePurchase} 
+                    disabled={purchasing || cartTotal > parentWalletBalance}
+                    className="flex-1"
+                  >
+                    {purchasing 
+                      ? (language === 'ar' ? 'جاري الطلب...' : 'Placing Order...')
+                      : (language === 'ar' ? 'تأكيد الطلب' : 'Confirm Order')}
+                  </Button>
+                </div>
+              </div>
+            </div>
           )}
 
           {checkoutStep === 'confirmation' && (
-            <div className="text-center py-6">
+            <div className="text-center p-6">
               <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Check className="h-8 w-8 text-green-600" />
               </div>
               <h3 className="text-xl font-bold mb-2">
                 {language === 'ar' ? 'تم الطلب بنجاح!' : 'Order Placed Successfully!'}
               </h3>
-              <p className="text-muted-foreground mb-6">
+              <p className="text-muted-foreground mb-6 text-sm">
                 {deliveryMethod === 'classroom'
                   ? (language === 'ar' 
                       ? `سيتم توصيل الطلب لـ ${student?.first_name} في فصله خلال 1-2 يوم`
                       : `Order will be delivered to ${student?.first_name}'s classroom within 1-2 days`)
                   : (language === 'ar'
-                      ? 'سنقوم بإعلامك عندما يكون طلبك جاهزاً للاستلام'
-                      : 'We will notify you when your order is ready for pickup')}
+                      ? 'سنقوم بإعلامك عندما يكون طلبك جاهزاً للاستلام من المتجر الخاص'
+                      : 'We will notify you when your order is ready for pickup from the private store')}
               </p>
               <Card className="bg-accent/50 text-left mb-6">
                 <CardContent className="py-4 space-y-2">
+                  <p className="font-medium text-sm mb-2">{language === 'ar' ? 'معلومات الاستلام' : 'Pickup Information'}</p>
                   <div className="flex items-center gap-2 text-sm">
-                    <MapPin className="h-4 w-4 text-muted-foreground" />
+                    <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                     <span>{language === 'ar' ? 'المبنى الرئيسي - الطابق الأرضي' : 'Main Building - Ground Floor'}</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
-                    <Clock className="h-4 w-4 text-muted-foreground" />
+                    <Clock className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                     <span>{language === 'ar' ? '7:00 ص - 2:00 م' : '7:00 AM - 2:00 PM'}</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
-                    <Phone className="h-4 w-4 text-muted-foreground" />
+                    <Phone className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                     <span>+968 2412 3456</span>
                   </div>
                 </CardContent>
