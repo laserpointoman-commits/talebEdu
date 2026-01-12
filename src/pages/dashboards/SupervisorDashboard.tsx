@@ -68,8 +68,9 @@ export default function SupervisorDashboard() {
   const [selectedTripType, setSelectedTripType] = useState<TripType | null>(null);
   const [showManualDialog, setShowManualDialog] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showConfirmManual, setShowConfirmManual] = useState(false);
   const [selectedStudentForManual, setSelectedStudentForManual] = useState<StudentStatus | null>(null);
-  const [awaitingNfcVerification, setAwaitingNfcVerification] = useState(false);
+  const [processingManual, setProcessingManual] = useState(false);
   const scanningRef = useRef(false);
 
   useEffect(() => {
@@ -183,11 +184,7 @@ export default function SupervisorDashboard() {
 
     try {
       await nfcService.startScanning(async (nfcData: NFCData) => {
-        if (awaitingNfcVerification && selectedStudentForManual) {
-          await handleManualNfcVerification(nfcData);
-        } else {
-          await handleNfcScan(nfcData);
-        }
+        await handleNfcScan(nfcData);
       });
       toast.success(language === 'ar' ? 'بدأ المسح المستمر' : 'Continuous scanning started');
     } catch (error) {
@@ -202,8 +199,6 @@ export default function SupervisorDashboard() {
     nfcService.stopScanning();
     setIsScanning(false);
     scanningRef.current = false;
-    setAwaitingNfcVerification(false);
-    setSelectedStudentForManual(null);
   };
 
   const handleNfcScan = async (nfcData: NFCData) => {
@@ -275,22 +270,24 @@ export default function SupervisorDashboard() {
     }
   };
 
-  const handleManualNfcVerification = async (nfcData: NFCData) => {
+  const confirmManualAttendance = async () => {
     if (!selectedStudentForManual) return;
-
-    if (nfcData.id === selectedStudentForManual.nfcId) {
-      // NFC matches - record attendance
+    
+    setProcessingManual(true);
+    
+    try {
       const action = selectedTripType === 'pickup' ? 'board' : 'exit';
       const studentName = language === 'ar' ? selectedStudentForManual.nameAr : selectedStudentForManual.name;
 
       await supabase.functions.invoke('record-bus-activity', {
         body: {
-          studentNfcId: nfcData.id,
+          studentId: selectedStudentForManual.id,
           busId: busData?.id,
           action: action,
           location: busData?.bus_number || 'Bus',
-          nfc_verified: true,
-          manual_entry: true
+          nfc_verified: false,
+          manual_entry: true,
+          manual_entry_by: user?.id
         }
       });
 
@@ -305,34 +302,28 @@ export default function SupervisorDashboard() {
         ...prev.slice(0, 9)
       ]);
 
-      toast.success(language === 'ar' ? `✓ تم التحقق - ${studentName}` : `✓ Verified - ${studentName}`, {
+      setLastScanned(studentName);
+      setTimeout(() => setLastScanned(null), 2000);
+
+      toast.success(language === 'ar' ? `✓ تم التسجيل - ${studentName}` : `✓ Recorded - ${studentName}`, {
         duration: 2000,
         position: 'top-center'
       });
 
-      setAwaitingNfcVerification(false);
+      setShowConfirmManual(false);
       setSelectedStudentForManual(null);
-      setShowManualDialog(false);
-    } else {
-      toast.error(language === 'ar' ? 'بطاقة NFC غير مطابقة' : 'NFC card does not match', {
-        duration: 2000,
-        position: 'top-center'
-      });
+    } catch (error) {
+      console.error('Error recording manual attendance:', error);
+      toast.error(language === 'ar' ? 'فشل تسجيل الحضور' : 'Failed to record attendance');
+    } finally {
+      setProcessingManual(false);
     }
   };
 
   const initiateManualAttendance = (student: StudentStatus) => {
     setSelectedStudentForManual(student);
-    setAwaitingNfcVerification(true);
-    if (!isScanning) {
-      startContinuousScanning();
-    }
-    toast.info(language === 'ar' 
-      ? `امسح بطاقة ${student.nameAr} للتحقق` 
-      : `Scan ${student.name}'s card to verify`, {
-      duration: 5000,
-      position: 'top-center'
-    });
+    setShowConfirmManual(true);
+    setShowManualDialog(false);
   };
 
   const startTrip = async (tripType: TripType) => {
@@ -551,40 +542,12 @@ export default function SupervisorDashboard() {
                       >
                         <Scan className="h-10 w-10 text-primary" />
                       </motion.div>
-                      
-                      {awaitingNfcVerification && selectedStudentForManual ? (
-                        <>
-                          <p className="font-semibold text-lg mb-1">
-                            {language === 'ar' ? 'في انتظار التحقق' : 'Awaiting Verification'}
-                          </p>
-                          <p className="text-primary font-bold">
-                            {language === 'ar' ? selectedStudentForManual.nameAr : selectedStudentForManual.name}
-                          </p>
-                          <p className="text-sm text-muted-foreground mt-2">
-                            {language === 'ar' ? 'امسح بطاقة الطالب للتأكيد' : 'Scan student card to confirm'}
-                          </p>
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="mt-4"
-                            onClick={() => {
-                              setAwaitingNfcVerification(false);
-                              setSelectedStudentForManual(null);
-                            }}
-                          >
-                            {language === 'ar' ? 'إلغاء' : 'Cancel'}
-                          </Button>
-                        </>
-                      ) : (
-                        <>
-                          <p className="font-semibold text-lg">
-                            {language === 'ar' ? 'جاري المسح...' : 'Scanning...'}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            {language === 'ar' ? 'ضع البطاقة بالقرب من الجهاز' : 'Hold card near device'}
-                          </p>
-                        </>
-                      )}
+                      <p className="font-semibold text-lg">
+                        {language === 'ar' ? 'جاري المسح...' : 'Scanning...'}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {language === 'ar' ? 'ضع البطاقة بالقرب من الجهاز' : 'Hold card near device'}
+                      </p>
                     </CardContent>
                   </Card>
                 </motion.div>
@@ -855,10 +818,7 @@ export default function SupervisorDashboard() {
                     key={student.id}
                     variant="outline"
                     className="w-full justify-start h-auto p-3"
-                    onClick={() => {
-                      setShowManualDialog(false);
-                      initiateManualAttendance(student);
-                    }}
+                    onClick={() => initiateManualAttendance(student)}
                   >
                     <div className="flex items-center gap-3 w-full">
                       <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
@@ -882,14 +842,75 @@ export default function SupervisorDashboard() {
               </div>
             </ScrollArea>
             
-            <div className="p-3 bg-amber-500/10 rounded-lg border border-amber-500/20">
-              <p className="text-sm text-amber-700">
+            <div className="p-3 bg-blue-500/10 rounded-lg border border-blue-500/20">
+              <p className="text-sm text-blue-700">
                 {language === 'ar' 
-                  ? '⚠️ سيتطلب التسجيل اليدوي مسح بطاقة NFC للتحقق'
-                  : '⚠️ Manual entry requires NFC card scan for verification'}
+                  ? 'ℹ️ استخدم هذا عندما ينسى الطالب بطاقته أو لا تعمل'
+                  : 'ℹ️ Use this when student forgot or has non-working card'}
               </p>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Confirm Manual Attendance Dialog */}
+      <Dialog open={showConfirmManual} onOpenChange={setShowConfirmManual}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-center">
+              {language === 'ar' ? 'تأكيد تسجيل الحضور' : 'Confirm Attendance'}
+            </DialogTitle>
+          </DialogHeader>
+          
+          {selectedStudentForManual && (
+            <div className="space-y-4">
+              <div className="text-center py-4">
+                <div className="w-20 h-20 mx-auto rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                  <Users className="h-10 w-10 text-primary" />
+                </div>
+                <p className="text-xl font-bold">
+                  {language === 'ar' ? selectedStudentForManual.nameAr : selectedStudentForManual.name}
+                </p>
+                <p className="text-muted-foreground">{selectedStudentForManual.class}</p>
+              </div>
+              
+              <div className="p-3 bg-amber-500/10 rounded-lg border border-amber-500/20">
+                <p className="text-sm text-amber-700 text-center">
+                  {language === 'ar' 
+                    ? '⚠️ سيتم تسجيل الحضور بدون تحقق NFC'
+                    : '⚠️ Attendance will be recorded without NFC verification'}
+                </p>
+              </div>
+              
+              <div className="flex gap-3">
+                <Button 
+                  variant="outline" 
+                  className="flex-1"
+                  onClick={() => {
+                    setShowConfirmManual(false);
+                    setSelectedStudentForManual(null);
+                  }}
+                  disabled={processingManual}
+                >
+                  {language === 'ar' ? 'إلغاء' : 'Cancel'}
+                </Button>
+                <Button 
+                  className="flex-1"
+                  onClick={confirmManualAttendance}
+                  disabled={processingManual}
+                >
+                  {processingManual ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <>
+                      <CheckCircle className="mr-2 h-4 w-4" />
+                      {language === 'ar' ? 'تأكيد' : 'Confirm'}
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
