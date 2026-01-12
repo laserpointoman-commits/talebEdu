@@ -171,28 +171,39 @@ export default function RoutesManagement() {
           .select(`
             id,
             profile_id,
-            bus_id,
             profiles:profile_id (full_name, full_name_ar)
           `);
-        
-        // Fetch buses for driver bus lookup
+
+        // Fetch buses (also includes which driver is currently assigned)
         const { data: allBusesData } = await supabase
           .from('buses')
-          .select('id, bus_number');
-        
-        const busLookup = new Map((allBusesData || []).map(b => [b.id, b.bus_number]));
-        
+          .select('id, bus_number, driver_id');
+
+        const busByDriverId = new Map(
+          (allBusesData || [])
+            .filter((b: any) => Boolean(b.driver_id))
+            .map((b: any) => [b.driver_id, { busId: b.id, busNumber: b.bus_number }])
+        );
+
         if (driversData) {
-          setDrivers(driversData.map(d => {
-            const currentBusNumber = d.bus_id ? busLookup.get(d.bus_id) : undefined;
-            return {
-              id: d.id,
-              name: ((d.profiles as any)?.full_name || 'Unknown') + (currentBusNumber ? ` (${currentBusNumber})` : ''),
-              nameAr: ((d.profiles as any)?.full_name_ar || (d.profiles as any)?.full_name || 'غير معروف') + (currentBusNumber ? ` (${currentBusNumber})` : ''),
-              currentBusId: d.bus_id || undefined,
-              currentBusNumber,
-            };
-          }));
+          setDrivers(
+            driversData.map((d: any) => {
+              const assignedBus = busByDriverId.get(d.id);
+              const currentBusNumber = assignedBus?.busNumber;
+
+              return {
+                id: d.id,
+                name:
+                  ((d.profiles as any)?.full_name || 'Unknown') +
+                  (currentBusNumber ? ` (${currentBusNumber})` : ''),
+                nameAr:
+                  ((d.profiles as any)?.full_name_ar || (d.profiles as any)?.full_name || 'غير معروف') +
+                  (currentBusNumber ? ` (${currentBusNumber})` : ''),
+                currentBusId: assignedBus?.busId,
+                currentBusNumber,
+              };
+            })
+          );
         }
 
         // Set buses state from the fetched data
@@ -705,13 +716,13 @@ export default function RoutesManagement() {
   const getDriverAssignment = (driverId: string): { routeName: string; busNumber: string } | null => {
     const currentBusId = formData.busId;
     
-    // First check if driver is already assigned to a bus via drivers table
+    // First check if driver is already assigned to a bus
     const driver = drivers.find(d => d.id === driverId);
     if (driver?.currentBusId && driver.currentBusId !== currentBusId) {
-      // Find the route for this bus
+      // Find the route for this bus (if any)
       const assignedRoute = routes.find(r => r.busId === driver.currentBusId);
       return {
-        routeName: assignedRoute ? (language === 'en' ? assignedRoute.name : assignedRoute.nameAr) : (language === 'en' ? 'Unknown Route' : 'مسار غير معروف'),
+        routeName: assignedRoute ? (language === 'en' ? assignedRoute.name : assignedRoute.nameAr) : (language === 'en' ? 'Assigned bus' : 'حافلة معينة'),
         busNumber: driver.currentBusNumber || (language === 'en' ? 'Unknown Bus' : 'حافلة غير معروفة')
       };
     }
@@ -736,10 +747,10 @@ export default function RoutesManagement() {
     // First check if supervisor is already assigned to a bus via supervisors table
     const supervisor = supervisors.find(s => s.id === supervisorId);
     if (supervisor?.currentBusId && supervisor.currentBusId !== currentBusId) {
-      // Find the route for this bus
+      // Find the route for this bus (if any)
       const assignedRoute = routes.find(r => r.busId === supervisor.currentBusId);
       return {
-        routeName: assignedRoute ? (language === 'en' ? assignedRoute.name : assignedRoute.nameAr) : (language === 'en' ? 'Unknown Route' : 'مسار غير معروف'),
+        routeName: assignedRoute ? (language === 'en' ? assignedRoute.name : assignedRoute.nameAr) : (language === 'en' ? 'Assigned bus' : 'حافلة معينة'),
         busNumber: supervisor.currentBusNumber || (language === 'en' ? 'Unknown Bus' : 'حافلة غير معروفة')
       };
     }
