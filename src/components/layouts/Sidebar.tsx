@@ -41,13 +41,13 @@ const navItems: NavItem[] = [
     title: 'dashboard.overview',
     href: '/dashboard',
     icon: LayoutDashboard,
-    roles: ['admin', 'teacher', 'parent', 'student', 'driver', 'finance', 'developer'],
+    roles: ['admin', 'teacher', 'parent', 'student', 'driver', 'finance', 'developer', 'supervisor'],
   },
   {
     title: 'dashboard.students',
     href: '/dashboard/students',
     icon: GraduationCap,
-    roles: ['admin', 'teacher', 'developer'],
+    roles: ['admin', 'teacher', 'developer', 'supervisor'],
   },
   {
     title: 'dashboard.teachers',
@@ -95,13 +95,13 @@ const navItems: NavItem[] = [
     title: 'dashboard.tracking',
     href: '/dashboard/bus-tracking',
     icon: MapPin,
-    roles: ['parent', 'driver', 'admin', 'developer'],
+    roles: ['parent', 'driver', 'admin', 'developer', 'supervisor'],
   },
   {
     title: 'dashboard.transport',
     href: '/dashboard/transport',
     icon: Bus,
-    roles: ['admin', 'developer'],
+    roles: ['admin', 'developer', 'supervisor'],
   },
   {
     title: 'dashboard.finance',
@@ -155,19 +155,19 @@ const navItems: NavItem[] = [
     title: 'dashboard.messages',
     href: '/dashboard/messages',
     icon: MessageSquare,
-    roles: ['admin', 'teacher', 'parent', 'developer'],
+    roles: ['admin', 'teacher', 'parent', 'developer', 'supervisor'],
   },
   {
     title: 'dashboard.reports',
     href: '/dashboard/reports',
     icon: FileText,
-    roles: ['admin', 'driver', 'finance', 'developer'],
+    roles: ['admin', 'driver', 'finance', 'developer', 'supervisor'],
   },
   {
     title: 'dashboard.userManagement',
     href: '/dashboard/admin/users',
     icon: Users,
-    roles: ['admin', 'developer'], // Visible to admin and developer
+    roles: ['admin', 'developer'],
   },
   {
     title: 'dashboard.nfcManagement',
@@ -179,7 +179,7 @@ const navItems: NavItem[] = [
     title: 'dashboard.settings',
     href: '/dashboard/settings',
     icon: Settings,
-    roles: ['admin', 'developer'],
+    roles: ['admin', 'developer', 'supervisor'],
   },
 ];
 
