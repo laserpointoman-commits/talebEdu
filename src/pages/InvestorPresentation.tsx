@@ -1100,16 +1100,15 @@ const InvestorPresentation = () => {
       </div>
 
       {/* Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-lg border-t p-4">
+      <div className="fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-lg border-t p-4" dir="ltr">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <Button
-            variant="outline"
-            onClick={prevSlide}
-            disabled={currentSlide === 0}
+            onClick={nextSlide}
+            disabled={currentSlide === slides.length - 1}
             className="gap-2"
           >
-            <ChevronRight className="w-4 h-4" />
-            السابق
+            <ChevronLeft className="w-4 h-4" />
+            التالي
           </Button>
           
           <div className="flex items-center gap-2">
@@ -1127,12 +1126,13 @@ const InvestorPresentation = () => {
           </div>
 
           <Button
-            onClick={nextSlide}
-            disabled={currentSlide === slides.length - 1}
+            variant="outline"
+            onClick={prevSlide}
+            disabled={currentSlide === 0}
             className="gap-2"
           >
-            التالي
-            <ChevronLeft className="w-4 h-4" />
+            السابق
+            <ChevronRight className="w-4 h-4" />
           </Button>
         </div>
       </div>
