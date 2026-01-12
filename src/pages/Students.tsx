@@ -340,7 +340,6 @@ export default function Students() {
   return (
     <div className="space-y-6 p-4 md:p-6" dir={language === 'ar' ? 'rtl' : 'ltr'}>
       <PageHeader
-        showBackButton
         title="Students"
         titleAr="الطلاب"
         subtitle="Manage and view all student profiles"

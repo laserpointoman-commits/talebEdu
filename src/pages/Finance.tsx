@@ -207,7 +207,6 @@ const Finance = () => {
     <div className="min-h-screen bg-background p-4 md:p-6" dir={language === 'ar' ? 'rtl' : 'ltr'}>
       <div className="container mx-auto max-w-7xl space-y-6">
         <PageHeader
-          showBackButton
           title="Financial System"
           titleAr="النظام المالي"
           subtitle="Comprehensive Financial Dashboard"

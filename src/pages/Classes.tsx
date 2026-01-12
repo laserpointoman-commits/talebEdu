@@ -405,7 +405,6 @@ export default function Classes() {
   return (
     <div className="space-y-6 p-4 md:p-6" dir={language === 'ar' ? 'rtl' : 'ltr'}>
       <PageHeader
-        showBackButton
         title="Classes"
         titleAr="الصفوف"
         subtitle="Manage classes and assign students"

@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Calendar, Clock } from 'lucide-react';
+import { Calendar, Clock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import LogoLoader from '@/components/LogoLoader';
 
@@ -95,9 +95,6 @@ export default function StudentSchedule() {
     <div className="space-y-6 p-4 md:p-6 max-w-4xl mx-auto pb-24">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate(`/student/${studentId}`)}>
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
         <div className="flex-1">
           <h1 className="text-xl md:text-2xl font-bold">
             {language === 'ar' ? 'جدول الحصص' : 'Class Schedule'}
