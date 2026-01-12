@@ -165,7 +165,6 @@ export default function ParentInvitationsDashboard() {
     <DashboardLayout>
       <div className="space-y-6 p-4 md:p-6" dir={language === "ar" ? "rtl" : "ltr"}>
         <PageHeader
-          showBackButton
           title="Parent Invitations"
           titleAr="دعوات أولياء الأمور"
           subtitle="Manage parent registration invitations"

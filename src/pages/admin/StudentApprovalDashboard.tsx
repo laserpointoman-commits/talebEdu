@@ -47,7 +47,6 @@ export default function StudentApprovalDashboard() {
   return (
     <div className="space-y-6 p-4 md:p-6" dir={language === 'ar' ? 'rtl' : 'ltr'}>
       <PageHeader
-        showBackButton
         title="Student Approval"
         titleAr="الموافقة على الطلاب"
         subtitle="Review and approve pending student registrations"

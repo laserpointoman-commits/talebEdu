@@ -8,7 +8,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { 
-  ArrowLeft,
   Wallet,
   Save,
   ArrowDownToLine,
@@ -234,9 +233,6 @@ export default function StudentWalletControl() {
     <div className="space-y-6 p-4 md:p-6 max-w-4xl mx-auto pb-24">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate(`/student/${studentId}`)}>
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
         <div className="flex-1">
           <h1 className="text-xl md:text-2xl font-bold">
             {language === 'ar' ? 'إدارة المحفظة' : 'Wallet Management'}

@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { School, Bus, Shield, ArrowLeft } from 'lucide-react';
+import { School, Bus, Shield } from 'lucide-react';
 
 export default function Devices() {
   const navigate = useNavigate();
@@ -38,15 +38,6 @@ export default function Devices() {
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 p-6">
       <div className="max-w-6xl mx-auto">
         <div className="mb-8">
-          <Button 
-            variant="ghost" 
-            onClick={() => navigate('/dashboard')}
-            className="mb-4"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Dashboard
-          </Button>
-          
           <h1 className="text-3xl font-bold mb-2">Device Selection</h1>
           <p className="text-muted-foreground">
             Choose a device interface to access NFC attendance and tracking systems

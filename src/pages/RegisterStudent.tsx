@@ -13,7 +13,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { Globe, UserPlus, Loader2, ArrowLeft, CheckCircle } from 'lucide-react';
+import { Globe, UserPlus, Loader2, CheckCircle } from 'lucide-react';
 import HomeLocationMap from '@/components/features/HomeLocationMap';
 
 export default function RegisterStudent() {
@@ -156,14 +156,6 @@ export default function RegisterStudent() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate('/dashboard')}
-              className="mr-2"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
             <img 
               src="/src/assets/talebedu-logo-blue.png" 
               alt="TalebEdu Logo" 

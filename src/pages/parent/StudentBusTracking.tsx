@@ -6,7 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
-  ArrowLeft,
   Bus,
   MapPin,
   User,
@@ -137,9 +136,6 @@ export default function StudentBusTracking() {
     <div className="space-y-6 p-6">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate(`/student/${studentId}`)}>
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
         <div className="flex-1">
           <h1 className="text-2xl font-bold">
             {language === 'ar' ? 'تتبع حافلة المدرسة' : 'School Bus Tracking'}

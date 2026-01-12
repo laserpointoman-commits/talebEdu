@@ -81,7 +81,6 @@ export default function FeeManagement() {
   return (
     <div className="container mx-auto p-6 space-y-6">
       <PageHeader
-        showBackButton
         title="Fee Management"
         titleAr="إدارة الرسوم"
         subtitle="Manage student fees, record payments, and track payment history"

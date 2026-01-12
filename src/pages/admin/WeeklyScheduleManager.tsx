@@ -583,7 +583,6 @@ export default function WeeklyScheduleManager() {
   return (
     <div className="space-y-6 p-4 md:p-6" dir={language === 'ar' ? 'rtl' : 'ltr'}>
       <PageHeader
-        showBackButton
         title="Weekly Schedule"
         titleAr="الجدول الأسبوعي"
         subtitle="View and manage class schedules across all classes"
