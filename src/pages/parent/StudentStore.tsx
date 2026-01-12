@@ -19,6 +19,7 @@ interface StoreItem {
   category: string;
   available: boolean;
   icon: string | null;
+  stock_quantity: number;
 }
 
 interface CartItem extends StoreItem {
@@ -28,6 +29,7 @@ interface CartItem extends StoreItem {
 interface Order {
   id: string;
   total_amount: number;
+  status: string;
   created_at: string;
   items: any;
 }
@@ -43,7 +45,7 @@ export default function StudentStore() {
   const [storeItems, setStoreItems] = useState<StoreItem[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [walletBalance, setWalletBalance] = useState(0);
+  const [parentWalletBalance, setParentWalletBalance] = useState(0);
 
   useEffect(() => {
     if (studentId && user) {
@@ -68,27 +70,27 @@ export default function StudentStore() {
 
       setStudent(studentData);
 
-      // Load canteen items as store items
+      // Load store items (stationery, books, uniforms)
       const { data: items } = await supabase
-        .from('canteen_items')
+        .from('store_items')
         .select('*')
         .eq('available', true)
         .order('category', { ascending: true });
 
       setStoreItems(items || []);
 
-      // Load student wallet balance
+      // Load parent wallet balance (parent pays for store items)
       const { data: wallet } = await supabase
         .from('wallet_balances')
         .select('balance')
-        .eq('user_id', studentId)
+        .eq('user_id', user?.id)
         .maybeSingle();
 
-      setWalletBalance(wallet?.balance || 0);
+      setParentWalletBalance(wallet?.balance || 0);
 
       // Load recent orders
       const { data: ordersData } = await supabase
-        .from('canteen_orders')
+        .from('store_orders')
         .select('*')
         .eq('student_id', studentId)
         .order('created_at', { ascending: false })
@@ -106,6 +108,10 @@ export default function StudentStore() {
     setCart(prev => {
       const existing = prev.find(c => c.id === item.id);
       if (existing) {
+        if (existing.quantity >= item.stock_quantity) {
+          toast.error(language === 'ar' ? 'لا يوجد مخزون كافي' : 'Not enough stock');
+          return prev;
+        }
         return prev.map(c => c.id === item.id ? { ...c, quantity: c.quantity + 1 } : c);
       }
       return [...prev, { ...item, quantity: 1 }];
@@ -131,20 +137,22 @@ export default function StudentStore() {
   const handlePurchase = async () => {
     if (cart.length === 0) return;
 
-    if (cartTotal > walletBalance) {
+    if (cartTotal > parentWalletBalance) {
       toast.error(language === 'ar' ? 'رصيد المحفظة غير كافي' : 'Insufficient wallet balance');
       return;
     }
 
     setPurchasing(true);
     try {
-      // Create order
+      // Create store order
       const { data: order, error: orderError } = await supabase
-        .from('canteen_orders')
+        .from('store_orders')
         .insert({
           student_id: studentId,
+          parent_id: user?.id,
           items: cart.map(c => ({ id: c.id, name: c.name, quantity: c.quantity, price: c.price })),
           total_amount: cartTotal,
+          status: 'completed',
           payment_method: 'wallet'
         })
         .select()
@@ -152,30 +160,39 @@ export default function StudentStore() {
 
       if (orderError) throw orderError;
 
-      // Deduct from wallet
+      // Deduct from parent wallet
+      const newBalance = parentWalletBalance - cartTotal;
       const { error: walletError } = await supabase
         .from('wallet_balances')
-        .update({ balance: walletBalance - cartTotal })
-        .eq('user_id', studentId);
+        .update({ balance: newBalance })
+        .eq('user_id', user?.id);
 
       if (walletError) throw walletError;
 
       // Record transaction
       await supabase.from('wallet_transactions').insert({
-        user_id: studentId,
+        user_id: user?.id,
         amount: -cartTotal,
-        balance_after: walletBalance - cartTotal,
+        balance_after: newBalance,
         type: 'purchase',
-        description: language === 'ar' ? 'شراء من المتجر' : 'Store purchase'
+        description: language === 'ar' ? 'شراء من متجر المدرسة' : 'School store purchase'
       });
 
-      toast.success(language === 'ar' ? 'تمت عملية الشراء بنجاح' : 'Purchase completed successfully');
+      // Update stock quantities
+      for (const item of cart) {
+        await supabase
+          .from('store_items')
+          .update({ stock_quantity: item.stock_quantity - item.quantity })
+          .eq('id', item.id);
+      }
+
+      toast.success(language === 'ar' ? 'تم الطلب بنجاح! يمكن استلامه من المدرسة' : 'Order placed! Collect from school');
       setCart([]);
-      setWalletBalance(prev => prev - cartTotal);
+      setParentWalletBalance(newBalance);
       loadData();
     } catch (error) {
       console.error('Error purchasing:', error);
-      toast.error(language === 'ar' ? 'فشلت عملية الشراء' : 'Purchase failed');
+      toast.error(language === 'ar' ? 'فشل الطلب' : 'Order failed');
     } finally {
       setPurchasing(false);
     }
@@ -194,6 +211,36 @@ export default function StudentStore() {
     return acc;
   }, {} as Record<string, StoreItem[]>);
 
+  const getCategoryIcon = (category: string) => {
+    switch (category) {
+      case 'Stationery': return '✏️';
+      case 'Books': return '📚';
+      case 'Uniforms': return '👔';
+      default: return '📦';
+    }
+  };
+
+  const getCategoryName = (category: string) => {
+    if (language === 'ar') {
+      switch (category) {
+        case 'Stationery': return 'القرطاسية';
+        case 'Books': return 'الكتب المدرسية';
+        case 'Uniforms': return 'الزي المدرسي';
+        default: return category;
+      }
+    }
+    return category;
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'completed': return { label: language === 'ar' ? 'مكتمل' : 'Completed', variant: 'default' as const };
+      case 'pending': return { label: language === 'ar' ? 'قيد التجهيز' : 'Pending', variant: 'secondary' as const };
+      case 'ready': return { label: language === 'ar' ? 'جاهز للاستلام' : 'Ready for Pickup', variant: 'outline' as const };
+      default: return { label: status, variant: 'outline' as const };
+    }
+  };
+
   return (
     <div className="space-y-6 p-4 md:p-6 max-w-4xl mx-auto pb-32">
       {/* Header */}
@@ -210,23 +257,28 @@ export default function StudentStore() {
       </div>
 
       {/* Wallet Balance */}
-      <Card className="bg-gradient-to-br from-primary/10 to-primary/5">
+      <Card className="bg-gradient-to-br from-pink-500/10 to-pink-500/5">
         <CardContent className="py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="p-3 bg-primary/20 rounded-full">
-                <Store className="h-6 w-6 text-primary" />
+              <div className="p-3 bg-pink-500/20 rounded-full">
+                <Store className="h-6 w-6 text-pink-600" />
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">
-                  {language === 'ar' ? 'رصيد المحفظة' : 'Wallet Balance'}
+                  {language === 'ar' ? 'رصيدك' : 'Your Balance'}
                 </p>
-                <p className="text-2xl font-bold text-primary">
-                  {walletBalance.toFixed(3)} {language === 'ar' ? 'ر.ع' : 'OMR'}
+                <p className="text-2xl font-bold text-pink-600">
+                  {parentWalletBalance.toFixed(3)} {language === 'ar' ? 'ر.ع' : 'OMR'}
                 </p>
               </div>
             </div>
           </div>
+          <p className="text-xs text-muted-foreground mt-2">
+            {language === 'ar' 
+              ? 'يتم الخصم من محفظة ولي الأمر للمشتريات من المتجر'
+              : 'Store purchases are deducted from parent wallet'}
+          </p>
         </CardContent>
       </Card>
 
@@ -251,55 +303,70 @@ export default function StudentStore() {
             <Card key={category}>
               <CardHeader className="py-3 px-4">
                 <CardTitle className="text-sm text-muted-foreground uppercase flex items-center gap-2">
-                  <span>{items[0]?.icon || '📦'}</span>
-                  {category}
+                  <span>{getCategoryIcon(category)}</span>
+                  {getCategoryName(category)}
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-0 space-y-2">
                 {items.map((item) => {
                   const qty = getCartQuantity(item.id);
+                  const outOfStock = item.stock_quantity <= 0;
                   return (
-                    <div key={item.id} className="flex items-center justify-between p-3 bg-accent/50 rounded-lg">
+                    <div 
+                      key={item.id} 
+                      className={`flex items-center justify-between p-3 rounded-lg ${
+                        outOfStock ? 'bg-muted/50 opacity-60' : 'bg-accent/50'
+                      }`}
+                    >
                       <div className="flex items-center gap-3">
                         <span className="text-xl">{item.icon || '📦'}</span>
                         <div>
                           <p className="font-medium">
                             {language === 'ar' ? item.name_ar || item.name : item.name}
                           </p>
-                          <p className="text-sm text-primary font-bold">
-                            {Number(item.price).toFixed(3)} {language === 'ar' ? 'ر.ع' : 'OMR'}
-                          </p>
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm text-primary font-bold">
+                              {Number(item.price).toFixed(3)} {language === 'ar' ? 'ر.ع' : 'OMR'}
+                            </p>
+                            {outOfStock && (
+                              <Badge variant="destructive" className="text-xs">
+                                {language === 'ar' ? 'نفذ' : 'Out of Stock'}
+                              </Badge>
+                            )}
+                          </div>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        {qty > 0 ? (
-                          <div className="flex items-center gap-2 bg-primary/10 rounded-full px-2">
+                        {!outOfStock && (
+                          qty > 0 ? (
+                            <div className="flex items-center gap-2 bg-primary/10 rounded-full px-2">
+                              <Button 
+                                size="icon" 
+                                variant="ghost" 
+                                className="h-8 w-8"
+                                onClick={() => removeFromCart(item.id)}
+                              >
+                                <Minus className="h-4 w-4" />
+                              </Button>
+                              <span className="font-bold w-6 text-center">{qty}</span>
+                              <Button 
+                                size="icon" 
+                                variant="ghost" 
+                                className="h-8 w-8"
+                                onClick={() => addToCart(item)}
+                              >
+                                <Plus className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ) : (
                             <Button 
-                              size="icon" 
-                              variant="ghost" 
-                              className="h-8 w-8"
-                              onClick={() => removeFromCart(item.id)}
-                            >
-                              <Minus className="h-4 w-4" />
-                            </Button>
-                            <span className="font-bold w-6 text-center">{qty}</span>
-                            <Button 
-                              size="icon" 
-                              variant="ghost" 
-                              className="h-8 w-8"
+                              size="sm" 
                               onClick={() => addToCart(item)}
                             >
-                              <Plus className="h-4 w-4" />
+                              <Plus className="h-4 w-4 mr-1" />
+                              {language === 'ar' ? 'أضف' : 'Add'}
                             </Button>
-                          </div>
-                        ) : (
-                          <Button 
-                            size="sm" 
-                            onClick={() => addToCart(item)}
-                          >
-                            <Plus className="h-4 w-4 mr-1" />
-                            {language === 'ar' ? 'أضف' : 'Add'}
-                          </Button>
+                          )
                         )}
                       </div>
                     </div>
@@ -319,55 +386,58 @@ export default function StudentStore() {
             {language === 'ar' ? 'الطلبات السابقة' : 'Order History'}
           </h2>
           
-          {orders.map((order) => (
-            <Card key={order.id}>
-              <CardContent className="py-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-semibold">
-                      {Number(order.total_amount).toFixed(3)} {language === 'ar' ? 'ر.ع' : 'OMR'}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      {format(new Date(order.created_at), 'MMM dd, yyyy HH:mm')}
-                    </p>
+          {orders.map((order) => {
+            const status = getStatusBadge(order.status);
+            return (
+              <Card key={order.id}>
+                <CardContent className="py-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-semibold">
+                        {Number(order.total_amount).toFixed(3)} {language === 'ar' ? 'ر.ع' : 'OMR'}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {format(new Date(order.created_at), 'MMM dd, yyyy HH:mm')}
+                      </p>
+                    </div>
+                    <Badge variant={status.variant}>
+                      <Check className="h-3 w-3 mr-1" />
+                      {status.label}
+                    </Badge>
                   </div>
-                  <Badge variant="default">
-                    <Check className="h-3 w-3 mr-1" />
-                    {language === 'ar' ? 'مكتمل' : 'Completed'}
-                  </Badge>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       )}
 
       {/* Floating Cart */}
       {cart.length > 0 && (
         <div className="fixed bottom-20 left-4 right-4 md:left-auto md:right-6 md:max-w-sm z-50">
-          <Card className="shadow-lg border-primary">
+          <Card className="shadow-lg border-pink-500">
             <CardContent className="py-4">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
-                  <ShoppingCart className="h-5 w-5 text-primary" />
+                  <ShoppingCart className="h-5 w-5 text-pink-600" />
                   <span className="font-medium">
                     {cart.reduce((sum, c) => sum + c.quantity, 0)} {language === 'ar' ? 'منتج' : 'items'}
                   </span>
                 </div>
-                <span className="text-xl font-bold text-primary">
+                <span className="text-xl font-bold text-pink-600">
                   {cartTotal.toFixed(3)} {language === 'ar' ? 'ر.ع' : 'OMR'}
                 </span>
               </div>
               <Button 
-                className="w-full" 
+                className="w-full bg-pink-600 hover:bg-pink-700" 
                 onClick={handlePurchase}
-                disabled={purchasing || cartTotal > walletBalance}
+                disabled={purchasing || cartTotal > parentWalletBalance}
               >
                 {purchasing 
-                  ? (language === 'ar' ? 'جاري الشراء...' : 'Processing...')
-                  : cartTotal > walletBalance
+                  ? (language === 'ar' ? 'جاري الطلب...' : 'Processing...')
+                  : cartTotal > parentWalletBalance
                     ? (language === 'ar' ? 'رصيد غير كافي' : 'Insufficient Balance')
-                    : (language === 'ar' ? 'إتمام الشراء' : 'Complete Purchase')}
+                    : (language === 'ar' ? 'تأكيد الطلب' : 'Place Order')}
               </Button>
             </CardContent>
           </Card>

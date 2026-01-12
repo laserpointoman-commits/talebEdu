@@ -3759,6 +3759,107 @@ export type Database = {
           },
         ]
       }
+      store_items: {
+        Row: {
+          available: boolean | null
+          category: string
+          cost_price: number | null
+          created_at: string | null
+          description: string | null
+          description_ar: string | null
+          icon: string | null
+          id: string
+          image_url: string | null
+          low_stock_alert: number | null
+          name: string
+          name_ar: string | null
+          price: number
+          stock_quantity: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          available?: boolean | null
+          category: string
+          cost_price?: number | null
+          created_at?: string | null
+          description?: string | null
+          description_ar?: string | null
+          icon?: string | null
+          id?: string
+          image_url?: string | null
+          low_stock_alert?: number | null
+          name: string
+          name_ar?: string | null
+          price?: number
+          stock_quantity?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          available?: boolean | null
+          category?: string
+          cost_price?: number | null
+          created_at?: string | null
+          description?: string | null
+          description_ar?: string | null
+          icon?: string | null
+          id?: string
+          image_url?: string | null
+          low_stock_alert?: number | null
+          name?: string
+          name_ar?: string | null
+          price?: number
+          stock_quantity?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      store_orders: {
+        Row: {
+          created_at: string | null
+          id: string
+          items: Json
+          notes: string | null
+          parent_id: string | null
+          payment_method: string | null
+          status: string | null
+          student_id: string | null
+          total_amount: number
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          items: Json
+          notes?: string | null
+          parent_id?: string | null
+          payment_method?: string | null
+          status?: string | null
+          student_id?: string | null
+          total_amount: number
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          items?: Json
+          notes?: string | null
+          parent_id?: string | null
+          payment_method?: string | null
+          status?: string | null
+          student_id?: string | null
+          total_amount?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_orders_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       student_bus_assignments: {
         Row: {
           bus_id: string | null
