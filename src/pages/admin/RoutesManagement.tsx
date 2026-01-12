@@ -165,20 +165,26 @@ export default function RoutesManagement() {
           })));
         }
 
-        // Fetch drivers with their current bus assignment
+        // Fetch drivers
         const { data: driversData } = await supabase
           .from('drivers')
           .select(`
             id,
             profile_id,
             bus_id,
-            profiles:profile_id (full_name, full_name_ar),
-            buses:bus_id (bus_number)
+            profiles:profile_id (full_name, full_name_ar)
           `);
+        
+        // Fetch buses for driver bus lookup
+        const { data: allBusesData } = await supabase
+          .from('buses')
+          .select('id, bus_number');
+        
+        const busLookup = new Map((allBusesData || []).map(b => [b.id, b.bus_number]));
         
         if (driversData) {
           setDrivers(driversData.map(d => {
-            const currentBusNumber = (d.buses as any)?.bus_number;
+            const currentBusNumber = d.bus_id ? busLookup.get(d.bus_id) : undefined;
             return {
               id: d.id,
               name: ((d.profiles as any)?.full_name || 'Unknown') + (currentBusNumber ? ` (${currentBusNumber})` : ''),
@@ -189,13 +195,9 @@ export default function RoutesManagement() {
           }));
         }
 
-        // Fetch buses
-        const { data: busesData } = await supabase
-          .from('buses')
-          .select('id, bus_number');
-        
-        if (busesData) {
-          setBuses(busesData.map(b => ({
+        // Set buses state from the fetched data
+        if (allBusesData) {
+          setBuses(allBusesData.map(b => ({
             id: b.id,
             busNumber: b.bus_number,
           })));
