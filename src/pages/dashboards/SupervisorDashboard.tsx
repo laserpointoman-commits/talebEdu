@@ -124,70 +124,19 @@ export default function SupervisorDashboard() {
   };
 
   const loadBusStudents = async (busId: string) => {
-    try {
-      const { data: assignments, error: assignmentsError } = await supabase
-        .from('student_bus_assignments')
-        .select('student_id')
-        .eq('bus_id', busId)
-        .eq('is_active', true);
+    // Always use edge function for supervisors to bypass RLS restrictions
+    const { data, error: fnError } = await supabase.functions.invoke('get-supervisor-bus-students', {
+      body: { busId }
+    });
 
-      if (assignmentsError) throw assignmentsError;
-
-      if (!assignments?.length) {
-        setStudents([]);
-        return;
-      }
-
-      const studentIds = assignments.map((a: any) => a.student_id).filter(Boolean);
-
-      const { data: studentsData, error: studentsError } = await supabase
-        .from('students')
-        .select('id, first_name, last_name, first_name_ar, last_name_ar, class, nfc_id')
-        .in('id', studentIds);
-
-      if (studentsError) throw studentsError;
-
-      // Get today's boarding logs
-      const today = new Date().toISOString().split('T')[0];
-      const { data: logs, error: logsError } = await supabase
-        .from('bus_boarding_logs')
-        .select('*')
-        .eq('bus_id', busId)
-        .gte('timestamp', `${today}T00:00:00`)
-        .order('timestamp', { ascending: false });
-
-      if (logsError) throw logsError;
-
-      const studentsWithStatus: StudentStatus[] = (studentsData || []).map((s: any) => {
-        const latestLog = logs?.find((l: any) => l.student_id === s.id);
-        return {
-          id: s.id,
-          name: `${s.first_name} ${s.last_name}`,
-          nameAr: `${s.first_name_ar || s.first_name} ${s.last_name_ar || s.last_name}`,
-          class: s.class || '',
-          nfcId: s.nfc_id || '',
-          status: latestLog?.action === 'board' ? 'boarded' : latestLog?.action === 'exit' ? 'exited' : 'waiting',
-          scanTime: latestLog ? new Date(latestLog.timestamp).toLocaleTimeString() : undefined
-        };
-      });
-
-      setStudents(studentsWithStatus);
-    } catch (error) {
-      console.warn('Supervisor loadBusStudents fallback to backend function:', error);
-
-      const { data, error: fnError } = await supabase.functions.invoke('get-supervisor-bus-students', {
-        body: { busId }
-      });
-
-      if (fnError) {
-        console.error('get-supervisor-bus-students failed:', fnError);
-        toast.error(language === 'ar' ? 'تعذر تحميل الطلاب' : 'Failed to load students');
-        setStudents([]);
-        return;
-      }
-
-      setStudents((data?.students || []) as StudentStatus[]);
+    if (fnError) {
+      console.error('get-supervisor-bus-students failed:', fnError);
+      toast.error(language === 'ar' ? 'تعذر تحميل الطلاب' : 'Failed to load students');
+      setStudents([]);
+      return;
     }
+
+    setStudents((data?.students || []) as StudentStatus[]);
   };
 
   const setupRealtimeSubscriptions = () => {
