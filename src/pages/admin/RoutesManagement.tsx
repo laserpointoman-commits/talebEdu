@@ -211,18 +211,27 @@ export default function RoutesManagement() {
           })));
         }
         
-        // Fetch supervisors from profiles table
+        // Fetch supervisors from profiles table with their current bus assignment
         const { data: supervisorsData } = await supabase
           .from('profiles')
-          .select('id, full_name, full_name_ar')
+          .select(`
+            id, 
+            full_name, 
+            full_name_ar,
+            supervisors:supervisors(bus_id, buses:bus_id(bus_number))
+          `)
           .eq('role', 'supervisor');
         
         if (supervisorsData) {
-          setSupervisors(supervisorsData.map(s => ({
-            id: s.id,
-            name: s.full_name || 'Unknown',
-            nameAr: s.full_name_ar || s.full_name || 'غير معروف',
-          })));
+          setSupervisors(supervisorsData.map(s => {
+            const supervisorRecord = (s.supervisors as any)?.[0];
+            const currentBus = supervisorRecord?.buses?.bus_number;
+            return {
+              id: s.id,
+              name: s.full_name + (currentBus ? ` (${currentBus})` : ''),
+              nameAr: (s.full_name_ar || s.full_name) + (currentBus ? ` (${currentBus})` : ''),
+            };
+          }));
         }
       } catch (error) {
         console.error('Error fetching data:', error);
