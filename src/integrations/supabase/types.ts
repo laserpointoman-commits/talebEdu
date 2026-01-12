@@ -3579,6 +3579,7 @@ export type Database = {
           is_active: boolean | null
           linked_entity_id: string | null
           linked_entity_type: string | null
+          nfc_pin_hash: string | null
           parent_user_id: string | null
           phone: string | null
           profile_image: string | null
@@ -3599,6 +3600,7 @@ export type Database = {
           is_active?: boolean | null
           linked_entity_id?: string | null
           linked_entity_type?: string | null
+          nfc_pin_hash?: string | null
           parent_user_id?: string | null
           phone?: string | null
           profile_image?: string | null
@@ -3619,6 +3621,7 @@ export type Database = {
           is_active?: boolean | null
           linked_entity_id?: string | null
           linked_entity_type?: string | null
+          nfc_pin_hash?: string | null
           parent_user_id?: string | null
           phone?: string | null
           profile_image?: string | null

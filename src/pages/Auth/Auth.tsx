@@ -8,12 +8,23 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { GraduationCap, Mail, Lock, Globe, Eye, EyeOff, Users, CreditCard, Wifi } from 'lucide-react';
+import { GraduationCap, Mail, Lock, Globe, Eye, EyeOff, Users, CreditCard, Wifi, KeyRound } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { motion, AnimatePresence } from 'framer-motion';
 import { nfcService } from '@/services/nfcService';
 
 type LoginType = 'parent' | 'staff';
+
+interface NfcUserInfo {
+  email: string;
+  name: string;
+  nameAr?: string;
+  role: string;
+  profileId: string;
+  hasPinSet: boolean;
+  nfcId: string;
+}
 
 export default function Auth() {
   const navigate = useNavigate();
@@ -28,6 +39,15 @@ export default function Auth() {
   
   // Staff NFC Login
   const [isNfcScanning, setIsNfcScanning] = useState(false);
+  const [nfcUserInfo, setNfcUserInfo] = useState<NfcUserInfo | null>(null);
+  
+  // PIN Dialogs
+  const [showPinDialog, setShowPinDialog] = useState(false);
+  const [showSetupPinDialog, setShowSetupPinDialog] = useState(false);
+  const [pin, setPin] = useState('');
+  const [newPin, setNewPin] = useState('');
+  const [confirmPin, setConfirmPin] = useState('');
+  const [pinStep, setPinStep] = useState<'create' | 'confirm'>('create');
   
   // Forgot Password State
   const [showForgotPassword, setShowForgotPassword] = useState(false);
@@ -89,57 +109,196 @@ export default function Auth() {
       const nfcData = await nfcService.readOnce();
       console.log('NFC Data received:', nfcData);
       
-      // Check if email is directly available in additionalData (from programmed card)
-      const additionalData = nfcData.additionalData as { email?: string } | undefined;
-      if (additionalData?.email) {
-        setSignInEmail(additionalData.email);
-        toast.success(language === 'ar' ? 'تم التعرف على البطاقة - أدخل كلمة المرور' : 'Card recognized - Enter password');
-        return;
-      }
+      // Get the NFC ID from the scanned card
+      let nfcId = nfcData.id;
       
-      // Fallback: Find employee by NFC ID in database
-      const { data: employee, error } = await supabase
-        .from('employees')
-        .select('profile_id, nfc_id')
-        .eq('nfc_id', nfcData.id)
-        .single();
-
-      if (error || !employee) {
-        // Try students table
-        const { data: student } = await supabase
-          .from('students')
-          .select('profile_id, nfc_id')
-          .eq('nfc_id', nfcData.id)
-          .single();
-        
-        if (!student) {
-          toast.error(language === 'ar' ? 'بطاقة غير معروفة' : 'Unknown card');
-          return;
+      // If there's additional data with email, use that for lookup
+      const additionalData = nfcData.additionalData as { email?: string; entityId?: string } | undefined;
+      
+      // Check if user exists and get their PIN status
+      const { data: checkResult, error: checkError } = await supabase.functions.invoke('check-nfc-pin-status', {
+        body: { 
+          nfcId: nfcId,
+          email: additionalData?.email 
         }
-        
-        // Student login via NFC - get their auth credentials
-        toast.info(language === 'ar' ? 'يرجى استخدام بيانات الحساب' : 'Please use account credentials');
+      });
+
+      if (checkError) {
+        console.error('Check PIN status error:', checkError);
+        toast.error(language === 'ar' ? 'فشل التحقق من البطاقة' : 'Failed to verify card');
         return;
       }
 
-      // Get auth user email for employee (supervisor, teacher, driver, etc.)
-      if (employee.profile_id) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('email')
-          .eq('id', employee.profile_id)
-          .single();
-        
-        if (profile?.email) {
-          setSignInEmail(profile.email);
-          toast.success(language === 'ar' ? 'تم التعرف على البطاقة - أدخل كلمة المرور' : 'Card recognized - Enter password');
-        }
+      if (!checkResult.found) {
+        toast.error(language === 'ar' ? 'بطاقة غير معروفة' : 'Unknown card');
+        return;
       }
+
+      if (!checkResult.isStaff) {
+        toast.error(language === 'ar' ? 'تسجيل NFC متاح للموظفين فقط' : 'NFC login is only for staff');
+        return;
+      }
+
+      // Store user info for PIN dialogs
+      setNfcUserInfo({
+        email: checkResult.email,
+        name: checkResult.name,
+        nameAr: checkResult.nameAr,
+        role: checkResult.role,
+        profileId: checkResult.profileId,
+        hasPinSet: checkResult.hasPinSet,
+        nfcId: nfcId
+      });
+
+      if (!checkResult.hasPinSet) {
+        // First time - need to set up PIN
+        setShowSetupPinDialog(true);
+        setPinStep('create');
+        setNewPin('');
+        setConfirmPin('');
+      } else {
+        // Has PIN - show PIN entry dialog
+        setShowPinDialog(true);
+        setPin('');
+      }
+
     } catch (error) {
       console.error('NFC login error:', error);
       toast.error(language === 'ar' ? 'فشل قراءة البطاقة' : 'Card scan failed');
     } finally {
       setIsNfcScanning(false);
+    }
+  };
+
+  const handlePinSubmit = async () => {
+    if (pin.length !== 4 || !nfcUserInfo) return;
+    
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('nfc-pin-login', {
+        body: {
+          nfcId: nfcUserInfo.nfcId,
+          pin: pin,
+          email: nfcUserInfo.email
+        }
+      });
+
+      if (error) {
+        console.error('PIN login error:', error);
+        toast.error(language === 'ar' ? 'فشل تسجيل الدخول' : 'Login failed');
+        setPin('');
+        return;
+      }
+
+      if (data.error) {
+        if (data.error === 'Incorrect PIN') {
+          toast.error(language === 'ar' ? 'رمز PIN غير صحيح' : 'Incorrect PIN');
+        } else {
+          toast.error(data.error);
+        }
+        setPin('');
+        return;
+      }
+
+      if (data.success && data.session) {
+        // Set the session in Supabase client
+        const { error: setSessionError } = await supabase.auth.setSession({
+          access_token: data.session.access_token,
+          refresh_token: data.session.refresh_token
+        });
+
+        if (setSessionError) {
+          console.error('Set session error:', setSessionError);
+          toast.error(language === 'ar' ? 'فشل إنشاء الجلسة' : 'Failed to create session');
+          return;
+        }
+
+        toast.success(language === 'ar' ? 'مرحباً بك!' : 'Welcome!');
+        setShowPinDialog(false);
+        setNfcUserInfo(null);
+        window.location.href = '/dashboard';
+      }
+    } catch (error) {
+      console.error('PIN submit error:', error);
+      toast.error(language === 'ar' ? 'حدث خطأ' : 'An error occurred');
+      setPin('');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSetupPin = async () => {
+    if (pinStep === 'create') {
+      if (newPin.length !== 4) {
+        toast.error(language === 'ar' ? 'يجب أن يكون الرمز 4 أرقام' : 'PIN must be 4 digits');
+        return;
+      }
+      setPinStep('confirm');
+      return;
+    }
+
+    // Confirm step
+    if (confirmPin !== newPin) {
+      toast.error(language === 'ar' ? 'الرمزان غير متطابقين' : 'PINs do not match');
+      setConfirmPin('');
+      return;
+    }
+
+    if (!nfcUserInfo) return;
+
+    setLoading(true);
+    try {
+      // Set the PIN
+      const { data: setResult, error: setError } = await supabase.functions.invoke('set-nfc-pin', {
+        body: {
+          pin: newPin,
+          email: nfcUserInfo.email,
+          profileId: nfcUserInfo.profileId
+        }
+      });
+
+      if (setError || !setResult.success) {
+        toast.error(language === 'ar' ? 'فشل حفظ الرمز' : 'Failed to save PIN');
+        return;
+      }
+
+      toast.success(language === 'ar' ? 'تم إنشاء رمز PIN بنجاح!' : 'PIN created successfully!');
+      
+      // Now login with the new PIN
+      const { data: loginData, error: loginError } = await supabase.functions.invoke('nfc-pin-login', {
+        body: {
+          nfcId: nfcUserInfo.nfcId,
+          pin: newPin,
+          email: nfcUserInfo.email
+        }
+      });
+
+      if (loginError || !loginData.success) {
+        toast.error(language === 'ar' ? 'فشل تسجيل الدخول' : 'Login failed');
+        return;
+      }
+
+      // Set the session
+      const { error: setSessionError } = await supabase.auth.setSession({
+        access_token: loginData.session.access_token,
+        refresh_token: loginData.session.refresh_token
+      });
+
+      if (setSessionError) {
+        console.error('Set session error:', setSessionError);
+        toast.error(language === 'ar' ? 'فشل إنشاء الجلسة' : 'Failed to create session');
+        return;
+      }
+
+      setShowSetupPinDialog(false);
+      setNfcUserInfo(null);
+      window.location.href = '/dashboard';
+
+    } catch (error) {
+      console.error('Setup PIN error:', error);
+      toast.error(language === 'ar' ? 'حدث خطأ' : 'An error occurred');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -377,7 +536,7 @@ export default function Auth() {
                           >
                             <CreditCard className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                             <p className="text-sm text-muted-foreground mb-4">
-                              {language === 'ar' ? 'سجل دخولك ببطاقة NFC' : 'Login with NFC Card'}
+                              {language === 'ar' ? 'سجل دخولك ببطاقة NFC + رمز PIN' : 'Login with NFC Card + PIN'}
                             </p>
                             <Button
                               type="button"
@@ -400,7 +559,7 @@ export default function Auth() {
                       </div>
                       <div className="relative flex justify-center text-xs uppercase">
                         <span className="bg-background px-2 text-muted-foreground">
-                          {language === 'ar' ? 'أو' : 'OR'}
+                          {language === 'ar' ? 'أو استخدم كلمة المرور' : 'OR use password'}
                         </span>
                       </div>
                     </div>
@@ -463,6 +622,133 @@ export default function Auth() {
           </Card>
         </motion.div>
       </div>
+
+      {/* Enter PIN Dialog */}
+      <Dialog open={showPinDialog} onOpenChange={(open) => { setShowPinDialog(open); if (!open) setPin(''); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 justify-center">
+              <KeyRound className="h-5 w-5 text-primary" />
+              {language === 'ar' ? 'أدخل رمز PIN' : 'Enter PIN'}
+            </DialogTitle>
+            <DialogDescription className="text-center">
+              {nfcUserInfo && (
+                <span className="block font-medium text-foreground mt-2">
+                  {language === 'ar' ? `مرحباً، ${nfcUserInfo.nameAr || nfcUserInfo.name}` : `Welcome, ${nfcUserInfo.name}`}
+                </span>
+              )}
+              {language === 'ar' ? 'أدخل رمز PIN المكون من 4 أرقام' : 'Enter your 4-digit PIN'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col items-center space-y-6 py-4">
+            <InputOTP
+              maxLength={4}
+              value={pin}
+              onChange={(value) => {
+                setPin(value);
+                if (value.length === 4) {
+                  setTimeout(() => handlePinSubmit(), 100);
+                }
+              }}
+            >
+              <InputOTPGroup>
+                <InputOTPSlot index={0} className="w-14 h-14 text-2xl" />
+                <InputOTPSlot index={1} className="w-14 h-14 text-2xl" />
+                <InputOTPSlot index={2} className="w-14 h-14 text-2xl" />
+                <InputOTPSlot index={3} className="w-14 h-14 text-2xl" />
+              </InputOTPGroup>
+            </InputOTP>
+            <Button
+              onClick={handlePinSubmit}
+              disabled={pin.length !== 4 || loading}
+              className="w-full"
+            >
+              {loading ? (language === 'ar' ? 'جاري التحقق...' : 'Verifying...') : (language === 'ar' ? 'تسجيل الدخول' : 'Sign In')}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Setup PIN Dialog */}
+      <Dialog open={showSetupPinDialog} onOpenChange={(open) => { 
+        setShowSetupPinDialog(open); 
+        if (!open) { setNewPin(''); setConfirmPin(''); setPinStep('create'); }
+      }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 justify-center">
+              <KeyRound className="h-5 w-5 text-primary" />
+              {pinStep === 'create' 
+                ? (language === 'ar' ? 'إنشاء رمز PIN' : 'Create PIN')
+                : (language === 'ar' ? 'تأكيد رمز PIN' : 'Confirm PIN')
+              }
+            </DialogTitle>
+            <DialogDescription className="text-center">
+              {nfcUserInfo && (
+                <span className="block font-medium text-foreground mt-2">
+                  {language === 'ar' ? `مرحباً، ${nfcUserInfo.nameAr || nfcUserInfo.name}` : `Welcome, ${nfcUserInfo.name}`}
+                </span>
+              )}
+              {pinStep === 'create'
+                ? (language === 'ar' ? 'أنشئ رمز PIN مكون من 4 أرقام للدخول السريع' : 'Create a 4-digit PIN for quick login')
+                : (language === 'ar' ? 'أعد إدخال رمز PIN للتأكيد' : 'Re-enter your PIN to confirm')
+              }
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col items-center space-y-6 py-4">
+            {pinStep === 'create' ? (
+              <InputOTP
+                maxLength={4}
+                value={newPin}
+                onChange={setNewPin}
+              >
+                <InputOTPGroup>
+                  <InputOTPSlot index={0} className="w-14 h-14 text-2xl" />
+                  <InputOTPSlot index={1} className="w-14 h-14 text-2xl" />
+                  <InputOTPSlot index={2} className="w-14 h-14 text-2xl" />
+                  <InputOTPSlot index={3} className="w-14 h-14 text-2xl" />
+                </InputOTPGroup>
+              </InputOTP>
+            ) : (
+              <InputOTP
+                maxLength={4}
+                value={confirmPin}
+                onChange={setConfirmPin}
+              >
+                <InputOTPGroup>
+                  <InputOTPSlot index={0} className="w-14 h-14 text-2xl" />
+                  <InputOTPSlot index={1} className="w-14 h-14 text-2xl" />
+                  <InputOTPSlot index={2} className="w-14 h-14 text-2xl" />
+                  <InputOTPSlot index={3} className="w-14 h-14 text-2xl" />
+                </InputOTPGroup>
+              </InputOTP>
+            )}
+            <div className="flex gap-2 w-full">
+              {pinStep === 'confirm' && (
+                <Button
+                  variant="outline"
+                  onClick={() => { setPinStep('create'); setConfirmPin(''); }}
+                  className="flex-1"
+                >
+                  {language === 'ar' ? 'رجوع' : 'Back'}
+                </Button>
+              )}
+              <Button
+                onClick={handleSetupPin}
+                disabled={(pinStep === 'create' ? newPin.length !== 4 : confirmPin.length !== 4) || loading}
+                className="flex-1"
+              >
+                {loading 
+                  ? (language === 'ar' ? 'جاري الحفظ...' : 'Saving...')
+                  : pinStep === 'create'
+                    ? (language === 'ar' ? 'التالي' : 'Next')
+                    : (language === 'ar' ? 'تأكيد وتسجيل الدخول' : 'Confirm & Sign In')
+                }
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Forgot Password Dialog */}
       <Dialog open={showForgotPassword} onOpenChange={setShowForgotPassword}>
