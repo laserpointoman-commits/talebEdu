@@ -107,18 +107,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(existingSession?.user ?? null);
       
       if (existingSession?.user) {
-        const userProfile = await fetchProfile(existingSession.user.id);
-        
-        // Check email confirmation for parents
-        if (userProfile?.role === 'parent' && !userProfile.email_confirmed) {
-          const currentPath = window.location.pathname;
-          if (currentPath !== '/email-confirmation-pending' && currentPath !== '/auth') {
-            window.location.href = '/email-confirmation-pending';
-            setLoading(false);
-            return;
-          }
-        }
-        
+        await fetchProfile(existingSession.user.id);
         // Parents go directly to dashboard - they can register students from there
       }
       
