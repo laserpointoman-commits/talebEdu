@@ -42,13 +42,14 @@ interface StudentStatus {
   class: string;
   nfcId: string;
   status: 'waiting' | 'boarded' | 'exited';
-  scanTime?: string;
+  boardTime?: string;
+  exitTime?: string;
 }
 
 interface RecentScan {
   studentName: string;
   time: string;
-  action: string;
+  action: 'board' | 'exit';
 }
 
 type TripType = 'pickup' | 'dropoff';
@@ -225,15 +226,27 @@ export default function SupervisorDashboard() {
         : 'Unknown Student';
 
       const existingStudent = students.find(s => s.nfcId === nfcData.id);
-      if (existingStudent?.status === 'boarded') {
-        toast.info(`${studentName} - ${language === 'ar' ? 'تم المسح مسبقاً' : 'Already scanned'}`, {
+      
+      // Determine action based on current status (toggle: waiting→board, boarded→exit)
+      let action: 'board' | 'exit';
+      let newStatus: 'boarded' | 'exited';
+      
+      if (existingStudent?.status === 'exited') {
+        // Already completed both scans
+        toast.info(`${studentName} - ${language === 'ar' ? 'اكتمل التسجيل' : 'Already completed'}`, {
           duration: 1500,
           position: 'top-center'
         });
         return;
+      } else if (existingStudent?.status === 'boarded') {
+        // Second scan - exit
+        action = 'exit';
+        newStatus = 'exited';
+      } else {
+        // First scan - board
+        action = 'board';
+        newStatus = 'boarded';
       }
-
-      const action = selectedTripType === 'pickup' ? 'board' : 'exit';
 
       await supabase.functions.invoke('record-bus-activity', {
         body: {
@@ -246,21 +259,30 @@ export default function SupervisorDashboard() {
         }
       });
 
+      const currentTime = new Date().toLocaleTimeString();
       setStudents(prev => prev.map(s => 
         s.nfcId === nfcData.id 
-          ? { ...s, status: 'boarded', scanTime: new Date().toLocaleTimeString() }
+          ? { 
+              ...s, 
+              status: newStatus, 
+              ...(action === 'board' ? { boardTime: currentTime } : { exitTime: currentTime })
+            }
           : s
       ));
 
       setRecentScans(prev => [
-        { studentName, time: new Date().toLocaleTimeString(), action },
+        { studentName, time: currentTime, action },
         ...prev.slice(0, 9)
       ]);
 
       setLastScanned(studentName);
       setTimeout(() => setLastScanned(null), 2000);
 
-      toast.success(`✓ ${studentName}`, {
+      const actionText = action === 'board' 
+        ? (language === 'ar' ? 'صعد' : 'Boarded')
+        : (language === 'ar' ? 'نزل' : 'Exited');
+
+      toast.success(`✓ ${studentName} - ${actionText}`, {
         duration: 1500,
         position: 'top-center'
       });
@@ -276,8 +298,19 @@ export default function SupervisorDashboard() {
     setProcessingManual(true);
     
     try {
-      const action = selectedTripType === 'pickup' ? 'board' : 'exit';
       const studentName = language === 'ar' ? selectedStudentForManual.nameAr : selectedStudentForManual.name;
+      
+      // Determine action based on current status
+      let action: 'board' | 'exit';
+      let newStatus: 'boarded' | 'exited';
+      
+      if (selectedStudentForManual.status === 'boarded') {
+        action = 'exit';
+        newStatus = 'exited';
+      } else {
+        action = 'board';
+        newStatus = 'boarded';
+      }
 
       await supabase.functions.invoke('record-bus-activity', {
         body: {
@@ -291,21 +324,30 @@ export default function SupervisorDashboard() {
         }
       });
 
+      const currentTime = new Date().toLocaleTimeString();
       setStudents(prev => prev.map(s => 
         s.id === selectedStudentForManual.id 
-          ? { ...s, status: 'boarded', scanTime: new Date().toLocaleTimeString() }
+          ? { 
+              ...s, 
+              status: newStatus, 
+              ...(action === 'board' ? { boardTime: currentTime } : { exitTime: currentTime })
+            }
           : s
       ));
 
       setRecentScans(prev => [
-        { studentName, time: new Date().toLocaleTimeString(), action: action + ' (manual)' },
+        { studentName, time: currentTime, action },
         ...prev.slice(0, 9)
       ]);
 
       setLastScanned(studentName);
       setTimeout(() => setLastScanned(null), 2000);
 
-      toast.success(language === 'ar' ? `✓ تم التسجيل - ${studentName}` : `✓ Recorded - ${studentName}`, {
+      const actionText = action === 'board' 
+        ? (language === 'ar' ? 'صعد' : 'Boarded')
+        : (language === 'ar' ? 'نزل' : 'Exited');
+
+      toast.success(`✓ ${studentName} - ${actionText}`, {
         duration: 2000,
         position: 'top-center'
       });
@@ -394,6 +436,7 @@ export default function SupervisorDashboard() {
 
   const waitingStudents = filteredStudents.filter(s => s.status === 'waiting');
   const boardedStudents = filteredStudents.filter(s => s.status === 'boarded');
+  const exitedStudents = filteredStudents.filter(s => s.status === 'exited');
 
   if (loading) {
     return <LogoLoader fullScreen />;
@@ -417,9 +460,10 @@ export default function SupervisorDashboard() {
     );
   }
 
-  const boardedCount = students.filter(s => s.status === 'boarded').length;
+  const completedCount = students.filter(s => s.status === 'exited').length;
+  const onBusCount = students.filter(s => s.status === 'boarded').length;
   const totalStudents = students.length;
-  const progressPercentage = totalStudents > 0 ? (boardedCount / totalStudents) * 100 : 0;
+  const progressPercentage = totalStudents > 0 ? (completedCount / totalStudents) * 100 : 0;
 
   return (
     <div className="min-h-screen bg-background">
@@ -463,23 +507,50 @@ export default function SupervisorDashboard() {
             <div className="flex items-center justify-between mb-3">
               <div>
                 <p className="text-sm text-muted-foreground">
-                  {language === 'ar' ? 'التقدم' : 'Progress'}
+                  {language === 'ar' ? 'اكتملوا' : 'Completed'}
                 </p>
                 <p className="text-2xl font-bold">
-                  {boardedCount} / {totalStudents}
+                  {completedCount} / {totalStudents}
                 </p>
               </div>
-              <div className="text-right">
-                <p className="text-3xl font-bold text-primary">{Math.round(progressPercentage)}%</p>
+              <div className="flex gap-4 text-center">
+                <div>
+                  <p className="text-lg font-bold text-green-600">{onBusCount}</p>
+                  <p className="text-[10px] text-muted-foreground">
+                    {language === 'ar' ? 'على متن' : 'On Bus'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-lg font-bold text-muted-foreground">{waitingStudents.length}</p>
+                  <p className="text-[10px] text-muted-foreground">
+                    {language === 'ar' ? 'انتظار' : 'Waiting'}
+                  </p>
+                </div>
               </div>
             </div>
-            <div className="w-full h-3 bg-muted rounded-full overflow-hidden">
+            <div className="w-full h-3 bg-muted rounded-full overflow-hidden flex">
               <motion.div 
-                className="h-full bg-primary rounded-full"
+                className="h-full bg-blue-500"
                 initial={{ width: 0 }}
                 animate={{ width: `${progressPercentage}%` }}
                 transition={{ duration: 0.5 }}
               />
+              <motion.div 
+                className="h-full bg-green-500"
+                initial={{ width: 0 }}
+                animate={{ width: `${totalStudents > 0 ? (onBusCount / totalStudents) * 100 : 0}%` }}
+                transition={{ duration: 0.5 }}
+              />
+            </div>
+            <div className="flex justify-between mt-2 text-[10px] text-muted-foreground">
+              <span className="flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                {language === 'ar' ? 'اكتمل' : 'Done'}
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                {language === 'ar' ? 'على متن' : 'On Bus'}
+              </span>
             </div>
           </CardContent>
         </Card>
@@ -644,12 +715,15 @@ export default function SupervisorDashboard() {
                 <Users className="h-5 w-5" />
                 {language === 'ar' ? 'الطلاب' : 'Students'}
               </CardTitle>
-              <div className="flex gap-2">
-                <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-200">
-                  {boardedCount} {language === 'ar' ? 'حضور' : 'present'}
+              <div className="flex gap-1 flex-wrap">
+                <Badge variant="outline" className="bg-blue-500/10 text-blue-600 border-blue-200 text-[10px]">
+                  {exitedStudents.length} {language === 'ar' ? 'اكتمل' : 'done'}
                 </Badge>
-                <Badge variant="outline">
-                  {students.length - boardedCount} {language === 'ar' ? 'انتظار' : 'waiting'}
+                <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-200 text-[10px]">
+                  {boardedStudents.length} {language === 'ar' ? 'على متن' : 'on bus'}
+                </Badge>
+                <Badge variant="outline" className="text-[10px]">
+                  {waitingStudents.length} {language === 'ar' ? 'انتظار' : 'waiting'}
                 </Badge>
               </div>
             </div>
@@ -668,16 +742,16 @@ export default function SupervisorDashboard() {
           <CardContent className="pt-0">
             <ScrollArea className="h-[300px]">
               <div className="space-y-2">
-                {/* Boarded Students */}
-                {boardedStudents.map((student) => (
+                {/* Exited Students (completed) */}
+                {exitedStudents.map((student) => (
                   <motion.div
                     key={student.id}
                     layout
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
-                    className="p-3 rounded-xl bg-green-500/10 border border-green-500/20 flex items-center gap-3"
+                    className="p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center gap-3"
                   >
-                    <div className="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center">
                       <CheckCircle className="h-5 w-5 text-white" />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -687,7 +761,51 @@ export default function SupervisorDashboard() {
                       <p className="text-xs text-muted-foreground">{student.class}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-xs text-green-600 font-medium">{student.scanTime}</p>
+                      <p className="text-xs text-blue-600">
+                        {language === 'ar' ? 'صعود' : 'In'}: {student.boardTime}
+                      </p>
+                      <p className="text-xs text-blue-600 font-medium">
+                        {language === 'ar' ? 'نزول' : 'Out'}: {student.exitTime}
+                      </p>
+                    </div>
+                  </motion.div>
+                ))}
+
+                {/* Boarded Students (on bus) */}
+                {boardedStudents.map((student) => (
+                  <motion.div
+                    key={student.id}
+                    layout
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="p-3 rounded-xl bg-green-500/10 border border-green-500/20 flex items-center gap-3"
+                  >
+                    <div className="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center">
+                      <Bus className="h-5 w-5 text-white" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate">
+                        {language === 'ar' ? student.nameAr : student.name}
+                      </p>
+                      <p className="text-xs text-muted-foreground">{student.class}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="text-right">
+                        <p className="text-xs text-green-600 font-medium">{student.boardTime}</p>
+                        <Badge variant="outline" className="text-[10px] bg-green-500/20 text-green-700 border-green-300">
+                          {language === 'ar' ? 'على متن' : 'On Bus'}
+                        </Badge>
+                      </div>
+                      {isTripActive && (
+                        <Button 
+                          size="sm" 
+                          variant="ghost"
+                          className="h-8 px-2"
+                          onClick={() => initiateManualAttendance(student)}
+                        >
+                          <Hand className="h-4 w-4" />
+                        </Button>
+                      )}
                     </div>
                   </motion.div>
                 ))}
@@ -750,11 +868,26 @@ export default function SupervisorDashboard() {
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: idx * 0.05 }}
-                    className="flex items-center justify-between p-2 rounded-lg bg-green-500/5"
+                    className={`flex items-center justify-between p-2 rounded-lg ${
+                      scan.action === 'board' ? 'bg-green-500/5' : 'bg-blue-500/5'
+                    }`}
                   >
                     <div className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-green-500" />
+                      {scan.action === 'board' ? (
+                        <ArrowUpFromLine className="h-4 w-4 text-green-500" />
+                      ) : (
+                        <ArrowDownToLine className="h-4 w-4 text-blue-500" />
+                      )}
                       <span className="text-sm font-medium">{scan.studentName}</span>
+                      <Badge variant="outline" className={`text-[10px] ${
+                        scan.action === 'board' 
+                          ? 'bg-green-500/10 text-green-600' 
+                          : 'bg-blue-500/10 text-blue-600'
+                      }`}>
+                        {scan.action === 'board' 
+                          ? (language === 'ar' ? 'صعود' : 'In')
+                          : (language === 'ar' ? 'نزول' : 'Out')}
+                      </Badge>
                     </div>
                     <span className="text-xs text-muted-foreground">{scan.time}</span>
                   </motion.div>
