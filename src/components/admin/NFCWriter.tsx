@@ -145,6 +145,7 @@ export default function NFCWriter() {
                   <SelectItem value="student">{language === 'ar' ? 'طالب' : 'Student'}</SelectItem>
                   <SelectItem value="teacher">{language === 'ar' ? 'معلم' : 'Teacher'}</SelectItem>
                   <SelectItem value="driver">{language === 'ar' ? 'سائق' : 'Driver'}</SelectItem>
+                  <SelectItem value="supervisor">{language === 'ar' ? 'مشرف' : 'Supervisor'}</SelectItem>
                   <SelectItem value="employee">{language === 'ar' ? 'موظف' : 'Employee'}</SelectItem>
                 </SelectContent>
               </Select>

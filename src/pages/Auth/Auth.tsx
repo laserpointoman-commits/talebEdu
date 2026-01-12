@@ -88,10 +88,10 @@ export default function Auth() {
     try {
       const nfcData = await nfcService.readOnce();
       
-      // Find employee by NFC ID
+      // Find employee by NFC ID (includes supervisors, teachers, drivers, etc.)
       const { data: employee, error } = await supabase
         .from('employees')
-        .select('*, profiles(id, full_name, role)')
+        .select('profile_id, nfc_id')
         .eq('nfc_id', nfcData.id)
         .single();
 
@@ -99,7 +99,7 @@ export default function Auth() {
         // Try students table
         const { data: student } = await supabase
           .from('students')
-          .select('*, profiles:profile_id(id, full_name, role)')
+          .select('profile_id, nfc_id')
           .eq('nfc_id', nfcData.id)
           .single();
         
@@ -113,7 +113,7 @@ export default function Auth() {
         return;
       }
 
-      // Get auth user email for employee
+      // Get auth user email for employee (supervisor, teacher, driver, etc.)
       if (employee.profile_id) {
         const { data: profile } = await supabase
           .from('profiles')
