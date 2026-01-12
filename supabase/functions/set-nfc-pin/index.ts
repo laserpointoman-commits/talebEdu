@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import * as bcrypt from "https://deno.land/x/bcrypt@v0.4.1/mod.ts";
+import { encode as hexEncode } from "https://deno.land/std@0.168.0/encoding/hex.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -12,6 +12,29 @@ interface SetPinRequest {
   nfcId?: string;
   email?: string;
   profileId?: string;
+}
+
+// Convert Uint8Array to hex string
+function toHexString(bytes: Uint8Array): string {
+  return new TextDecoder().decode(hexEncode(bytes));
+}
+
+// Hash PIN using SHA-256 with salt
+async function hashPin(pin: string): Promise<string> {
+  // Generate a random salt
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const saltHex = toHexString(salt);
+  
+  // Combine salt and pin
+  const encoder = new TextEncoder();
+  const data = encoder.encode(saltHex + pin);
+  
+  // Hash the combined data
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashHex = toHexString(new Uint8Array(hashBuffer));
+  
+  // Return salt + hash for verification later
+  return `${saltHex}:${hashHex}`;
 }
 
 serve(async (req) => {
@@ -104,9 +127,8 @@ serve(async (req) => {
       }
     }
 
-    // Hash the PIN
-    const salt = await bcrypt.genSalt(10);
-    const pinHash = await bcrypt.hash(pin, salt);
+    // Hash the PIN using SHA-256 with salt
+    const pinHash = await hashPin(pin);
 
     // Update the profile with the hashed PIN
     const { error: updateError } = await supabase

@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import * as bcrypt from "https://deno.land/x/bcrypt@v0.4.1/mod.ts";
+import { encode as hexEncode } from "https://deno.land/std@0.168.0/encoding/hex.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -11,6 +11,32 @@ interface NfcPinLoginRequest {
   nfcId: string;
   pin: string;
   email?: string;
+}
+
+// Convert Uint8Array to hex string
+function toHexString(bytes: Uint8Array): string {
+  return new TextDecoder().decode(hexEncode(bytes));
+}
+
+// Verify PIN against stored hash
+async function verifyPin(pin: string, storedHash: string): Promise<boolean> {
+  try {
+    const [saltHex, originalHashHex] = storedHash.split(':');
+    if (!saltHex || !originalHashHex) return false;
+    
+    // Combine salt and pin
+    const encoder = new TextEncoder();
+    const data = encoder.encode(saltHex + pin);
+    
+    // Hash the combined data
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashHex = toHexString(new Uint8Array(hashBuffer));
+    
+    // Compare hashes
+    return hashHex === originalHashHex;
+  } catch {
+    return false;
+  }
 }
 
 serve(async (req) => {
@@ -124,8 +150,8 @@ serve(async (req) => {
         );
       }
 
-      // Verify PIN
-      const pinValid = await bcrypt.compare(pin, profile.nfc_pin_hash);
+      // Verify PIN using SHA-256
+      const pinValid = await verifyPin(pin, profile.nfc_pin_hash);
       if (!pinValid) {
         return new Response(
           JSON.stringify({ error: 'Incorrect PIN' }),
@@ -165,7 +191,7 @@ serve(async (req) => {
         );
       }
 
-      const pinValid = await bcrypt.compare(pin, profile.nfc_pin_hash);
+      const pinValid = await verifyPin(pin, profile.nfc_pin_hash);
       if (!pinValid) {
         return new Response(
           JSON.stringify({ error: 'Incorrect PIN' }),
