@@ -155,12 +155,12 @@ export default function BoardingHistory({ studentId, busId, daysToShow = 7 }: Bo
                       >
                         <div
                           className={`mt-1 p-2 rounded-full ${
-                            log.action === 'board'
+                            log.action === 'boarded' || log.action === 'board'
                               ? 'bg-green-500/10 text-green-500'
                               : 'bg-orange-500/10 text-orange-500'
                           }`}
                         >
-                          {log.action === 'board' ? (
+                          {log.action === 'boarded' || log.action === 'board' ? (
                             <LogIn className="h-4 w-4" />
                           ) : (
                             <LogOut className="h-4 w-4" />
@@ -171,10 +171,10 @@ export default function BoardingHistory({ studentId, busId, daysToShow = 7 }: Bo
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                               <Badge
-                                variant={log.action === 'board' ? 'default' : 'secondary'}
+                                variant={log.action === 'boarded' || log.action === 'board' ? 'default' : 'secondary'}
                                 className="text-xs"
                               >
-                                {log.action === 'board'
+                                {log.action === 'boarded' || log.action === 'board'
                                   ? language === 'ar' ? 'صعود' : 'Boarded'
                                   : language === 'ar' ? 'نزول' : 'Alighted'}
                               </Badge>
