@@ -52,7 +52,12 @@ interface RecentScan {
   action: 'board' | 'exit';
 }
 
-type TripType = 'pickup' | 'dropoff';
+// Auto-detect trip type based on time of day
+const getAutoTripType = (): TripType => {
+  const hour = new Date().getHours();
+  // Before 12 PM = pickup (going to school), After 12 PM = dropoff (going home)
+  return hour < 12 ? 'pickup' : 'dropoff';
+};
 
 export default function SupervisorDashboard() {
   const { language } = useLanguage();
@@ -65,8 +70,7 @@ export default function SupervisorDashboard() {
   const [currentTrip, setCurrentTrip] = useState<any>(null);
   const [recentScans, setRecentScans] = useState<RecentScan[]>([]);
   const [lastScanned, setLastScanned] = useState<string | null>(null);
-  const [showTripSelection, setShowTripSelection] = useState(false);
-  const [selectedTripType, setSelectedTripType] = useState<TripType | null>(null);
+  const [tripType, setTripType] = useState<TripType>(getAutoTripType());
   const [showManualDialog, setShowManualDialog] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showConfirmManual, setShowConfirmManual] = useState(false);
