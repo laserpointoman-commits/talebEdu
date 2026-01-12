@@ -5,22 +5,35 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Input } from "@/components/ui/input";
 import { 
   Bus, 
   Users, 
-  MapPin, 
-  Wifi, 
-  WifiOff, 
   CheckCircle, 
   Play, 
   Square,
-  AlertTriangle
+  AlertTriangle,
+  Scan,
+  UserPlus,
+  Search,
+  Clock,
+  ArrowUpFromLine,
+  ArrowDownToLine,
+  X,
+  Hand,
+  Loader2
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import LogoLoader from "@/components/LogoLoader";
 import { nfcService, NFCData } from "@/services/nfcService";
 import { motion, AnimatePresence } from "framer-motion";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface StudentStatus {
   id: string;
@@ -38,6 +51,8 @@ interface RecentScan {
   action: string;
 }
 
+type TripType = 'pickup' | 'dropoff';
+
 export default function SupervisorDashboard() {
   const { language } = useLanguage();
   const { user } = useAuth();
@@ -49,18 +64,25 @@ export default function SupervisorDashboard() {
   const [currentTrip, setCurrentTrip] = useState<any>(null);
   const [recentScans, setRecentScans] = useState<RecentScan[]>([]);
   const [lastScanned, setLastScanned] = useState<string | null>(null);
+  const [showTripSelection, setShowTripSelection] = useState(false);
+  const [selectedTripType, setSelectedTripType] = useState<TripType | null>(null);
+  const [showManualDialog, setShowManualDialog] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedStudentForManual, setSelectedStudentForManual] = useState<StudentStatus | null>(null);
+  const [awaitingNfcVerification, setAwaitingNfcVerification] = useState(false);
   const scanningRef = useRef(false);
 
   useEffect(() => {
     if (user) {
       loadSupervisorData();
-      setupRealtimeSubscriptions();
+      const cleanup = setupRealtimeSubscriptions();
+      return () => {
+        cleanup();
+        if (scanningRef.current) {
+          nfcService.stopScanning();
+        }
+      };
     }
-    return () => {
-      if (scanningRef.current) {
-        nfcService.stopScanning();
-      }
-    };
   }, [user]);
 
   const loadSupervisorData = async () => {
@@ -68,7 +90,6 @@ export default function SupervisorDashboard() {
       let busId: string | null = null;
       let busInfo: any = null;
 
-      // First check supervisors table
       const { data: supervisor } = await supabase
         .from('supervisors')
         .select('*, buses(*)')
@@ -80,7 +101,6 @@ export default function SupervisorDashboard() {
         busInfo = supervisor.buses;
       }
 
-      // If not found in supervisors table, check buses.supervisor_id
       if (!busId) {
         const { data: bus } = await supabase
           .from('buses')
@@ -102,7 +122,6 @@ export default function SupervisorDashboard() {
       setBusData(busInfo);
       await loadBusStudents(busId);
 
-      // Check for active trip
       const today = new Date().toISOString().split('T')[0];
       const { data: activeTrip } = await supabase
         .from('bus_trips')
@@ -115,6 +134,7 @@ export default function SupervisorDashboard() {
       if (activeTrip) {
         setCurrentTrip(activeTrip);
         setIsTripActive(true);
+        setSelectedTripType(activeTrip.trip_type === 'morning' ? 'pickup' : 'dropoff');
       }
     } catch (error) {
       console.error('Error loading supervisor data:', error);
@@ -124,7 +144,6 @@ export default function SupervisorDashboard() {
   };
 
   const loadBusStudents = async (busId: string) => {
-    // Always use edge function for supervisors to bypass RLS restrictions
     const { data, error: fnError } = await supabase.functions.invoke('get-supervisor-bus-students', {
       body: { busId }
     });
@@ -164,7 +183,11 @@ export default function SupervisorDashboard() {
 
     try {
       await nfcService.startScanning(async (nfcData: NFCData) => {
-        await handleNfcScan(nfcData);
+        if (awaitingNfcVerification && selectedStudentForManual) {
+          await handleManualNfcVerification(nfcData);
+        } else {
+          await handleNfcScan(nfcData);
+        }
       });
       toast.success(language === 'ar' ? 'بدأ المسح المستمر' : 'Continuous scanning started');
     } catch (error) {
@@ -179,16 +202,15 @@ export default function SupervisorDashboard() {
     nfcService.stopScanning();
     setIsScanning(false);
     scanningRef.current = false;
-    toast.info(language === 'ar' ? 'توقف المسح' : 'Scanning stopped');
+    setAwaitingNfcVerification(false);
+    setSelectedStudentForManual(null);
   };
 
   const handleNfcScan = async (nfcData: NFCData) => {
     try {
-      // Find student by NFC ID
       const student = students.find(s => s.nfcId === nfcData.id);
       
       if (!student) {
-        // Try to find in database
         const { data: dbStudent } = await supabase
           .from('students')
           .select('*')
@@ -207,7 +229,6 @@ export default function SupervisorDashboard() {
         ? (language === 'ar' ? student.nameAr : student.name)
         : 'Unknown Student';
 
-      // Check if already scanned
       const existingStudent = students.find(s => s.nfcId === nfcData.id);
       if (existingStudent?.status === 'boarded') {
         toast.info(`${studentName} - ${language === 'ar' ? 'تم المسح مسبقاً' : 'Already scanned'}`, {
@@ -217,35 +238,32 @@ export default function SupervisorDashboard() {
         return;
       }
 
-      // Determine action (toggle between board/exit)
-      const action = existingStudent?.status === 'exited' ? 'board' : 'board';
+      const action = selectedTripType === 'pickup' ? 'board' : 'exit';
 
-      // Record bus activity
       await supabase.functions.invoke('record-bus-activity', {
         body: {
           studentNfcId: nfcData.id,
           busId: busData?.id,
           action: action,
-          location: busData?.bus_number || 'Bus'
+          location: busData?.bus_number || 'Bus',
+          nfc_verified: true,
+          manual_entry: false
         }
       });
 
-      // Update local state immediately for fast UI feedback
       setStudents(prev => prev.map(s => 
         s.nfcId === nfcData.id 
           ? { ...s, status: 'boarded', scanTime: new Date().toLocaleTimeString() }
           : s
       ));
 
-      // Add to recent scans
       setRecentScans(prev => [
         { studentName, time: new Date().toLocaleTimeString(), action },
         ...prev.slice(0, 9)
       ]);
 
-      // Show quick confirmation
       setLastScanned(studentName);
-      setTimeout(() => setLastScanned(null), 1500);
+      setTimeout(() => setLastScanned(null), 2000);
 
       toast.success(`✓ ${studentName}`, {
         duration: 1500,
@@ -257,7 +275,67 @@ export default function SupervisorDashboard() {
     }
   };
 
-  const startTrip = async () => {
+  const handleManualNfcVerification = async (nfcData: NFCData) => {
+    if (!selectedStudentForManual) return;
+
+    if (nfcData.id === selectedStudentForManual.nfcId) {
+      // NFC matches - record attendance
+      const action = selectedTripType === 'pickup' ? 'board' : 'exit';
+      const studentName = language === 'ar' ? selectedStudentForManual.nameAr : selectedStudentForManual.name;
+
+      await supabase.functions.invoke('record-bus-activity', {
+        body: {
+          studentNfcId: nfcData.id,
+          busId: busData?.id,
+          action: action,
+          location: busData?.bus_number || 'Bus',
+          nfc_verified: true,
+          manual_entry: true
+        }
+      });
+
+      setStudents(prev => prev.map(s => 
+        s.id === selectedStudentForManual.id 
+          ? { ...s, status: 'boarded', scanTime: new Date().toLocaleTimeString() }
+          : s
+      ));
+
+      setRecentScans(prev => [
+        { studentName, time: new Date().toLocaleTimeString(), action: action + ' (manual)' },
+        ...prev.slice(0, 9)
+      ]);
+
+      toast.success(language === 'ar' ? `✓ تم التحقق - ${studentName}` : `✓ Verified - ${studentName}`, {
+        duration: 2000,
+        position: 'top-center'
+      });
+
+      setAwaitingNfcVerification(false);
+      setSelectedStudentForManual(null);
+      setShowManualDialog(false);
+    } else {
+      toast.error(language === 'ar' ? 'بطاقة NFC غير مطابقة' : 'NFC card does not match', {
+        duration: 2000,
+        position: 'top-center'
+      });
+    }
+  };
+
+  const initiateManualAttendance = (student: StudentStatus) => {
+    setSelectedStudentForManual(student);
+    setAwaitingNfcVerification(true);
+    if (!isScanning) {
+      startContinuousScanning();
+    }
+    toast.info(language === 'ar' 
+      ? `امسح بطاقة ${student.nameAr} للتحقق` 
+      : `Scan ${student.name}'s card to verify`, {
+      duration: 5000,
+      position: 'top-center'
+    });
+  };
+
+  const startTrip = async (tripType: TripType) => {
     if (!busData?.id) return;
 
     try {
@@ -266,7 +344,7 @@ export default function SupervisorDashboard() {
         .insert({
           bus_id: busData.id,
           supervisor_id: user?.id,
-          trip_type: new Date().getHours() < 12 ? 'morning' : 'afternoon',
+          trip_type: tripType === 'pickup' ? 'morning' : 'afternoon',
           status: 'in_progress',
           started_at: new Date().toISOString()
         })
@@ -277,7 +355,16 @@ export default function SupervisorDashboard() {
 
       setCurrentTrip(trip);
       setIsTripActive(true);
-      toast.success(language === 'ar' ? 'بدأت الرحلة' : 'Trip started');
+      setSelectedTripType(tripType);
+      setShowTripSelection(false);
+      
+      // Reset students status for new trip
+      setStudents(prev => prev.map(s => ({ ...s, status: 'waiting', scanTime: undefined })));
+      setRecentScans([]);
+      
+      toast.success(language === 'ar' 
+        ? (tripType === 'pickup' ? 'بدأت رحلة التوصيل للمدرسة' : 'بدأت رحلة العودة للمنزل')
+        : (tripType === 'pickup' ? 'Pickup trip started' : 'Drop-off trip started'));
     } catch (error) {
       console.error('Error starting trip:', error);
       toast.error(language === 'ar' ? 'فشل بدء الرحلة' : 'Failed to start trip');
@@ -298,6 +385,7 @@ export default function SupervisorDashboard() {
 
       setCurrentTrip(null);
       setIsTripActive(false);
+      setSelectedTripType(null);
       stopScanning();
       toast.success(language === 'ar' ? 'انتهت الرحلة' : 'Trip ended');
     } catch (error) {
@@ -306,18 +394,30 @@ export default function SupervisorDashboard() {
     }
   };
 
+  const filteredStudents = students.filter(s => {
+    const searchLower = searchQuery.toLowerCase();
+    return s.name.toLowerCase().includes(searchLower) || 
+           s.nameAr.includes(searchQuery) ||
+           s.class.toLowerCase().includes(searchLower);
+  });
+
+  const waitingStudents = filteredStudents.filter(s => s.status === 'waiting');
+  const boardedStudents = filteredStudents.filter(s => s.status === 'boarded');
+
   if (loading) {
     return <LogoLoader fullScreen />;
   }
 
   if (!busData) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] p-6">
-        <Bus className="h-20 w-20 text-muted-foreground mb-6" />
-        <h2 className="text-2xl font-bold mb-2">
+      <div className="flex flex-col items-center justify-center min-h-[80vh] p-6">
+        <div className="w-24 h-24 rounded-full bg-muted flex items-center justify-center mb-6">
+          <Bus className="h-12 w-12 text-muted-foreground" />
+        </div>
+        <h2 className="text-2xl font-bold mb-2 text-center">
           {language === 'ar' ? 'لم يتم تعيين حافلة' : 'No Bus Assigned'}
         </h2>
-        <p className="text-muted-foreground text-center">
+        <p className="text-muted-foreground text-center max-w-sm">
           {language === 'ar' 
             ? 'يرجى التواصل مع الإدارة لتعيين حافلة لك'
             : 'Please contact administration to assign a bus to you'}
@@ -327,206 +427,343 @@ export default function SupervisorDashboard() {
   }
 
   const boardedCount = students.filter(s => s.status === 'boarded').length;
+  const totalStudents = students.length;
+  const progressPercentage = totalStudents > 0 ? (boardedCount / totalStudents) * 100 : 0;
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="flex justify-between items-start">
-        <div>
-          <h1 className="text-3xl font-bold">
-            {language === 'ar' ? 'لوحة المشرف' : 'Supervisor Dashboard'}
-          </h1>
-          <p className="text-muted-foreground">
-            {language === 'ar' ? `الحافلة ${busData.bus_number}` : `Bus ${busData.bus_number}`}
-          </p>
+      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b">
+        <div className="p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                <Bus className="h-6 w-6 text-primary" />
+              </div>
+              <div>
+                <h1 className="text-lg font-bold">{busData.bus_number}</h1>
+                <p className="text-sm text-muted-foreground">
+                  {language === 'ar' ? 'لوحة المشرف' : 'Supervisor'}
+                </p>
+              </div>
+            </div>
+            {isTripActive && (
+              <Badge 
+                className={`px-3 py-1.5 ${
+                  selectedTripType === 'pickup' 
+                    ? 'bg-blue-500 hover:bg-blue-600' 
+                    : 'bg-orange-500 hover:bg-orange-600'
+                }`}
+              >
+                {selectedTripType === 'pickup' 
+                  ? (language === 'ar' ? '🏫 للمدرسة' : '🏫 Pickup')
+                  : (language === 'ar' ? '🏠 للمنزل' : '🏠 Drop-off')}
+              </Badge>
+            )}
+          </div>
         </div>
-        <Badge variant={isTripActive ? "default" : "secondary"} className="text-lg px-4 py-2">
-          {isTripActive 
-            ? (language === 'ar' ? 'الرحلة نشطة' : 'Trip Active')
-            : (language === 'ar' ? 'لا توجد رحلة' : 'No Active Trip')}
-        </Badge>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card>
+      {/* Main Content */}
+      <div className="p-4 space-y-4 pb-32">
+        {/* Progress Card */}
+        <Card className="overflow-hidden">
           <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <Bus className="h-8 w-8 text-primary" />
+            <div className="flex items-center justify-between mb-3">
               <div>
                 <p className="text-sm text-muted-foreground">
-                  {language === 'ar' ? 'الحافلة' : 'Bus'}
+                  {language === 'ar' ? 'التقدم' : 'Progress'}
                 </p>
-                <p className="text-xl font-bold">{busData.bus_number}</p>
+                <p className="text-2xl font-bold">
+                  {boardedCount} / {totalStudents}
+                </p>
               </div>
+              <div className="text-right">
+                <p className="text-3xl font-bold text-primary">{Math.round(progressPercentage)}%</p>
+              </div>
+            </div>
+            <div className="w-full h-3 bg-muted rounded-full overflow-hidden">
+              <motion.div 
+                className="h-full bg-primary rounded-full"
+                initial={{ width: 0 }}
+                animate={{ width: `${progressPercentage}%` }}
+                transition={{ duration: 0.5 }}
+              />
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <Users className="h-8 w-8 text-blue-500" />
-              <div>
-                <p className="text-sm text-muted-foreground">
-                  {language === 'ar' ? 'الطلاب' : 'Students'}
-                </p>
-                <p className="text-xl font-bold">{students.length}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <CheckCircle className="h-8 w-8 text-green-500" />
-              <div>
-                <p className="text-sm text-muted-foreground">
-                  {language === 'ar' ? 'على متن الحافلة' : 'Boarded'}
-                </p>
-                <p className="text-xl font-bold">{boardedCount}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <MapPin className="h-8 w-8 text-orange-500" />
-              <div>
-                <p className="text-sm text-muted-foreground">
-                  {language === 'ar' ? 'في انتظار' : 'Waiting'}
-                </p>
-                <p className="text-xl font-bold">{students.length - boardedCount}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
 
-      {/* Trip Controls */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Trip Selection or Active Trip */}
         {!isTripActive ? (
-          <Button size="lg" className="h-16 text-lg" onClick={startTrip}>
-            <Play className="mr-2 h-6 w-6" />
-            {language === 'ar' ? 'بدء الرحلة' : 'Start Trip'}
-          </Button>
+          <Card className="border-2 border-dashed">
+            <CardContent className="p-6">
+              <div className="text-center mb-6">
+                <Clock className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
+                <h3 className="font-semibold text-lg">
+                  {language === 'ar' ? 'ابدأ رحلة جديدة' : 'Start a New Trip'}
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  {language === 'ar' ? 'اختر نوع الرحلة للبدء' : 'Select trip type to begin'}
+                </p>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-3">
+                <Button 
+                  size="lg" 
+                  className="h-24 flex-col gap-2 bg-blue-500 hover:bg-blue-600"
+                  onClick={() => startTrip('pickup')}
+                >
+                  <ArrowUpFromLine className="h-8 w-8" />
+                  <span className="text-sm font-medium">
+                    {language === 'ar' ? 'توصيل للمدرسة' : 'Pickup'}
+                  </span>
+                </Button>
+                <Button 
+                  size="lg" 
+                  className="h-24 flex-col gap-2 bg-orange-500 hover:bg-orange-600"
+                  onClick={() => startTrip('dropoff')}
+                >
+                  <ArrowDownToLine className="h-8 w-8" />
+                  <span className="text-sm font-medium">
+                    {language === 'ar' ? 'توصيل للمنزل' : 'Drop-off'}
+                  </span>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         ) : (
-          <Button size="lg" variant="destructive" className="h-16 text-lg" onClick={endTrip}>
-            <Square className="mr-2 h-6 w-6" />
-            {language === 'ar' ? 'إنهاء الرحلة' : 'End Trip'}
-          </Button>
-        )}
-        
-        {!isScanning ? (
-          <Button 
-            size="lg" 
-            variant="outline" 
-            className="h-16 text-lg"
-            onClick={startContinuousScanning}
-            disabled={!isTripActive}
-          >
-            <Wifi className="mr-2 h-6 w-6" />
-            {language === 'ar' ? 'بدء مسح NFC' : 'Start NFC Scanning'}
-          </Button>
-        ) : (
-          <Button 
-            size="lg" 
-            variant="secondary" 
-            className="h-16 text-lg animate-pulse"
-            onClick={stopScanning}
-          >
-            <WifiOff className="mr-2 h-6 w-6" />
-            {language === 'ar' ? 'إيقاف المسح' : 'Stop Scanning'}
-          </Button>
-        )}
-      </div>
+          <>
+            {/* Scanning Status */}
+            <AnimatePresence mode="wait">
+              {isScanning ? (
+                <motion.div
+                  key="scanning"
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                >
+                  <Card className="border-2 border-primary bg-primary/5">
+                    <CardContent className="p-6 text-center">
+                      <motion.div
+                        animate={{ scale: [1, 1.1, 1] }}
+                        transition={{ duration: 1.5, repeat: Infinity }}
+                        className="w-20 h-20 mx-auto rounded-full bg-primary/20 flex items-center justify-center mb-4"
+                      >
+                        <Scan className="h-10 w-10 text-primary" />
+                      </motion.div>
+                      
+                      {awaitingNfcVerification && selectedStudentForManual ? (
+                        <>
+                          <p className="font-semibold text-lg mb-1">
+                            {language === 'ar' ? 'في انتظار التحقق' : 'Awaiting Verification'}
+                          </p>
+                          <p className="text-primary font-bold">
+                            {language === 'ar' ? selectedStudentForManual.nameAr : selectedStudentForManual.name}
+                          </p>
+                          <p className="text-sm text-muted-foreground mt-2">
+                            {language === 'ar' ? 'امسح بطاقة الطالب للتأكيد' : 'Scan student card to confirm'}
+                          </p>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="mt-4"
+                            onClick={() => {
+                              setAwaitingNfcVerification(false);
+                              setSelectedStudentForManual(null);
+                            }}
+                          >
+                            {language === 'ar' ? 'إلغاء' : 'Cancel'}
+                          </Button>
+                        </>
+                      ) : (
+                        <>
+                          <p className="font-semibold text-lg">
+                            {language === 'ar' ? 'جاري المسح...' : 'Scanning...'}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {language === 'ar' ? 'ضع البطاقة بالقرب من الجهاز' : 'Hold card near device'}
+                          </p>
+                        </>
+                      )}
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="not-scanning"
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                >
+                  <Card className="border-dashed">
+                    <CardContent className="p-6 text-center">
+                      <div className="w-20 h-20 mx-auto rounded-full bg-muted flex items-center justify-center mb-4">
+                        <Scan className="h-10 w-10 text-muted-foreground" />
+                      </div>
+                      <p className="font-medium text-muted-foreground">
+                        {language === 'ar' ? 'اضغط لبدء المسح' : 'Tap to start scanning'}
+                      </p>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
-      {/* Scanning Status */}
-      <AnimatePresence>
-        {isScanning && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="p-4 bg-primary/10 rounded-lg border-2 border-primary text-center"
-          >
-            <motion.div
-              animate={{ scale: [1, 1.1, 1] }}
-              transition={{ duration: 1.5, repeat: Infinity }}
-              className="flex justify-center mb-2"
-            >
-              <Wifi className="h-12 w-12 text-primary" />
-            </motion.div>
-            <p className="font-semibold">
-              {language === 'ar' ? 'في انتظار مسح NFC...' : 'Waiting for NFC scan...'}
-            </p>
-            <p className="text-sm text-muted-foreground">
-              {language === 'ar' ? 'ضع سوار الطالب بالقرب من الماسح' : 'Hold student wristband near scanner'}
-            </p>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Last Scanned */}
-      <AnimatePresence>
-        {lastScanned && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            className="p-4 bg-green-500/20 rounded-lg border border-green-500 text-center"
-          >
-            <CheckCircle className="h-8 w-8 text-green-600 mx-auto mb-2" />
-            <p className="text-lg font-bold text-green-700">{lastScanned}</p>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Student List */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              {language === 'ar' ? 'قائمة الطلاب' : 'Student List'}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ScrollArea className="h-[400px]">
-              <div className="space-y-2">
-                {students.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    {language === 'ar' ? 'لا يوجد طلاب مسجلون' : 'No students assigned'}
-                  </div>
-                ) : (
-                  students.map((student) => (
-                    <motion.div
-                      key={student.id}
-                      layout
-                      className={`p-3 rounded-lg border flex items-center justify-between ${
-                        student.status === 'boarded' 
-                          ? 'bg-green-500/10 border-green-500/30' 
-                          : 'bg-muted/50'
-                      }`}
-                    >
-                      <div>
-                        <p className="font-medium">
-                          {language === 'ar' ? student.nameAr : student.name}
+            {/* Last Scanned Popup */}
+            <AnimatePresence>
+              {lastScanned && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20, scale: 0.9 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -20, scale: 0.9 }}
+                  className="fixed top-24 left-4 right-4 z-50"
+                >
+                  <Card className="bg-green-500 border-green-600 text-white shadow-lg">
+                    <CardContent className="p-4 flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">
+                        <CheckCircle className="h-6 w-6" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-bold text-lg">{lastScanned}</p>
+                        <p className="text-sm text-white/80">
+                          {selectedTripType === 'pickup' 
+                            ? (language === 'ar' ? 'صعد للحافلة' : 'Boarded')
+                            : (language === 'ar' ? 'نزل من الحافلة' : 'Dropped off')}
                         </p>
-                        <p className="text-sm text-muted-foreground">{student.class}</p>
                       </div>
-                      <div className="flex items-center gap-2">
-                        {student.scanTime && (
-                          <span className="text-xs text-muted-foreground">{student.scanTime}</span>
-                        )}
-                        <Badge variant={student.status === 'boarded' ? 'default' : 'outline'}>
-                          {student.status === 'boarded' 
-                            ? (language === 'ar' ? 'على متن' : 'Boarded')
-                            : (language === 'ar' ? 'في انتظار' : 'Waiting')}
-                        </Badge>
-                      </div>
-                    </motion.div>
-                  ))
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Action Buttons */}
+            <div className="grid grid-cols-2 gap-3">
+              {!isScanning ? (
+                <Button 
+                  size="lg" 
+                  className="h-14"
+                  onClick={startContinuousScanning}
+                >
+                  <Scan className="mr-2 h-5 w-5" />
+                  {language === 'ar' ? 'بدء المسح' : 'Start Scan'}
+                </Button>
+              ) : (
+                <Button 
+                  size="lg" 
+                  variant="secondary"
+                  className="h-14"
+                  onClick={stopScanning}
+                >
+                  <Square className="mr-2 h-5 w-5" />
+                  {language === 'ar' ? 'إيقاف' : 'Stop'}
+                </Button>
+              )}
+              
+              <Button 
+                size="lg" 
+                variant="outline"
+                className="h-14"
+                onClick={() => setShowManualDialog(true)}
+              >
+                <Hand className="mr-2 h-5 w-5" />
+                {language === 'ar' ? 'يدوي' : 'Manual'}
+              </Button>
+            </div>
+          </>
+        )}
+
+        {/* Students List */}
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                {language === 'ar' ? 'الطلاب' : 'Students'}
+              </CardTitle>
+              <div className="flex gap-2">
+                <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-200">
+                  {boardedCount} {language === 'ar' ? 'حضور' : 'present'}
+                </Badge>
+                <Badge variant="outline">
+                  {students.length - boardedCount} {language === 'ar' ? 'انتظار' : 'waiting'}
+                </Badge>
+              </div>
+            </div>
+            
+            {/* Search */}
+            <div className="relative mt-3">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input 
+                placeholder={language === 'ar' ? 'بحث عن طالب...' : 'Search student...'}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <ScrollArea className="h-[300px]">
+              <div className="space-y-2">
+                {/* Boarded Students */}
+                {boardedStudents.map((student) => (
+                  <motion.div
+                    key={student.id}
+                    layout
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="p-3 rounded-xl bg-green-500/10 border border-green-500/20 flex items-center gap-3"
+                  >
+                    <div className="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center">
+                      <CheckCircle className="h-5 w-5 text-white" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate">
+                        {language === 'ar' ? student.nameAr : student.name}
+                      </p>
+                      <p className="text-xs text-muted-foreground">{student.class}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs text-green-600 font-medium">{student.scanTime}</p>
+                    </div>
+                  </motion.div>
+                ))}
+                
+                {/* Waiting Students */}
+                {waitingStudents.map((student) => (
+                  <motion.div
+                    key={student.id}
+                    layout
+                    className="p-3 rounded-xl bg-muted/50 border flex items-center gap-3"
+                  >
+                    <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                      <Clock className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate">
+                        {language === 'ar' ? student.nameAr : student.name}
+                      </p>
+                      <p className="text-xs text-muted-foreground">{student.class}</p>
+                    </div>
+                    {isTripActive && (
+                      <Button 
+                        size="sm" 
+                        variant="ghost"
+                        className="h-8 px-2"
+                        onClick={() => initiateManualAttendance(student)}
+                      >
+                        <Hand className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </motion.div>
+                ))}
+                
+                {filteredStudents.length === 0 && (
+                  <div className="text-center py-8 text-muted-foreground">
+                    {searchQuery 
+                      ? (language === 'ar' ? 'لا توجد نتائج' : 'No results found')
+                      : (language === 'ar' ? 'لا يوجد طلاب' : 'No students')}
+                  </div>
                 )}
               </div>
             </ScrollArea>
@@ -534,47 +771,127 @@ export default function SupervisorDashboard() {
         </Card>
 
         {/* Recent Scans */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Wifi className="h-5 w-5" />
-              {language === 'ar' ? 'آخر المسحات' : 'Recent Scans'}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ScrollArea className="h-[400px]">
+        {recentScans.length > 0 && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Clock className="h-5 w-5" />
+                {language === 'ar' ? 'آخر المسحات' : 'Recent Scans'}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
               <div className="space-y-2">
-                {recentScans.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    {language === 'ar' ? 'لا توجد مسحات بعد' : 'No scans yet'}
-                  </div>
-                ) : (
-                  recentScans.map((scan, idx) => (
-                    <motion.div
-                      key={idx}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      className="p-3 rounded-lg bg-green-500/10 border border-green-500/20 flex items-center justify-between"
-                    >
-                      <div className="flex items-center gap-2">
-                        <CheckCircle className="h-4 w-4 text-green-600" />
-                        <span className="font-medium">{scan.studentName}</span>
+                {recentScans.slice(0, 5).map((scan, idx) => (
+                  <motion.div
+                    key={idx}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: idx * 0.05 }}
+                    className="flex items-center justify-between p-2 rounded-lg bg-green-500/5"
+                  >
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                      <span className="text-sm font-medium">{scan.studentName}</span>
+                    </div>
+                    <span className="text-xs text-muted-foreground">{scan.time}</span>
+                  </motion.div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+
+      {/* Bottom Action Bar */}
+      {isTripActive && (
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/95 backdrop-blur border-t safe-area-inset-bottom">
+          <div className="flex gap-3">
+            <Button 
+              size="lg" 
+              variant="destructive" 
+              className="flex-1 h-14"
+              onClick={endTrip}
+            >
+              <Square className="mr-2 h-5 w-5" />
+              {language === 'ar' ? 'إنهاء الرحلة' : 'End Trip'}
+            </Button>
+            <Button 
+              size="lg" 
+              variant="outline" 
+              className="h-14 px-4"
+              onClick={() => toast.info(language === 'ar' ? 'جاري الإبلاغ...' : 'Reporting...')}
+            >
+              <AlertTriangle className="h-5 w-5 text-destructive" />
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Manual Attendance Dialog */}
+      <Dialog open={showManualDialog} onOpenChange={setShowManualDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <UserPlus className="h-5 w-5" />
+              {language === 'ar' ? 'تسجيل حضور يدوي' : 'Manual Attendance'}
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input 
+                placeholder={language === 'ar' ? 'بحث عن طالب...' : 'Search student...'}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            
+            <ScrollArea className="h-[300px]">
+              <div className="space-y-2">
+                {waitingStudents.map((student) => (
+                  <Button
+                    key={student.id}
+                    variant="outline"
+                    className="w-full justify-start h-auto p-3"
+                    onClick={() => {
+                      setShowManualDialog(false);
+                      initiateManualAttendance(student);
+                    }}
+                  >
+                    <div className="flex items-center gap-3 w-full">
+                      <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                        <Users className="h-5 w-5" />
                       </div>
-                      <span className="text-sm text-muted-foreground">{scan.time}</span>
-                    </motion.div>
-                  ))
+                      <div className="text-left">
+                        <p className="font-medium">
+                          {language === 'ar' ? student.nameAr : student.name}
+                        </p>
+                        <p className="text-xs text-muted-foreground">{student.class}</p>
+                      </div>
+                    </div>
+                  </Button>
+                ))}
+                
+                {waitingStudents.length === 0 && (
+                  <div className="text-center py-8 text-muted-foreground">
+                    {language === 'ar' ? 'جميع الطلاب تم تسجيلهم' : 'All students recorded'}
+                  </div>
                 )}
               </div>
             </ScrollArea>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Emergency Button */}
-      <Button size="lg" variant="destructive" className="w-full h-16 text-lg">
-        <AlertTriangle className="mr-2 h-6 w-6" />
-        {language === 'ar' ? 'إبلاغ عن حالة طارئة' : 'Report Emergency'}
-      </Button>
+            
+            <div className="p-3 bg-amber-500/10 rounded-lg border border-amber-500/20">
+              <p className="text-sm text-amber-700">
+                {language === 'ar' 
+                  ? '⚠️ سيتطلب التسجيل اليدوي مسح بطاقة NFC للتحقق'
+                  : '⚠️ Manual entry requires NFC card scan for verification'}
+              </p>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
