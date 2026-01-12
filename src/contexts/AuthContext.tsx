@@ -119,18 +119,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         }
         
-        // Check if parent needs to register students
-        if (userProfile?.role === 'parent' && 
-            userProfile.email_confirmed &&
-            userProfile.expected_students_count && 
-            userProfile.registered_students_count < userProfile.expected_students_count) {
-          const currentPath = window.location.pathname;
-          if (currentPath !== '/dashboard/register-student' && currentPath !== '/auth') {
-            window.location.href = '/dashboard/register-student';
-            setLoading(false);
-            return;
-          }
-        }
+        // Parents go directly to dashboard - they can register students from there
       }
       
       setLoading(false);
