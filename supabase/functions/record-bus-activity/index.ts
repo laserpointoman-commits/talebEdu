@@ -92,7 +92,7 @@ serve(async (req) => {
         .limit(1)
         .single();
 
-      if (existingBoard && existingBoard.action === 'board') {
+      if (existingBoard && existingBoard.action === 'boarded') {
         console.log('Student already boarded today on this bus');
         return new Response(
           JSON.stringify({ 
@@ -104,13 +104,16 @@ serve(async (req) => {
       }
     }
 
+    // Map action values to match database constraint (board -> boarded, exit -> exited)
+    const dbAction = action === 'board' ? 'boarded' : 'exited';
+
     // Insert bus boarding log
     const { data: boardingLog, error: boardingError } = await supabase
       .from('bus_boarding_logs')
       .insert({
         student_id: student.id,
         bus_id: busId,
-        action: action,
+        action: dbAction,
         location: location,
         latitude: latitude,
         longitude: longitude,
