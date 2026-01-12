@@ -81,7 +81,9 @@ export default function SupervisorDashboard() {
   const [showEndTripWarning, setShowEndTripWarning] = useState(false);
   const [showAbsentConfirm, setShowAbsentConfirm] = useState(false);
   const [selectedStudentForAbsent, setSelectedStudentForAbsent] = useState<StudentStatus | null>(null);
+  const [scanCount, setScanCount] = useState(0);
   const scanningRef = useRef(false);
+  const shouldContinueScanning = useRef(false);
 
   useEffect(() => {
     if (user) {
@@ -89,9 +91,8 @@ export default function SupervisorDashboard() {
       const cleanup = setupRealtimeSubscriptions();
       return () => {
         cleanup();
-        if (scanningRef.current) {
-          nfcService.stopScanning();
-        }
+        shouldContinueScanning.current = false;
+        scanningRef.current = false;
       };
     }
   }, [user]);
@@ -188,27 +189,66 @@ export default function SupervisorDashboard() {
     };
   };
 
+  // Continuous scanning using readOnce in a loop (iOS CoreNFC requires new session per scan)
   const startContinuousScanning = async () => {
+    if (scanningRef.current) return;
+    
     setIsScanning(true);
     scanningRef.current = true;
+    shouldContinueScanning.current = true;
+    setScanCount(0);
 
-    try {
-      await nfcService.startScanning(async (nfcData: NFCData) => {
-        await handleNfcScan(nfcData);
-      });
-      toast.success(language === 'ar' ? 'بدأ المسح' : 'Scanning started');
-    } catch (error) {
-      console.error('Error starting NFC scan:', error);
-      setIsScanning(false);
-      scanningRef.current = false;
-      toast.error(language === 'ar' ? 'فشل بدء المسح' : 'Failed to start scanning');
+    toast.success(language === 'ar' ? 'بدأ المسح المستمر' : 'Continuous scanning started');
+
+    // Start the continuous scanning loop
+    continuousScanLoop();
+  };
+
+  const continuousScanLoop = async () => {
+    while (shouldContinueScanning.current) {
+      try {
+        console.log('NFC: Starting new scan session...');
+        const nfcData = await nfcService.readOnce();
+        
+        if (!shouldContinueScanning.current) break;
+        
+        if (nfcData) {
+          setScanCount(prev => prev + 1);
+          await handleNfcScan(nfcData);
+        }
+        
+        // Small delay before next scan to prevent overwhelming
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+      } catch (error: any) {
+        console.log('NFC scan error or cancelled:', error?.message);
+        
+        // If user cancelled or error occurred, check if we should continue
+        if (!shouldContinueScanning.current) break;
+        
+        // For timeouts or cancellations, just continue the loop
+        if (error?.message?.includes('timeout') || error?.message?.includes('cancel')) {
+          continue;
+        }
+        
+        // For other errors, show toast but continue
+        console.error('NFC scan error:', error);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
     }
+    
+    // Cleanup when loop ends
+    setIsScanning(false);
+    scanningRef.current = false;
+    console.log('NFC: Continuous scanning stopped');
   };
 
   const stopScanning = () => {
-    nfcService.stopScanning();
-    setIsScanning(false);
+    shouldContinueScanning.current = false;
     scanningRef.current = false;
+    setIsScanning(false);
+    nfcService.stopScanning();
+    toast.info(language === 'ar' ? 'توقف المسح' : 'Scanning stopped');
   };
 
   const handleNfcScan = async (nfcData: NFCData) => {
@@ -537,31 +577,61 @@ export default function SupervisorDashboard() {
           </Card>
         ) : (
           <>
-            {/* NFC Scanner Button */}
-            <Card className={`transition-all ${isScanning ? 'border-primary border-2 bg-primary/5' : ''}`}>
+            {/* NFC Scanner Card with Visual Feedback */}
+            <Card className={`transition-all ${isScanning ? 'border-primary border-2 bg-primary/5 animate-pulse' : ''}`}>
               <CardContent className="p-4">
-                <Button 
-                  size="lg" 
-                  className={`w-full h-16 text-lg ${isScanning ? 'bg-primary' : ''}`}
-                  onClick={isScanning ? stopScanning : startContinuousScanning}
-                >
-                  {isScanning ? (
-                    <>
-                      <motion.div
-                        animate={{ scale: [1, 1.2, 1] }}
-                        transition={{ duration: 1, repeat: Infinity }}
-                      >
-                        <Scan className="mr-3 h-6 w-6" />
-                      </motion.div>
-                      {language === 'ar' ? 'جاري المسح... اضغط للإيقاف' : 'Scanning... Tap to Stop'}
-                    </>
-                  ) : (
-                    <>
-                      <Scan className="mr-3 h-6 w-6" />
-                      {language === 'ar' ? 'اضغط لبدء المسح' : 'Tap to Start NFC Scan'}
-                    </>
-                  )}
-                </Button>
+                {isScanning ? (
+                  <div className="text-center space-y-3">
+                    {/* Animated scanning indicator */}
+                    <motion.div 
+                      className="w-20 h-20 mx-auto rounded-full bg-primary/20 flex items-center justify-center"
+                      animate={{ 
+                        scale: [1, 1.1, 1],
+                        boxShadow: [
+                          '0 0 0 0 rgba(59, 130, 246, 0.4)',
+                          '0 0 0 20px rgba(59, 130, 246, 0)',
+                          '0 0 0 0 rgba(59, 130, 246, 0)'
+                        ]
+                      }}
+                      transition={{ duration: 1.5, repeat: Infinity }}
+                    >
+                      <Scan className="h-10 w-10 text-primary" />
+                    </motion.div>
+                    
+                    <div>
+                      <p className="font-bold text-lg text-primary">
+                        {language === 'ar' ? 'جاري المسح...' : 'Scanning...'}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {language === 'ar' ? 'ضع البطاقة للقراءة' : 'Hold card to scan'}
+                      </p>
+                      {scanCount > 0 && (
+                        <Badge variant="secondary" className="mt-2">
+                          {scanCount} {language === 'ar' ? 'تم مسحهم' : 'scanned'}
+                        </Badge>
+                      )}
+                    </div>
+                    
+                    <Button 
+                      size="lg" 
+                      variant="destructive"
+                      className="w-full h-12"
+                      onClick={stopScanning}
+                    >
+                      <Square className="mr-2 h-5 w-5" />
+                      {language === 'ar' ? 'إيقاف المسح' : 'Stop Scanning'}
+                    </Button>
+                  </div>
+                ) : (
+                  <Button 
+                    size="lg" 
+                    className="w-full h-16 text-lg"
+                    onClick={startContinuousScanning}
+                  >
+                    <Scan className="mr-3 h-6 w-6" />
+                    {language === 'ar' ? 'اضغط لبدء المسح' : 'Tap to Start NFC Scan'}
+                  </Button>
+                )}
               </CardContent>
             </Card>
 
