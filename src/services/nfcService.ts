@@ -163,8 +163,11 @@ class NFCService {
     }
 
     try {
-      const message = JSON.stringify(data);
-      console.log("Writing NFC tag:", data);
+      // CRITICAL: Write ONLY the ID to minimize tag space usage
+      // Most NFC tags have very limited storage (48-144 bytes)
+      // The ID is sufficient - we look up full data from database on read
+      const message = data.id;
+      console.log("Writing NFC tag with compact ID:", message, "(full data:", data, ")");
 
       if (!Capacitor.isNativePlatform()) {
         // Web NFC API
@@ -208,8 +211,8 @@ class NFCService {
     try {
       console.log("Erasing NFC tag...");
 
-      // Write an empty/reset payload to the tag
-      const emptyData = JSON.stringify({ erased: true, timestamp: new Date().toISOString() });
+      // Write minimal erase marker - just "X" to indicate erased
+      const emptyData = "X";
 
       if (!Capacitor.isNativePlatform()) {
         // Web NFC API
