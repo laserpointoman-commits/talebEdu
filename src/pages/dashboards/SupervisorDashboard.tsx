@@ -52,6 +52,8 @@ interface RecentScan {
   action: 'board' | 'exit';
 }
 
+type TripType = 'pickup' | 'dropoff';
+
 // Auto-detect trip type based on time of day
 const getAutoTripType = (): TripType => {
   const hour = new Date().getHours();
@@ -140,7 +142,7 @@ export default function SupervisorDashboard() {
       if (activeTrip) {
         setCurrentTrip(activeTrip);
         setIsTripActive(true);
-        setSelectedTripType(activeTrip.trip_type === 'morning' ? 'pickup' : 'dropoff');
+        setTripType(activeTrip.trip_type === 'morning' ? 'pickup' : 'dropoff');
       }
     } catch (error) {
       console.error('Error loading supervisor data:', error);
@@ -386,7 +388,7 @@ export default function SupervisorDashboard() {
     setShowManualDialog(false);
   };
 
-  const startTrip = async (tripType: TripType) => {
+  const startTrip = async (type: TripType) => {
     if (!busData?.id) return;
 
     try {
@@ -395,7 +397,7 @@ export default function SupervisorDashboard() {
         .insert({
           bus_id: busData.id,
           supervisor_id: user?.id,
-          trip_type: tripType === 'pickup' ? 'morning' : 'afternoon',
+          trip_type: type === 'pickup' ? 'morning' : 'afternoon',
           status: 'in_progress',
           started_at: new Date().toISOString()
         })
@@ -406,16 +408,15 @@ export default function SupervisorDashboard() {
 
       setCurrentTrip(trip);
       setIsTripActive(true);
-      setSelectedTripType(tripType);
-      setShowTripSelection(false);
+      setTripType(type);
       
       // Reset students status for new trip
       setStudents(prev => prev.map(s => ({ ...s, status: 'waiting', scanTime: undefined })));
       setRecentScans([]);
       
       toast.success(language === 'ar' 
-        ? (tripType === 'pickup' ? 'بدأت رحلة التوصيل للمدرسة' : 'بدأت رحلة العودة للمنزل')
-        : (tripType === 'pickup' ? 'Pickup trip started' : 'Drop-off trip started'));
+        ? (type === 'pickup' ? 'بدأت رحلة التوصيل للمدرسة' : 'بدأت رحلة العودة للمنزل')
+        : (type === 'pickup' ? 'Pickup trip started' : 'Drop-off trip started'));
     } catch (error) {
       console.error('Error starting trip:', error);
       toast.error(language === 'ar' ? 'فشل بدء الرحلة' : 'Failed to start trip');
@@ -436,7 +437,7 @@ export default function SupervisorDashboard() {
 
       setCurrentTrip(null);
       setIsTripActive(false);
-      setSelectedTripType(null);
+      setTripType(getAutoTripType());
       stopScanning();
       toast.success(language === 'ar' ? 'انتهت الرحلة' : 'Trip ended');
     } catch (error) {
@@ -503,12 +504,12 @@ export default function SupervisorDashboard() {
             {isTripActive && (
               <Badge 
                 className={`px-3 py-1.5 ${
-                  selectedTripType === 'pickup' 
+                  tripType === 'pickup' 
                     ? 'bg-blue-500 hover:bg-blue-600' 
                     : 'bg-orange-500 hover:bg-orange-600'
                 }`}
               >
-                {selectedTripType === 'pickup' 
+                {tripType === 'pickup' 
                   ? (language === 'ar' ? '🏫 للمدرسة' : '🏫 Pickup')
                   : (language === 'ar' ? '🏠 للمنزل' : '🏠 Drop-off')}
               </Badge>
@@ -678,7 +679,7 @@ export default function SupervisorDashboard() {
                       <div className="flex-1">
                         <p className="font-bold text-lg">{lastScanned}</p>
                         <p className="text-sm text-white/80">
-                          {selectedTripType === 'pickup' 
+                          {tripType === 'pickup' 
                             ? (language === 'ar' ? 'صعد للحافلة' : 'Boarded')
                             : (language === 'ar' ? 'نزل من الحافلة' : 'Dropped off')}
                         </p>
