@@ -14,14 +14,14 @@ import {
   Square,
   AlertTriangle,
   Scan,
-  UserPlus,
   Search,
   Clock,
   ArrowUpFromLine,
   ArrowDownToLine,
-  X,
-  Hand,
-  Loader2
+  UserX,
+  Loader2,
+  ShieldAlert,
+  X
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -33,7 +33,18 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface StudentStatus {
   id: string;
@@ -41,15 +52,9 @@ interface StudentStatus {
   nameAr: string;
   class: string;
   nfcId: string;
-  status: 'waiting' | 'boarded' | 'exited';
+  status: 'waiting' | 'boarded' | 'exited' | 'absent';
   boardTime?: string;
   exitTime?: string;
-}
-
-interface RecentScan {
-  studentName: string;
-  time: string;
-  action: 'board' | 'exit';
 }
 
 type TripType = 'pickup' | 'dropoff';
@@ -57,7 +62,6 @@ type TripType = 'pickup' | 'dropoff';
 // Auto-detect trip type based on time of day
 const getAutoTripType = (): TripType => {
   const hour = new Date().getHours();
-  // Before 12 PM = pickup (going to school), After 12 PM = dropoff (going home)
   return hour < 12 ? 'pickup' : 'dropoff';
 };
 
@@ -70,14 +74,13 @@ export default function SupervisorDashboard() {
   const [isScanning, setIsScanning] = useState(false);
   const [isTripActive, setIsTripActive] = useState(false);
   const [currentTrip, setCurrentTrip] = useState<any>(null);
-  const [recentScans, setRecentScans] = useState<RecentScan[]>([]);
   const [lastScanned, setLastScanned] = useState<string | null>(null);
   const [tripType, setTripType] = useState<TripType>(getAutoTripType());
-  const [showManualDialog, setShowManualDialog] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [showConfirmManual, setShowConfirmManual] = useState(false);
-  const [selectedStudentForManual, setSelectedStudentForManual] = useState<StudentStatus | null>(null);
-  const [processingManual, setProcessingManual] = useState(false);
+  const [processingStudent, setProcessingStudent] = useState<string | null>(null);
+  const [showEndTripWarning, setShowEndTripWarning] = useState(false);
+  const [showAbsentConfirm, setShowAbsentConfirm] = useState(false);
+  const [selectedStudentForAbsent, setSelectedStudentForAbsent] = useState<StudentStatus | null>(null);
   const scanningRef = useRef(false);
 
   useEffect(() => {
@@ -193,7 +196,7 @@ export default function SupervisorDashboard() {
       await nfcService.startScanning(async (nfcData: NFCData) => {
         await handleNfcScan(nfcData);
       });
-      toast.success(language === 'ar' ? 'بدأ المسح المستمر' : 'Continuous scanning started');
+      toast.success(language === 'ar' ? 'بدأ المسح' : 'Scanning started');
     } catch (error) {
       console.error('Error starting NFC scan:', error);
       setIsScanning(false);
@@ -209,120 +212,43 @@ export default function SupervisorDashboard() {
   };
 
   const handleNfcScan = async (nfcData: NFCData) => {
-    try {
-      const student = students.find(s => s.nfcId === nfcData.id);
-      
-      if (!student) {
-        const { data: dbStudent } = await supabase
-          .from('students')
-          .select('*')
-          .eq('nfc_id', nfcData.id)
-          .single();
-
-        if (!dbStudent) {
-          toast.error(language === 'ar' ? 'الطالب غير موجود' : 'Student not found', {
-            duration: 1500
-          });
-          return;
-        }
-      }
-
-      const studentName = student 
-        ? (language === 'ar' ? student.nameAr : student.name)
-        : 'Unknown Student';
-
-      const existingStudent = students.find(s => s.nfcId === nfcData.id);
-      
-      // Determine action based on current status (toggle: waiting→board, boarded→exit)
-      let action: 'board' | 'exit';
-      let newStatus: 'boarded' | 'exited';
-      
-      if (existingStudent?.status === 'exited') {
-        // Already completed both scans
-        toast.info(`${studentName} - ${language === 'ar' ? 'اكتمل التسجيل' : 'Already completed'}`, {
-          duration: 1500,
-          position: 'top-center'
-        });
-        return;
-      } else if (existingStudent?.status === 'boarded') {
-        // Second scan - exit
-        action = 'exit';
-        newStatus = 'exited';
-      } else {
-        // First scan - board
-        action = 'board';
-        newStatus = 'boarded';
-      }
-
-      await supabase.functions.invoke('record-bus-activity', {
-        body: {
-          studentNfcId: nfcData.id,
-          busId: busData?.id,
-          action: action,
-          location: busData?.bus_number || 'Bus',
-          nfc_verified: true,
-          manual_entry: false
-        }
-      });
-
-      const currentTime = new Date().toLocaleTimeString();
-      setStudents(prev => prev.map(s => 
-        s.nfcId === nfcData.id 
-          ? { 
-              ...s, 
-              status: newStatus, 
-              ...(action === 'board' ? { boardTime: currentTime } : { exitTime: currentTime })
-            }
-          : s
-      ));
-
-      setRecentScans(prev => [
-        { studentName, time: currentTime, action },
-        ...prev.slice(0, 9)
-      ]);
-
-      setLastScanned(studentName);
-      setTimeout(() => setLastScanned(null), 2000);
-
-      const actionText = action === 'board' 
-        ? (language === 'ar' ? 'صعد' : 'Boarded')
-        : (language === 'ar' ? 'نزل' : 'Exited');
-
-      toast.success(`✓ ${studentName} - ${actionText}`, {
-        duration: 1500,
-        position: 'top-center'
-      });
-
-    } catch (error) {
-      console.error('Error processing scan:', error);
+    const student = students.find(s => s.nfcId === nfcData.id);
+    
+    if (!student) {
+      toast.error(language === 'ar' ? 'الطالب غير موجود' : 'Student not found');
+      return;
     }
+
+    await processStudentAction(student);
   };
 
-  const confirmManualAttendance = async () => {
-    if (!selectedStudentForManual) return;
+  const processStudentAction = async (student: StudentStatus, action?: 'board' | 'exit' | 'absent') => {
+    if (processingStudent) return;
     
-    setProcessingManual(true);
-    
+    setProcessingStudent(student.id);
+
     try {
-      const studentName = language === 'ar' ? selectedStudentForManual.nameAr : selectedStudentForManual.name;
-      
       // Determine action based on current status
-      let action: 'board' | 'exit';
+      let finalAction: 'board' | 'exit' = action as any;
       let newStatus: 'boarded' | 'exited';
-      
-      if (selectedStudentForManual.status === 'boarded') {
-        action = 'exit';
-        newStatus = 'exited';
+
+      if (!finalAction) {
+        if (student.status === 'boarded') {
+          finalAction = 'exit';
+          newStatus = 'exited';
+        } else {
+          finalAction = 'board';
+          newStatus = 'boarded';
+        }
       } else {
-        action = 'board';
-        newStatus = 'boarded';
+        newStatus = finalAction === 'board' ? 'boarded' : 'exited';
       }
 
       const { data, error } = await supabase.functions.invoke('record-bus-activity', {
         body: {
-          studentId: selectedStudentForManual.id,
+          studentId: student.id,
           busId: busData?.id,
-          action: action,
+          action: finalAction,
           location: busData?.bus_number || 'Bus',
           nfc_verified: false,
           manual_entry: true,
@@ -331,61 +257,78 @@ export default function SupervisorDashboard() {
       });
 
       if (error || data?.error) {
-        const errorMsg = data?.error || error?.message || 'Failed to record attendance';
-        console.error('Manual attendance error:', errorMsg);
-        toast.error(errorMsg);
-        setProcessingManual(false);
-        setShowConfirmManual(false);
-        setSelectedStudentForManual(null);
-        // Refresh student list to get correct statuses
-        if (busData?.id) {
-          loadBusStudents(busData.id);
-        }
-        return;
+        throw new Error(data?.error || 'Failed to record');
       }
 
-      const currentTime = new Date().toLocaleTimeString();
+      const currentTime = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+      const studentName = language === 'ar' ? student.nameAr : student.name;
+      
       setStudents(prev => prev.map(s => 
-        s.id === selectedStudentForManual.id 
+        s.id === student.id 
           ? { 
               ...s, 
               status: newStatus, 
-              ...(action === 'board' ? { boardTime: currentTime } : { exitTime: currentTime })
+              ...(finalAction === 'board' ? { boardTime: currentTime } : { exitTime: currentTime })
             }
           : s
       ));
 
-      setRecentScans(prev => [
-        { studentName, time: currentTime, action },
-        ...prev.slice(0, 9)
-      ]);
-
       setLastScanned(studentName);
       setTimeout(() => setLastScanned(null), 2000);
 
-      const actionText = action === 'board' 
-        ? (language === 'ar' ? 'صعد' : 'Boarded')
-        : (language === 'ar' ? 'نزل' : 'Exited');
+      const actionText = finalAction === 'board' 
+        ? (language === 'ar' ? '✓ صعد' : '✓ Boarded')
+        : (language === 'ar' ? '✓ نزل' : '✓ Exited');
 
-      toast.success(`✓ ${studentName} - ${actionText}`, {
-        duration: 2000,
-        position: 'top-center'
-      });
+      toast.success(`${studentName} - ${actionText}`, { duration: 1500 });
 
-      setShowConfirmManual(false);
-      setSelectedStudentForManual(null);
     } catch (error) {
-      console.error('Error recording manual attendance:', error);
-      toast.error(language === 'ar' ? 'فشل تسجيل الحضور' : 'Failed to record attendance');
+      console.error('Error processing action:', error);
+      toast.error(language === 'ar' ? 'فشل التسجيل' : 'Failed to record');
+      // Refresh to get correct state
+      if (busData?.id) loadBusStudents(busData.id);
     } finally {
-      setProcessingManual(false);
+      setProcessingStudent(null);
     }
   };
 
-  const initiateManualAttendance = (student: StudentStatus) => {
-    setSelectedStudentForManual(student);
-    setShowConfirmManual(true);
-    setShowManualDialog(false);
+  const markStudentAbsent = async () => {
+    if (!selectedStudentForAbsent) return;
+    
+    setProcessingStudent(selectedStudentForAbsent.id);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('mark-student-absent', {
+        body: {
+          studentId: selectedStudentForAbsent.id,
+          busId: busData?.id,
+          tripType: tripType,
+          supervisorId: user?.id,
+        }
+      });
+
+      if (error || data?.error) {
+        throw new Error(data?.error || 'Failed to mark absent');
+      }
+
+      const studentName = language === 'ar' ? selectedStudentForAbsent.nameAr : selectedStudentForAbsent.name;
+      
+      setStudents(prev => prev.map(s => 
+        s.id === selectedStudentForAbsent.id 
+          ? { ...s, status: 'absent' }
+          : s
+      ));
+
+      toast.warning(`${studentName} - ${language === 'ar' ? 'غائب' : 'Marked absent'}`, { duration: 2000 });
+
+    } catch (error) {
+      console.error('Error marking absent:', error);
+      toast.error(language === 'ar' ? 'فشل تسجيل الغياب' : 'Failed to mark absent');
+    } finally {
+      setProcessingStudent(null);
+      setShowAbsentConfirm(false);
+      setSelectedStudentForAbsent(null);
+    }
   };
 
   const startTrip = async (type: TripType) => {
@@ -411,8 +354,7 @@ export default function SupervisorDashboard() {
       setTripType(type);
       
       // Reset students status for new trip
-      setStudents(prev => prev.map(s => ({ ...s, status: 'waiting', scanTime: undefined })));
-      setRecentScans([]);
+      setStudents(prev => prev.map(s => ({ ...s, status: 'waiting', boardTime: undefined, exitTime: undefined })));
       
       toast.success(language === 'ar' 
         ? (type === 'pickup' ? 'بدأت رحلة التوصيل للمدرسة' : 'بدأت رحلة العودة للمنزل')
@@ -420,6 +362,15 @@ export default function SupervisorDashboard() {
     } catch (error) {
       console.error('Error starting trip:', error);
       toast.error(language === 'ar' ? 'فشل بدء الرحلة' : 'Failed to start trip');
+    }
+  };
+
+  const attemptEndTrip = () => {
+    const studentsOnBus = students.filter(s => s.status === 'boarded');
+    if (studentsOnBus.length > 0) {
+      setShowEndTripWarning(true);
+    } else {
+      endTrip();
     }
   };
 
@@ -439,6 +390,7 @@ export default function SupervisorDashboard() {
       setIsTripActive(false);
       setTripType(getAutoTripType());
       stopScanning();
+      setShowEndTripWarning(false);
       toast.success(language === 'ar' ? 'انتهت الرحلة' : 'Trip ended');
     } catch (error) {
       console.error('Error ending trip:', error);
@@ -456,6 +408,7 @@ export default function SupervisorDashboard() {
   const waitingStudents = filteredStudents.filter(s => s.status === 'waiting');
   const boardedStudents = filteredStudents.filter(s => s.status === 'boarded');
   const exitedStudents = filteredStudents.filter(s => s.status === 'exited');
+  const absentStudents = filteredStudents.filter(s => s.status === 'absent');
 
   if (loading) {
     return <LogoLoader fullScreen />;
@@ -479,592 +432,451 @@ export default function SupervisorDashboard() {
     );
   }
 
-  const completedCount = students.filter(s => s.status === 'exited').length;
-  const onBusCount = students.filter(s => s.status === 'boarded').length;
+  const completedCount = exitedStudents.length + absentStudents.length;
+  const onBusCount = boardedStudents.length;
   const totalStudents = students.length;
-  const progressPercentage = totalStudents > 0 ? (completedCount / totalStudents) * 100 : 0;
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b">
-        <div className="p-4">
+      {/* Compact Header */}
+      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur border-b">
+        <div className="p-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                <Bus className="h-6 w-6 text-primary" />
+            <div className="flex items-center gap-2">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                <Bus className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <h1 className="text-lg font-bold">{busData.bus_number}</h1>
-                <p className="text-sm text-muted-foreground">
-                  {language === 'ar' ? 'لوحة المشرف' : 'Supervisor'}
-                </p>
+                <h1 className="font-bold">{busData.bus_number}</h1>
+                {isTripActive && (
+                  <Badge 
+                    variant="outline"
+                    className={`text-[10px] ${
+                      tripType === 'pickup' 
+                        ? 'bg-blue-500/10 text-blue-600 border-blue-300' 
+                        : 'bg-orange-500/10 text-orange-600 border-orange-300'
+                    }`}
+                  >
+                    {tripType === 'pickup' 
+                      ? (language === 'ar' ? '🏫 للمدرسة' : '🏫 To School')
+                      : (language === 'ar' ? '🏠 للمنزل' : '🏠 To Home')}
+                  </Badge>
+                )}
               </div>
             </div>
+            
+            {/* Quick Stats */}
             {isTripActive && (
-              <Badge 
-                className={`px-3 py-1.5 ${
-                  tripType === 'pickup' 
-                    ? 'bg-blue-500 hover:bg-blue-600' 
-                    : 'bg-orange-500 hover:bg-orange-600'
-                }`}
-              >
-                {tripType === 'pickup' 
-                  ? (language === 'ar' ? '🏫 للمدرسة' : '🏫 Pickup')
-                  : (language === 'ar' ? '🏠 للمنزل' : '🏠 Drop-off')}
-              </Badge>
+              <div className="flex gap-2">
+                <div className="text-center px-2">
+                  <p className="text-lg font-bold text-green-600">{onBusCount}</p>
+                  <p className="text-[9px] text-muted-foreground">{language === 'ar' ? 'على متن' : 'On Bus'}</p>
+                </div>
+                <div className="text-center px-2">
+                  <p className="text-lg font-bold text-muted-foreground">{waitingStudents.length}</p>
+                  <p className="text-[9px] text-muted-foreground">{language === 'ar' ? 'انتظار' : 'Waiting'}</p>
+                </div>
+              </div>
             )}
           </div>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="p-4 space-y-4 pb-32">
-        {/* Progress Card */}
-        <Card className="overflow-hidden">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-3">
-              <div>
-                <p className="text-sm text-muted-foreground">
-                  {language === 'ar' ? 'اكتملوا' : 'Completed'}
-                </p>
-                <p className="text-2xl font-bold">
-                  {completedCount} / {totalStudents}
-                </p>
-              </div>
-              <div className="flex gap-4 text-center">
-                <div>
-                  <p className="text-lg font-bold text-green-600">{onBusCount}</p>
-                  <p className="text-[10px] text-muted-foreground">
-                    {language === 'ar' ? 'على متن' : 'On Bus'}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-lg font-bold text-muted-foreground">{waitingStudents.length}</p>
-                  <p className="text-[10px] text-muted-foreground">
-                    {language === 'ar' ? 'انتظار' : 'Waiting'}
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div className="w-full h-3 bg-muted rounded-full overflow-hidden flex">
-              <motion.div 
-                className="h-full bg-blue-500"
-                initial={{ width: 0 }}
-                animate={{ width: `${progressPercentage}%` }}
-                transition={{ duration: 0.5 }}
-              />
-              <motion.div 
-                className="h-full bg-green-500"
-                initial={{ width: 0 }}
-                animate={{ width: `${totalStudents > 0 ? (onBusCount / totalStudents) * 100 : 0}%` }}
-                transition={{ duration: 0.5 }}
-              />
-            </div>
-            <div className="flex justify-between mt-2 text-[10px] text-muted-foreground">
-              <span className="flex items-center gap-1">
-                <span className="w-2 h-2 rounded-full bg-blue-500"></span>
-                {language === 'ar' ? 'اكتمل' : 'Done'}
-              </span>
-              <span className="flex items-center gap-1">
-                <span className="w-2 h-2 rounded-full bg-green-500"></span>
-                {language === 'ar' ? 'على متن' : 'On Bus'}
-              </span>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Last Scanned Popup */}
+      <AnimatePresence>
+        {lastScanned && (
+          <motion.div
+            initial={{ opacity: 0, y: -50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -50 }}
+            className="fixed top-16 left-4 right-4 z-50"
+          >
+            <Card className="bg-green-500 border-green-600 text-white shadow-xl">
+              <CardContent className="p-3 flex items-center gap-3">
+                <CheckCircle className="h-8 w-8" />
+                <p className="font-bold text-lg">{lastScanned}</p>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-        {/* Trip Selection or Active Trip */}
+      {/* Main Content */}
+      <div className="p-4 space-y-4 pb-28">
+        
+        {/* Trip Selection */}
         {!isTripActive ? (
           <Card className="border-2 border-dashed">
             <CardContent className="p-6">
               <div className="text-center mb-6">
                 <Clock className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
                 <h3 className="font-semibold text-lg">
-                  {language === 'ar' ? 'ابدأ رحلة جديدة' : 'Start a New Trip'}
+                  {language === 'ar' ? 'ابدأ رحلة جديدة' : 'Start Trip'}
                 </h3>
-                <p className="text-sm text-muted-foreground">
-                  {language === 'ar' ? 'اختر نوع الرحلة للبدء' : 'Select trip type to begin'}
-                </p>
               </div>
               
               <div className="grid grid-cols-2 gap-3">
                 <Button 
                   size="lg" 
-                  className="h-24 flex-col gap-2 bg-blue-500 hover:bg-blue-600"
+                  className="h-20 flex-col gap-2 bg-blue-500 hover:bg-blue-600"
                   onClick={() => startTrip('pickup')}
                 >
-                  <ArrowUpFromLine className="h-8 w-8" />
-                  <span className="text-sm font-medium">
-                    {language === 'ar' ? 'توصيل للمدرسة' : 'Pickup'}
-                  </span>
+                  <ArrowUpFromLine className="h-6 w-6" />
+                  <span className="text-sm">{language === 'ar' ? 'للمدرسة' : 'To School'}</span>
                 </Button>
                 <Button 
                   size="lg" 
-                  className="h-24 flex-col gap-2 bg-orange-500 hover:bg-orange-600"
+                  className="h-20 flex-col gap-2 bg-orange-500 hover:bg-orange-600"
                   onClick={() => startTrip('dropoff')}
                 >
-                  <ArrowDownToLine className="h-8 w-8" />
-                  <span className="text-sm font-medium">
-                    {language === 'ar' ? 'توصيل للمنزل' : 'Drop-off'}
-                  </span>
+                  <ArrowDownToLine className="h-6 w-6" />
+                  <span className="text-sm">{language === 'ar' ? 'للمنزل' : 'To Home'}</span>
                 </Button>
               </div>
             </CardContent>
           </Card>
         ) : (
           <>
-            {/* Scanning Status */}
-            <AnimatePresence mode="wait">
-              {isScanning ? (
-                <motion.div
-                  key="scanning"
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
+            {/* NFC Scanner Button */}
+            <Card className={`transition-all ${isScanning ? 'border-primary border-2 bg-primary/5' : ''}`}>
+              <CardContent className="p-4">
+                <Button 
+                  size="lg" 
+                  className={`w-full h-16 text-lg ${isScanning ? 'bg-primary' : ''}`}
+                  onClick={isScanning ? stopScanning : startContinuousScanning}
                 >
-                  <Card className="border-2 border-primary bg-primary/5">
-                    <CardContent className="p-6 text-center">
+                  {isScanning ? (
+                    <>
                       <motion.div
-                        animate={{ scale: [1, 1.1, 1] }}
-                        transition={{ duration: 1.5, repeat: Infinity }}
-                        className="w-20 h-20 mx-auto rounded-full bg-primary/20 flex items-center justify-center mb-4"
+                        animate={{ scale: [1, 1.2, 1] }}
+                        transition={{ duration: 1, repeat: Infinity }}
                       >
-                        <Scan className="h-10 w-10 text-primary" />
+                        <Scan className="mr-3 h-6 w-6" />
                       </motion.div>
-                      <p className="font-semibold text-lg">
-                        {language === 'ar' ? 'جاري المسح...' : 'Scanning...'}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        {language === 'ar' ? 'ضع البطاقة بالقرب من الجهاز' : 'Hold card near device'}
-                      </p>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="not-scanning"
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                >
-                  <Card className="border-dashed">
-                    <CardContent className="p-6 text-center">
-                      <div className="w-20 h-20 mx-auto rounded-full bg-muted flex items-center justify-center mb-4">
-                        <Scan className="h-10 w-10 text-muted-foreground" />
-                      </div>
-                      <p className="font-medium text-muted-foreground">
-                        {language === 'ar' ? 'اضغط لبدء المسح' : 'Tap to start scanning'}
-                      </p>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                      {language === 'ar' ? 'جاري المسح... اضغط للإيقاف' : 'Scanning... Tap to Stop'}
+                    </>
+                  ) : (
+                    <>
+                      <Scan className="mr-3 h-6 w-6" />
+                      {language === 'ar' ? 'اضغط لبدء المسح' : 'Tap to Start NFC Scan'}
+                    </>
+                  )}
+                </Button>
+              </CardContent>
+            </Card>
 
-            {/* Last Scanned Popup */}
-            <AnimatePresence>
-              {lastScanned && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20, scale: 0.9 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -20, scale: 0.9 }}
-                  className="fixed top-24 left-4 right-4 z-50"
-                >
-                  <Card className="bg-green-500 border-green-600 text-white shadow-lg">
-                    <CardContent className="p-4 flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">
-                        <CheckCircle className="h-6 w-6" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-bold text-lg">{lastScanned}</p>
-                        <p className="text-sm text-white/80">
-                          {tripType === 'pickup' 
-                            ? (language === 'ar' ? 'صعد للحافلة' : 'Boarded')
-                            : (language === 'ar' ? 'نزل من الحافلة' : 'Dropped off')}
+            {/* Students List */}
+            <Card>
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Users className="h-5 w-5" />
+                    {language === 'ar' ? 'الطلاب' : 'Students'} ({students.length})
+                  </CardTitle>
+                </div>
+                <div className="relative mt-2">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input 
+                    placeholder={language === 'ar' ? 'بحث...' : 'Search...'}
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10 h-9"
+                  />
+                </div>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <ScrollArea className="h-[400px]">
+                  <div className="space-y-2">
+                    
+                    {/* On Bus - Need to Exit */}
+                    {boardedStudents.length > 0 && (
+                      <div className="mb-3">
+                        <p className="text-xs font-medium text-green-600 mb-2 flex items-center gap-1">
+                          <Bus className="h-3 w-3" />
+                          {language === 'ar' ? 'على متن الحافلة' : 'On Bus'} ({boardedStudents.length})
                         </p>
+                        {boardedStudents.map((student) => (
+                          <StudentRow 
+                            key={student.id}
+                            student={student}
+                            language={language}
+                            onCheckOut={() => processStudentAction(student, 'exit')}
+                            isProcessing={processingStudent === student.id}
+                            variant="onbus"
+                          />
+                        ))}
                       </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* Action Buttons */}
-            <div className="grid grid-cols-2 gap-3">
-              {!isScanning ? (
-                <Button 
-                  size="lg" 
-                  className="h-14"
-                  onClick={startContinuousScanning}
-                >
-                  <Scan className="mr-2 h-5 w-5" />
-                  {language === 'ar' ? 'بدء المسح' : 'Start Scan'}
-                </Button>
-              ) : (
-                <Button 
-                  size="lg" 
-                  variant="secondary"
-                  className="h-14"
-                  onClick={stopScanning}
-                >
-                  <Square className="mr-2 h-5 w-5" />
-                  {language === 'ar' ? 'إيقاف' : 'Stop'}
-                </Button>
-              )}
-              
-              <Button 
-                size="lg" 
-                variant="outline"
-                className="h-14"
-                onClick={() => setShowManualDialog(true)}
-              >
-                <Hand className="mr-2 h-5 w-5" />
-                {language === 'ar' ? 'يدوي' : 'Manual'}
-              </Button>
-            </div>
-          </>
-        )}
-
-        {/* Students List */}
-        <Card>
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Users className="h-5 w-5" />
-                {language === 'ar' ? 'الطلاب' : 'Students'}
-              </CardTitle>
-              <div className="flex gap-1 flex-wrap">
-                <Badge variant="outline" className="bg-blue-500/10 text-blue-600 border-blue-200 text-[10px]">
-                  {exitedStudents.length} {language === 'ar' ? 'اكتمل' : 'done'}
-                </Badge>
-                <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-200 text-[10px]">
-                  {boardedStudents.length} {language === 'ar' ? 'على متن' : 'on bus'}
-                </Badge>
-                <Badge variant="outline" className="text-[10px]">
-                  {waitingStudents.length} {language === 'ar' ? 'انتظار' : 'waiting'}
-                </Badge>
-              </div>
-            </div>
-            
-            {/* Search */}
-            <div className="relative mt-3">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input 
-                placeholder={language === 'ar' ? 'بحث عن طالب...' : 'Search student...'}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <ScrollArea className="h-[300px]">
-              <div className="space-y-2">
-                {/* Exited Students (completed) */}
-                {exitedStudents.map((student) => (
-                  <motion.div
-                    key={student.id}
-                    layout
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    className="p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center gap-3"
-                  >
-                    <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center">
-                      <CheckCircle className="h-5 w-5 text-white" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">
-                        {language === 'ar' ? student.nameAr : student.name}
-                      </p>
-                      <p className="text-xs text-muted-foreground">{student.class}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-xs text-blue-600">
-                        {language === 'ar' ? 'صعود' : 'In'}: {student.boardTime}
-                      </p>
-                      <p className="text-xs text-blue-600 font-medium">
-                        {language === 'ar' ? 'نزول' : 'Out'}: {student.exitTime}
-                      </p>
-                    </div>
-                  </motion.div>
-                ))}
-
-                {/* Boarded Students (on bus) */}
-                {boardedStudents.map((student) => (
-                  <motion.div
-                    key={student.id}
-                    layout
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    className="p-3 rounded-xl bg-green-500/10 border border-green-500/20 flex items-center gap-3"
-                  >
-                    <div className="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center">
-                      <Bus className="h-5 w-5 text-white" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">
-                        {language === 'ar' ? student.nameAr : student.name}
-                      </p>
-                      <p className="text-xs text-muted-foreground">{student.class}</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="text-right">
-                        <p className="text-xs text-green-600 font-medium">{student.boardTime}</p>
-                        <Badge variant="outline" className="text-[10px] bg-green-500/20 text-green-700 border-green-300">
-                          {language === 'ar' ? 'على متن' : 'On Bus'}
-                        </Badge>
-                      </div>
-                      {isTripActive && (
-                        <Button 
-                          size="sm" 
-                          variant="ghost"
-                          className="h-8 px-2"
-                          onClick={() => initiateManualAttendance(student)}
-                        >
-                          <Hand className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                  </motion.div>
-                ))}
-                
-                {/* Waiting Students */}
-                {waitingStudents.map((student) => (
-                  <motion.div
-                    key={student.id}
-                    layout
-                    className="p-3 rounded-xl bg-muted/50 border flex items-center gap-3"
-                  >
-                    <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
-                      <Clock className="h-5 w-5 text-muted-foreground" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">
-                        {language === 'ar' ? student.nameAr : student.name}
-                      </p>
-                      <p className="text-xs text-muted-foreground">{student.class}</p>
-                    </div>
-                    {isTripActive && (
-                      <Button 
-                        size="sm" 
-                        variant="ghost"
-                        className="h-8 px-2"
-                        onClick={() => initiateManualAttendance(student)}
-                      >
-                        <Hand className="h-4 w-4" />
-                      </Button>
                     )}
-                  </motion.div>
-                ))}
-                
-                {filteredStudents.length === 0 && (
-                  <div className="text-center py-8 text-muted-foreground">
-                    {searchQuery 
-                      ? (language === 'ar' ? 'لا توجد نتائج' : 'No results found')
-                      : (language === 'ar' ? 'لا يوجد طلاب' : 'No students')}
-                  </div>
-                )}
-              </div>
-            </ScrollArea>
-          </CardContent>
-        </Card>
 
-        {/* Recent Scans */}
-        {recentScans.length > 0 && (
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Clock className="h-5 w-5" />
-                {language === 'ar' ? 'آخر المسحات' : 'Recent Scans'}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <div className="space-y-2">
-                {recentScans.slice(0, 5).map((scan, idx) => (
-                  <motion.div
-                    key={idx}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: idx * 0.05 }}
-                    className={`flex items-center justify-between p-2 rounded-lg ${
-                      scan.action === 'board' ? 'bg-green-500/5' : 'bg-blue-500/5'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      {scan.action === 'board' ? (
-                        <ArrowUpFromLine className="h-4 w-4 text-green-500" />
-                      ) : (
-                        <ArrowDownToLine className="h-4 w-4 text-blue-500" />
-                      )}
-                      <span className="text-sm font-medium">{scan.studentName}</span>
-                      <Badge variant="outline" className={`text-[10px] ${
-                        scan.action === 'board' 
-                          ? 'bg-green-500/10 text-green-600' 
-                          : 'bg-blue-500/10 text-blue-600'
-                      }`}>
-                        {scan.action === 'board' 
-                          ? (language === 'ar' ? 'صعود' : 'In')
-                          : (language === 'ar' ? 'نزول' : 'Out')}
-                      </Badge>
-                    </div>
-                    <span className="text-xs text-muted-foreground">{scan.time}</span>
-                  </motion.div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                    {/* Waiting - Need to Board or Mark Absent */}
+                    {waitingStudents.length > 0 && (
+                      <div className="mb-3">
+                        <p className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          {language === 'ar' ? 'في انتظار' : 'Waiting'} ({waitingStudents.length})
+                        </p>
+                        {waitingStudents.map((student) => (
+                          <StudentRow 
+                            key={student.id}
+                            student={student}
+                            language={language}
+                            onCheckIn={() => processStudentAction(student, 'board')}
+                            onMarkAbsent={() => {
+                              setSelectedStudentForAbsent(student);
+                              setShowAbsentConfirm(true);
+                            }}
+                            isProcessing={processingStudent === student.id}
+                            variant="waiting"
+                          />
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Completed */}
+                    {exitedStudents.length > 0 && (
+                      <div className="mb-3">
+                        <p className="text-xs font-medium text-blue-600 mb-2 flex items-center gap-1">
+                          <CheckCircle className="h-3 w-3" />
+                          {language === 'ar' ? 'اكتمل' : 'Completed'} ({exitedStudents.length})
+                        </p>
+                        {exitedStudents.map((student) => (
+                          <StudentRow 
+                            key={student.id}
+                            student={student}
+                            language={language}
+                            variant="completed"
+                          />
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Absent */}
+                    {absentStudents.length > 0 && (
+                      <div className="mb-3">
+                        <p className="text-xs font-medium text-red-600 mb-2 flex items-center gap-1">
+                          <UserX className="h-3 w-3" />
+                          {language === 'ar' ? 'غائب' : 'Absent'} ({absentStudents.length})
+                        </p>
+                        {absentStudents.map((student) => (
+                          <StudentRow 
+                            key={student.id}
+                            student={student}
+                            language={language}
+                            variant="absent"
+                          />
+                        ))}
+                      </div>
+                    )}
+
+                    {filteredStudents.length === 0 && (
+                      <div className="text-center py-8 text-muted-foreground">
+                        {language === 'ar' ? 'لا توجد نتائج' : 'No results'}
+                      </div>
+                    )}
+                  </div>
+                </ScrollArea>
+              </CardContent>
+            </Card>
+          </>
         )}
       </div>
 
       {/* Bottom Action Bar */}
       {isTripActive && (
         <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/95 backdrop-blur border-t safe-area-inset-bottom">
-          <div className="flex gap-3">
-            <Button 
-              size="lg" 
-              variant="destructive" 
-              className="flex-1 h-14"
-              onClick={endTrip}
-            >
-              <Square className="mr-2 h-5 w-5" />
-              {language === 'ar' ? 'إنهاء الرحلة' : 'End Trip'}
-            </Button>
-            <Button 
-              size="lg" 
-              variant="outline" 
-              className="h-14 px-4"
-              onClick={() => toast.info(language === 'ar' ? 'جاري الإبلاغ...' : 'Reporting...')}
-            >
-              <AlertTriangle className="h-5 w-5 text-destructive" />
-            </Button>
-          </div>
+          <Button 
+            size="lg" 
+            variant={onBusCount > 0 ? "outline" : "destructive"}
+            className="w-full h-14"
+            onClick={attemptEndTrip}
+          >
+            <Square className="mr-2 h-5 w-5" />
+            {language === 'ar' ? 'إنهاء الرحلة' : 'End Trip'}
+            {onBusCount > 0 && (
+              <Badge variant="secondary" className="ml-2">
+                {onBusCount} {language === 'ar' ? 'على متن' : 'still on bus'}
+              </Badge>
+            )}
+          </Button>
         </div>
       )}
 
-      {/* Manual Attendance Dialog */}
-      <Dialog open={showManualDialog} onOpenChange={setShowManualDialog}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <UserPlus className="h-5 w-5" />
-              {language === 'ar' ? 'تسجيل حضور يدوي' : 'Manual Attendance'}
-            </DialogTitle>
-          </DialogHeader>
-          
-          <div className="space-y-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input 
-                placeholder={language === 'ar' ? 'بحث عن طالب...' : 'Search student...'}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            
-            <ScrollArea className="h-[300px]">
-              <div className="space-y-2">
-                {waitingStudents.map((student) => (
-                  <Button
-                    key={student.id}
-                    variant="outline"
-                    className="w-full justify-start h-auto p-3"
-                    onClick={() => initiateManualAttendance(student)}
-                  >
-                    <div className="flex items-center gap-3 w-full">
-                      <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
-                        <Users className="h-5 w-5" />
-                      </div>
-                      <div className="text-left">
-                        <p className="font-medium">
-                          {language === 'ar' ? student.nameAr : student.name}
-                        </p>
-                        <p className="text-xs text-muted-foreground">{student.class}</p>
-                      </div>
-                    </div>
-                  </Button>
-                ))}
-                
-                {waitingStudents.length === 0 && (
-                  <div className="text-center py-8 text-muted-foreground">
-                    {language === 'ar' ? 'جميع الطلاب تم تسجيلهم' : 'All students recorded'}
-                  </div>
-                )}
-              </div>
-            </ScrollArea>
-            
-            <div className="p-3 bg-blue-500/10 rounded-lg border border-blue-500/20">
-              <p className="text-sm text-blue-700">
-                {language === 'ar' 
-                  ? 'ℹ️ استخدم هذا عندما ينسى الطالب بطاقته أو لا تعمل'
-                  : 'ℹ️ Use this when student forgot or has non-working card'}
-              </p>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* End Trip Warning Dialog */}
+      <AlertDialog open={showEndTripWarning} onOpenChange={setShowEndTripWarning}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+              <ShieldAlert className="h-5 w-5" />
+              {language === 'ar' ? 'تحذير!' : 'Warning!'}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-base">
+              {language === 'ar' 
+                ? `لا يزال هناك ${onBusCount} طالب على متن الحافلة. تأكد من نزول جميع الطلاب قبل إنهاء الرحلة.`
+                : `There are still ${onBusCount} students on the bus. Make sure all students have exited before ending the trip.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{language === 'ar' ? 'العودة' : 'Go Back'}</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={endTrip}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {language === 'ar' ? 'إنهاء على أي حال' : 'End Anyway'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
-      {/* Confirm Manual Attendance Dialog */}
-      <Dialog open={showConfirmManual} onOpenChange={setShowConfirmManual}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle className="text-center">
-              {language === 'ar' ? 'تأكيد تسجيل الحضور' : 'Confirm Attendance'}
-            </DialogTitle>
-          </DialogHeader>
-          
-          {selectedStudentForManual && (
-            <div className="space-y-4">
-              <div className="text-center py-4">
-                <div className="w-20 h-20 mx-auto rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                  <Users className="h-10 w-10 text-primary" />
-                </div>
-                <p className="text-xl font-bold">
-                  {language === 'ar' ? selectedStudentForManual.nameAr : selectedStudentForManual.name}
-                </p>
-                <p className="text-muted-foreground">{selectedStudentForManual.class}</p>
-              </div>
-              
-              <div className="p-3 bg-amber-500/10 rounded-lg border border-amber-500/20">
-                <p className="text-sm text-amber-700 text-center">
+      {/* Mark Absent Confirmation */}
+      <AlertDialog open={showAbsentConfirm} onOpenChange={setShowAbsentConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <UserX className="h-5 w-5 text-red-500" />
+              {language === 'ar' ? 'تسجيل غياب' : 'Mark as Absent'}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {selectedStudentForAbsent && (
+                <span className="text-base">
                   {language === 'ar' 
-                    ? '⚠️ سيتم تسجيل الحضور بدون تحقق NFC'
-                    : '⚠️ Attendance will be recorded without NFC verification'}
-                </p>
-              </div>
-              
-              <div className="flex gap-3">
-                <Button 
-                  variant="outline" 
-                  className="flex-1"
-                  onClick={() => {
-                    setShowConfirmManual(false);
-                    setSelectedStudentForManual(null);
-                  }}
-                  disabled={processingManual}
-                >
-                  {language === 'ar' ? 'إلغاء' : 'Cancel'}
-                </Button>
-                <Button 
-                  className="flex-1"
-                  onClick={confirmManualAttendance}
-                  disabled={processingManual}
-                >
-                  {processingManual ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <>
-                      <CheckCircle className="mr-2 h-4 w-4" />
-                      {language === 'ar' ? 'تأكيد' : 'Confirm'}
-                    </>
-                  )}
-                </Button>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+                    ? `هل تريد تسجيل ${selectedStudentForAbsent.nameAr} كغائب؟ سيتم إخطار ولي الأمر.`
+                    : `Mark ${selectedStudentForAbsent.name} as absent? The parent will be notified.`}
+                </span>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setSelectedStudentForAbsent(null)}>
+              {language === 'ar' ? 'إلغاء' : 'Cancel'}
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={markStudentAbsent}
+              className="bg-red-500 hover:bg-red-600"
+              disabled={processingStudent === selectedStudentForAbsent?.id}
+            >
+              {processingStudent === selectedStudentForAbsent?.id ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                language === 'ar' ? 'تأكيد الغياب' : 'Confirm Absent'
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
+  );
+}
+
+// Student Row Component
+interface StudentRowProps {
+  student: StudentStatus;
+  language: string;
+  onCheckIn?: () => void;
+  onCheckOut?: () => void;
+  onMarkAbsent?: () => void;
+  isProcessing?: boolean;
+  variant: 'waiting' | 'onbus' | 'completed' | 'absent';
+}
+
+function StudentRow({ student, language, onCheckIn, onCheckOut, onMarkAbsent, isProcessing, variant }: StudentRowProps) {
+  const getBgColor = () => {
+    switch (variant) {
+      case 'onbus': return 'bg-green-500/10 border-green-500/30';
+      case 'completed': return 'bg-blue-500/10 border-blue-500/30';
+      case 'absent': return 'bg-red-500/10 border-red-500/30';
+      default: return 'bg-muted/50 border-muted';
+    }
+  };
+
+  const getIcon = () => {
+    switch (variant) {
+      case 'onbus': return <Bus className="h-4 w-4 text-green-600" />;
+      case 'completed': return <CheckCircle className="h-4 w-4 text-blue-600" />;
+      case 'absent': return <UserX className="h-4 w-4 text-red-600" />;
+      default: return <Clock className="h-4 w-4 text-muted-foreground" />;
+    }
+  };
+
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className={`p-3 rounded-xl border flex items-center gap-3 mb-2 ${getBgColor()}`}
+    >
+      <div className="w-9 h-9 rounded-full bg-background flex items-center justify-center border">
+        {getIcon()}
+      </div>
+      
+      <div className="flex-1 min-w-0">
+        <p className="font-medium text-sm truncate">
+          {language === 'ar' ? student.nameAr : student.name}
+        </p>
+        <p className="text-[10px] text-muted-foreground">{student.class}</p>
+      </div>
+
+      {/* Action Buttons */}
+      <div className="flex gap-1">
+        {variant === 'waiting' && (
+          <>
+            <Button 
+              size="sm" 
+              className="h-9 px-3 bg-green-500 hover:bg-green-600"
+              onClick={onCheckIn}
+              disabled={isProcessing}
+            >
+              {isProcessing ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <>
+                  <ArrowUpFromLine className="h-4 w-4 mr-1" />
+                  {language === 'ar' ? 'صعود' : 'In'}
+                </>
+              )}
+            </Button>
+            <Button 
+              size="sm" 
+              variant="outline"
+              className="h-9 px-2 text-red-500 border-red-300 hover:bg-red-50"
+              onClick={onMarkAbsent}
+              disabled={isProcessing}
+            >
+              <UserX className="h-4 w-4" />
+            </Button>
+          </>
+        )}
+        
+        {variant === 'onbus' && (
+          <Button 
+            size="sm" 
+            className="h-9 px-3 bg-blue-500 hover:bg-blue-600"
+            onClick={onCheckOut}
+            disabled={isProcessing}
+          >
+            {isProcessing ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <>
+                <ArrowDownToLine className="h-4 w-4 mr-1" />
+                {language === 'ar' ? 'نزول' : 'Out'}
+              </>
+            )}
+          </Button>
+        )}
+
+        {variant === 'completed' && (
+          <div className="text-right text-[10px]">
+            <p className="text-green-600">{student.boardTime}</p>
+            <p className="text-blue-600 font-medium">{student.exitTime}</p>
+          </div>
+        )}
+
+        {variant === 'absent' && (
+          <Badge variant="outline" className="bg-red-500/10 text-red-600 border-red-300 text-[10px]">
+            {language === 'ar' ? 'غائب' : 'Absent'}
+          </Badge>
+        )}
+      </div>
+    </motion.div>
   );
 }
