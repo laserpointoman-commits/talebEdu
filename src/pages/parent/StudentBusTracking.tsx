@@ -10,11 +10,13 @@ import {
   MapPin,
   User,
   Clock,
-  Phone
+  Phone,
+  History
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import LogoLoader from '@/components/LogoLoader';
 import { motion } from 'framer-motion';
+import BoardingHistory from '@/components/tracking/BoardingHistory';
 
 export default function StudentBusTracking() {
   const { studentId } = useParams();
@@ -312,6 +314,15 @@ export default function StudentBusTracking() {
             </CardContent>
           </Card>
         </div>
+      )}
+
+      {/* Boarding History - Past Week */}
+      {studentId && (
+        <BoardingHistory 
+          studentId={studentId} 
+          busId={busAssignment?.bus_id}
+          daysToShow={7}
+        />
       )}
 
       {/* No Assignment */}

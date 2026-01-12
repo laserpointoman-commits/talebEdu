@@ -10,6 +10,7 @@ import { format } from 'date-fns';
 interface BoardingHistoryProps {
   studentId: string;
   busId?: string;
+  daysToShow?: number; // Default 7 days
 }
 
 interface BoardingLog {
@@ -18,9 +19,11 @@ interface BoardingLog {
   location: string;
   timestamp: string;
   bus_id: string;
+  nfc_verified?: boolean;
+  manual_entry?: boolean;
 }
 
-export default function BoardingHistory({ studentId, busId }: BoardingHistoryProps) {
+export default function BoardingHistory({ studentId, busId, daysToShow = 7 }: BoardingHistoryProps) {
   const { language } = useLanguage();
   const [logs, setLogs] = useState<BoardingLog[]>([]);
   const [loading, setLoading] = useState(true);
@@ -41,7 +44,7 @@ export default function BoardingHistory({ studentId, busId }: BoardingHistoryPro
         },
         (payload) => {
           if (payload.new) {
-            setLogs(prev => [payload.new as BoardingLog, ...prev].slice(0, 10));
+            setLogs(prev => [payload.new as BoardingLog, ...prev]);
           }
         }
       )
@@ -50,16 +53,21 @@ export default function BoardingHistory({ studentId, busId }: BoardingHistoryPro
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [studentId]);
+  }, [studentId, daysToShow]);
 
   const loadBoardingHistory = async () => {
     try {
+      // Calculate date range - past X days
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - daysToShow);
+      const startDateStr = startDate.toISOString();
+
       let query = supabase
         .from('bus_boarding_logs')
         .select('*')
         .eq('student_id', studentId)
-        .order('timestamp', { ascending: false })
-        .limit(10);
+        .gte('timestamp', startDateStr)
+        .order('timestamp', { ascending: false });
 
       if (busId) {
         query = query.eq('bus_id', busId);
@@ -75,6 +83,16 @@ export default function BoardingHistory({ studentId, busId }: BoardingHistoryPro
       setLoading(false);
     }
   };
+
+  // Group logs by date
+  const groupedLogs = logs.reduce((acc, log) => {
+    const date = format(new Date(log.timestamp), 'yyyy-MM-dd');
+    if (!acc[date]) {
+      acc[date] = [];
+    }
+    acc[date].push(log);
+    return acc;
+  }, {} as Record<string, BoardingLog[]>);
 
   if (loading) {
     return (
@@ -93,62 +111,98 @@ export default function BoardingHistory({ studentId, busId }: BoardingHistoryPro
     );
   }
 
+  const formatDateHeader = (dateStr: string) => {
+    const date = new Date(dateStr);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    if (format(date, 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd')) {
+      return language === 'ar' ? 'اليوم' : 'Today';
+    }
+    if (format(date, 'yyyy-MM-dd') === format(yesterday, 'yyyy-MM-dd')) {
+      return language === 'ar' ? 'أمس' : 'Yesterday';
+    }
+    return format(date, 'EEEE, MMM dd');
+  };
+
   return (
     <Card>
       <CardHeader>
         <CardTitle className="text-lg flex items-center gap-2">
           <Clock className="h-5 w-5" />
-          {language === 'ar' ? 'سجل الركوب' : 'Boarding History'}
+          {language === 'ar' ? `سجل الركوب (آخر ${daysToShow} أيام)` : `Boarding History (Last ${daysToShow} Days)`}
         </CardTitle>
       </CardHeader>
       <CardContent>
         {logs.length === 0 ? (
           <div className="text-center text-muted-foreground py-8">
-            {language === 'ar' ? 'لا يوجد سجل حتى الآن' : 'No history yet'}
+            {language === 'ar' ? 'لا يوجد سجل خلال هذه الفترة' : 'No records in this period'}
           </div>
         ) : (
-          <ScrollArea className="h-[300px] pr-4">
-            <div className="space-y-4">
-              {logs.map((log) => (
-                <div
-                  key={log.id}
-                  className="flex items-start gap-3 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
-                >
-                  <div
-                    className={`mt-1 p-2 rounded-full ${
-                      log.action === 'board'
-                        ? 'bg-green-500/10 text-green-500'
-                        : 'bg-orange-500/10 text-orange-500'
-                    }`}
-                  >
-                    {log.action === 'board' ? (
-                      <LogIn className="h-4 w-4" />
-                    ) : (
-                      <LogOut className="h-4 w-4" />
-                    )}
-                  </div>
-                  
-                  <div className="flex-1 space-y-1">
-                    <div className="flex items-center justify-between">
-                      <Badge
-                        variant={log.action === 'board' ? 'default' : 'secondary'}
-                        className="text-xs"
+          <ScrollArea className="h-[400px] pr-4">
+            <div className="space-y-6">
+              {Object.entries(groupedLogs).map(([date, dayLogs]) => (
+                <div key={date}>
+                  <h4 className="text-sm font-semibold text-muted-foreground mb-3 sticky top-0 bg-card py-1">
+                    {formatDateHeader(date)}
+                  </h4>
+                  <div className="space-y-3">
+                    {dayLogs.map((log) => (
+                      <div
+                        key={log.id}
+                        className="flex items-start gap-3 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
                       >
-                        {log.action === 'board'
-                          ? language === 'ar' ? 'صعود' : 'Boarded'
-                          : language === 'ar' ? 'نزول' : 'Alighted'}
-                      </Badge>
-                      <span className="text-xs text-muted-foreground">
-                        {format(new Date(log.timestamp), 'MMM dd, h:mm a')}
-                      </span>
-                    </div>
-                    
-                    {log.location && (
-                      <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                        <MapPin className="h-3 w-3" />
-                        {log.location}
+                        <div
+                          className={`mt-1 p-2 rounded-full ${
+                            log.action === 'board'
+                              ? 'bg-green-500/10 text-green-500'
+                              : 'bg-orange-500/10 text-orange-500'
+                          }`}
+                        >
+                          {log.action === 'board' ? (
+                            <LogIn className="h-4 w-4" />
+                          ) : (
+                            <LogOut className="h-4 w-4" />
+                          )}
+                        </div>
+                        
+                        <div className="flex-1 space-y-1">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <Badge
+                                variant={log.action === 'board' ? 'default' : 'secondary'}
+                                className="text-xs"
+                              >
+                                {log.action === 'board'
+                                  ? language === 'ar' ? 'صعود' : 'Boarded'
+                                  : language === 'ar' ? 'نزول' : 'Alighted'}
+                              </Badge>
+                              {log.nfc_verified && (
+                                <Badge variant="outline" className="text-xs">
+                                  NFC
+                                </Badge>
+                              )}
+                              {log.manual_entry && (
+                                <Badge variant="outline" className="text-xs text-amber-600">
+                                  {language === 'ar' ? 'يدوي' : 'Manual'}
+                                </Badge>
+                              )}
+                            </div>
+                            <span className="text-xs text-muted-foreground">
+                              {format(new Date(log.timestamp), 'h:mm a')}
+                            </span>
+                          </div>
+                          
+                          {log.location && (
+                            <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                              <MapPin className="h-3 w-3" />
+                              {log.location}
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    )}
+                    ))}
                   </div>
                 </div>
               ))}
