@@ -113,7 +113,7 @@ export default function BottomNavigation() {
     <div 
       className="fixed bottom-0 left-0 right-0 z-50 lg:hidden"
       style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
-      dir={dir}
+      dir="ltr"
     >
       {/* Background blur layer */}
       <div className="absolute inset-0 bg-background/80 backdrop-blur-xl border-t border-border/40" />
