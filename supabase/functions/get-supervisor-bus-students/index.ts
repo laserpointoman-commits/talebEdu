@@ -129,10 +129,11 @@ serve(async (req) => {
 
     const students: StudentStatus[] = (studentsData ?? []).map((s) => {
       const latestLog = logs?.find((l) => l.student_id === s.id);
-      const status =
-        latestLog?.action === "board"
+      // Database stores 'boarded' and 'exited' (not 'board'/'exit')
+      const status: "waiting" | "boarded" | "exited" =
+        latestLog?.action === "boarded"
           ? "boarded"
-          : latestLog?.action === "exit"
+          : latestLog?.action === "exited"
             ? "exited"
             : "waiting";
 
