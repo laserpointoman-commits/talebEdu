@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,7 +9,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { User, Mail, Phone, MapPin, Calendar, Edit, Save, X, Camera, Shield, Key, Eye, EyeOff } from 'lucide-react';
+import { User, Mail, Phone, MapPin, Calendar, Edit, Save, X, Camera, Shield, Key, Eye, EyeOff, CreditCard } from 'lucide-react';
+import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 
 const Profile = () => {
   const { user, profile } = useAuth();
@@ -36,6 +37,34 @@ const Profile = () => {
     new: false,
     confirm: false
   });
+  
+  // NFC PIN state
+  const [nfcPin, setNfcPin] = useState('');
+  const [confirmNfcPin, setConfirmNfcPin] = useState('');
+  const [hasPinSet, setHasPinSet] = useState(false);
+  const [pinLoading, setPinLoading] = useState(false);
+  const [isStaff, setIsStaff] = useState(false);
+
+  // Check if user is staff and has PIN set
+  useEffect(() => {
+    const checkPinStatus = async () => {
+      if (!user?.email) return;
+      
+      const staffRoles = ['admin', 'teacher', 'driver', 'supervisor', 'finance', 'canteen', 'school_attendance'];
+      setIsStaff(staffRoles.includes(profile?.role || ''));
+      
+      if (staffRoles.includes(profile?.role || '')) {
+        const { data } = await supabase
+          .from('profiles')
+          .select('nfc_pin_hash')
+          .eq('id', user.id)
+          .single();
+        
+        setHasPinSet(!!data?.nfc_pin_hash);
+      }
+    };
+    checkPinStatus();
+  }, [user, profile]);
 
   const handleSave = () => {
     setIsEditing(false);
@@ -449,6 +478,85 @@ const Profile = () => {
                       {language === 'ar' ? 'تغيير كلمة المرور' : 'Change Password'}
                     </Button>
                   </div>
+
+                  {/* NFC PIN Section - Staff Only */}
+                  {isStaff && (
+                    <div className="mt-8 pt-6 border-t space-y-4">
+                      <div className="flex items-center gap-2 mb-4">
+                        <CreditCard className="h-5 w-5 text-primary" />
+                        <h3 className="text-lg font-semibold">
+                          {language === 'ar' ? 'رمز PIN للبطاقة' : 'NFC Card PIN'}
+                        </h3>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        {hasPinSet 
+                          ? (language === 'ar' ? 'لديك رمز PIN مُعد. يمكنك تغييره أدناه.' : 'You have a PIN set. You can change it below.')
+                          : (language === 'ar' ? 'أنشئ رمز PIN للدخول السريع ببطاقة NFC' : 'Create a PIN for quick NFC card login')
+                        }
+                      </p>
+                      <div className="flex flex-col items-center space-y-4">
+                        <div className="space-y-2 w-full">
+                          <Label>{language === 'ar' ? 'رمز PIN جديد' : 'New PIN'}</Label>
+                          <div className="flex justify-center">
+                            <InputOTP maxLength={4} value={nfcPin} onChange={setNfcPin}>
+                              <InputOTPGroup>
+                                <InputOTPSlot index={0} className="w-12 h-12 text-xl" />
+                                <InputOTPSlot index={1} className="w-12 h-12 text-xl" />
+                                <InputOTPSlot index={2} className="w-12 h-12 text-xl" />
+                                <InputOTPSlot index={3} className="w-12 h-12 text-xl" />
+                              </InputOTPGroup>
+                            </InputOTP>
+                          </div>
+                        </div>
+                        <div className="space-y-2 w-full">
+                          <Label>{language === 'ar' ? 'تأكيد رمز PIN' : 'Confirm PIN'}</Label>
+                          <div className="flex justify-center">
+                            <InputOTP maxLength={4} value={confirmNfcPin} onChange={setConfirmNfcPin}>
+                              <InputOTPGroup>
+                                <InputOTPSlot index={0} className="w-12 h-12 text-xl" />
+                                <InputOTPSlot index={1} className="w-12 h-12 text-xl" />
+                                <InputOTPSlot index={2} className="w-12 h-12 text-xl" />
+                                <InputOTPSlot index={3} className="w-12 h-12 text-xl" />
+                              </InputOTPGroup>
+                            </InputOTP>
+                          </div>
+                        </div>
+                        <Button 
+                          className="w-full gap-2"
+                          disabled={nfcPin.length !== 4 || confirmNfcPin.length !== 4 || pinLoading}
+                          onClick={async () => {
+                            if (nfcPin !== confirmNfcPin) {
+                              toast({ title: language === 'ar' ? 'الرمزان غير متطابقين' : 'PINs do not match', variant: 'destructive' });
+                              return;
+                            }
+                            setPinLoading(true);
+                            try {
+                              const { data, error } = await supabase.functions.invoke('set-nfc-pin', {
+                                body: { pin: nfcPin, email: user?.email }
+                              });
+                              if (error || !data.success) throw new Error(data?.error || 'Failed');
+                              toast({ title: language === 'ar' ? 'تم حفظ رمز PIN' : 'PIN saved successfully' });
+                              setNfcPin('');
+                              setConfirmNfcPin('');
+                              setHasPinSet(true);
+                            } catch (e: any) {
+                              toast({ title: e.message, variant: 'destructive' });
+                            } finally {
+                              setPinLoading(false);
+                            }
+                          }}
+                        >
+                          <CreditCard className="h-4 w-4" />
+                          {pinLoading 
+                            ? (language === 'ar' ? 'جاري الحفظ...' : 'Saving...')
+                            : hasPinSet 
+                              ? (language === 'ar' ? 'تغيير رمز PIN' : 'Change PIN')
+                              : (language === 'ar' ? 'إنشاء رمز PIN' : 'Create PIN')
+                          }
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 </TabsContent>
               </Tabs>
             </div>
