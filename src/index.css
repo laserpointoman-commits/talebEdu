@@ -586,3 +586,26 @@ body.scanner-active .scanner-ui {
   50% { top: 100%; }
   100% { top: 0; }
 }
+
+/* Force LTR direction for numeric inputs (PIN, time, phone numbers, etc.) */
+.dir-ltr,
+[dir="ltr"],
+input[type="number"],
+input[type="tel"],
+input[type="time"],
+input[type="date"],
+input[inputmode="numeric"] {
+  direction: ltr !important;
+  text-align: left !important;
+}
+
+/* RTL context with LTR content alignment */
+[dir="rtl"] .dir-ltr,
+[dir="rtl"] input[type="number"],
+[dir="rtl"] input[type="tel"],
+[dir="rtl"] input[type="time"],
+[dir="rtl"] input[type="date"],
+[dir="rtl"] input[inputmode="numeric"] {
+  direction: ltr !important;
+  text-align: left !important;
+}
