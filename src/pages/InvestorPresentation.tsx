@@ -330,37 +330,6 @@ const InvestorPresentation = () => {
           >
             مستقبل الإدارة المدرسية الذكية
           </motion.p>
-          <motion.div
-            initial={{ y: 30, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.7, duration: 0.6 }}
-            className="relative"
-          >
-            {/* Glow effect */}
-            <motion.div
-              className="absolute -inset-3 bg-gradient-to-r from-amber-500/40 via-orange-500/50 to-amber-500/40 rounded-3xl blur-xl"
-              animate={{ opacity: [0.4, 0.7, 0.4], scale: [0.98, 1.02, 0.98] }}
-              transition={{ duration: 3, repeat: Infinity }}
-            />
-            <motion.div
-              className="absolute -inset-1 bg-gradient-to-r from-amber-400 via-orange-500 to-amber-400 rounded-2xl blur-sm"
-              animate={{ opacity: [0.5, 0.8, 0.5] }}
-              transition={{ duration: 2, repeat: Infinity }}
-            />
-            <div className="relative bg-gradient-to-l from-amber-500 via-orange-500 to-amber-500 text-white px-10 py-5 rounded-2xl shadow-2xl overflow-hidden">
-              {/* Shimmer effect */}
-              <motion.div
-                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent skew-x-12"
-                animate={{ x: ["-200%", "200%"] }}
-                transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 1.5 }}
-              />
-              <span className="relative text-xl md:text-2xl font-bold tracking-wide flex items-center gap-3 justify-center">
-                <Sparkles className="w-6 h-6" />
-                عرض استثماري
-                <Sparkles className="w-6 h-6" />
-              </span>
-            </div>
-          </motion.div>
           <motion.p
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -504,85 +473,6 @@ const InvestorPresentation = () => {
         </div>
       )
     },
-    // Slide 5: Investment Usage (without prices)
-    {
-      id: "investment-usage",
-      content: (
-        <div className="flex flex-col h-full px-8 py-12" dir="rtl">
-          <motion.h2
-            initial={{ x: -50, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            className="text-4xl font-bold text-primary mb-8 text-center"
-          >
-            توزيع الاستثمار
-          </motion.h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {[
-              { 
-                title: "تأسيس الشركة والتراخيص", 
-                percent: 7.5,
-                icon: Briefcase,
-                items: ["تسجيل الشركة", "التراخيص التجارية", "الاستشارات القانونية", "العلامة التجارية"]
-              },
-              { 
-                title: "المكتب والتجهيزات", 
-                percent: 17.5,
-                icon: Building2,
-                items: ["إيجار مكتب (سنة)", "أثاث مكتبي", "أجهزة كمبيوتر", "معدات اجتماعات"]
-              },
-              { 
-                title: "غرفة الخوادم والبنية التحتية", 
-                percent: 22.5,
-                icon: Server,
-                items: ["خوادم عالية الأداء", "نظام تبريد", "UPS وحماية", "شبكات وأمان"]
-              },
-              { 
-                title: "معدات المدارس", 
-                percent: 20,
-                icon: Monitor,
-                items: ["أجهزة NFC", "تابلتات", "طابعات الأساور", "أساور NFC"]
-              },
-              { 
-                title: "الرواتب والتوظيف", 
-                percent: 25,
-                icon: Users,
-                items: ["مدير تقني", "مطورين", "مبيعات وتسويق", "دعم فني"]
-              },
-              { 
-                title: "التسويق والمبيعات", 
-                percent: 7.5,
-                icon: TrendingUp,
-                items: ["حملات إعلانية", "معارض تعليمية", "مواد ترويجية", "موقع إلكتروني"]
-              }
-            ].map((item, index) => (
-              <motion.div
-                key={index}
-                initial={{ y: 30, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.2 + index * 0.1 }}
-                className="bg-card border rounded-2xl p-5"
-              >
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="bg-primary/10 p-2 rounded-xl">
-                    <item.icon className="w-6 h-6 text-primary" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-bold">{item.title}</h3>
-                    <span className="text-xs text-muted-foreground">({item.percent}%)</span>
-                  </div>
-                </div>
-                <Progress value={item.percent} className="h-2 mb-3" />
-                <div className="flex flex-wrap gap-2">
-                  {item.items.map((subItem, i) => (
-                    <span key={i} className="text-xs bg-muted px-2 py-1 rounded-full">{subItem}</span>
-                  ))}
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      )
-    },
     // Slide 6: Revenue Sources
     {
       id: "revenue",
@@ -649,97 +539,6 @@ const InvestorPresentation = () => {
               </div>
             </motion.div>
           </div>
-        </div>
-      )
-    },
-    // Slide 7: Financial Projections
-    {
-      id: "projections",
-      content: (
-        <div className="flex flex-col h-full px-8 py-12" dir="rtl">
-          <motion.h2
-            initial={{ x: -50, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            className="text-4xl font-bold text-primary mb-8 text-center"
-          >
-            التوقعات المالية - 3 سنوات
-          </motion.h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            {[
-              { 
-                year: "السنة الأولى", 
-                schools: "20", 
-                students: "8,000",
-                revenue: "180,000",
-                status: "نمو"
-              },
-              { 
-                year: "السنة الثانية", 
-                schools: "60", 
-                students: "25,000",
-                revenue: "540,000",
-                status: "توسع"
-              },
-              { 
-                year: "السنة الثالثة", 
-                schools: "150", 
-                students: "60,000",
-                revenue: "1,350,000",
-                status: "ريادة"
-              }
-            ].map((item, index) => (
-              <motion.div
-                key={index}
-                initial={{ y: 50, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.3 + index * 0.2 }}
-                className={`rounded-2xl p-6 text-center ${
-                  index === 2 
-                    ? 'bg-gradient-to-br from-amber-500 to-orange-500 text-white' 
-                    : 'bg-card border'
-                }`}
-              >
-                <Calendar className={`w-10 h-10 mx-auto mb-4 ${index === 2 ? 'text-white' : 'text-primary'}`} />
-                <h3 className="text-2xl font-bold mb-4">{item.year}</h3>
-                <div className="space-y-3">
-                  <div>
-                    <p className={`text-3xl font-bold ${index === 2 ? 'text-white' : 'text-primary'}`}>{item.schools}</p>
-                    <p className={`text-sm ${index === 2 ? 'text-white/80' : 'text-muted-foreground'}`}>مدرسة</p>
-                  </div>
-                  <div>
-                    <p className={`text-3xl font-bold ${index === 2 ? 'text-white' : 'text-green-600'}`}>{item.students}</p>
-                    <p className={`text-sm ${index === 2 ? 'text-white/80' : 'text-muted-foreground'}`}>طالب</p>
-                  </div>
-                  <div className={`pt-3 border-t ${index === 2 ? 'border-white/20' : 'border-border'}`}>
-                    <p className={`text-3xl font-bold ${index === 2 ? 'text-white' : 'text-amber-600'}`}>{item.revenue}</p>
-                    <p className={`text-sm ${index === 2 ? 'text-white/80' : 'text-muted-foreground'}`}>ر.ع إيرادات</p>
-                  </div>
-                </div>
-                <div className={`mt-4 px-4 py-2 rounded-full ${
-                  index === 2 ? 'bg-white/20' : 'bg-primary/10'
-                }`}>
-                  <span className={`font-bold ${index === 2 ? 'text-white' : 'text-primary'}`}>{item.status}</span>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-          <motion.div
-            initial={{ y: 30, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.9 }}
-            className="bg-gradient-to-l from-green-500/10 to-emerald-500/10 border border-green-500/20 rounded-2xl p-6"
-          >
-            <div className="flex items-center justify-center gap-8 flex-wrap">
-              <div className="text-center">
-                <p className="text-4xl font-bold text-green-600">575%</p>
-                <p className="text-muted-foreground">العائد على الاستثمار (3 سنوات)</p>
-              </div>
-              <div className="text-center">
-                <p className="text-4xl font-bold text-green-600">18 شهر</p>
-                <p className="text-muted-foreground">نقطة التعادل</p>
-              </div>
-            </div>
-          </motion.div>
         </div>
       )
     },
@@ -814,82 +613,6 @@ const InvestorPresentation = () => {
         </div>
       )
     },
-    // Slide 9: Roadmap (4 months)
-    {
-      id: "roadmap",
-      content: (
-        <div className="flex flex-col h-full px-8 py-12" dir="rtl">
-          <motion.h2
-            initial={{ x: -50, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            className="text-4xl font-bold text-primary mb-8 text-center"
-          >
-            خطة التنفيذ - 4 أشهر
-          </motion.h2>
-          <div className="relative flex-1">
-            <div className="absolute right-6 top-0 bottom-0 w-1 bg-gradient-to-b from-primary via-primary to-primary/30 rounded-full" />
-            <div className="space-y-6">
-              {[
-                { 
-                  phase: "الشهر 1", 
-                  title: "التأسيس", 
-                  tasks: ["تسجيل الشركة", "تأجير المكتب", "توظيف الفريق الأساسي", "التراخيص التجارية"],
-                  status: "start"
-                },
-                { 
-                  phase: "الشهر 2", 
-                  title: "البنية التحتية", 
-                  tasks: ["تجهيز غرفة الخوادم", "شراء المعدات", "إعداد الأنظمة", "تدريب الفريق"],
-                  status: "progress"
-                },
-                { 
-                  phase: "الشهر 3", 
-                  title: "الإطلاق التجريبي", 
-                  tasks: ["5 مدارس تجريبية", "جمع التغذية الراجعة", "تحسين النظام", "إعداد المواد التسويقية"],
-                  status: "progress"
-                },
-                { 
-                  phase: "الشهر 4", 
-                  title: "الإطلاق الرسمي", 
-                  tasks: ["إطلاق رسمي", "استهداف 20 مدرسة", "حملات تسويقية", "بناء فريق المبيعات"],
-                  status: "future"
-                }
-              ].map((item, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ x: 50, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  transition={{ delay: 0.3 + index * 0.15 }}
-                  className="flex gap-4 mr-3"
-                >
-                  <div className={`w-7 h-7 rounded-full flex items-center justify-center z-10 ${
-                    item.status === 'start' ? 'bg-green-500' :
-                    item.status === 'progress' ? 'bg-blue-500' : 'bg-amber-500'
-                  }`}>
-                    <CheckCircle2 className="w-4 h-4 text-white" />
-                  </div>
-                  <div className="flex-1 bg-card border rounded-2xl p-5">
-                    <div className="flex items-center gap-3 mb-3">
-                      <span className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-bold">
-                        {item.phase}
-                      </span>
-                      <h3 className="font-bold text-lg">{item.title}</h3>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {item.tasks.map((task, i) => (
-                        <span key={i} className="text-sm bg-muted px-3 py-1 rounded-full">
-                          {task}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )
-    },
     // Slide 11: Call to Action
     {
       id: "cta",
@@ -960,6 +683,18 @@ const InvestorPresentation = () => {
             className="mt-12 bg-gradient-to-l from-primary to-blue-600 text-white px-10 py-5 rounded-2xl text-xl font-bold shadow-xl"
           >
             هل أنت مستعد لتكون شريكنا في النجاح؟
+          </motion.div>
+          
+          {/* Contact Info */}
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 1.1 }}
+            className="mt-8 flex flex-col items-center gap-2"
+          >
+            <p className="text-xl font-bold text-foreground">مازن خنفر</p>
+            <p className="text-lg text-foreground">Mazen Khanfar</p>
+            <p className="text-lg text-primary font-medium" dir="ltr">+968 9656 4540</p>
           </motion.div>
         </div>
       )
