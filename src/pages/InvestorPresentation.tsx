@@ -230,43 +230,6 @@ const IntroAnimation = ({ onComplete }: { onComplete: () => void }) => {
           مستقبل الإدارة المدرسية الذكية
         </motion.p>
 
-        {/* Investment badge with beautiful styling */}
-        <motion.div
-          className="relative"
-          initial={{ opacity: 0, scale: 0.5 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 3, type: "spring", stiffness: 200 }}
-        >
-          {/* Outer glow */}
-          <motion.div
-            className="absolute -inset-4 bg-gradient-to-r from-amber-500/30 via-orange-500/40 to-amber-500/30 rounded-3xl blur-2xl"
-            animate={{ opacity: [0.4, 0.7, 0.4], scale: [0.95, 1.05, 0.95] }}
-            transition={{ duration: 3, repeat: Infinity }}
-          />
-          {/* Inner glow */}
-          <motion.div
-            className="absolute -inset-1 bg-gradient-to-r from-amber-400 via-orange-500 to-amber-400 rounded-2xl blur-sm"
-            animate={{ opacity: [0.6, 0.9, 0.6] }}
-            transition={{ duration: 2, repeat: Infinity }}
-          />
-          {/* Main badge */}
-          <motion.div 
-            className="relative bg-gradient-to-l from-amber-500 via-orange-500 to-amber-500 text-white px-10 py-5 rounded-2xl shadow-2xl overflow-hidden"
-            dir="rtl"
-          >
-            {/* Shimmer effect */}
-            <motion.div
-              className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-12"
-              animate={{ x: ["-200%", "200%"] }}
-              transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 1 }}
-            />
-            <span className="relative text-xl md:text-2xl font-bold tracking-wide flex items-center gap-3 justify-center">
-              <Sparkles className="w-6 h-6" />
-              عرض استثماري
-              <Sparkles className="w-6 h-6" />
-            </span>
-          </motion.div>
-        </motion.div>
 
         {/* Loading indicator */}
         <motion.div
@@ -551,7 +514,7 @@ const InvestorPresentation = () => {
             animate={{ x: 0, opacity: 1 }}
             className="text-4xl font-bold text-primary mb-8 text-center"
           >
-            توزيع الاستثمار - 200,000 ر.ع
+            توزيع الاستثمار
           </motion.h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {[
@@ -920,52 +883,6 @@ const InvestorPresentation = () => {
                       ))}
                     </div>
                   </div>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )
-    },
-    // Slide 10: Investment Offer (without valuation)
-    {
-      id: "offer",
-      content: (
-        <div className="flex flex-col h-full px-8 py-12" dir="rtl">
-          <motion.h2
-            initial={{ x: -50, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            className="text-4xl font-bold text-primary mb-8 text-center"
-          >
-            عرض الاستثمار
-          </motion.h2>
-          <div className="flex-1 flex flex-col justify-center">
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.3 }}
-              className="bg-gradient-to-br from-amber-500 to-orange-500 rounded-3xl p-8 text-white text-center mb-8"
-            >
-              <Wallet className="w-16 h-16 mx-auto mb-4" />
-              <h3 className="text-5xl font-bold mb-2">200,000 ر.ع</h3>
-              <p className="text-2xl opacity-90">مقابل 25% من الشركة</p>
-            </motion.div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {[
-                { icon: PieChart, title: "حصة المستثمر", value: "25%", desc: "من أرباح الشركة" },
-                { icon: BarChart3, title: "العائد المتوقع", value: "575%", desc: "خلال 3 سنوات" }
-              ].map((item, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ y: 30, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ delay: 0.5 + index * 0.1 }}
-                  className="bg-card border rounded-2xl p-6 text-center"
-                >
-                  <item.icon className="w-10 h-10 mx-auto mb-3 text-primary" />
-                  <h3 className="font-bold text-lg mb-1">{item.title}</h3>
-                  <p className="text-3xl font-bold text-primary mb-1">{item.value}</p>
-                  <p className="text-sm text-muted-foreground">{item.desc}</p>
                 </motion.div>
               ))}
             </div>
