@@ -732,10 +732,6 @@ const InvestorPresentation = () => {
       </AnimatePresence>
 
       <div className="min-h-screen bg-background flex flex-col pt-[env(safe-area-inset-top)]">
-        {/* Progress bar */}
-        <div className="fixed top-[env(safe-area-inset-top)] left-0 right-0 z-50">
-          <Progress value={(currentSlide / (slides.length - 1)) * 100} className="h-1 rounded-none" />
-        </div>
 
         {/* Slide content */}
         <div className="flex-1 pt-4 pb-24 overflow-y-auto">
