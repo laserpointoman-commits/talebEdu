@@ -330,14 +330,35 @@ const InvestorPresentation = () => {
           >
             مستقبل الإدارة المدرسية الذكية
           </motion.p>
-          <motion.p
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
+          {/* Decorative animated icons */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.9, duration: 0.6 }}
-            className="text-lg text-muted-foreground mt-8"
+            className="mt-8 flex items-center justify-center gap-6"
           >
-            يناير 2026
-          </motion.p>
+            {[
+              { icon: GraduationCap, color: "from-blue-500 to-cyan-500" },
+              { icon: Shield, color: "from-emerald-500 to-green-500" },
+              { icon: Wallet, color: "from-amber-500 to-orange-500" },
+              { icon: Bus, color: "from-purple-500 to-pink-500" }
+            ].map((item, index) => (
+              <motion.div
+                key={index}
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 1 + index * 0.1, duration: 0.5 }}
+                className={`w-12 h-12 rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center shadow-lg`}
+              >
+                <motion.div
+                  animate={{ y: [0, -3, 0] }}
+                  transition={{ duration: 2, repeat: Infinity, delay: index * 0.2 }}
+                >
+                  <item.icon className="w-6 h-6 text-white" />
+                </motion.div>
+              </motion.div>
+            ))}
+          </motion.div>
         </div>
       )
     },
