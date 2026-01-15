@@ -762,7 +762,7 @@ const InvestorPresentation = () => {
             التالي
           </Button>
           
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2" dir="rtl">
             {slides.map((_, index) => (
               <button
                 key={index}
