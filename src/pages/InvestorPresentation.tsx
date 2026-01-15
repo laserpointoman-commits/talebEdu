@@ -412,7 +412,9 @@ const InvestorPresentation = () => {
               { icon: Bus, title: "تتبع الحافلات", color: "from-indigo-500 to-violet-500" },
               { icon: GraduationCap, title: "إدارة الدرجات", color: "from-teal-500 to-cyan-500" },
               { icon: Users, title: "تواصل مباشر", color: "from-pink-500 to-fuchsia-500" },
-              { icon: ShoppingBag, title: "متجر قرطاسية إلكتروني", color: "from-amber-500 to-yellow-500" }
+              { icon: ShoppingBag, title: "متجر قرطاسية إلكتروني", color: "from-amber-500 to-yellow-500" },
+              { icon: Globe, title: "دعم 3 لغات", color: "from-cyan-500 to-blue-500" },
+              { icon: Smartphone, title: "جميع الأجهزة", color: "from-slate-500 to-gray-600" }
             ].map((item, index) => (
               <motion.div
                 key={index}
