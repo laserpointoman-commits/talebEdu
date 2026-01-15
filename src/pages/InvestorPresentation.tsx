@@ -558,9 +558,15 @@ const InvestorPresentation = () => {
             {[
               { 
                 icon: Smartphone, 
-                title: "تطبيق جاهز ومكتمل", 
-                desc: "التطبيق تم تطويره بالكامل وجاهز للإطلاق فوراً",
+                title: "تطبيق جاهز لجميع الأجهزة", 
+                desc: "جاهز للآيفون والأندرويد والأجهزة اللوحية والحواسيب",
                 color: "from-blue-500 to-cyan-500"
+              },
+              { 
+                icon: Globe, 
+                title: "دعم 3 لغات", 
+                desc: "يدعم العربية والإنجليزية والهندية لتغطية جميع المستخدمين",
+                color: "from-orange-500 to-amber-500"
               },
               { 
                 icon: Award, 
@@ -573,12 +579,6 @@ const InvestorPresentation = () => {
                 title: "أساور NFC ذكية", 
                 desc: "تتبع دقيق وآمن للطلاب في جميع الأوقات",
                 color: "from-green-500 to-emerald-500"
-              },
-              { 
-                icon: Globe, 
-                title: "دعم عربي كامل", 
-                desc: "واجهة عربية متكاملة تناسب السوق المحلي",
-                color: "from-orange-500 to-amber-500"
               },
               { 
                 icon: Target, 
