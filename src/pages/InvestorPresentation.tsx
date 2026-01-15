@@ -335,7 +335,7 @@ const InvestorPresentation = () => {
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.9, duration: 0.6 }}
-            className="mt-8 flex items-center justify-center gap-6"
+            className="mt-6 flex items-center justify-center gap-5"
           >
             {[
               { icon: GraduationCap, color: "from-blue-500 to-cyan-500" },
@@ -358,6 +358,73 @@ const InvestorPresentation = () => {
                 </motion.div>
               </motion.div>
             ))}
+          </motion.div>
+
+          {/* Key stats */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.3, duration: 0.6 }}
+            className="mt-10 grid grid-cols-3 gap-4 w-full max-w-md mx-auto"
+          >
+            {[
+              { value: "+10", label: "ميزة ذكية" },
+              { value: "3", label: "لغات" },
+              { value: "∞", label: "أجهزة" }
+            ].map((stat, index) => (
+              <motion.div
+                key={index}
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 1.5 + index * 0.1, duration: 0.4 }}
+                className="text-center p-3 rounded-xl bg-muted/50 border border-border/50"
+              >
+                <div className="text-2xl font-bold text-primary">{stat.value}</div>
+                <div className="text-xs text-muted-foreground">{stat.label}</div>
+              </motion.div>
+            ))}
+          </motion.div>
+
+          {/* Tagline badges */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.7, duration: 0.5 }}
+            className="mt-8 flex flex-wrap items-center justify-center gap-2"
+          >
+            {[
+              { icon: Smartphone, text: "iOS & Android" },
+              { icon: Monitor, text: "ويب" },
+              { icon: Globe, text: "عربي • English • हिंदी" }
+            ].map((badge, index) => (
+              <motion.div
+                key={index}
+                initial={{ x: -20, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ delay: 1.8 + index * 0.1, duration: 0.4 }}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-sm"
+              >
+                <badge.icon className="w-3.5 h-3.5 text-primary" />
+                <span className="text-foreground/80">{badge.text}</span>
+              </motion.div>
+            ))}
+          </motion.div>
+
+          {/* Animated arrow hint */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 2.2, duration: 0.5 }}
+            className="mt-10 flex flex-col items-center"
+          >
+            <motion.div
+              animate={{ y: [0, 8, 0] }}
+              transition={{ duration: 1.5, repeat: Infinity }}
+              className="text-muted-foreground/50"
+            >
+              <ChevronLeft className="w-6 h-6 rotate-[-90deg]" />
+            </motion.div>
+            <span className="text-xs text-muted-foreground/50">اسحب للمتابعة</span>
           </motion.div>
         </div>
       )
