@@ -731,14 +731,14 @@ const InvestorPresentation = () => {
         )}
       </AnimatePresence>
 
-      <div className="min-h-screen bg-background flex flex-col">
+      <div className="min-h-screen bg-background flex flex-col pt-[env(safe-area-inset-top)]">
         {/* Progress bar */}
-        <div className="fixed top-0 left-0 right-0 z-50">
+        <div className="fixed top-[env(safe-area-inset-top)] left-0 right-0 z-50">
           <Progress value={(currentSlide / (slides.length - 1)) * 100} className="h-1 rounded-none" />
         </div>
 
         {/* Slide content */}
-        <div className="flex-1 pt-4 pb-24">
+        <div className="flex-1 pt-4 pb-24 overflow-y-auto">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentSlide}
@@ -747,6 +747,7 @@ const InvestorPresentation = () => {
             exit={{ opacity: 0, x: -100 }}
             transition={{ duration: 0.3 }}
             className="h-full"
+            onAnimationComplete={() => window.scrollTo({ top: 0, behavior: 'instant' })}
           >
             {slides[currentSlide].content}
           </motion.div>
@@ -754,7 +755,7 @@ const InvestorPresentation = () => {
       </div>
 
       {/* Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-lg border-t p-4" dir="ltr">
+      <div className="fixed bottom-[env(safe-area-inset-bottom)] left-0 right-0 bg-background/80 backdrop-blur-lg border-t p-4 pb-[max(1rem,env(safe-area-inset-bottom))]" dir="ltr">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <Button
             onClick={nextSlide}
