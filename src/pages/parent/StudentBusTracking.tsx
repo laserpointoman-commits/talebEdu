@@ -32,9 +32,14 @@ export default function StudentBusTracking() {
   useEffect(() => {
     if (studentId && user) {
       loadData();
-      setupRealtimeSubscription();
     }
   }, [studentId, user]);
+
+  useEffect(() => {
+    if (!studentId || !user || !busAssignment?.bus_id) return;
+    const cleanup = setupRealtimeSubscription(busAssignment.bus_id);
+    return cleanup;
+  }, [busAssignment?.bus_id, studentId, user?.id]);
 
   const loadData = async () => {
     try {
@@ -62,12 +67,13 @@ export default function StudentBusTracking() {
         `)
         .eq('student_id', studentId)
         .eq('is_active', true)
-        .single();
+        .limit(1)
+        .maybeSingle();
 
       setBusAssignment(assignment);
 
       if (assignment?.bus_id) {
-        // Check for active trip
+        // Check for active trip (robust against multiple rows)
         const today = new Date().toISOString().split('T')[0];
         const { data: trip } = await supabase
           .from('bus_trips')
@@ -75,7 +81,9 @@ export default function StudentBusTracking() {
           .eq('bus_id', assignment.bus_id)
           .eq('status', 'in_progress')
           .gte('created_at', `${today}T00:00:00`)
-          .single();
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
 
         setActiveTrip(trip);
 
@@ -86,11 +94,13 @@ export default function StudentBusTracking() {
           .eq('bus_id', assignment.bus_id)
           .order('timestamp', { ascending: false })
           .limit(1)
-          .single();
+          .maybeSingle();
 
         setLastLocation(location);
+      } else {
+        setActiveTrip(null);
+        setLastLocation(null);
       }
-
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
@@ -98,27 +108,34 @@ export default function StudentBusTracking() {
     }
   };
 
-  const setupRealtimeSubscription = () => {
-    if (!busAssignment?.bus_id) return;
-
+  const setupRealtimeSubscription = (busId: string) => {
     const channel = supabase
-      .channel('bus-tracking')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'bus_trips',
-        filter: `bus_id=eq.${busAssignment.bus_id}`
-      }, () => {
-        loadData();
-      })
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'bus_locations',
-        filter: `bus_id=eq.${busAssignment.bus_id}`
-      }, (payload) => {
-        setLastLocation(payload.new);
-      })
+      .channel(`bus-tracking-${busId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'bus_trips',
+          filter: `bus_id=eq.${busId}`,
+        },
+        () => {
+          // When a trip starts/ends, refresh to show/hide the live map
+          loadData();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'bus_locations',
+          filter: `bus_id=eq.${busId}`,
+        },
+        (payload) => {
+          if (payload.new) setLastLocation(payload.new);
+        }
+      )
       .subscribe();
 
     return () => {

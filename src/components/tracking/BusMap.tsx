@@ -19,23 +19,65 @@ export default function BusMap({ busId, studentLocation }: BusMapProps) {
   const busMarker = useRef<mapboxgl.Marker | null>(null);
   const studentMarker = useRef<mapboxgl.Marker | null>(null);
   const [busLocation, setBusLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [mapStatus, setMapStatus] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [mapError, setMapError] = useState<string | null>(null);
 
   // Initialize map
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
 
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/streets-v12',
-      center: [58.4059, 23.5880], // Oman center
-      zoom: 12
-    });
+    setMapStatus('loading');
+    setMapError(null);
 
-    map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+    let m: mapboxgl.Map | null = null;
+    let handleWindowResize: (() => void) | null = null;
 
-    return () => {
-      map.current?.remove();
-    };
+    try {
+      m = new mapboxgl.Map({
+        container: mapContainer.current,
+        style: 'mapbox://styles/mapbox/streets-v12',
+        center: [58.4059, 23.588], // Oman center
+        zoom: 12,
+      });
+
+      map.current = m;
+      m.addControl(new mapboxgl.NavigationControl(), 'top-right');
+
+      const onLoad = () => {
+        setMapStatus('ready');
+
+        // PageTransition uses transforms; Mapbox often needs an explicit resize after animations.
+        requestAnimationFrame(() => m?.resize());
+        setTimeout(() => m?.resize(), 450);
+      };
+
+      const onError = (e: any) => {
+        console.error('Map error:', e?.error || e);
+        setMapStatus('error');
+        setMapError(e?.error?.message || 'Map failed to load');
+      };
+
+      m.on('load', onLoad);
+      m.on('error', onError);
+
+      handleWindowResize = () => m?.resize();
+      window.addEventListener('resize', handleWindowResize);
+
+      return () => {
+        window.removeEventListener('resize', handleWindowResize!);
+        m?.off('load', onLoad);
+        m?.off('error', onError);
+        m?.remove();
+        map.current = null;
+        busMarker.current = null;
+        studentMarker.current = null;
+      };
+    } catch (err: any) {
+      console.error('Map init error:', err);
+      setMapStatus('error');
+      setMapError(err?.message || 'Map failed to initialize');
+      return;
+    }
   }, []);
 
   // Load initial bus location
@@ -53,13 +95,13 @@ export default function BusMap({ busId, studentLocation }: BusMapProps) {
           event: '*',
           schema: 'public',
           table: 'bus_locations',
-          filter: `bus_id=eq.${busId}`
+          filter: `bus_id=eq.${busId}`,
         },
         (payload) => {
           if (payload.new && 'latitude' in payload.new && 'longitude' in payload.new) {
             const newLocation = {
               latitude: payload.new.latitude as number,
-              longitude: payload.new.longitude as number
+              longitude: payload.new.longitude as number,
             };
             setBusLocation(newLocation);
             updateBusMarker(newLocation);
@@ -111,7 +153,7 @@ export default function BusMap({ busId, studentLocation }: BusMapProps) {
       if (data) {
         const location = {
           latitude: data.latitude,
-          longitude: data.longitude
+          longitude: data.longitude,
         };
         setBusLocation(location);
         updateBusMarker(location);
@@ -139,21 +181,21 @@ export default function BusMap({ busId, studentLocation }: BusMapProps) {
       el.style.alignItems = 'center';
       el.style.justifyContent = 'center';
       el.style.animation = 'bounce 1s ease-in-out infinite';
-      el.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 12h18"/><path d="M8 6V4"/><path d="M16 6V4"/><circle cx="7" cy="17" r="1"/><circle cx="17" cy="17" r="1"/></svg>';
+      el.innerHTML =
+        '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 12h18"/><path d="M8 6V4"/><path d="M16 6V4"/><circle cx="7" cy="17" r="1"/><circle cx="17" cy="17" r="1"/></svg>';
 
-      // Add bounce animation styles
-      const style = document.createElement('style');
-      style.textContent = `
-        @keyframes bounce {
-          0%, 100% {
-            transform: translateY(0);
+      // Add bounce animation styles (once)
+      if (!document.getElementById('bus-marker-bounce-style')) {
+        const style = document.createElement('style');
+        style.id = 'bus-marker-bounce-style';
+        style.textContent = `
+          @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
           }
-          50% {
-            transform: translateY(-8px);
-          }
-        }
-      `;
-      document.head.appendChild(style);
+        `;
+        document.head.appendChild(style);
+      }
 
       busMarker.current = new mapboxgl.Marker(el)
         .setLngLat([location.longitude, location.latitude])
@@ -167,19 +209,34 @@ export default function BusMap({ busId, studentLocation }: BusMapProps) {
     map.current.flyTo({
       center: [location.longitude, location.latitude],
       zoom: 14,
-      duration: 2000
+      duration: 2000,
     });
+
+    // If the map was initialized while hidden/transforming, force a resize
+    setTimeout(() => map.current?.resize(), 0);
   };
 
   return (
-    <div className="relative w-full h-full min-h-[400px] rounded-lg overflow-hidden">
-      <div ref={mapContainer} className="w-full h-full" />
-      
+    <div className="relative w-full h-full min-h-[350px] rounded-lg overflow-hidden">
+      <div ref={mapContainer} className="absolute inset-0" />
+
+      {mapStatus !== 'ready' && (
+        <div className="absolute inset-0 flex items-center justify-center bg-background/60 backdrop-blur-sm">
+          <div className="max-w-xs text-center text-sm text-muted-foreground px-6">
+            {mapStatus === 'loading'
+              ? language === 'ar'
+                ? 'جاري تحميل الخريطة…'
+                : 'Loading map…'
+              : language === 'ar'
+                ? `تعذر تحميل الخريطة: ${mapError || ''}`
+                : `Map unavailable: ${mapError || ''}`}
+          </div>
+        </div>
+      )}
+
       {busLocation && (
         <div className="absolute top-4 left-4 bg-background/95 backdrop-blur-sm rounded-lg p-3 shadow-lg border">
-          <div className="text-sm font-medium mb-1">
-            {language === 'ar' ? 'آخر تحديث' : 'Last Updated'}
-          </div>
+          <div className="text-sm font-medium mb-1">{language === 'ar' ? 'آخر تحديث' : 'Last Updated'}</div>
           <div className="text-xs text-muted-foreground">
             {new Date().toLocaleTimeString(language === 'ar' ? 'ar-SA' : 'en-US')}
           </div>
