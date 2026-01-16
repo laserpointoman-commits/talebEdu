@@ -410,22 +410,6 @@ const InvestorPresentation = () => {
             ))}
           </motion.div>
 
-          {/* Animated arrow hint */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 2.2, duration: 0.5 }}
-            className="mt-10 flex flex-col items-center"
-          >
-            <motion.div
-              animate={{ y: [0, 8, 0] }}
-              transition={{ duration: 1.5, repeat: Infinity }}
-              className="text-muted-foreground/50"
-            >
-              <ChevronLeft className="w-6 h-6 rotate-[-90deg]" />
-            </motion.div>
-            <span className="text-xs text-muted-foreground/50">اسحب للمتابعة</span>
-          </motion.div>
         </div>
       )
     },
