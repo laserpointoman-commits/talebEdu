@@ -126,19 +126,34 @@ export default function BusMap({ busId, studentLocation }: BusMapProps) {
     if (!map.current) return;
 
     if (!busMarker.current) {
-      // Create custom bus marker
+      // Create custom bus marker with bounce animation
       const el = document.createElement('div');
       el.className = 'bus-marker';
-      el.style.width = '40px';
-      el.style.height = '40px';
+      el.style.width = '50px';
+      el.style.height = '50px';
       el.style.borderRadius = '50%';
       el.style.backgroundColor = '#3b82f6';
       el.style.border = '4px solid white';
-      el.style.boxShadow = '0 4px 6px rgba(0,0,0,0.3)';
+      el.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.5)';
       el.style.display = 'flex';
       el.style.alignItems = 'center';
       el.style.justifyContent = 'center';
-      el.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 12h18"/><path d="M8 6V4"/><path d="M16 6V4"/><circle cx="7" cy="17" r="1"/><circle cx="17" cy="17" r="1"/></svg>';
+      el.style.animation = 'bounce 1s ease-in-out infinite';
+      el.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 12h18"/><path d="M8 6V4"/><path d="M16 6V4"/><circle cx="7" cy="17" r="1"/><circle cx="17" cy="17" r="1"/></svg>';
+
+      // Add bounce animation styles
+      const style = document.createElement('style');
+      style.textContent = `
+        @keyframes bounce {
+          0%, 100% {
+            transform: translateY(0);
+          }
+          50% {
+            transform: translateY(-8px);
+          }
+        }
+      `;
+      document.head.appendChild(style);
 
       busMarker.current = new mapboxgl.Marker(el)
         .setLngLat([location.longitude, location.latitude])
