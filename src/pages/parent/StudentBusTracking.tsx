@@ -15,8 +15,8 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import LogoLoader from '@/components/LogoLoader';
-import { motion } from 'framer-motion';
 import BoardingHistory from '@/components/tracking/BoardingHistory';
+import BusMap from '@/components/tracking/BusMap';
 
 export default function StudentBusTracking() {
   const { studentId } = useParams();
@@ -176,8 +176,8 @@ export default function StudentBusTracking() {
         </CardContent>
       </Card>
 
-      {/* Live Map Placeholder */}
-      {activeTrip && (
+      {/* Live Map */}
+      {activeTrip && busAssignment?.bus_id && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -185,29 +185,21 @@ export default function StudentBusTracking() {
               {language === 'ar' ? 'الموقع المباشر' : 'Live Location'}
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="h-[300px] bg-muted rounded-lg flex items-center justify-center relative overflow-hidden">
-              {/* Animated bus icon */}
-              <motion.div
-                animate={{ 
-                  x: [0, 100, 50, 150, 0],
-                  y: [0, 50, 100, 50, 0]
-                }}
-                transition={{
-                  duration: 10,
-                  repeat: Infinity,
-                  ease: "linear"
-                }}
-                className="absolute"
-              >
-                <Bus className="h-12 w-12 text-primary" />
-              </motion.div>
-              <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
+          <CardContent className="p-0">
+            <div className="h-[350px] relative">
+              <BusMap 
+                busId={busAssignment.bus_id}
+                studentLocation={student?.home_latitude && student?.home_longitude ? {
+                  lat: student.home_latitude,
+                  lng: student.home_longitude
+                } : undefined}
+              />
+              {/* Current stop overlay */}
               <div className="absolute bottom-4 left-4 right-4">
-                <div className="bg-background/90 backdrop-blur p-4 rounded-lg">
+                <div className="bg-background/90 backdrop-blur p-4 rounded-lg shadow-lg">
                   <div className="flex items-center gap-2 text-sm">
                     <MapPin className="h-4 w-4 text-primary" />
-                    <span>
+                    <span className="font-medium">
                       {activeTrip.current_stop || lastLocation?.current_stop || 
                         (language === 'ar' ? 'في الطريق' : 'On Route')}
                     </span>
