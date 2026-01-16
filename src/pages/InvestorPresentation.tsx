@@ -656,8 +656,8 @@ const InvestorPresentation = () => {
               },
               { 
                 icon: Target, 
-                title: "أول في السوق", 
-                desc: "لا يوجد منافس محلي يقدم نفس الحل المتكامل",
+                title: "الأول في العالم", 
+                desc: "لا يوجد منافس يقدم نفس الحل المتكامل",
                 color: "from-red-500 to-rose-500"
               },
               { 
