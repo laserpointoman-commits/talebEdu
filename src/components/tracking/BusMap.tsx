@@ -1,12 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
+import mapboxgl from 'maplibre-gl';
+import 'maplibre-gl/dist/maplibre-gl.css';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
 
-mapboxgl.accessToken = '';
-// Using OpenStreetMap raster tiles for the base map (no Mapbox token required).
+// Using OpenStreetMap raster tiles for the base map (no token required).
 
 interface BusMapProps {
   busId: string;
