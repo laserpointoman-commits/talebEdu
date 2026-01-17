@@ -41,6 +41,7 @@ export default function AllBusesMap({ buses }: AllBusesMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const markers = useRef<Map<string, mapboxgl.Marker>>(new Map());
+  const hasAutoFittedRef = useRef(false);
   const [busLocations, setBusLocations] = useState<Map<string, BusLocationData>>(new Map());
   const [activeBusIds, setActiveBusIds] = useState<Set<string>>(new Set());
   const [mapStatus, setMapStatus] = useState<'loading' | 'ready' | 'error'>('loading');
@@ -137,6 +138,9 @@ export default function AllBusesMap({ buses }: AllBusesMapProps) {
 
   // Load all bus locations + active trips
   useEffect(() => {
+    // Allow auto-fit again when the bus list changes, but don't keep re-centering on every location update
+    hasAutoFittedRef.current = false;
+
     loadAllBusLocations();
     loadActiveTrips();
   }, [buses]);
@@ -240,12 +244,13 @@ export default function AllBusesMap({ buses }: AllBusesMapProps) {
       markers.current.set(bus.id, marker);
     });
 
-    // Fit map to show all buses
-    if (hasValidLocations && bounds.getNorthEast() && bounds.getSouthWest()) {
+    // Auto-fit only once (otherwise the map keeps re-centering while you pinch/zoom)
+    if (!hasAutoFittedRef.current && hasValidLocations && bounds.getNorthEast() && bounds.getSouthWest()) {
+      hasAutoFittedRef.current = true;
       map.current.fitBounds(bounds, {
         padding: 60,
         maxZoom: 14,
-        duration: 1000,
+        duration: 600,
       });
     }
   }, [busLocations, buses, mapStatus, activeBusIds]);
