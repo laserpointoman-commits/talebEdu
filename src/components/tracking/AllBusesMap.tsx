@@ -273,8 +273,7 @@ export default function AllBusesMap({ buses }: AllBusesMapProps) {
       }
 
       const el = createMarkerElement(bus, isActiveBus);
-      // Offset so the center of the small dot is the true GPS coordinate (prevents "drifting" at low zoom)
-      const marker = new mapboxgl.Marker({ element: el, anchor: 'bottom', offset: [0, 6] })
+      const marker = new mapboxgl.Marker({ element: el, anchor: 'bottom' })
         .setLngLat([location.longitude, location.latitude])
         .addTo(map.current!);
       markers.current.set(bus.id, marker);
@@ -496,33 +495,42 @@ export default function AllBusesMap({ buses }: AllBusesMapProps) {
 
     pinWrapper.appendChild(pin);
     
-    // Pin pointer/anchor at the bottom - this is the exact GPS location
+    // Pin pointer - its tip marks the GPS point
     const pointer = document.createElement('div');
     pointer.style.width = '0';
     pointer.style.height = '0';
     pointer.style.borderLeft = '8px solid transparent';
     pointer.style.borderRight = '8px solid transparent';
-    pointer.style.borderTop = isActive 
-      ? '12px solid hsl(var(--primary))' 
-      : '12px solid hsl(0, 72%, 51%)';
+    pointer.style.borderTop = isActive
+      ? '12px solid hsl(var(--primary))'
+      : '12px solid hsl(var(--destructive))';
     pointer.style.marginTop = '-2px';
     pointer.style.filter = 'drop-shadow(0 2px 4px hsl(var(--foreground) / 0.25))';
 
-    // Precise location dot at the exact GPS coordinate (bottom of marker)
+    // Zero-sized anchor so the dot center is EXACTLY the GPS coordinate (no zoom-dependent pixel offset)
+    const anchorPoint = document.createElement('div');
+    anchorPoint.style.position = 'relative';
+    anchorPoint.style.width = '0';
+    anchorPoint.style.height = '0';
+
     const preciseDot = document.createElement('div');
+    preciseDot.style.position = 'absolute';
+    preciseDot.style.left = '-6px';
+    preciseDot.style.top = '-6px';
     preciseDot.style.width = '12px';
     preciseDot.style.height = '12px';
     preciseDot.style.borderRadius = '9999px';
     preciseDot.style.background = 'hsl(var(--background))';
-    preciseDot.style.border = isActive 
-      ? '2px solid hsl(var(--primary))' 
+    preciseDot.style.border = isActive
+      ? '2px solid hsl(var(--primary))'
       : '2px solid hsl(var(--destructive))';
     preciseDot.style.boxShadow = '0 1px 3px hsl(var(--foreground) / 0.35)';
-    preciseDot.style.marginTop = '-2px';
-    
+
+    anchorPoint.appendChild(preciseDot);
+
     container.appendChild(pinWrapper);
     container.appendChild(pointer);
-    container.appendChild(preciseDot);
+    container.appendChild(anchorPoint);
 
     // Add "Inactive" badge inside the label for inactive buses (so it doesn't affect anchor)
     if (!isActive) {
