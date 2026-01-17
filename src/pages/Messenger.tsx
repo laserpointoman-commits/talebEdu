@@ -106,16 +106,17 @@ function MessengerContent() {
       const newSet = new Set(prev);
       if (newSet.has(messageId)) {
         newSet.delete(messageId);
-        toast.success(isArabic ? 'تم إلغاء التميز' : 'Message unstarred');
+        toast.success(isArabic ? 'تم إلغاء التميز' : isHindi ? 'संदेश अनस्टार किया गया' : 'Message unstarred');
       } else {
         newSet.add(messageId);
-        toast.success(isArabic ? 'تم التميز' : 'Message starred');
+        toast.success(isArabic ? 'تم التميز' : isHindi ? 'संदेश स्टार किया गया' : 'Message starred');
       }
       return newSet;
     });
   };
 
   const isArabic = language === 'ar';
+  const isHindi = language === 'hi';
   const dir = isArabic ? 'rtl' : 'ltr';
   
   // Check if user can pin (Admin, Teacher, Supervisor)
@@ -177,9 +178,9 @@ function MessengerContent() {
       const date = new Date(msg.created_at);
       let key: string;
       if (isToday(date)) {
-        key = isArabic ? 'اليوم' : 'Today';
+        key = isArabic ? 'اليوم' : isHindi ? 'आज' : 'Today';
       } else if (isYesterday(date)) {
-        key = isArabic ? 'أمس' : 'Yesterday';
+        key = isArabic ? 'أمس' : isHindi ? 'कल' : 'Yesterday';
       } else {
         key = format(date, 'MMMM d, yyyy');
       }
@@ -193,7 +194,7 @@ function MessengerContent() {
     if (!timestamp) return '';
     const date = new Date(timestamp);
     if (isToday(date)) return format(date, 'HH:mm');
-    if (isYesterday(date)) return isArabic ? 'أمس' : 'Yesterday';
+    if (isYesterday(date)) return isArabic ? 'أمس' : isHindi ? 'कल' : 'Yesterday';
     if (isThisWeek(date)) return format(date, 'EEEE');
     return format(date, 'dd/MM/yyyy');
   };
@@ -287,18 +288,18 @@ function MessengerContent() {
   const handleDeleteChat = async (convId: string) => {
     const success = await deleteChat(convId);
     if (success) {
-      toast.success(isArabic ? 'تم حذف المحادثة' : 'Chat deleted');
+      toast.success(isArabic ? 'تم حذف المحادثة' : isHindi ? 'चैट हटाया गया' : 'Chat deleted');
     } else {
-      toast.error(isArabic ? 'فشل حذف المحادثة' : 'Failed to delete chat');
+      toast.error(isArabic ? 'فشل حذف المحادثة' : isHindi ? 'चैट हटाने में विफल' : 'Failed to delete chat');
     }
   };
 
   const handleArchiveChat = async (convId: string) => {
     const success = await archiveChat(convId);
     if (success) {
-      toast.success(isArabic ? 'تم أرشفة المحادثة' : 'Chat archived');
+      toast.success(isArabic ? 'تم أرشفة المحادثة' : isHindi ? 'चैट संग्रहीत' : 'Chat archived');
     } else {
-      toast.error(isArabic ? 'فشل أرشفة المحادثة' : 'Failed to archive chat');
+      toast.error(isArabic ? 'فشل أرشفة المحادثة' : isHindi ? 'चैट संग्रहीत करने में विफल' : 'Failed to archive chat');
     }
   };
 
@@ -307,10 +308,10 @@ function MessengerContent() {
       const newSet = new Set(prev);
       if (newSet.has(convId)) {
         newSet.delete(convId);
-        toast.success(isArabic ? 'تم إلغاء التثبيت' : 'Chat unpinned');
+        toast.success(isArabic ? 'تم إلغاء التثبيت' : isHindi ? 'चैट अनपिन किया गया' : 'Chat unpinned');
       } else {
         newSet.add(convId);
-        toast.success(isArabic ? 'تم التثبيت' : 'Chat pinned');
+        toast.success(isArabic ? 'تم التثبيت' : isHindi ? 'चैट पिन किया गया' : 'Chat pinned');
       }
       return newSet;
     });
@@ -319,10 +320,10 @@ function MessengerContent() {
   const handleForwardMessage = async (messageId: string, recipientIds: string[]) => {
     const success = await forwardMessageFn(messageId, recipientIds);
     if (success) {
-      toast.success(isArabic ? 'تم إعادة التوجيه' : 'Message forwarded');
+      toast.success(isArabic ? 'تم إعادة التوجيه' : isHindi ? 'संदेश अग्रेषित' : 'Message forwarded');
       setForwardMessage(null);
     } else {
-      toast.error(isArabic ? 'فشل إعادة التوجيه' : 'Failed to forward message');
+      toast.error(isArabic ? 'فشل إعادة التوجيه' : isHindi ? 'संदेश अग्रेषित करने में विफल' : 'Failed to forward message');
     }
   };
 
@@ -391,14 +392,14 @@ function MessengerContent() {
                 <X className="h-5 w-5" style={{ color: colors.textPrimary }} />
               </Button>
               <h2 className="text-lg font-semibold" style={{ color: colors.textPrimary }}>
-                {isArabic ? 'محادثة جديدة' : 'New Chat'}
+                {isArabic ? 'محادثة جديدة' : isHindi ? 'नई चैट' : 'New Chat'}
               </h2>
             </div>
             <div className="p-4 space-y-3">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: colors.textMuted }} />
                 <Input
-                  placeholder={isArabic ? 'البحث عن جهات الاتصال...' : 'Search contacts...'}
+                  placeholder={isArabic ? 'البحث عن جهات الاتصال...' : isHindi ? 'संपर्क खोजें...' : 'Search contacts...'}
                   value={newChatSearchQuery}
                   onChange={(e) => handleNewChatSearch(e.target.value)}
                   className="pl-10 border-0 rounded-lg"
@@ -432,7 +433,7 @@ function MessengerContent() {
                     ))
                   ) : (
                     <p className="text-center py-8" style={{ color: colors.textMuted }}>
-                      {isArabic ? 'لم يتم العثور على مستخدمين' : 'No users found'}
+                      {isArabic ? 'لم يتم العثور على مستخدمين' : isHindi ? 'कोई उपयोगकर्ता नहीं मिला' : 'No users found'}
                     </p>
                   )
                 ) : (

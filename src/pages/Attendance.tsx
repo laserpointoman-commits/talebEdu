@@ -240,8 +240,10 @@ export default function Attendance() {
       <PageHeader
         title="Attendance"
         titleAr="الحضور"
+        titleHi="उपस्थिति"
         subtitle="Track and manage student attendance"
         subtitleAr="تتبع وإدارة حضور الطلاب"
+        subtitleHi="छात्र उपस्थिति ट्रैक और प्रबंधित करें"
         actions={
           <div className="flex gap-2">
             <Button variant="outline" onClick={handleExportReport} size="sm">
