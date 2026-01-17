@@ -93,12 +93,18 @@ export default function HomeLocationPicker({ value, onChange }: HomeLocationPick
     }
   };
 
+  const getText = (en: string, ar: string, hi: string) => {
+    if (language === 'ar') return ar;
+    if (language === 'hi') return hi;
+    return en;
+  };
+
   const getCurrentLocation = () => {
     if (!navigator.geolocation) {
       toast({
         variant: 'destructive',
-        title: language === 'en' ? 'Error' : 'خطأ',
-        description: language === 'en' ? 'Geolocation is not supported' : 'تحديد الموقع غير مدعوم',
+        title: getText('Error', 'خطأ', 'त्रुटि'),
+        description: getText('Geolocation is not supported', 'تحديد الموقع غير مدعوم', 'जियोलोकेशन समर्थित नहीं है'),
       });
       return;
     }
@@ -132,10 +138,12 @@ export default function HomeLocationPicker({ value, onChange }: HomeLocationPick
         });
         
         toast({
-          title: language === 'en' ? 'Location Found' : 'تم تحديد الموقع',
-          description: language === 'en' 
-            ? `Nearest area: ${nearestArea.name}` 
-            : `أقرب منطقة: ${nearestArea.nameAr}`,
+          title: getText('Location Found', 'تم تحديد الموقع', 'स्थान मिला'),
+          description: getText(
+            `Nearest area: ${nearestArea.name}`,
+            `أقرب منطقة: ${nearestArea.nameAr}`,
+            `निकटतम क्षेत्र: ${nearestArea.name}`
+          ),
         });
         setIsGettingLocation(false);
       },
@@ -143,8 +151,8 @@ export default function HomeLocationPicker({ value, onChange }: HomeLocationPick
         console.error('Geolocation error:', error);
         toast({
           variant: 'destructive',
-          title: language === 'en' ? 'Error' : 'خطأ',
-          description: language === 'en' ? 'Could not get your location' : 'لا يمكن تحديد موقعك',
+          title: getText('Error', 'خطأ', 'त्रुटि'),
+          description: getText('Could not get your location', 'لا يمكن تحديد موقعك', 'आपका स्थान प्राप्त नहीं हो सका'),
         });
         setIsGettingLocation(false);
       }
@@ -157,21 +165,21 @@ export default function HomeLocationPicker({ value, onChange }: HomeLocationPick
         <div className="flex items-center gap-2 mb-2">
           <MapPin className="h-5 w-5 text-primary" />
           <span className="font-medium">
-            {language === 'en' ? 'Home Location (for Bus Route)' : 'موقع المنزل (لمسار الحافلة)'}
+            {getText('Home Location (for Bus Route)', 'موقع المنزل (لمسار الحافلة)', 'घर का स्थान (बस मार्ग के लिए)')}
           </span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label>{language === 'en' ? 'Area' : 'المنطقة'}</Label>
+            <Label>{getText('Area', 'المنطقة', 'क्षेत्र')}</Label>
             <Select value={selectedArea} onValueChange={handleAreaChange}>
               <SelectTrigger>
-                <SelectValue placeholder={language === 'en' ? 'Select your area' : 'اختر منطقتك'} />
+                <SelectValue placeholder={getText('Select your area', 'اختر منطقتك', 'अपना क्षेत्र चुनें')} />
               </SelectTrigger>
               <SelectContent className="max-h-60">
                 {muscatAreas.map((area) => (
                   <SelectItem key={area.name} value={area.name}>
-                    {language === 'en' ? area.name : area.nameAr}
+                    {language === 'en' || language === 'hi' ? area.name : area.nameAr}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -179,11 +187,11 @@ export default function HomeLocationPicker({ value, onChange }: HomeLocationPick
           </div>
 
           <div className="space-y-2">
-            <Label>{language === 'en' ? 'Street / Building' : 'الشارع / المبنى'}</Label>
+            <Label>{getText('Street / Building', 'الشارع / المبنى', 'सड़क / भवन')}</Label>
             <Input
               value={address}
               onChange={(e) => handleAddressChange(e.target.value)}
-              placeholder={language === 'en' ? 'Building 42, Street 18' : 'مبنى 42، شارع 18'}
+              placeholder={getText('Building 42, Street 18', 'مبنى 42، شارع 18', 'बिल्डिंग 42, स्ट्रीट 18')}
             />
           </div>
         </div>
@@ -197,8 +205,8 @@ export default function HomeLocationPicker({ value, onChange }: HomeLocationPick
         >
           <Navigation className={`h-4 w-4 mr-2 ${isGettingLocation ? 'animate-spin' : ''}`} />
           {isGettingLocation
-            ? (language === 'en' ? 'Getting Location...' : 'جاري تحديد الموقع...')
-            : (language === 'en' ? 'Use Current Location' : 'استخدم الموقع الحالي')}
+            ? getText('Getting Location...', 'جاري تحديد الموقع...', 'स्थान प्राप्त हो रहा है...')
+            : getText('Use Current Location', 'استخدم الموقع الحالي', 'वर्तमान स्थान का उपयोग करें')}
         </Button>
 
         {value.latitude && value.longitude && (

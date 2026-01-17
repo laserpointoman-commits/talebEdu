@@ -18,6 +18,12 @@ export default function LowBalanceAlert({ threshold = 20, onTopUpClick }: LowBal
   const [balance, setBalance] = useState<number | null>(null);
   const [showAlert, setShowAlert] = useState(false);
 
+  const getText = (en: string, ar: string, hi: string) => {
+    if (language === 'ar') return ar;
+    if (language === 'hi') return hi;
+    return en;
+  };
+
   useEffect(() => {
     if (user) {
       loadBalance();
@@ -89,7 +95,7 @@ export default function LowBalanceAlert({ threshold = 20, onTopUpClick }: LowBal
             <AlertCircle className="h-4 w-4" />
             <AlertTitle className="flex items-center justify-between">
               <span>
-                {language === 'ar' ? 'رصيد منخفض' : 'Low Balance'}
+                {getText('Low Balance', 'رصيد منخفض', 'कम शेष राशि')}
               </span>
               <Button 
                 variant="outline" 
@@ -98,13 +104,15 @@ export default function LowBalanceAlert({ threshold = 20, onTopUpClick }: LowBal
                 className="ml-4"
               >
                 <Wallet className="h-3 w-3 mr-1" />
-                {language === 'ar' ? 'شحن الآن' : 'Top Up Now'}
+                {getText('Top Up Now', 'شحن الآن', 'अभी टॉप अप करें')}
               </Button>
             </AlertTitle>
             <AlertDescription>
-              {language === 'ar' 
-                ? `رصيدك الحالي ${balance.toFixed(2)} ريال عماني منخفض. يُنصح بشحن المحفظة للتأكد من عدم انقطاع الخدمات.`
-                : `Your current balance of ${balance.toFixed(2)} OMR is low. Please top up to ensure uninterrupted services.`}
+              {getText(
+                `Your current balance of ${balance.toFixed(2)} OMR is low. Please top up to ensure uninterrupted services.`,
+                `رصيدك الحالي ${balance.toFixed(2)} ريال عماني منخفض. يُنصح بشحن المحفظة للتأكد من عدم انقطاع الخدمات.`,
+                `आपकी वर्तमान शेष राशि ${balance.toFixed(2)} OMR कम है। निर्बाध सेवाओं के लिए कृपया टॉप अप करें।`
+              )}
             </AlertDescription>
           </Alert>
         </motion.div>

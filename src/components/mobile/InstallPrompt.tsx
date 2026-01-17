@@ -14,6 +14,12 @@ export default function InstallPrompt() {
     // Language provider not available yet, use default
   }
   
+  const getText = (en: string, ar: string, hi: string) => {
+    if (language === 'ar') return ar;
+    if (language === 'hi') return hi;
+    return en;
+  };
+  
   const [showPrompt, setShowPrompt] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 
@@ -62,7 +68,7 @@ export default function InstallPrompt() {
         <div className="flex items-start justify-between">
           <CardTitle className="text-lg flex items-center gap-2">
             <Download className="h-5 w-5 text-primary" />
-            {language === 'en' ? 'Install TalebEdu' : 'تثبيت TalebEdu'}
+            {getText('Install TalebEdu', 'تثبيت TalebEdu', 'TalebEdu इंस्टॉल करें')}
           </CardTitle>
           <Button
             variant="ghost"
@@ -76,16 +82,18 @@ export default function InstallPrompt() {
       </CardHeader>
       <CardContent className="space-y-3">
         <p className="text-sm text-muted-foreground">
-          {language === 'en'
-            ? 'Install our app for quick access and better performance'
-            : 'قم بتثبيت التطبيق للوصول السريع وأداء أفضل'}
+          {getText(
+            'Install our app for quick access and better performance',
+            'قم بتثبيت التطبيق للوصول السريع وأداء أفضل',
+            'त्वरित पहुंच और बेहतर प्रदर्शन के लिए हमारा ऐप इंस्टॉल करें'
+          )}
         </p>
         <div className="flex gap-2">
           <Button onClick={handleInstall} className="flex-1">
-            {language === 'en' ? 'Install' : 'تثبيت'}
+            {getText('Install', 'تثبيت', 'इंस्टॉल करें')}
           </Button>
           <Button onClick={handleDismiss} variant="outline">
-            {language === 'en' ? 'Not now' : 'ليس الآن'}
+            {getText('Not now', 'ليس الآن', 'अभी नहीं')}
           </Button>
         </div>
       </CardContent>
