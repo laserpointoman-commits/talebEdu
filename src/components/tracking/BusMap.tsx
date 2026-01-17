@@ -18,6 +18,9 @@ export default function BusMap({ busId, studentLocation }: BusMapProps) {
   const map = useRef<mapboxgl.Map | null>(null);
   const busMarker = useRef<mapboxgl.Marker | null>(null);
   const studentMarker = useRef<mapboxgl.Marker | null>(null);
+  const userInteractedRef = useRef(false);
+  const hasAutoCenteredRef = useRef(false);
+
   const [busLocation, setBusLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [mapStatus, setMapStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   const [mapError, setMapError] = useState<string | null>(null);
@@ -31,6 +34,7 @@ export default function BusMap({ busId, studentLocation }: BusMapProps) {
 
     let m: mapboxgl.Map | null = null;
     let handleWindowResize: (() => void) | null = null;
+    let onMoveStart: ((e: any) => void) | null = null;
 
     try {
       const osmRasterStyle: any = {
@@ -60,6 +64,12 @@ export default function BusMap({ busId, studentLocation }: BusMapProps) {
       map.current = m;
       m.addControl(new mapboxgl.NavigationControl(), 'top-right');
 
+      // If the user moves the map, stop auto-follow
+      onMoveStart = (e: any) => {
+        if (e?.originalEvent) userInteractedRef.current = true;
+      };
+      m.on('movestart', onMoveStart);
+
       const onLoad = () => {
         setMapStatus('ready');
 
@@ -84,6 +94,7 @@ export default function BusMap({ busId, studentLocation }: BusMapProps) {
         window.removeEventListener('resize', handleWindowResize!);
         m?.off('load', onLoad);
         m?.off('error', onError);
+        if (onMoveStart) m?.off('movestart', onMoveStart);
         m?.remove();
         map.current = null;
         busMarker.current = null;
@@ -99,6 +110,8 @@ export default function BusMap({ busId, studentLocation }: BusMapProps) {
 
   // Load initial bus location
   useEffect(() => {
+    userInteractedRef.current = false;
+    hasAutoCenteredRef.current = false;
     loadBusLocation();
   }, [busId]);
 
@@ -221,12 +234,17 @@ export default function BusMap({ busId, studentLocation }: BusMapProps) {
       busMarker.current.setLngLat([location.longitude, location.latitude]);
     }
 
-    // Center map on bus
-    map.current.flyTo({
-      center: [location.longitude, location.latitude],
-      zoom: 14,
-      duration: 2000,
-    });
+    // Follow the bus until the user manually moves the map
+    if (!userInteractedRef.current) {
+      const duration = hasAutoCenteredRef.current ? 800 : 0;
+      hasAutoCenteredRef.current = true;
+
+      map.current.easeTo({
+        center: [location.longitude, location.latitude],
+        zoom: Math.max(map.current.getZoom(), 14),
+        duration,
+      });
+    }
 
     // If the map was initialized while hidden/transforming, force a resize
     setTimeout(() => map.current?.resize(), 0);
