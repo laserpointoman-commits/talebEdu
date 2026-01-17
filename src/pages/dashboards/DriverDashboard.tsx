@@ -139,10 +139,10 @@ export default function DriverDashboard() {
     <div className="space-y-6 p-6">
       <div>
         <h1 className="text-3xl font-bold">
-          {language === 'ar' ? 'لوحة السائق' : 'Driver Dashboard'}
+          {language === 'ar' ? 'لوحة السائق' : language === 'hi' ? 'ड्राइवर डैशबोर्ड' : 'Driver Dashboard'}
         </h1>
         <p className="text-muted-foreground">
-          {language === 'ar' ? 'إدارة رحلة الحافلة' : 'Manage your bus route'}
+          {language === 'ar' ? 'إدارة رحلة الحافلة' : language === 'hi' ? 'अपने बस मार्ग का प्रबंधन करें' : 'Manage your bus route'}
         </p>
       </div>
 
@@ -153,19 +153,19 @@ export default function DriverDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {[
           {
-            title: language === 'ar' ? 'رقم الحافلة' : 'Bus Number',
+            title: language === 'ar' ? 'رقم الحافلة' : language === 'hi' ? 'बस नंबर' : 'Bus Number',
             value: busData?.bus_number || 'N/A',
             icon: Bus,
             iconColor: 'text-primary',
           },
           {
-            title: language === 'ar' ? 'الطلاب على متن الحافلة' : 'Students On Board',
+            title: language === 'ar' ? 'الطلاب على متن الحافلة' : language === 'hi' ? 'बस में छात्र' : 'Students On Board',
             value: `${boardedCount} / ${students.length}`,
             icon: Users,
             iconColor: 'text-emerald-500',
           },
           {
-            title: language === 'ar' ? 'التوقف التالي' : 'Next Stop',
+            title: language === 'ar' ? 'التوقف التالي' : language === 'hi' ? 'अगला स्टॉप' : 'Next Stop',
             value: nextStop || 'N/A',
             icon: MapPin,
             iconColor: 'text-amber-500',
@@ -207,14 +207,14 @@ export default function DriverDashboard() {
         <Card>
           <CardHeader>
             <CardTitle>
-              {language === 'ar' ? 'قائمة الطلاب' : 'Student List'}
+              {language === 'ar' ? 'قائمة الطلاب' : language === 'hi' ? 'छात्र सूची' : 'Student List'}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
               {students.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
-                  {language === 'ar' ? 'لا يوجد طلاب مسجلون' : 'No students assigned'}
+                  {language === 'ar' ? 'لا يوجد طلاب مسجلون' : language === 'hi' ? 'कोई छात्र असाइन नहीं' : 'No students assigned'}
                 </div>
               ) : (
                 students.map((student, idx) => (
@@ -231,11 +231,11 @@ export default function DriverDashboard() {
                     {student.status === 'boarded' ? (
                       <Badge className="bg-green-500">
                         <CheckCircle className="h-3 w-3 mr-1" />
-                        {language === 'ar' ? 'على متن الحافلة' : 'Boarded'}
+                        {language === 'ar' ? 'على متن الحافلة' : language === 'hi' ? 'बोर्ड किया' : 'Boarded'}
                       </Badge>
                     ) : (
                       <Badge variant="outline">
-                        {language === 'ar' ? 'في انتظار' : 'Waiting'}
+                        {language === 'ar' ? 'في انتظار' : language === 'hi' ? 'प्रतीक्षा में' : 'Waiting'}
                       </Badge>
                     )}
                   </div>
@@ -250,11 +250,11 @@ export default function DriverDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Button size="lg" className="h-16">
           <CheckCircle className="mr-2 h-5 w-5" />
-          {language === 'ar' ? 'بدء الرحلة' : 'Start Trip'}
+          {language === 'ar' ? 'بدء الرحلة' : language === 'hi' ? 'यात्रा शुरू करें' : 'Start Trip'}
         </Button>
         <Button size="lg" variant="destructive" className="h-16">
           <AlertTriangle className="mr-2 h-5 w-5" />
-          {language === 'ar' ? 'إبلاغ عن حالة طارئة' : 'Report Emergency'}
+          {language === 'ar' ? 'إبلاغ عن حالة طارئة' : language === 'hi' ? 'आपातकाल की रिपोर्ट करें' : 'Report Emergency'}
         </Button>
       </div>
     </div>

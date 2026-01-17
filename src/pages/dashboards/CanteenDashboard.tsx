@@ -88,7 +88,7 @@ export default function CanteenDashboard() {
       .order('category', { ascending: true });
 
     if (error) {
-      toast.error(language === 'en' ? 'Failed to load items' : 'فشل تحميل العناصر');
+      toast.error(language === 'ar' ? 'فشل تحميل العناصر' : language === 'hi' ? 'आइटम लोड करने में विफल' : 'Failed to load items');
       return;
     }
 
@@ -113,7 +113,7 @@ export default function CanteenDashboard() {
         await loadStudentByNFC(nfcData.id);
       }
     } catch (error) {
-      toast.error(language === 'en' ? 'NFC scan failed' : 'فشل مسح NFC');
+      toast.error(language === 'ar' ? 'فشل مسح NFC' : language === 'hi' ? 'NFC स्कैन विफल' : 'NFC scan failed');
     } finally {
       setIsScanning(false);
     }
@@ -135,7 +135,7 @@ export default function CanteenDashboard() {
       .single();
 
     if (error || !studentData) {
-      toast.error(language === 'en' ? 'Student not found' : 'الطالب غير موجود');
+      toast.error(language === 'ar' ? 'الطالب غير موجود' : language === 'hi' ? 'छात्र नहीं मिला' : 'Student not found');
       return;
     }
 
@@ -160,14 +160,16 @@ export default function CanteenDashboard() {
     });
 
     setCart([]);
-    const fullName = language === 'en'
-      ? `${studentData.first_name} ${studentData.last_name}`
-      : `${studentData.first_name_ar || studentData.first_name} ${studentData.last_name_ar || studentData.last_name}`;
+    const fullName = language === 'ar'
+      ? `${studentData.first_name_ar || studentData.first_name} ${studentData.last_name_ar || studentData.last_name}`
+      : `${studentData.first_name} ${studentData.last_name}`;
     
     toast.success(
-      language === 'en' 
-        ? `Welcome ${fullName}!` 
-        : `مرحباً ${fullName}!`
+      language === 'ar' 
+        ? `مرحباً ${fullName}!` 
+        : language === 'hi'
+        ? `स्वागत है ${fullName}!`
+        : `Welcome ${fullName}!`
     );
   };
 
@@ -176,9 +178,11 @@ export default function CanteenDashboard() {
         student.restrictions.allowed_items.length > 0 &&
         !student.restrictions.allowed_items.includes(item.id)) {
       toast.error(
-        language === 'en' 
-          ? 'This item is restricted by parent' 
-          : 'هذا العنصر محظور من قبل ولي الأمر'
+        language === 'ar' 
+          ? 'هذا العنصر محظور من قبل ولي الأمر' 
+          : language === 'hi'
+          ? 'यह आइटम अभिभावक द्वारा प्रतिबंधित है'
+          : 'This item is restricted by parent'
       );
       return;
     }
@@ -214,24 +218,28 @@ export default function CanteenDashboard() {
 
     if (method === 'wallet') {
       if (!student) {
-        toast.error(language === 'en' ? 'No student selected' : 'لم يتم اختيار طالب');
+        toast.error(language === 'ar' ? 'لم يتم اختيار طالب' : language === 'hi' ? 'कोई छात्र नहीं चुना गया' : 'No student selected');
         return;
       }
 
       if (student.restrictions?.daily_limit && total > student.restrictions.daily_limit) {
         toast.error(
-          language === 'en' 
-            ? 'Amount exceeds daily limit' 
-            : 'المبلغ يتجاوز الحد اليومي'
+          language === 'ar' 
+            ? 'المبلغ يتجاوز الحد اليومي' 
+            : language === 'hi'
+            ? 'राशि दैनिक सीमा से अधिक है'
+            : 'Amount exceeds daily limit'
         );
         return;
       }
 
       if (student.wallet_balance < total) {
         toast.error(
-          language === 'en' 
-            ? 'Insufficient wallet balance' 
-            : 'رصيد المحفظة غير كافٍ'
+          language === 'ar' 
+            ? 'رصيد المحفظة غير كافٍ' 
+            : language === 'hi'
+            ? 'वॉलेट बैलेंस अपर्याप्त'
+            : 'Insufficient wallet balance'
         );
         return;
       }
@@ -249,7 +257,7 @@ export default function CanteenDashboard() {
         .eq('user_id', student.profile_id);
 
       if (walletError) {
-        toast.error(language === 'en' ? 'Payment failed' : 'فشلت العملية');
+        toast.error(language === 'ar' ? 'فشلت العملية' : language === 'hi' ? 'भुगतान विफल' : 'Payment failed');
         return;
       }
 
@@ -288,7 +296,7 @@ export default function CanteenDashboard() {
         });
 
       if (orderError) {
-        toast.error(language === 'en' ? 'Failed to create order' : 'فشل إنشاء الطلب');
+        toast.error(language === 'ar' ? 'فشل إنشاء الطلب' : language === 'hi' ? 'ऑर्डर बनाने में विफल' : 'Failed to create order');
         return;
       }
     } else {
@@ -311,15 +319,17 @@ export default function CanteenDashboard() {
         });
 
       if (orderError) {
-        toast.error(language === 'en' ? 'Failed to create order' : 'فشل إنشاء الطلب');
+        toast.error(language === 'ar' ? 'فشل إنشاء الطلب' : language === 'hi' ? 'ऑर्डर बनाने में विफल' : 'Failed to create order');
         return;
       }
     }
 
     toast.success(
-      language === 'en' 
-        ? 'Payment successful!' 
-        : 'تمت العملية بنجاح!'
+      language === 'ar' 
+        ? 'تمت العملية بنجاح!' 
+        : language === 'hi'
+        ? 'भुगतान सफल!'
+        : 'Payment successful!'
     );
 
     // Reset
@@ -352,10 +362,10 @@ export default function CanteenDashboard() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-              {language === 'en' ? 'Canteen System' : 'نظام المقصف'}
+              {language === 'ar' ? 'نظام المقصف' : language === 'hi' ? 'कैंटीन सिस्टम' : 'Canteen System'}
             </h1>
             <p className="text-muted-foreground">
-              {language === 'en' ? 'Complete point of sale management' : 'إدارة نقطة البيع الكاملة'}
+              {language === 'ar' ? 'إدارة نقطة البيع الكاملة' : language === 'hi' ? 'संपूर्ण पॉइंट ऑफ सेल प्रबंधन' : 'Complete point of sale management'}
             </p>
           </div>
         </div>
@@ -367,15 +377,15 @@ export default function CanteenDashboard() {
               <TabsList className="w-full grid grid-cols-3 rounded-none border-b h-14">
                 <TabsTrigger value="pos" className="gap-2 data-[state=active]:bg-primary/10">
                   <LayoutDashboard className="h-4 w-4" />
-                  {language === 'en' ? 'Point of Sale' : 'نقطة البيع'}
+                  {language === 'ar' ? 'نقطة البيع' : language === 'hi' ? 'पॉइंट ऑफ सेल' : 'Point of Sale'}
                 </TabsTrigger>
                 <TabsTrigger value="inventory" className="gap-2 data-[state=active]:bg-primary/10">
                   <Package className="h-4 w-4" />
-                  {language === 'en' ? 'Inventory' : 'المخزون'}
+                  {language === 'ar' ? 'المخزون' : language === 'hi' ? 'इन्वेंटरी' : 'Inventory'}
                 </TabsTrigger>
                 <TabsTrigger value="reports" className="gap-2 data-[state=active]:bg-primary/10">
                   <TrendingUp className="h-4 w-4" />
-                  {language === 'en' ? 'Reports' : 'التقارير'}
+                  {language === 'ar' ? 'التقارير' : language === 'hi' ? 'रिपोर्ट' : 'Reports'}
                 </TabsTrigger>
               </TabsList>
 
@@ -392,8 +402,8 @@ export default function CanteenDashboard() {
                     >
                       <Scan className="mr-2 h-5 w-5" />
                       {isScanning 
-                        ? (language === 'en' ? 'Scanning...' : 'جاري المسح...')
-                        : (language === 'en' ? 'Scan NFC' : 'مسح NFC')
+                        ? (language === 'ar' ? 'جاري المسح...' : language === 'hi' ? 'स्कैनिंग...' : 'Scanning...')
+                        : (language === 'ar' ? 'مسح NFC' : language === 'hi' ? 'NFC स्कैन करें' : 'Scan NFC')
                       }
                     </Button>
                   </div>
@@ -407,7 +417,7 @@ export default function CanteenDashboard() {
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                   <Input
-                    placeholder={language === 'en' ? 'Search items...' : 'بحث عن عنصر...'}
+                    placeholder={language === 'ar' ? 'بحث عن عنصر...' : language === 'hi' ? 'आइटम खोजें...' : 'Search items...'}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-10"
@@ -423,7 +433,7 @@ export default function CanteenDashboard() {
                   <CardHeader>
                     <CardTitle className="text-lg flex items-center gap-2">
                       <span>{categoryData.icon}</span>
-                      <span>{language === 'en' ? categoryName : categoryData.name_ar || categoryName}</span>
+                      <span>{language === 'ar' ? categoryData.name_ar || categoryName : categoryName}</span>
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -445,14 +455,14 @@ export default function CanteenDashboard() {
                           >
                             <div className="text-3xl mb-2">{item.icon || '🍽️'}</div>
                             <div className="font-semibold text-sm text-center">
-                              {language === 'en' ? item.name : item.name_ar || item.name}
+                              {language === 'ar' ? item.name_ar || item.name : item.name}
                             </div>
                             <div className="text-primary font-bold mt-1">
-                              {item.price.toFixed(3)} {language === 'en' ? 'OMR' : 'ر.ع'}
+                              {item.price.toFixed(3)} {language === 'ar' ? 'ر.ع' : 'OMR'}
                             </div>
                             {isRestricted && (
                               <Badge variant="destructive" className="mt-2 text-xs">
-                                {language === 'en' ? 'Restricted' : 'محظور'}
+                                {language === 'ar' ? 'محظور' : language === 'hi' ? 'प्रतिबंधित' : 'Restricted'}
                               </Badge>
                             )}
                           </Button>
@@ -472,30 +482,30 @@ export default function CanteenDashboard() {
               <Card className="border-primary">
                 <CardHeader>
                   <CardTitle className="text-lg">
-                    {language === 'en' ? 'Student' : 'الطالب'}
+                    {language === 'ar' ? 'الطالب' : language === 'hi' ? 'छात्र' : 'Student'}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
                   <div>
                     <p className="font-semibold">
-                      {language === 'en' 
-                        ? `${student.first_name} ${student.last_name}`
-                        : `${student.first_name_ar || student.first_name} ${student.last_name_ar || student.last_name}`
+                      {language === 'ar' 
+                        ? `${student.first_name_ar || student.first_name} ${student.last_name_ar || student.last_name}`
+                        : `${student.first_name} ${student.last_name}`
                       }
                     </p>
                     <p className="text-sm text-muted-foreground">{student.nfc_id}</p>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span>{language === 'en' ? 'Balance:' : 'الرصيد:'}</span>
+                    <span>{language === 'ar' ? 'الرصيد:' : language === 'hi' ? 'शेष:' : 'Balance:'}</span>
                     <span className="font-bold text-primary">
-                      {student.wallet_balance.toFixed(3)} {language === 'en' ? 'OMR' : 'ر.ع'}
+                      {student.wallet_balance.toFixed(3)} {language === 'ar' ? 'ر.ع' : 'OMR'}
                     </span>
                   </div>
                   {student.restrictions?.daily_limit && (
                     <div className="flex justify-between text-sm">
-                      <span>{language === 'en' ? 'Daily Limit:' : 'الحد اليومي:'}</span>
+                      <span>{language === 'ar' ? 'الحد اليومي:' : language === 'hi' ? 'दैनिक सीमा:' : 'Daily Limit:'}</span>
                       <span className="font-bold">
-                        {student.restrictions.daily_limit.toFixed(3)} {language === 'en' ? 'OMR' : 'ر.ع'}
+                        {student.restrictions.daily_limit.toFixed(3)} {language === 'ar' ? 'ر.ع' : 'OMR'}
                       </span>
                     </div>
                   )}

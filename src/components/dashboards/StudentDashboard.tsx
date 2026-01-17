@@ -14,14 +14,18 @@ export default function StudentDashboard() {
 
       <div>
         <h2 className="text-xl md:text-3xl font-bold tracking-tight">
-          {language === 'en' 
-            ? `Welcome back, ${user?.email?.split('@')[0] || 'Student'}!` 
-            : `مرحباً بعودتك، ${user?.email?.split('@')[0] || 'الطالب'}!`}
+          {language === 'ar' 
+            ? `مرحباً بعودتك، ${user?.email?.split('@')[0] || 'الطالب'}!`
+            : language === 'hi'
+            ? `वापसी पर स्वागत है, ${user?.email?.split('@')[0] || 'छात्र'}!`
+            : `Welcome back, ${user?.email?.split('@')[0] || 'Student'}!`}
         </h2>
         <p className="text-xs md:text-base text-muted-foreground mb-3 md:mb-6">
-          {language === 'en' 
-            ? 'Your learning journey continues here' 
-            : 'رحلتك التعليمية تستمر هنا'}
+          {language === 'ar' 
+            ? 'رحلتك التعليمية تستمر هنا' 
+            : language === 'hi'
+            ? 'आपकी सीखने की यात्रा यहाँ जारी है'
+            : 'Your learning journey continues here'}
         </p>
       </div>
     </div>
