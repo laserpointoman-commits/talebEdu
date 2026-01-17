@@ -132,17 +132,28 @@ export default function SupervisorDashboard() {
       { enableHighAccuracy: true, timeout: 10000 }
     );
 
-    // Watch position continuously
+    // Watch position continuously - only show toast once for errors
+    let hasShownLocationError = false;
     locationWatchId.current = navigator.geolocation.watchPosition(
-      (pos) => sendLocationUpdate(pos),
+      (pos) => {
+        hasShownLocationError = false; // Reset on success
+        sendLocationUpdate(pos);
+      },
       (err) => {
-        console.error('Location watch error:', err);
-        toast.error(language === 'ar' ? 'خطأ في تتبع الموقع' : 'Location tracking error');
+        console.error('Location watch error:', err.code, err.message);
+        // Only show toast once per error session
+        if (!hasShownLocationError) {
+          hasShownLocationError = true;
+          // Don't show toast for timeout errors (code 3) - just log them
+          if (err.code !== 3) {
+            toast.error(language === 'ar' ? 'خطأ في تتبع الموقع' : 'Location tracking error');
+          }
+        }
       },
       { 
         enableHighAccuracy: true, 
-        timeout: 30000,
-        maximumAge: 5000  // Send updates every 5 seconds minimum
+        timeout: 60000, // Increased timeout to reduce false errors
+        maximumAge: 10000
       }
     );
     
