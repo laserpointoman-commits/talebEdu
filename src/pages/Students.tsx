@@ -174,8 +174,8 @@ export default function Students() {
 
       if (!nfcId) {
         toast({
-          title: language === 'ar' ? 'خطأ' : 'Error',
-          description: language === 'ar' ? 'لم يتم قراءة بطاقة NFC' : 'Could not read NFC tag',
+          title: language === 'en' ? 'Error' : language === 'hi' ? 'त्रुटि' : 'خطأ',
+          description: language === 'en' ? 'Could not read NFC tag' : language === 'hi' ? 'NFC टैग पढ़ नहीं सका' : 'لم يتم قراءة بطاقة NFC',
           variant: 'destructive',
         });
         return;
@@ -226,19 +226,19 @@ export default function Students() {
         setSelectedStudent(foundStudent);
         setIsProfileDialogOpen(true);
         toast({
-          title: language === 'ar' ? 'تم المسح بنجاح' : 'NFC Scan Successful',
-          description: language === 'ar' ? `تم العثور على: ${foundStudent.nameAr}` : `Found student: ${foundStudent.name}`,
+          title: language === 'en' ? 'NFC Scan Successful' : language === 'hi' ? 'NFC स्कैन सफल' : 'تم المسح بنجاح',
+          description: language === 'en' ? `Found student: ${foundStudent.name}` : language === 'hi' ? `छात्र मिला: ${foundStudent.name}` : `تم العثور على: ${foundStudent.nameAr}`,
         });
       } else {
         toast({
-          title: language === 'ar' ? 'لم يتم العثور' : 'Not Found',
-          description: language === 'ar' ? 'لم يتم العثور على طالب بهذا المعرف' : 'No student found with this NFC ID',
+          title: language === 'en' ? 'Not Found' : language === 'hi' ? 'नहीं मिला' : 'لم يتم العثور',
+          description: language === 'en' ? 'No student found with this NFC ID' : language === 'hi' ? 'इस NFC ID के साथ कोई छात्र नहीं मिला' : 'لم يتم العثور على طالب بهذا المعرف',
           variant: 'destructive',
         });
       }
     } catch (error: any) {
       toast({
-        title: language === 'ar' ? 'خطأ' : 'Error',
+        title: language === 'en' ? 'Error' : language === 'hi' ? 'त्रुटि' : 'خطأ',
         description: error.message,
         variant: 'destructive',
       });
@@ -248,8 +248,8 @@ export default function Students() {
   const handleWriteNFC = async (student: any) => {
     if (!student.nfcId) {
       toast({
-        title: language === 'ar' ? 'خطأ' : 'Error',
-        description: language === 'ar' ? 'لم يتم تعيين رقم NFC لهذا الطالب' : 'No NFC ID assigned to this student',
+        title: language === 'en' ? 'Error' : language === 'hi' ? 'त्रुटि' : 'خطأ',
+        description: language === 'en' ? 'No NFC ID assigned to this student' : language === 'hi' ? 'इस छात्र को कोई NFC ID नियुक्त नहीं है' : 'لم يتم تعيين رقم NFC لهذا الطالب',
         variant: "destructive"
       });
       return;
@@ -266,13 +266,13 @@ export default function Students() {
       
       if (success) {
         toast({
-          title: language === 'ar' ? 'نجح' : 'Success',
-          description: language === 'ar' ? 'تم كتابة بطاقة NFC بنجاح' : 'NFC tag written successfully',
+          title: language === 'en' ? 'Success' : language === 'hi' ? 'सफलता' : 'نجح',
+          description: language === 'en' ? 'NFC tag written successfully' : language === 'hi' ? 'NFC टैग सफलतापूर्वक लिखा गया' : 'تم كتابة بطاقة NFC بنجاح',
         });
       }
     } catch (error: any) {
       toast({
-        title: language === 'ar' ? 'خطأ' : 'Error',
+        title: language === 'en' ? 'Error' : language === 'hi' ? 'त्रुटि' : 'خطأ',
         description: error.message,
         variant: "destructive"
       });
@@ -292,9 +292,11 @@ export default function Students() {
     if (studentToDelete) {
       deleteStudent(studentToDelete.id);
       toast({
-        title: language === 'en' ? 'Student Deleted' : 'تم حذف الطالب',
+        title: language === 'en' ? 'Student Deleted' : language === 'hi' ? 'छात्र हटाया गया' : 'تم حذف الطالب',
         description: language === 'en' 
           ? `${studentToDelete.name} has been deleted successfully` 
+          : language === 'hi'
+          ? `${studentToDelete.name} को सफलतापूर्वक हटा दिया गया`
           : `تم حذف ${studentToDelete.name} بنجاح`,
       });
       setDeleteConfirmOpen(false);
@@ -312,9 +314,11 @@ export default function Students() {
     setSelectedStudents([]);
     
     toast({
-      title: language === 'en' ? 'Deleted Successfully' : 'تم الحذف بنجاح',
+      title: language === 'en' ? 'Deleted Successfully' : language === 'hi' ? 'सफलतापूर्वक हटाया गया' : 'تم الحذف بنجاح',
       description: language === 'en' 
         ? `${count} students have been deleted successfully` 
+        : language === 'hi'
+        ? `${count} छात्रों को सफलतापूर्वक हटा दिया गया`
         : `تم حذف ${count} طلاب بنجاح`,
     });
     
@@ -466,7 +470,7 @@ export default function Students() {
                           {student.class}
                         </span>
                       ) : (
-                        <span className="text-sm text-muted-foreground">{student.grade || 'No class'}</span>
+                        <span className="text-sm text-muted-foreground">{student.grade || (language === 'en' ? 'No class' : language === 'hi' ? 'कोई कक्षा नहीं' : 'لا يوجد صف')}</span>
                       )}
                     </div>
                   </div>
@@ -521,7 +525,7 @@ export default function Students() {
                 variant="outline"
                 onClick={() => handleViewProfile(student)}
               >
-                {language === 'en' ? 'View Full Profile' : 'عرض الملف الكامل'}
+                {language === 'en' ? 'View Full Profile' : language === 'hi' ? 'पूरी प्रोफाइल देखें' : 'عرض الملف الكامل'}
               </Button>
             </CardContent>
           </Card>
@@ -544,7 +548,7 @@ export default function Students() {
         <DialogContent className="max-w-3xl">
           <DialogHeader>
             <DialogTitle>
-              {language === 'en' ? 'Student Profile' : 'ملف الطالب'}
+              {language === 'en' ? 'Student Profile' : language === 'hi' ? 'छात्र प्रोफाइल' : 'ملف الطالب'}
             </DialogTitle>
           </DialogHeader>
           {selectedStudent && (
@@ -569,7 +573,7 @@ export default function Students() {
                 <div>
                   <Label className="text-muted-foreground">{t('common.nfcId')}</Label>
                   <div className="flex items-center gap-2">
-                    <p className="font-medium number-display">{selectedStudent.nfcId || (language === 'ar' ? 'لم يتم تعيين' : 'Not assigned')}</p>
+                    <p className="font-medium number-display">{selectedStudent.nfcId || (language === 'en' ? 'Not assigned' : language === 'hi' ? 'नियुक्त नहीं' : 'لم يتم تعيين')}</p>
                     {selectedStudent.nfcId && canEdit && (
                       <Button
                         size="sm"
@@ -578,14 +582,14 @@ export default function Students() {
                         disabled={writingNfc === selectedStudent.id}
                       >
                         <Nfc className={`h-4 w-4 mr-2 ${writingNfc === selectedStudent.id ? 'animate-pulse' : ''}`} />
-                        {language === 'ar' ? 'كتابة NFC' : 'Write NFC'}
+                        {language === 'en' ? 'Write NFC' : language === 'hi' ? 'NFC लिखें' : 'كتابة NFC'}
                       </Button>
                     )}
                   </div>
                 </div>
                 <div>
                   <Label className="text-muted-foreground">{t('common.barcode')}</Label>
-                  <p className="font-medium number-display">{selectedStudent.barcode || (language === 'ar' ? 'لم يتم تعيين' : 'Not assigned')}</p>
+                  <p className="font-medium number-display">{selectedStudent.barcode || (language === 'en' ? 'Not assigned' : language === 'hi' ? 'नियुक्त नहीं' : 'لم يتم تعيين')}</p>
                 </div>
                 <div>
                   <Label className="text-muted-foreground">{t('common.phone')}</Label>
@@ -604,11 +608,11 @@ export default function Students() {
                   <p className="font-medium">{selectedStudent.bloodGroup || '-'}</p>
                 </div>
                 <div>
-                  <Label className="text-muted-foreground">{language === 'ar' ? 'الجنسية' : 'Nationality'}</Label>
+                  <Label className="text-muted-foreground">{language === 'en' ? 'Nationality' : language === 'hi' ? 'राष्ट्रीयता' : 'الجنسية'}</Label>
                   <p className="font-medium">{selectedStudent.nationality || '-'}</p>
                 </div>
                 <div>
-                  <Label className="text-muted-foreground">{language === 'ar' ? 'الجنس' : 'Gender'}</Label>
+                  <Label className="text-muted-foreground">{language === 'en' ? 'Gender' : language === 'hi' ? 'लिंग' : 'الجنس'}</Label>
                   <p className="font-medium">{selectedStudent.gender || '-'}</p>
                 </div>
                 <div className="col-span-2">
@@ -616,15 +620,15 @@ export default function Students() {
                   <p className="font-medium">{selectedStudent.address || '-'}</p>
                 </div>
                 <div>
-                  <Label className="text-muted-foreground">{language === 'ar' ? 'جهة الاتصال الطارئة' : 'Emergency Contact'}</Label>
+                  <Label className="text-muted-foreground">{language === 'en' ? 'Emergency Contact' : language === 'hi' ? 'आपातकालीन संपर्क' : 'جهة الاتصال الطارئة'}</Label>
                   <p className="font-medium">{selectedStudent.emergencyContactName || '-'}</p>
                 </div>
                 <div>
-                  <Label className="text-muted-foreground">{language === 'ar' ? 'هاتف الطوارئ' : 'Emergency Phone'}</Label>
+                  <Label className="text-muted-foreground">{language === 'en' ? 'Emergency Phone' : language === 'hi' ? 'आपातकालीन फोन' : 'هاتف الطوارئ'}</Label>
                   <p className="font-medium number-display">{selectedStudent.emergencyContact || '-'}</p>
                 </div>
                 <div className="col-span-2">
-                  <Label className="text-muted-foreground">{language === 'ar' ? 'الحالة الطبية' : 'Medical Conditions'}</Label>
+                  <Label className="text-muted-foreground">{language === 'en' ? 'Medical Conditions' : language === 'hi' ? 'चिकित्सा स्थितियाँ' : 'الحالة الطبية'}</Label>
                   <p className="font-medium">{selectedStudent.medicalConditions || '-'}</p>
                 </div>
                 <div className="col-span-2">
@@ -642,13 +646,13 @@ export default function Students() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {language === 'en' ? 'Reading NFC Card...' : 'قراءة بطاقة NFC...'}
+              {language === 'en' ? 'Reading NFC Card...' : language === 'hi' ? 'NFC कार्ड पढ़ रहा है...' : 'قراءة بطاقة NFC...'}
             </DialogTitle>
           </DialogHeader>
           <div className="flex flex-col items-center justify-center py-8">
             <Nfc className="h-16 w-16 text-primary animate-pulse" />
             <p className="mt-4 text-muted-foreground">
-              {language === 'en' ? 'Please tap the NFC card' : 'يرجى تقريب بطاقة NFC'}
+              {language === 'en' ? 'Please tap the NFC card' : language === 'hi' ? 'कृपया NFC कार्ड टैप करें' : 'يرجى تقريب بطاقة NFC'}
             </p>
           </div>
         </DialogContent>
@@ -659,18 +663,20 @@ export default function Students() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {language === 'en' ? 'Confirm Bulk Deletion' : 'تأكيد الحذف الجماعي'}
+              {language === 'en' ? 'Confirm Bulk Deletion' : language === 'hi' ? 'सामूहिक हटाने की पुष्टि करें' : 'تأكيد الحذف الجماعي'}
             </AlertDialogTitle>
             <AlertDialogDescription>
               {language === 'en' 
                 ? `Are you sure you want to delete ${selectedStudents.length} selected students? This action cannot be undone.`
+                : language === 'hi'
+                ? `क्या आप वाकई ${selectedStudents.length} चयनित छात्रों को हटाना चाहते हैं? यह क्रिया पूर्ववत नहीं की जा सकती।`
                 : `هل أنت متأكد من حذف ${selectedStudents.length} طالب محدد؟ لا يمكن التراجع عن هذا الإجراء.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>{language === 'en' ? 'Cancel' : 'إلغاء'}</AlertDialogCancel>
+            <AlertDialogCancel>{language === 'en' ? 'Cancel' : language === 'hi' ? 'रद्द करें' : 'إلغاء'}</AlertDialogCancel>
             <AlertDialogAction onClick={confirmBulkDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              {language === 'en' ? `Delete ${selectedStudents.length} Students` : `حذف ${selectedStudents.length} طالب`}
+              {language === 'en' ? `Delete ${selectedStudents.length} Students` : language === 'hi' ? `${selectedStudents.length} छात्र हटाएं` : `حذف ${selectedStudents.length} طالب`}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -681,20 +687,22 @@ export default function Students() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {language === 'en' ? 'Confirm Delete' : 'تأكيد الحذف'}
+              {language === 'en' ? 'Confirm Delete' : language === 'hi' ? 'हटाने की पुष्टि करें' : 'تأكيد الحذف'}
             </AlertDialogTitle>
             <AlertDialogDescription>
               {language === 'en' 
                 ? `Are you sure you want to delete ${studentToDelete?.name}? This action cannot be undone.`
+                : language === 'hi'
+                ? `क्या आप वाकई ${studentToDelete?.name} को हटाना चाहते हैं? यह क्रिया पूर्ववत नहीं की जा सकती।`
                 : `هل أنت متأكد من حذف ${studentToDelete?.name}؟ لا يمكن التراجع عن هذا الإجراء.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setStudentToDelete(null)}>
-              {language === 'en' ? 'Cancel' : 'إلغاء'}
+              {language === 'en' ? 'Cancel' : language === 'hi' ? 'रद्द करें' : 'إلغاء'}
             </AlertDialogCancel>
             <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              {language === 'en' ? 'Delete' : 'حذف'}
+              {language === 'en' ? 'Delete' : language === 'hi' ? 'हटाएं' : 'حذف'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
