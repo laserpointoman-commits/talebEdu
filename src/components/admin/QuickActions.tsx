@@ -48,13 +48,13 @@ const QuickActionButton = memo(({
       {/* Floating icon with shadow */}
       <div 
         className={cn(
-          "w-12 h-12 rounded-2xl flex items-center justify-center",
+          "w-16 h-16 rounded-2xl flex items-center justify-center",
           "bg-card shadow-lg shadow-foreground/5",
           "group-hover:shadow-xl group-hover:shadow-foreground/10",
           "transition-shadow duration-200"
         )}
       >
-        <Icon className={cn("h-6 w-6", colorClass)} />
+        <Icon className={cn("h-8 w-8", colorClass)} />
       </div>
       {/* Label below */}
       <span className="text-xs text-center font-medium text-muted-foreground group-hover:text-foreground transition-colors line-clamp-2 max-w-[80px]">
@@ -80,8 +80,8 @@ export const QuickActions = memo(function QuickActions() {
         <div className="flex flex-wrap justify-center gap-4">
           {[...Array(4)].map((_, i) => (
             <div key={i} className="flex flex-col items-center gap-2 p-3">
-              <div className="w-12 h-12 bg-muted animate-pulse rounded-2xl" />
-              <div className="w-12 h-3 bg-muted animate-pulse rounded" />
+              <div className="w-16 h-16 bg-muted animate-pulse rounded-2xl" />
+              <div className="w-14 h-3 bg-muted animate-pulse rounded" />
             </div>
           ))}
         </div>
