@@ -100,7 +100,7 @@ export default function WeeklyScheduleManager() {
   const [schedules, setSchedules] = useState<ScheduleEntry[]>([]);
   const [classes, setClasses] = useState<ClassInfo[]>([]);
   const [teachers, setTeachers] = useState<Teacher[]>([]);
-  const [selectedClass, setSelectedClass] = useState<string>('all');
+  const [selectedClass, setSelectedClass] = useState<string>('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   
   // Dialog states
@@ -205,6 +205,11 @@ export default function WeeklyScheduleManager() {
 
       if (teachersError) throw teachersError;
       setTeachers(teachersData || []);
+
+      // Auto-select first class if none selected
+      if (!selectedClass && classesData && classesData.length > 0) {
+        setSelectedClass(classesData[0].id);
+      }
 
     } catch (error: any) {
       console.error('Error fetching data:', error);
@@ -441,9 +446,9 @@ export default function WeeklyScheduleManager() {
     });
   };
 
-  const filteredSchedules = selectedClass === 'all' 
-    ? schedules 
-    : schedules.filter(s => s.class_id === selectedClass);
+  const filteredSchedules = selectedClass 
+    ? schedules.filter(s => s.class_id === selectedClass)
+    : [];
 
   const getSchedulesByDayAndTime = (day: string, time: string) => {
     return filteredSchedules.filter(s => s.day === day && s.time === time);
@@ -824,9 +829,6 @@ export default function WeeklyScheduleManager() {
                 <SelectValue placeholder={language === 'en' ? 'Filter by class' : language === 'hi' ? 'कक्षा द्वारा फ़िल्टर करें' : 'تصفية حسب الصف'} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">
-                  {language === 'en' ? 'All Classes' : language === 'hi' ? 'सभी कक्षाएं' : 'جميع الصفوف'}
-                </SelectItem>
                 {classes.map(c => (
                   <SelectItem key={c.id} value={c.id}>
                     {c.name} ({c.grade}-{c.section})
