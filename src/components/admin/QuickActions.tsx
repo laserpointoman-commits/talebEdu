@@ -10,14 +10,14 @@ import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 const colorClasses = [
-  'from-blue-500 to-indigo-600 text-white shadow-[0_4px_20px_hsl(220,90%,50%,0.4)]',
-  'from-emerald-500 to-teal-600 text-white shadow-[0_4px_20px_hsl(160,84%,40%,0.4)]',
-  'from-purple-500 to-fuchsia-600 text-white shadow-[0_4px_20px_hsl(280,85%,55%,0.4)]',
-  'from-amber-500 to-orange-600 text-white shadow-[0_4px_20px_hsl(40,90%,50%,0.4)]',
-  'from-cyan-500 to-blue-600 text-white shadow-[0_4px_20px_hsl(190,85%,45%,0.4)]',
-  'from-rose-500 to-pink-600 text-white shadow-[0_4px_20px_hsl(350,80%,55%,0.4)]',
-  'from-indigo-500 to-violet-600 text-white shadow-[0_4px_20px_hsl(250,85%,55%,0.4)]',
-  'from-teal-500 to-emerald-600 text-white shadow-[0_4px_20px_hsl(170,80%,40%,0.4)]',
+  'from-blue-500 to-indigo-600 text-white shadow-md',
+  'from-emerald-500 to-teal-600 text-white shadow-md',
+  'from-purple-500 to-fuchsia-600 text-white shadow-md',
+  'from-amber-500 to-orange-600 text-white shadow-md',
+  'from-cyan-500 to-blue-600 text-white shadow-md',
+  'from-rose-500 to-pink-600 text-white shadow-md',
+  'from-indigo-500 to-violet-600 text-white shadow-md',
+  'from-teal-500 to-emerald-600 text-white shadow-md',
 ];
 
 const QuickActionButton = memo(({ 
@@ -39,31 +39,31 @@ const QuickActionButton = memo(({
       initial={{ opacity: 0, y: 20, scale: 0.9 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ 
-        delay: index * 0.06, 
-        duration: 0.3,
+        delay: index * 0.04, 
+        duration: 0.25,
         type: "spring",
-        stiffness: 200,
-        damping: 15
+        stiffness: 300,
+        damping: 20
       }}
-      whileHover={{ scale: 1.05, y: -4 }}
-      whileTap={{ scale: 0.95 }}
+      whileHover={{ scale: 1.03, y: -2 }}
+      whileTap={{ scale: 0.97 }}
     >
       <Button
         variant="ghost"
         className={cn(
-          "h-auto w-full flex-col gap-3 p-5 rounded-3xl",
+          "h-auto w-full flex-col gap-2.5 p-4 rounded-2xl",
           "bg-gradient-to-br",
           "border-0",
-          "hover:brightness-110",
-          "transition-all duration-300",
+          "hover:brightness-105",
+          "transition-all duration-200",
           colorClass
         )}
         onClick={onClick}
       >
-        <div className="p-3.5 rounded-2xl bg-white/25 backdrop-blur-sm">
-          <Icon className="h-7 w-7" />
+        <div className="p-3 rounded-xl bg-white/20 backdrop-blur-sm">
+          <Icon className="h-6 w-6" />
         </div>
-        <span className="text-xs text-center font-semibold line-clamp-2 drop-shadow-sm">
+        <span className="text-xs text-center font-medium line-clamp-2">
           {t(action.title)}
         </span>
       </Button>
