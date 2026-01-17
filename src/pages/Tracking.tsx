@@ -173,14 +173,18 @@ export default function Tracking() {
     }
   }, [students]);
 
+  const getText = (en: string, ar: string, hi: string) => {
+    if (language === 'ar') return ar;
+    if (language === 'hi') return hi;
+    return en;
+  };
+
   const handleStartRoute = () => {
     setIsTracking(true);
     setCurrentRoute({ ...currentRoute, status: 'in-progress' });
     toast({
-      title: language === 'en' ? 'Route Started' : 'بدأ المسار',
-      description: language === 'en' 
-        ? 'GPS tracking is now active'
-        : 'تتبع GPS نشط الآن'
+      title: getText('Route Started', 'بدأ المسار', 'मार्ग शुरू हुआ'),
+      description: getText('GPS tracking is now active', 'تتبع GPS نشط الآن', 'GPS ट्रैकिंग अब सक्रिय है')
     });
   };
 
@@ -188,10 +192,8 @@ export default function Tracking() {
     setIsTracking(false);
     setCurrentRoute({ ...currentRoute, status: 'paused' });
     toast({
-      title: language === 'en' ? 'Route Paused' : 'توقف المسار',
-      description: language === 'en' 
-        ? 'GPS tracking has been paused'
-        : 'تم إيقاف تتبع GPS مؤقتاً'
+      title: getText('Route Paused', 'توقف المسار', 'मार्ग रुका'),
+      description: getText('GPS tracking has been paused', 'تم إيقاف تتبع GPS مؤقتاً', 'GPS ट्रैकिंग रोक दी गई है')
     });
   };
 
@@ -199,10 +201,8 @@ export default function Tracking() {
     setIsTracking(false);
     setCurrentRoute({ ...currentRoute, status: 'completed', completedStops: currentRoute.totalStops });
     toast({
-      title: language === 'en' ? 'Route Completed' : 'اكتمل المسار',
-      description: language === 'en' 
-        ? 'All students have been delivered'
-        : 'تم توصيل جميع الطلاب'
+      title: getText('Route Completed', 'اكتمل المسار', 'मार्ग पूर्ण'),
+      description: getText('All students have been delivered', 'تم توصيل جميع الطلاب', 'सभी छात्रों को पहुंचा दिया गया है')
     });
   };
 
@@ -228,10 +228,8 @@ export default function Tracking() {
     }
 
     toast({
-      title: language === 'en' ? 'Student Picked Up' : 'تم استلام الطالب',
-      description: language === 'en' 
-        ? 'Student has been marked as picked up'
-        : 'تم تسجيل استلام الطالب'
+      title: getText('Student Picked Up', 'تم استلام الطالب', 'छात्र को पिक अप किया गया'),
+      description: getText('Student has been marked as picked up', 'تم تسجيل استلام الطالب', 'छात्र को पिक अप के रूप में चिह्नित किया गया')
     });
   };
 
@@ -244,10 +242,8 @@ export default function Tracking() {
       completedStops: currentRoute.completedStops + 1 
     });
     toast({
-      title: language === 'en' ? 'Student Marked Absent' : 'تم تسجيل الغياب',
-      description: language === 'en' 
-        ? 'Parent will be notified'
-        : 'سيتم إخطار ولي الأمر'
+      title: getText('Student Marked Absent', 'تم تسجيل الغياب', 'छात्र को अनुपस्थित चिह्नित किया गया'),
+      description: getText('Parent will be notified', 'سيتم إخطار ولي الأمر', 'अभिभावक को सूचित किया जाएगा')
     });
   };
 
@@ -257,10 +253,8 @@ export default function Tracking() {
 
   const handleSendReport = () => {
     toast({
-      title: language === 'en' ? 'Report Sent' : 'تم إرسال التقرير',
-      description: language === 'en' 
-        ? 'Your report has been sent to the school'
-        : 'تم إرسال تقريرك إلى المدرسة'
+      title: getText('Report Sent', 'تم إرسال التقرير', 'रिपोर्ट भेजी गई'),
+      description: getText('Your report has been sent to the school', 'تم إرسال تقريرك إلى المدرسة', 'आपकी रिपोर्ट स्कूल को भेज दी गई है')
     });
     setIsReportDialogOpen(false);
     setReportMessage('');
@@ -282,19 +276,19 @@ export default function Tracking() {
   const getStatusBadge = (status: string) => {
     const statusMap = {
       'waiting': { 
-        label: language === 'en' ? 'Waiting' : 'في الانتظار',
+        label: getText('Waiting', 'في الانتظار', 'प्रतीक्षारत'),
         variant: 'outline' as const
       },
       'picked': { 
-        label: language === 'en' ? 'Picked Up' : 'تم الاستلام',
+        label: getText('Picked Up', 'تم الاستلام', 'पिक अप किया'),
         variant: 'default' as const
       },
       'absent': { 
-        label: language === 'en' ? 'Absent' : 'غائب',
+        label: getText('Absent', 'غائب', 'अनुपस्थित'),
         variant: 'destructive' as const
       },
       'dropped': { 
-        label: language === 'en' ? 'Dropped Off' : 'تم التوصيل',
+        label: getText('Dropped Off', 'تم التوصيل', 'उतार दिया'),
         variant: 'secondary' as const
       }
     };
@@ -318,12 +312,14 @@ export default function Tracking() {
         <div>
           <h2 className="text-3xl font-bold tracking-tight flex items-center gap-2">
             <Navigation className="h-8 w-8" />
-            {language === 'en' ? 'Bus Tracking' : 'تتبع الحافلة'}
+            {getText('Bus Tracking', 'تتبع الحافلة', 'बस ट्रैकिंग')}
           </h2>
           <p className="text-muted-foreground mt-1">
-            {language === 'en' 
-              ? 'Track your children\'s bus in real-time'
-              : 'تتبع حافلة أطفالك في الوقت الفعلي'}
+            {getText(
+              'Track your children\'s bus in real-time',
+              'تتبع حافلة أطفالك في الوقت الفعلي',
+              'वास्तविक समय में अपने बच्चों की बस को ट्रैक करें'
+            )}
           </p>
         </div>
 
@@ -333,11 +329,11 @@ export default function Tracking() {
             <CardTitle className="flex items-center justify-between">
               <span className="flex items-center gap-2">
                 <MapPin className="h-5 w-5" />
-                {language === 'en' ? 'Live Location' : 'الموقع المباشر'}
+                {getText('Live Location', 'الموقع المباشر', 'लाइव स्थान')}
               </span>
               <Badge variant="outline" className="gap-1">
                 <div className="h-2 w-2 bg-success rounded-full animate-pulse" />
-                {language === 'en' ? 'Live' : 'مباشر'}
+                {getText('Live', 'مباشر', 'लाइव')}
               </Badge>
             </CardTitle>
           </CardHeader>
@@ -346,9 +342,11 @@ export default function Tracking() {
               <div className="text-center">
                 <Navigation2 className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
                 <p className="text-sm text-muted-foreground">
-                  {language === 'en' 
-                    ? 'Live map tracking will be displayed here'
-                    : 'سيتم عرض التتبع المباشر للخريطة هنا'}
+                  {getText(
+                    'Live map tracking will be displayed here',
+                    'سيتم عرض التتبع المباشر للخريطة هنا',
+                    'यहां लाइव मैप ट्रैकिंग प्रदर्शित होगी'
+                  )}
                 </p>
                 {busLocation && (
                   <p className="text-xs text-muted-foreground mt-2">
@@ -367,10 +365,10 @@ export default function Tracking() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">
-                    {language === 'en' ? 'Current Location' : 'الموقع الحالي'}
+                    {getText('Current Location', 'الموقع الحالي', 'वर्तमान स्थान')}
                   </p>
                   <p className="text-lg font-semibold">
-                    {busLocation?.current_stop || (language === 'en' ? 'En Route' : 'في الطريق')}
+                    {busLocation?.current_stop || getText('En Route', 'في الطريق', 'रास्ते में')}
                   </p>
                 </div>
                 <MapPin className="h-8 w-8 text-primary" />
@@ -383,12 +381,12 @@ export default function Tracking() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">
-                    {language === 'en' ? 'ETA to School' : 'الوقت المتوقع للوصول'}
+                    {getText('ETA to School', 'الوقت المتوقع للوصول', 'स्कूल पहुंचने का अनुमानित समय')}
                   </p>
                   <p className="text-lg font-semibold">
                     {busLocation?.eta_minutes 
-                      ? `${busLocation.eta_minutes} ${language === 'en' ? 'minutes' : 'دقيقة'}`
-                      : (language === 'en' ? 'Calculating...' : 'جاري الحساب...')}
+                      ? `${busLocation.eta_minutes} ${getText('minutes', 'دقيقة', 'मिनट')}`
+                      : getText('Calculating...', 'جاري الحساب...', 'गणना हो रही है...')}
                   </p>
                 </div>
                 <Clock className="h-8 w-8 text-accent" />
@@ -401,10 +399,10 @@ export default function Tracking() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">
-                    {language === 'en' ? 'Bus Number' : 'رقم الحافلة'}
+                    {getText('Bus Number', 'رقم الحافلة', 'बस नंबर')}
                   </p>
                   <p className="text-lg font-semibold">
-                    {busRoutes[0]?.bus?.bus_number || (language === 'en' ? 'Not Assigned' : 'غير محدد')}
+                    {busRoutes[0]?.bus?.bus_number || getText('Not Assigned', 'غير محدد', 'असाइन नहीं')}
                   </p>
                 </div>
                 <Bus className="h-8 w-8 text-primary" />
@@ -423,10 +421,10 @@ export default function Tracking() {
         <div>
           <h2 className="text-3xl font-bold tracking-tight flex items-center gap-2">
             <Navigation className="h-8 w-8" />
-            {language === 'en' ? 'Route Tracking' : 'تتبع المسار'}
+            {getText('Route Tracking', 'تتبع المسار', 'मार्ग ट्रैकिंग')}
           </h2>
           <p className="text-muted-foreground mt-1">
-            {language === 'en' ? currentRoute.name : currentRoute.nameAr}
+            {language === 'ar' ? currentRoute.nameAr : currentRoute.name}
           </p>
         </div>
         <div className="flex gap-2">
@@ -434,25 +432,25 @@ export default function Tracking() {
           {currentRoute.status === 'not-started' && (
             <Button onClick={handleStartRoute} className="gap-2">
               <Play className="h-4 w-4" />
-              {language === 'en' ? 'Start Route' : 'بدء المسار'}
+              {getText('Start Route', 'بدء المسار', 'मार्ग शुरू करें')}
             </Button>
           )}
           {currentRoute.status === 'in-progress' && (
             <>
               <Button onClick={handlePauseRoute} variant="outline" className="gap-2">
                 <Pause className="h-4 w-4" />
-                {language === 'en' ? 'Pause' : 'إيقاف مؤقت'}
+                {getText('Pause', 'إيقاف مؤقت', 'रोकें')}
               </Button>
               <Button onClick={handleEndRoute} variant="destructive" className="gap-2">
                 <Square className="h-4 w-4" />
-                {language === 'en' ? 'End Route' : 'إنهاء المسار'}
+                {getText('End Route', 'إنهاء المسار', 'मार्ग समाप्त')}
               </Button>
             </>
           )}
           {currentRoute.status === 'paused' && (
             <Button onClick={handleStartRoute} className="gap-2">
               <Play className="h-4 w-4" />
-              {language === 'en' ? 'Resume' : 'استئناف'}
+              {getText('Resume', 'استئناف', 'जारी रखें')}
             </Button>
           )}
         </div>
@@ -465,7 +463,7 @@ export default function Tracking() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">
-                  {language === 'en' ? 'Progress' : 'التقدم'}
+                  {getText('Progress', 'التقدم', 'प्रगति')}
                 </p>
                 <p className="text-2xl font-bold">
                   {currentRoute.completedStops}/{currentRoute.totalStops || studentsOnRoute.length}
@@ -486,10 +484,10 @@ export default function Tracking() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">
-                  {language === 'en' ? 'ETA' : 'الوقت المتوقع'}
+                  {getText('ETA', 'الوقت المتوقع', 'अनुमानित समय')}
                 </p>
                 <p className="text-2xl font-bold">
-                  {currentRoute.estimatedTime} {language === 'en' ? 'min' : 'دقيقة'}
+                  {currentRoute.estimatedTime} {getText('min', 'دقيقة', 'मिनट')}
                 </p>
               </div>
               <Clock className="h-8 w-8 text-primary" />
@@ -502,7 +500,7 @@ export default function Tracking() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">
-                  {language === 'en' ? 'Students' : 'الطلاب'}
+                  {getText('Students', 'الطلاب', 'छात्र')}
                 </p>
                 <p className="text-2xl font-bold">
                   {studentsOnRoute.filter(s => s.status === 'picked').length}/{studentsOnRoute.length}
@@ -518,21 +516,21 @@ export default function Tracking() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">
-                  {language === 'en' ? 'Status' : 'الحالة'}
+                  {getText('Status', 'الحالة', 'स्थिति')}
                 </p>
                 <div className="flex items-center gap-2 mt-1">
                   {isTracking ? (
                     <>
                       <Wifi className="h-4 w-4 text-success" />
                       <span className="text-sm font-medium text-success">
-                        {language === 'en' ? 'Tracking' : 'التتبع نشط'}
+                        {getText('Tracking', 'التتبع نشط', 'ट्रैकिंग')}
                       </span>
                     </>
                   ) : (
                     <>
                       <WifiOff className="h-4 w-4 text-muted-foreground" />
                       <span className="text-sm font-medium text-muted-foreground">
-                        {language === 'en' ? 'Offline' : 'غير متصل'}
+                        {getText('Offline', 'غير متصل', 'ऑफलाइन')}
                       </span>
                     </>
                   )}
@@ -551,7 +549,7 @@ export default function Tracking() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Navigation2 className="h-5 w-5" />
-              {language === 'en' ? 'Route Map' : 'خريطة المسار'}
+              {getText('Route Map', 'خريطة المسار', 'मार्ग नक्शा')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -559,9 +557,11 @@ export default function Tracking() {
               <div className="text-center">
                 <MapPin className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
                 <p className="text-sm text-muted-foreground">
-                  {language === 'en' 
-                    ? 'Interactive map will be displayed here'
-                    : 'سيتم عرض الخريطة التفاعلية هنا'}
+                  {getText(
+                    'Interactive map will be displayed here',
+                    'سيتم عرض الخريطة التفاعلية هنا',
+                    'यहां इंटरएक्टिव मैप प्रदर्शित होगा'
+                  )}
                 </p>
               </div>
             </div>
@@ -573,7 +573,7 @@ export default function Tracking() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Users className="h-5 w-5" />
-              {language === 'en' ? 'Students on Route' : 'الطلاب في المسار'}
+              {getText('Students on Route', 'الطلاب في المسار', 'मार्ग पर छात्र')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -581,7 +581,7 @@ export default function Tracking() {
               {studentsOnRoute.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>{language === 'en' ? 'No students assigned to this route' : 'لا يوجد طلاب في هذا المسار'}</p>
+                  <p>{getText('No students assigned to this route', 'لا يوجد طلاب في هذا المسار', 'इस मार्ग पर कोई छात्र असाइन नहीं')}</p>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -601,7 +601,7 @@ export default function Tracking() {
                               {language === 'en' ? student.location : student.locationAr}
                             </p>
                             <p className="text-xs text-muted-foreground mt-1">
-                              {language === 'en' ? 'Pickup:' : 'الاستلام:'} {student.pickupTime}
+                              {getText('Pickup:', 'الاستلام:', 'पिकअप:')} {student.pickupTime}
                             </p>
                           </div>
                         </div>
@@ -648,21 +648,21 @@ export default function Tracking() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {language === 'en' ? 'Send Report' : 'إرسال تقرير'}
+              {getText('Send Report', 'إرسال تقرير', 'रिपोर्ट भेजें')}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label>{language === 'en' ? 'Message' : 'الرسالة'}</Label>
+              <Label>{getText('Message', 'الرسالة', 'संदेश')}</Label>
               <Textarea
                 value={reportMessage}
                 onChange={(e) => setReportMessage(e.target.value)}
-                placeholder={language === 'en' ? 'Describe the issue...' : 'صف المشكلة...'}
+                placeholder={getText('Describe the issue...', 'صف المشكلة...', 'समस्या का वर्णन करें...')}
                 rows={4}
               />
             </div>
             <Button onClick={handleSendReport} className="w-full">
-              {language === 'en' ? 'Send Report' : 'إرسال التقرير'}
+              {getText('Send Report', 'إرسال التقرير', 'रिपोर्ट भेजें')}
             </Button>
           </div>
         </DialogContent>

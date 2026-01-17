@@ -16,54 +16,62 @@ export default function Exams() {
     return <ExamManagement />;
   }
 
+  const getText = (en: string, ar: string, hi: string) => {
+    if (language === 'ar') return ar;
+    if (language === 'hi') return hi;
+    return en;
+  };
+
   const upcomingExams = [
     {
       id: '1',
-      subject: language === 'en' ? 'Mathematics' : 'الرياضيات',
-      examType: language === 'en' ? 'Midterm' : 'اختبار منتصف الفصل',
+      subject: getText('Mathematics', 'الرياضيات', 'गणित'),
+      examType: getText('Midterm', 'اختبار منتصف الفصل', 'मध्यावधि'),
       date: '2024-03-15',
-      time: language === 'en' ? '09:00 AM' : '09:00 ص',
-      duration: language === 'en' ? '2 hours' : 'ساعتان',
-      room: language === 'en' ? 'Hall A' : 'قاعة أ',
-      syllabus: language === 'en' ? 'Chapters 1-5' : 'الفصول 1-5',
+      time: getText('09:00 AM', '09:00 ص', '09:00 AM'),
+      duration: getText('2 hours', 'ساعتان', '2 घंटे'),
+      room: getText('Hall A', 'قاعة أ', 'हॉल A'),
+      syllabus: getText('Chapters 1-5', 'الفصول 1-5', 'अध्याय 1-5'),
     },
     {
       id: '2',
-      subject: language === 'en' ? 'Physics' : 'الفيزياء',
-      examType: language === 'en' ? 'Midterm' : 'اختبار منتصف الفصل',
+      subject: getText('Physics', 'الفيزياء', 'भौतिकी'),
+      examType: getText('Midterm', 'اختبار منتصف الفصل', 'मध्यावधि'),
       date: '2024-03-17',
-      time: language === 'en' ? '09:00 AM' : '09:00 ص',
-      duration: language === 'en' ? '2 hours' : 'ساعتان',
-      room: language === 'en' ? 'Hall B' : 'قاعة ب',
-      syllabus: language === 'en' ? 'Units 1-4' : 'الوحدات 1-4',
+      time: getText('09:00 AM', '09:00 ص', '09:00 AM'),
+      duration: getText('2 hours', 'ساعتان', '2 घंटे'),
+      room: getText('Hall B', 'قاعة ب', 'हॉल B'),
+      syllabus: getText('Units 1-4', 'الوحدات 1-4', 'यूनिट 1-4'),
     },
     {
       id: '3',
-      subject: language === 'en' ? 'English' : 'اللغة الإنجليزية',
-      examType: language === 'en' ? 'Midterm' : 'اختبار منتصف الفصل',
+      subject: getText('English', 'اللغة الإنجليزية', 'अंग्रेज़ी'),
+      examType: getText('Midterm', 'اختبار منتصف الفصل', 'मध्यावधि'),
       date: '2024-03-19',
-      time: language === 'en' ? '10:00 AM' : '10:00 ص',
-      duration: language === 'en' ? '1.5 hours' : 'ساعة ونصف',
-      room: language === 'en' ? 'Hall A' : 'قاعة أ',
-      syllabus: language === 'en' ? 'Literature & Grammar' : 'الأدب والقواعد',
+      time: getText('10:00 AM', '10:00 ص', '10:00 AM'),
+      duration: getText('1.5 hours', 'ساعة ونصف', '1.5 घंटे'),
+      room: getText('Hall A', 'قاعة أ', 'हॉल A'),
+      syllabus: getText('Literature & Grammar', 'الأدب والقواعد', 'साहित्य और व्याकरण'),
     },
     {
       id: '4',
-      subject: language === 'en' ? 'Chemistry' : 'الكيمياء',
-      examType: language === 'en' ? 'Lab Exam' : 'اختبار عملي',
+      subject: getText('Chemistry', 'الكيمياء', 'रसायन विज्ञान'),
+      examType: getText('Lab Exam', 'اختبار عملي', 'प्रयोगशाला परीक्षा'),
       date: '2024-03-20',
-      time: language === 'en' ? '02:00 PM' : '02:00 م',
-      duration: language === 'en' ? '3 hours' : '3 ساعات',
-      room: language === 'en' ? 'Lab 2' : 'مختبر 2',
-      syllabus: language === 'en' ? 'Practical Experiments' : 'التجارب العملية',
+      time: getText('02:00 PM', '02:00 م', '02:00 PM'),
+      duration: getText('3 hours', '3 ساعات', '3 घंटे'),
+      room: getText('Lab 2', 'مختبر 2', 'प्रयोगशाला 2'),
+      syllabus: getText('Practical Experiments', 'التجارب العملية', 'व्यावहारिक प्रयोग'),
     },
   ];
 
   const downloadExamSchedule = () => {
     // Create CSV content
-    const headers = language === 'en' 
-      ? ['Subject', 'Exam Type', 'Date', 'Time', 'Duration', 'Room', 'Syllabus']
-      : ['المادة', 'نوع الامتحان', 'التاريخ', 'الوقت', 'المدة', 'القاعة', 'المنهج'];
+    const headers = getText(
+      'Subject,Exam Type,Date,Time,Duration,Room,Syllabus',
+      'المادة,نوع الامتحان,التاريخ,الوقت,المدة,القاعة,المنهج',
+      'विषय,परीक्षा प्रकार,तारीख,समय,अवधि,कमरा,पाठ्यक्रम'
+    ).split(',');
     
     const csvContent = [
       headers.join(','),

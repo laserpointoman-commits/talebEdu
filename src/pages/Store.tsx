@@ -26,11 +26,13 @@ export default function StorePage() {
         <Card className="p-8 text-center">
           <Package className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
           <h3 className="text-lg font-semibold mb-2">
-            {language === 'en' ? 'Access Restricted' : 'الوصول مقيد'}
+            {language === 'en' ? 'Access Restricted' : language === 'hi' ? 'पहुंच प्रतिबंधित' : 'الوصول مقيد'}
           </h3>
           <p className="text-muted-foreground">
             {language === 'en' 
               ? 'This section is available for parents and students only'
+              : language === 'hi'
+              ? 'यह अनुभाग केवल अभिभावकों और छात्रों के लिए उपलब्ध है'
               : 'هذا القسم متاح للآباء والطلاب فقط'}
           </p>
         </Card>
