@@ -3,23 +3,28 @@ import { useLanguage } from "@/contexts/LanguageContext";
 interface PageHeaderProps {
   title: string;
   titleAr?: string;
+  titleHi?: string;
   subtitle?: string;
   subtitleAr?: string;
+  subtitleHi?: string;
   actions?: React.ReactNode;
 }
 
 export function PageHeader({
   title,
   titleAr,
+  titleHi,
   subtitle,
   subtitleAr,
+  subtitleHi,
   actions,
 }: PageHeaderProps) {
   const { language } = useLanguage();
   const isArabic = language === 'ar';
+  const isHindi = language === 'hi';
 
-  const displayTitle = isArabic && titleAr ? titleAr : title;
-  const displaySubtitle = isArabic && subtitleAr ? subtitleAr : subtitle;
+  const displayTitle = isArabic && titleAr ? titleAr : isHindi && titleHi ? titleHi : title;
+  const displaySubtitle = isArabic && subtitleAr ? subtitleAr : isHindi && subtitleHi ? subtitleHi : subtitle;
 
   return (
     <div className="relative mb-6 md:mb-8">
