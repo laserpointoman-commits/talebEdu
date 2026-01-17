@@ -18,10 +18,14 @@ export function useActiveBusTrips(busIds: string[]) {
     let cancelled = false;
 
     const load = async () => {
+      // Only consider trips from TODAY as active
+      const today = new Date().toISOString().split("T")[0];
+      
       const { data, error } = await supabase
         .from("bus_trips")
         .select("bus_id")
         .eq("status", "in_progress")
+        .gte("created_at", `${today}T00:00:00`)
         .in("bus_id", stableBusIds);
 
       if (cancelled) return;
