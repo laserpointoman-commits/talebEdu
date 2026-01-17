@@ -273,8 +273,8 @@ export default function AllBusesMap({ buses }: AllBusesMapProps) {
       }
 
       const el = createMarkerElement(bus, isActiveBus);
-      // anchor='center' on zero-size element = GPS point is exactly at center
-      const marker = new mapboxgl.Marker({ element: el, anchor: 'center' })
+      // anchor='bottom' places the GPS point at the bottom-center of the marker
+      const marker = new mapboxgl.Marker({ element: el, anchor: 'bottom' })
         .setLngLat([location.longitude, location.latitude])
         .addTo(map.current!);
       markers.current.set(bus.id, marker);
@@ -388,32 +388,20 @@ export default function AllBusesMap({ buses }: AllBusesMapProps) {
     }
   };
 
-  const createMarkerElement = (bus: BusInfo, hasLiveLocation: boolean) => {
-    const isActive = hasLiveLocation;
+  const createMarkerElement = (bus: BusInfo, isActive: boolean) => {
+    // Container sized to hold the visible elements; anchor='bottom' places the GPS at bottom-center
+    const container = document.createElement('div');
+    container.className = 'bus-marker';
+    container.dataset.busId = bus.id;
+    container.dataset.active = isActive ? 'true' : 'false';
+    container.style.display = 'flex';
+    container.style.flexDirection = 'column';
+    container.style.alignItems = 'center';
+    container.style.cursor = 'pointer';
 
-    // Root element is a zero-size div; marker anchor='center' means (0,0) = GPS point
-    const root = document.createElement('div');
-    root.className = 'bus-marker-root';
-    root.dataset.busId = bus.id;
-    root.dataset.active = isActive ? 'true' : 'false';
-    root.style.position = 'relative';
-    root.style.width = '0';
-    root.style.height = '0';
-    root.style.cursor = 'pointer';
-
-    root.addEventListener('click', () => {
+    container.addEventListener('click', () => {
       fetchBusDetails(bus.id);
     });
-
-    // Visible marker elements positioned absolutely around center
-    const wrapper = document.createElement('div');
-    wrapper.style.position = 'absolute';
-    wrapper.style.left = '50%';
-    wrapper.style.bottom = '0';
-    wrapper.style.transform = 'translateX(-50%)';
-    wrapper.style.display = 'flex';
-    wrapper.style.flexDirection = 'column';
-    wrapper.style.alignItems = 'center';
 
     // Label above pin
     const labelWrap = document.createElement('div');
@@ -505,25 +493,11 @@ export default function AllBusesMap({ buses }: AllBusesMapProps) {
       : '10px solid hsl(var(--destructive))';
     pointer.style.marginTop = '-1px';
 
-    // GPS dot at exact anchor point
-    const dot = document.createElement('div');
-    dot.style.width = '10px';
-    dot.style.height = '10px';
-    dot.style.borderRadius = '9999px';
-    dot.style.background = 'hsl(var(--background))';
-    dot.style.border = isActive
-      ? '2px solid hsl(var(--primary))'
-      : '2px solid hsl(var(--destructive))';
-    dot.style.boxShadow = '0 1px 3px hsl(var(--foreground) / 0.3)';
-    dot.style.marginTop = '-1px';
+    container.appendChild(labelWrap);
+    container.appendChild(pinWrap);
+    container.appendChild(pointer);
 
-    wrapper.appendChild(labelWrap);
-    wrapper.appendChild(pinWrap);
-    wrapper.appendChild(pointer);
-    wrapper.appendChild(dot);
-    root.appendChild(wrapper);
-
-    return root;
+    return container;
   };
 
   const activeBusCount = activeBusIds.size;
