@@ -178,11 +178,11 @@ export default function Homework() {
         .single();
 
       if (!teacherData) {
-        toast({
-          title: language === 'en' ? 'Error' : 'خطأ',
-          description: language === 'en' ? 'Teacher record not found' : 'لم يتم العثور على سجل المعلم',
-          variant: 'destructive',
-        });
+      toast({
+        title: language === 'en' ? 'Error' : language === 'hi' ? 'त्रुटि' : 'خطأ',
+        description: language === 'en' ? 'Teacher record not found' : language === 'hi' ? 'शिक्षक रिकॉर्ड नहीं मिला' : 'لم يتم العثور على سجل المعلم',
+        variant: 'destructive',
+      });
         return;
       }
 
@@ -203,8 +203,8 @@ export default function Homework() {
       if (error) throw error;
 
       toast({
-        title: language === 'en' ? 'Homework Added' : 'تم إضافة الواجب',
-        description: language === 'en' ? 'Homework has been added successfully' : 'تم إضافة الواجب بنجاح',
+        title: language === 'en' ? 'Homework Added' : language === 'hi' ? 'होमवर्क जोड़ा गया' : 'تم إضافة الواجب',
+        description: language === 'en' ? 'Homework has been added successfully' : language === 'hi' ? 'होमवर्क सफलतापूर्वक जोड़ा गया' : 'تم إضافة الواجب بنجاح',
       });
       setIsAddDialogOpen(false);
       setFormData({ subject: '', title: '', description: '', dueDate: '', class: '' });
@@ -212,15 +212,15 @@ export default function Homework() {
     } catch (error) {
       if (error instanceof z.ZodError) {
         toast({
-          title: language === 'en' ? 'Validation Error' : 'خطأ في التحقق',
+          title: language === 'en' ? 'Validation Error' : language === 'hi' ? 'सत्यापन त्रुटि' : 'خطأ في التحقق',
           description: error.errors[0].message,
           variant: 'destructive',
         });
       } else {
         console.error('Error adding homework:', error);
         toast({
-          title: language === 'en' ? 'Error' : 'خطأ',
-          description: language === 'en' ? 'Failed to add homework' : 'فشل في إضافة الواجب',
+          title: language === 'en' ? 'Error' : language === 'hi' ? 'त्रुटि' : 'خطأ',
+          description: language === 'en' ? 'Failed to add homework' : language === 'hi' ? 'होमवर्क जोड़ने में विफल' : 'فشل في إضافة الواجب',
           variant: 'destructive',
         });
       }
@@ -231,15 +231,15 @@ export default function Homework() {
     switch (status) {
       case 'pending':
         return <Badge className="bg-warning/10 text-warning">
-          {language === 'en' ? 'Pending' : 'معلق'}
+          {language === 'en' ? 'Pending' : language === 'hi' ? 'लंबित' : 'معلق'}
         </Badge>;
       case 'submitted':
         return <Badge className="bg-success/10 text-success">
-          {language === 'en' ? 'Submitted' : 'مُسلّم'}
+          {language === 'en' ? 'Submitted' : language === 'hi' ? 'जमा किया गया' : 'مُسلّم'}
         </Badge>;
       case 'overdue':
         return <Badge className="bg-destructive/10 text-destructive">
-          {language === 'en' ? 'Overdue' : 'متأخر'}
+          {language === 'en' ? 'Overdue' : language === 'hi' ? 'अतिदेय' : 'متأخر'}
         </Badge>;
       default:
         return null;
@@ -256,13 +256,13 @@ export default function Homework() {
         <div>
           <h2 className="text-3xl font-bold tracking-tight">{t('dashboard.homework')}</h2>
           <p className="text-muted-foreground">
-            {language === 'en' ? 'Manage and track homework assignments' : 'إدارة وتتبع الواجبات المنزلية'}
+            {language === 'en' ? 'Manage and track homework assignments' : language === 'hi' ? 'होमवर्क असाइनमेंट प्रबंधित और ट्रैक करें' : 'إدارة وتتبع الواجبات المنزلية'}
           </p>
         </div>
         {profile?.role === 'teacher' && (
           <Button onClick={() => setIsAddDialogOpen(true)}>
             <Plus className="h-4 w-4 mr-2" />
-            {language === 'en' ? 'Add Homework' : 'إضافة واجب'}
+            {language === 'en' ? 'Add Homework' : language === 'hi' ? 'होमवर्क जोड़ें' : 'إضافة واجب'}
           </Button>
         )}
       </div>
@@ -271,7 +271,7 @@ export default function Homework() {
         <Card>
           <CardContent className="py-12 text-center text-muted-foreground">
             <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>{language === 'en' ? 'No homework assignments found' : 'لا توجد واجبات منزلية'}</p>
+            <p>{language === 'en' ? 'No homework assignments found' : language === 'hi' ? 'कोई होमवर्क असाइनमेंट नहीं मिला' : 'لا توجد واجبات منزلية'}</p>
           </CardContent>
         </Card>
       ) : (
@@ -291,23 +291,23 @@ export default function Homework() {
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="text-sm mb-3">{hw.description || (language === 'en' ? 'No description' : 'لا يوجد وصف')}</p>
+                <p className="text-sm mb-3">{hw.description || (language === 'en' ? 'No description' : language === 'hi' ? 'कोई विवरण नहीं' : 'لا يوجد وصف')}</p>
                 <div className="flex items-center gap-4 text-sm text-muted-foreground">
                   <span className="flex items-center gap-1">
                     <Calendar className="h-3 w-3" />
-                    {language === 'en' ? 'Due' : 'موعد التسليم'}: {new Date(hw.dueDate).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US')}
+                    {language === 'en' ? 'Due' : language === 'hi' ? 'जमा करने की तारीख' : 'موعد التسليم'}: {new Date(hw.dueDate).toLocaleDateString(language === 'ar' ? 'ar-SA' : language === 'hi' ? 'hi-IN' : 'en-US')}
                   </span>
                   <span className="flex items-center gap-1">
                     <Clock className="h-3 w-3" />
                     {hw.class}
                   </span>
                   {profile?.role !== 'teacher' && (
-                    <span>{language === 'en' ? 'Teacher' : 'المدرس'}: {hw.teacher}</span>
+                    <span>{language === 'en' ? 'Teacher' : language === 'hi' ? 'शिक्षक' : 'المدرس'}: {hw.teacher}</span>
                   )}
                 </div>
                 {profile?.role === 'student' && hw.status === 'pending' && (
                   <Button className="mt-3" size="sm">
-                    {language === 'en' ? 'Submit Homework' : 'تسليم الواجب'}
+                    {language === 'en' ? 'Submit Homework' : language === 'hi' ? 'होमवर्क जमा करें' : 'تسليم الواجب'}
                   </Button>
                 )}
               </CardContent>
@@ -320,41 +320,41 @@ export default function Homework() {
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{language === 'en' ? 'Add Homework' : 'إضافة واجب'}</DialogTitle>
+            <DialogTitle>{language === 'en' ? 'Add Homework' : language === 'hi' ? 'होमवर्क जोड़ें' : 'إضافة واجب'}</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div>
-              <Label htmlFor="subject">{language === 'en' ? 'Subject' : 'المادة'}</Label>
+              <Label htmlFor="subject">{language === 'en' ? 'Subject' : language === 'hi' ? 'विषय' : 'المادة'}</Label>
               <Input
                 id="subject"
                 value={formData.subject}
                 onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                placeholder={language === 'en' ? 'e.g., Mathematics' : 'مثال: الرياضيات'}
+                placeholder={language === 'en' ? 'e.g., Mathematics' : language === 'hi' ? 'जैसे, गणित' : 'مثال: الرياضيات'}
                 maxLength={100}
               />
             </div>
             <div>
-              <Label htmlFor="title">{language === 'en' ? 'Title' : 'العنوان'}</Label>
+              <Label htmlFor="title">{language === 'en' ? 'Title' : language === 'hi' ? 'शीर्षक' : 'العنوان'}</Label>
               <Input
                 id="title"
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                placeholder={language === 'en' ? 'e.g., Chapter 5 Exercises' : 'مثال: تمارين الفصل 5'}
+                placeholder={language === 'en' ? 'e.g., Chapter 5 Exercises' : language === 'hi' ? 'जैसे, अध्याय 5 अभ्यास' : 'مثال: تمارين الفصل 5'}
                 maxLength={200}
               />
             </div>
             <div>
-              <Label htmlFor="description">{language === 'en' ? 'Description' : 'الوصف'}</Label>
+              <Label htmlFor="description">{language === 'en' ? 'Description' : language === 'hi' ? 'विवरण' : 'الوصف'}</Label>
               <Textarea
                 id="description"
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder={language === 'en' ? 'Detailed instructions...' : 'تعليمات مفصلة...'}
+                placeholder={language === 'en' ? 'Detailed instructions...' : language === 'hi' ? 'विस्तृत निर्देश...' : 'تعليمات مفصلة...'}
                 maxLength={1000}
               />
             </div>
             <div>
-              <Label htmlFor="dueDate">{language === 'en' ? 'Due Date' : 'موعد التسليم'}</Label>
+              <Label htmlFor="dueDate">{language === 'en' ? 'Due Date' : language === 'hi' ? 'जमा करने की तारीख' : 'موعد التسليم'}</Label>
               <Input
                 id="dueDate"
                 type="date"
@@ -363,10 +363,10 @@ export default function Homework() {
               />
             </div>
             <div>
-              <Label htmlFor="class">{language === 'en' ? 'Class' : 'الصف'}</Label>
+              <Label htmlFor="class">{language === 'en' ? 'Class' : language === 'hi' ? 'कक्षा' : 'الصف'}</Label>
               <Select value={formData.class} onValueChange={(value) => setFormData({ ...formData, class: value })}>
                 <SelectTrigger>
-                  <SelectValue placeholder={language === 'en' ? 'Select class' : 'اختر الصف'} />
+                  <SelectValue placeholder={language === 'en' ? 'Select class' : language === 'hi' ? 'कक्षा चुनें' : 'اختر الصف'} />
                 </SelectTrigger>
                 <SelectContent>
                   {classes.map((cls) => (

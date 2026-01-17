@@ -79,7 +79,7 @@ export default function Exams() {
     link.download = `exam_schedule_${new Date().toISOString().split('T')[0]}.csv`;
     link.click();
 
-    toast.success(language === 'en' ? 'Exam schedule downloaded successfully' : 'تم تنزيل جدول الامتحانات بنجاح');
+    toast.success(language === 'en' ? 'Exam schedule downloaded successfully' : language === 'hi' ? 'परीक्षा शेड्यूल सफलतापूर्वक डाउनलोड किया गया' : 'تم تنزيل جدول الامتحانات بنجاح');
   };
 
   return (
@@ -88,12 +88,12 @@ export default function Exams() {
         <div>
           <h2 className="text-3xl font-bold tracking-tight">{t('dashboard.examSchedule')}</h2>
           <p className="text-muted-foreground">
-            {language === 'en' ? 'View upcoming exam schedules' : 'عرض جداول الامتحانات القادمة'}
+            {language === 'en' ? 'View upcoming exam schedules' : language === 'hi' ? 'आगामी परीक्षा कार्यक्रम देखें' : 'عرض جداول الامتحانات القادمة'}
           </p>
         </div>
         <Button onClick={downloadExamSchedule} variant="outline">
           <Download className="h-4 w-4 mr-2" />
-          {language === 'en' ? 'Download Schedule' : 'تنزيل الجدول'}
+          {language === 'en' ? 'Download Schedule' : language === 'hi' ? 'शेड्यूल डाउनलोड करें' : 'تنزيل الجدول'}
         </Button>
       </div>
 
@@ -117,21 +117,21 @@ export default function Exams() {
                 <div className="flex items-center gap-2">
                   <Clock className="h-4 w-4 text-muted-foreground" />
                   <div>
-                    <p className="text-xs text-muted-foreground">{language === 'en' ? 'Duration' : 'المدة'}</p>
+                    <p className="text-xs text-muted-foreground">{language === 'en' ? 'Duration' : language === 'hi' ? 'अवधि' : 'المدة'}</p>
                     <p className="text-sm font-medium">{exam.duration}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <MapPin className="h-4 w-4 text-muted-foreground" />
                   <div>
-                    <p className="text-xs text-muted-foreground">{language === 'en' ? 'Location' : 'المكان'}</p>
+                    <p className="text-xs text-muted-foreground">{language === 'en' ? 'Location' : language === 'hi' ? 'स्थान' : 'المكان'}</p>
                     <p className="text-sm font-medium">{exam.room}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 col-span-2">
                   <FileText className="h-4 w-4 text-muted-foreground" />
                   <div>
-                    <p className="text-xs text-muted-foreground">{language === 'en' ? 'Syllabus' : 'المنهج'}</p>
+                    <p className="text-xs text-muted-foreground">{language === 'en' ? 'Syllabus' : language === 'hi' ? 'पाठ्यक्रम' : 'المنهج'}</p>
                     <p className="text-sm font-medium">{exam.syllabus}</p>
                   </div>
                 </div>
