@@ -170,15 +170,15 @@ export default function Grades() {
   };
 
   const getExamTypeLabel = (type: string) => {
-    const labels: Record<string, { en: string; ar: string }> = {
-      midterm: { en: 'Midterm', ar: 'اختبار منتصف الفصل' },
-      final: { en: 'Final', ar: 'الاختبار النهائي' },
-      quiz: { en: 'Quiz', ar: 'اختبار قصير' },
-      assignment: { en: 'Assignment', ar: 'واجب' },
-      project: { en: 'Project', ar: 'مشروع' },
-      lab: { en: 'Lab Report', ar: 'تقرير المختبر' },
+    const labels: Record<string, { en: string; ar: string; hi: string }> = {
+      midterm: { en: 'Midterm', ar: 'اختبار منتصف الفصل', hi: 'मध्यावधि' },
+      final: { en: 'Final', ar: 'الاختبار النهائي', hi: 'अंतिम' },
+      quiz: { en: 'Quiz', ar: 'اختبار قصير', hi: 'प्रश्नोत्तरी' },
+      assignment: { en: 'Assignment', ar: 'واجب', hi: 'असाइनमेंट' },
+      project: { en: 'Project', ar: 'مشروع', hi: 'प्रोजेक्ट' },
+      lab: { en: 'Lab Report', ar: 'تقرير المختبر', hi: 'लैब रिपोर्ट' },
     };
-    return labels[type]?.[language === 'ar' ? 'ar' : 'en'] || type;
+    return labels[type]?.[language === 'ar' ? 'ar' : language === 'hi' ? 'hi' : 'en'] || type;
   };
 
   // Check if user is teacher or admin - they can manage grades
@@ -196,7 +196,7 @@ export default function Grades() {
       <div>
         <h2 className="text-3xl font-bold tracking-tight">{t('dashboard.grades')}</h2>
         <p className="text-muted-foreground">
-          {language === 'en' ? 'View student grades' : 'عرض درجات الطلاب'}
+          {language === 'en' ? 'View student grades' : language === 'hi' ? 'छात्र ग्रेड देखें' : 'عرض درجات الطلاب'}
         </p>
       </div>
 
@@ -205,7 +205,7 @@ export default function Grades() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              {language === 'en' ? 'Overall GPA' : 'المعدل التراكمي'}
+              {language === 'en' ? 'Overall GPA' : language === 'hi' ? 'कुल जीपीए' : 'المعدل التراكمي'}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -221,7 +221,7 @@ export default function Grades() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              {language === 'en' ? 'Total Exams' : 'إجمالي الاختبارات'}
+              {language === 'en' ? 'Total Exams' : language === 'hi' ? 'कुल परीक्षाएं' : 'إجمالي الاختبارات'}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -235,7 +235,7 @@ export default function Grades() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              {language === 'en' ? 'Average Score' : 'متوسط الدرجة'}
+              {language === 'en' ? 'Average Score' : language === 'hi' ? 'औसत स्कोर' : 'متوسط الدرجة'}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -249,17 +249,17 @@ export default function Grades() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              {language === 'en' ? 'Performance' : 'الأداء'}
+              {language === 'en' ? 'Performance' : language === 'hi' ? 'प्रदर्शन' : 'الأداء'}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-2">
               <TrendingUp className="h-5 w-5 text-success" />
               <span className="text-2xl font-bold">
-                {stats.averageScore >= 90 ? (language === 'en' ? 'Excellent' : 'ممتاز') :
-                 stats.averageScore >= 80 ? (language === 'en' ? 'Good' : 'جيد جداً') :
-                 stats.averageScore >= 70 ? (language === 'en' ? 'Fair' : 'جيد') :
-                 (language === 'en' ? 'Needs Work' : 'يحتاج تحسين')}
+                {stats.averageScore >= 90 ? (language === 'en' ? 'Excellent' : language === 'hi' ? 'उत्कृष्ट' : 'ممتاز') :
+                 stats.averageScore >= 80 ? (language === 'en' ? 'Good' : language === 'hi' ? 'अच्छा' : 'جيد جداً') :
+                 stats.averageScore >= 70 ? (language === 'en' ? 'Fair' : language === 'hi' ? 'ठीक' : 'جيد') :
+                 (language === 'en' ? 'Needs Work' : language === 'hi' ? 'सुधार की जरूरत' : 'يحتاج تحسين')}
               </span>
             </div>
           </CardContent>
@@ -269,16 +269,17 @@ export default function Grades() {
       {/* Grades Table */}
       <Card>
         <CardHeader>
-          <CardTitle>{language === 'en' ? 'Recent Grades' : 'الدرجات الأخيرة'}</CardTitle>
+          <CardTitle>{language === 'en' ? 'Recent Grades' : language === 'hi' ? 'हाल के ग्रेड' : 'الدرجات الأخيرة'}</CardTitle>
         </CardHeader>
         <CardContent>
           {grades.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>{language === 'en' ? 'No grades found' : 'لا توجد درجات'}</p>
+              <p>{language === 'en' ? 'No grades found' : language === 'hi' ? 'कोई ग्रेड नहीं मिला' : 'لا توجد درجات'}</p>
               <p className="text-sm mt-2">
                 {language === 'en' 
                   ? 'Grades will appear here once exams are graded'
+                  : language === 'hi' ? 'परीक्षाओं की ग्रेडिंग के बाद ग्रेड यहाँ दिखाई देंगे'
                   : 'ستظهر الدرجات هنا بعد تصحيح الاختبارات'}
               </p>
             </div>
@@ -311,7 +312,7 @@ export default function Grades() {
                         </p>
                         <p className="text-xs text-muted-foreground">
                           {new Date(grade.exam.date).toLocaleDateString(
-                            language === 'ar' ? 'ar-SA' : 'en-US'
+                            language === 'ar' ? 'ar-SA' : language === 'hi' ? 'hi-IN' : 'en-US'
                           )}
                         </p>
                       </div>
