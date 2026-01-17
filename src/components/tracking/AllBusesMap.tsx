@@ -178,6 +178,30 @@ export default function AllBusesMap({ buses }: AllBusesMapProps) {
     };
   }, [buses]);
 
+  // Subscribe to real-time updates for trip status changes
+  useEffect(() => {
+    if (buses.length === 0) return;
+
+    const channel = supabase
+      .channel('all-bus-trips')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'bus_trips',
+        },
+        () => {
+          loadActiveTrips();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [buses]);
+
   // Update markers when locations change or buses load
   useEffect(() => {
     if (!map.current || mapStatus !== 'ready') return;
@@ -200,7 +224,7 @@ export default function AllBusesMap({ buses }: AllBusesMapProps) {
       hasValidLocations = true;
       bounds.extend([displayLocation.longitude, displayLocation.latitude]);
       
-      const hasLiveLocation = !!location;
+      const isActiveBus = activeBusIds.has(bus.id);
       
       // Remove existing marker to recreate with correct status
       if (markers.current.has(bus.id)) {
@@ -208,8 +232,8 @@ export default function AllBusesMap({ buses }: AllBusesMapProps) {
         markers.current.delete(bus.id);
       }
       
-      // Create marker with live location status
-      const el = createMarkerElement(bus, hasLiveLocation);
+      // Create marker with active trip status
+      const el = createMarkerElement(bus, isActiveBus);
       const marker = new mapboxgl.Marker({ element: el, anchor: 'bottom' })
         .setLngLat([displayLocation.longitude, displayLocation.latitude])
         .addTo(map.current!);
@@ -224,7 +248,7 @@ export default function AllBusesMap({ buses }: AllBusesMapProps) {
         duration: 1000,
       });
     }
-  }, [busLocations, buses, mapStatus]);
+  }, [busLocations, buses, mapStatus, activeBusIds]);
 
   const loadAllBusLocations = async () => {
     if (buses.length === 0) return;
@@ -255,6 +279,28 @@ export default function AllBusesMap({ buses }: AllBusesMapProps) {
       }
     } catch (error) {
       console.error('Error loading bus locations:', error);
+    }
+  };
+
+  const loadActiveTrips = async () => {
+    if (buses.length === 0) return;
+
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const { data, error } = await supabase
+        .from('bus_trips')
+        .select('bus_id')
+        .eq('status', 'in_progress')
+        .gte('created_at', `${today}T00:00:00`);
+
+      if (error) throw error;
+
+      if (data) {
+        const activeIds = new Set(data.map(t => t.bus_id));
+        setActiveBusIds(activeIds);
+      }
+    } catch (error) {
+      console.error('Error loading active trips:', error);
     }
   };
 
@@ -429,7 +475,7 @@ export default function AllBusesMap({ buses }: AllBusesMapProps) {
     return container;
   };
 
-  const activeBusCount = Array.from(busLocations.values()).length;
+  const activeBusCount = activeBusIds.size;
 
   return (
     <div className="relative w-full h-full min-h-[450px] rounded-xl overflow-hidden border bg-card">
@@ -452,13 +498,13 @@ export default function AllBusesMap({ buses }: AllBusesMapProps) {
       {/* Stats overlay */}
       <div className="absolute top-4 left-4 bg-card/95 backdrop-blur-sm rounded-lg p-3 shadow-lg border">
         <div className="text-sm font-medium mb-1">
-          {language === 'ar' ? 'الحافلات المتتبعة' : 'Tracking Buses'}
+          {language === 'ar' ? 'الرحلات النشطة' : 'Active Trips'}
         </div>
         <div className="text-2xl font-bold text-primary">
           {activeBusCount} / {buses.length}
         </div>
         <div className="text-xs text-muted-foreground mt-1">
-          {language === 'ar' ? 'مواقع مباشرة' : 'Live locations'}
+          {language === 'ar' ? 'حافلات في الخدمة' : 'Buses in service'}
         </div>
       </div>
 
@@ -506,13 +552,13 @@ export default function AllBusesMap({ buses }: AllBusesMapProps) {
               {/* Status Badge */}
               <div className="flex items-center gap-2">
                 <div className={`px-3 py-1.5 rounded-full text-sm font-medium ${
-                  busLocations.has(selectedBus.id) 
+                  activeBusIds.has(selectedBus.id) 
                     ? 'bg-primary/10 text-primary' 
                     : 'bg-red-500/10 text-red-500'
                 }`}>
-                  {busLocations.has(selectedBus.id) 
-                    ? (language === 'ar' ? '🟢 نشطة - تتبع مباشر' : '🟢 Active - Live Tracking')
-                    : (language === 'ar' ? '🔴 غير نشطة' : '🔴 Inactive')
+                  {activeBusIds.has(selectedBus.id) 
+                    ? (language === 'ar' ? '🟢 رحلة نشطة' : '🟢 Active Trip')
+                    : (language === 'ar' ? '🔴 لا توجد رحلة' : '🔴 No Active Trip')
                   }
                 </div>
               </div>
