@@ -86,70 +86,14 @@ export default function AllBusesMap({ buses }: AllBusesMapProps) {
       handleWindowResize = () => m?.resize();
       window.addEventListener('resize', handleWindowResize);
 
-      // Add marker label styles
+      // Add marker styles (pulse keyframes)
       if (!document.getElementById('all-buses-marker-style')) {
         const style = document.createElement('style');
         style.id = 'all-buses-marker-style';
         style.textContent = `
-          @keyframes pulse-ring {
-            0% { transform: scale(1); opacity: 1; }
-            100% { transform: scale(1.5); opacity: 0; }
-          }
-          .bus-pin-container {
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-          }
-          .bus-pin-label {
-            position: absolute;
-            top: -28px;
-            background: hsl(var(--card));
-            color: hsl(var(--card-foreground));
-            padding: 4px 10px;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 600;
-            white-space: nowrap;
-            box-shadow: 0 2px 8px hsl(var(--foreground) / 0.15);
-            border: 1px solid hsl(var(--border));
-          }
-          .bus-pin-label::after {
-            content: '';
-            position: absolute;
-            bottom: -5px;
-            left: 50%;
-            transform: translateX(-50%);
-            border-left: 5px solid transparent;
-            border-right: 5px solid transparent;
-            border-top: 5px solid hsl(var(--card));
-          }
-          .bus-pin {
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            background: hsl(var(--primary));
-            border: 3px solid hsl(var(--background));
-            box-shadow: 0 4px 12px hsl(var(--primary) / 0.3);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: hsl(var(--primary-foreground));
-            position: relative;
-            z-index: 2;
-          }
-          .bus-pin-inactive {
-            background: hsl(var(--muted));
-            color: hsl(var(--muted-foreground));
-          }
-          .bus-pin-pulse {
-            position: absolute;
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            background: hsl(var(--primary) / 0.4);
-            animation: pulse-ring 2s ease-out infinite;
-            z-index: 1;
+          @keyframes busPinPulse {
+            0% { transform: scale(1); opacity: 0.55; }
+            100% { transform: scale(1.7); opacity: 0; }
           }
         `;
         document.head.appendChild(style);
@@ -231,7 +175,7 @@ export default function AllBusesMap({ buses }: AllBusesMapProps) {
         if (!markers.current.has(bus.id)) {
           // Create new marker
           const el = createMarkerElement(bus);
-          const marker = new mapboxgl.Marker(el)
+          const marker = new mapboxgl.Marker({ element: el, anchor: 'bottom' })
             .setLngLat([location.longitude, location.latitude])
             .addTo(map.current!);
           markers.current.set(bus.id, marker);
@@ -287,23 +231,83 @@ export default function AllBusesMap({ buses }: AllBusesMapProps) {
   const createMarkerElement = (bus: BusInfo) => {
     const container = document.createElement('div');
     container.className = 'bus-pin-container';
+    container.style.position = 'relative';
+    container.style.display = 'flex';
+    container.style.flexDirection = 'column';
+    container.style.alignItems = 'center';
+    container.style.width = '44px';
+    container.style.height = '44px';
 
-    // Label with bus name/number
+    // Label (always visible above pin)
+    const labelWrap = document.createElement('div');
+    labelWrap.style.position = 'absolute';
+    labelWrap.style.left = '50%';
+    labelWrap.style.top = '-42px';
+    labelWrap.style.transform = 'translateX(-50%)';
+    labelWrap.style.zIndex = '10';
+    labelWrap.style.pointerEvents = 'none';
+    labelWrap.style.display = 'flex';
+    labelWrap.style.flexDirection = 'column';
+    labelWrap.style.alignItems = 'center';
+
     const label = document.createElement('div');
     label.className = 'bus-pin-label';
     label.textContent = `${language === 'ar' ? 'حافلة' : 'Bus'} ${bus.bus_number}`;
-    container.appendChild(label);
+    label.style.background = 'hsl(var(--card))';
+    label.style.color = 'hsl(var(--card-foreground))';
+    label.style.padding = '6px 10px';
+    label.style.borderRadius = '8px';
+    label.style.fontSize = '13px';
+    label.style.fontWeight = '700';
+    label.style.whiteSpace = 'nowrap';
+    label.style.border = '1px solid hsl(var(--border))';
+    label.style.boxShadow = '0 6px 16px hsl(var(--foreground) / 0.18)';
+
+    const arrow = document.createElement('div');
+    arrow.style.width = '0';
+    arrow.style.height = '0';
+    arrow.style.borderLeft = '6px solid transparent';
+    arrow.style.borderRight = '6px solid transparent';
+    arrow.style.borderTop = '6px solid hsl(var(--card))';
+    arrow.style.filter = 'drop-shadow(0 1px 0 hsl(var(--border)))';
+    arrow.style.marginTop = '-1px';
+
+    labelWrap.appendChild(label);
+    labelWrap.appendChild(arrow);
+    container.appendChild(labelWrap);
 
     // Pulse effect for active buses
     if (bus.status === 'active') {
       const pulse = document.createElement('div');
       pulse.className = 'bus-pin-pulse';
+      pulse.style.position = 'absolute';
+      pulse.style.left = '50%';
+      pulse.style.top = '50%';
+      pulse.style.transform = 'translate(-50%, -50%)';
+      pulse.style.width = '44px';
+      pulse.style.height = '44px';
+      pulse.style.borderRadius = '9999px';
+      pulse.style.background = 'hsl(var(--primary) / 0.35)';
+      pulse.style.animation = 'busPinPulse 2s ease-out infinite';
+      pulse.style.zIndex = '1';
       container.appendChild(pulse);
     }
 
     // Bus pin
     const pin = document.createElement('div');
-    pin.className = `bus-pin ${bus.status !== 'active' ? 'bus-pin-inactive' : ''}`;
+    pin.className = 'bus-pin';
+    pin.style.width = '44px';
+    pin.style.height = '44px';
+    pin.style.borderRadius = '9999px';
+    pin.style.display = 'flex';
+    pin.style.alignItems = 'center';
+    pin.style.justifyContent = 'center';
+    pin.style.border = '3px solid hsl(var(--background))';
+    pin.style.boxShadow = '0 8px 20px hsl(var(--foreground) / 0.14)';
+    pin.style.background = bus.status === 'active' ? 'hsl(var(--primary))' : 'hsl(var(--muted))';
+    pin.style.color = bus.status === 'active' ? 'hsl(var(--primary-foreground))' : 'hsl(var(--muted-foreground))';
+    pin.style.position = 'relative';
+    pin.style.zIndex = '2';
     pin.innerHTML = `
       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <rect x="3" y="6" width="18" height="13" rx="2"/>
@@ -314,8 +318,8 @@ export default function AllBusesMap({ buses }: AllBusesMapProps) {
         <circle cx="17" cy="17" r="1"/>
       </svg>
     `;
-    container.appendChild(pin);
 
+    container.appendChild(pin);
     return container;
   };
 
