@@ -87,7 +87,7 @@ export default function WalletComponent() {
     } catch (error: any) {
       console.error('Error fetching wallet data:', error);
       toast({
-        title: language === 'ar' ? 'خطأ' : 'Error',
+        title: language === 'ar' ? 'خطأ' : language === 'hi' ? 'त्रुटि' : 'Error',
         description: error.message,
         variant: 'destructive'
       });
@@ -100,8 +100,8 @@ export default function WalletComponent() {
     const amount = parseFloat(topUpAmount);
     if (!amount || amount <= 0) {
       toast({
-        title: language === 'ar' ? 'خطأ' : 'Error',
-        description: language === 'ar' ? 'يرجى إدخال مبلغ صحيح' : 'Please enter a valid amount',
+        title: language === 'ar' ? 'خطأ' : language === 'hi' ? 'त्रुटि' : 'Error',
+        description: language === 'ar' ? 'يرجى إدخال مبلغ صحيح' : language === 'hi' ? 'कृपया एक वैध राशि दर्ज करें' : 'Please enter a valid amount',
         variant: 'destructive'
       });
       return;
@@ -136,9 +136,11 @@ export default function WalletComponent() {
 
       setBalance(newBalance);
       toast({
-        title: language === 'ar' ? 'تم إضافة الرصيد' : 'Funds Added',
+        title: language === 'ar' ? 'تم إضافة الرصيد' : language === 'hi' ? 'धन जोड़ा गया' : 'Funds Added',
         description: language === 'ar' 
           ? `تم إضافة ${amount.toFixed(2)} ر.ع إلى محفظتك`
+          : language === 'hi'
+          ? `आपके वॉलेट में OMR ${amount.toFixed(2)} जोड़ा गया`
           : `Added OMR ${amount.toFixed(2)} to your wallet`,
       });
 
@@ -147,7 +149,7 @@ export default function WalletComponent() {
       fetchWalletData();
     } catch (error: any) {
       toast({
-        title: language === 'ar' ? 'خطأ' : 'Error',
+        title: language === 'ar' ? 'خطأ' : language === 'hi' ? 'त्रुटि' : 'Error',
         description: error.message,
         variant: 'destructive'
       });
@@ -173,15 +175,17 @@ export default function WalletComponent() {
       <div className="flex flex-col items-center justify-center py-12 space-y-4">
         <AlertCircle className="h-12 w-12 text-destructive" />
         <h2 className="text-xl font-semibold">
-          {language === 'ar' ? 'غير مصرح' : 'Access Denied'}
+          {language === 'ar' ? 'غير مصرح' : language === 'hi' ? 'पहुँच अस्वीकृत' : 'Access Denied'}
         </h2>
         <p className="text-muted-foreground text-center max-w-md">
           {language === 'ar' 
             ? 'ليس لديك صلاحية الوصول إلى هذه الصفحة. المحفظة متاحة فقط للطلاب وأولياء الأمور.'
+            : language === 'hi'
+            ? 'आपको इस पृष्ठ तक पहुँचने की अनुमति नहीं है। वॉलेट केवल छात्रों और अभिभावकों के लिए उपलब्ध है।'
             : 'You do not have permission to access this page. Wallet is only available for students and parents.'}
         </p>
         <Button onClick={() => window.history.back()}>
-          {language === 'ar' ? 'العودة' : 'Go Back'}
+          {language === 'ar' ? 'العودة' : language === 'hi' ? 'वापस जाएं' : 'Go Back'}
         </Button>
       </div>
     );
@@ -200,14 +204,14 @@ export default function WalletComponent() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Wallet className="h-5 w-5" />
-            {language === 'ar' ? 'محفظتي' : 'My Wallet'}
+            {language === 'ar' ? 'محفظتي' : language === 'hi' ? 'मेरा वॉलेट' : 'My Wallet'}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-6">
             <div className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground p-6 rounded-lg">
               <p className="text-sm opacity-90">
-                {language === 'ar' ? 'الرصيد الحالي' : 'Current Balance'}
+                {language === 'ar' ? 'الرصيد الحالي' : language === 'hi' ? 'वर्तमान शेष' : 'Current Balance'}
               </p>
               <p className="text-4xl font-bold mt-2">
                 <span className="number-display">{language === 'ar' ? `${balance.toFixed(2)} ر.ع` : `OMR ${balance.toFixed(2)}`}</span>
@@ -215,7 +219,7 @@ export default function WalletComponent() {
               <div className="flex gap-2 mt-6">
                 <Button size="sm" variant="secondary" onClick={() => setShowTopUp(true)}>
                   <Plus className="h-4 w-4 mr-1" />
-                  {language === 'ar' ? 'إضافة رصيد' : 'Add Funds'}
+                  {language === 'ar' ? 'إضافة رصيد' : language === 'hi' ? 'धन जोड़ें' : 'Add Funds'}
                 </Button>
                 <WalletTransfer />
               </div>
@@ -228,13 +232,13 @@ export default function WalletComponent() {
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">
-            {language === 'ar' ? 'المعاملات الأخيرة' : 'Recent Transactions'}
+            {language === 'ar' ? 'المعاملات الأخيرة' : language === 'hi' ? 'हालिया लेन-देन' : 'Recent Transactions'}
           </CardTitle>
         </CardHeader>
         <CardContent>
           {transactions.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              {language === 'ar' ? 'لا توجد معاملات بعد' : 'No transactions yet'}
+              {language === 'ar' ? 'لا توجد معاملات بعد' : language === 'hi' ? 'अभी तक कोई लेन-देन नहीं' : 'No transactions yet'}
             </div>
           ) : (
             <div className="space-y-3">
@@ -284,12 +288,12 @@ export default function WalletComponent() {
                     </p>
                     <Badge variant="outline" className="text-xs mt-1">
                       {transaction.type === 'deposit' 
-                        ? (language === 'en' ? 'Deposit' : 'إيداع')
+                        ? (language === 'ar' ? 'إيداع' : language === 'hi' ? 'जमा' : 'Deposit')
                         : transaction.type === 'transfer_in'
-                        ? (language === 'en' ? 'Received' : 'استلام')
+                        ? (language === 'ar' ? 'استلام' : language === 'hi' ? 'प्राप्त' : 'Received')
                         : transaction.type === 'transfer_out'
-                        ? (language === 'en' ? 'Sent' : 'إرسال')
-                        : (language === 'en' ? 'Purchase' : 'شراء')}
+                        ? (language === 'ar' ? 'إرسال' : language === 'hi' ? 'भेजा' : 'Sent')
+                        : (language === 'ar' ? 'شراء' : language === 'hi' ? 'खरीद' : 'Purchase')}
                     </Badge>
                   </div>
                 </div>
@@ -305,16 +309,16 @@ export default function WalletComponent() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Plus className="h-5 w-5" />
-              {language === 'ar' ? 'إضافة رصيد' : 'Add Funds'}
+              {language === 'ar' ? 'إضافة رصيد' : language === 'hi' ? 'धन जोड़ें' : 'Add Funds'}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label>{language === 'ar' ? 'المبلغ (ر.ع)' : 'Amount (OMR)'}</Label>
+              <Label>{language === 'ar' ? 'المبلغ (ر.ع)' : language === 'hi' ? 'राशि (OMR)' : 'Amount (OMR)'}</Label>
               <Input 
                 type="number" 
                 step="0.01"
-                placeholder={language === 'ar' ? 'أدخل المبلغ' : 'Enter amount'}
+                placeholder={language === 'ar' ? 'أدخل المبلغ' : language === 'hi' ? 'राशि दर्ज करें' : 'Enter amount'}
                 value={topUpAmount}
                 onChange={(e) => setTopUpAmount(e.target.value)}
                 dir="ltr"
@@ -325,6 +329,8 @@ export default function WalletComponent() {
               <p className="text-sm text-muted-foreground text-center">
                 {language === 'ar' 
                   ? 'في التطبيق الفعلي، سيتم توجيهك لبوابة الدفع الإلكتروني'
+                  : language === 'hi'
+                  ? 'उत्पादन में, आपको भुगतान गेटवे पर रीडायरेक्ट किया जाएगा'
                   : 'In production, you will be redirected to payment gateway'}
               </p>
             </div>
@@ -336,10 +342,10 @@ export default function WalletComponent() {
               {processing ? (
                 <span className="flex items-center">
                   <LogoLoader size="small" />
-                  <span className="ml-2">{language === 'ar' ? 'جاري المعالجة...' : 'Processing...'}</span>
+                  <span className="ml-2">{language === 'ar' ? 'جاري المعالجة...' : language === 'hi' ? 'प्रोसेसिंग...' : 'Processing...'}</span>
                 </span>
               ) : (
-                language === 'ar' ? 'إضافة الرصيد' : 'Add Funds'
+                language === 'ar' ? 'إضافة الرصيد' : language === 'hi' ? 'धन जोड़ें' : 'Add Funds'
               )}
             </Button>
           </div>

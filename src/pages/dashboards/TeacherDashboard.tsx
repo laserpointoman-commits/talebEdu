@@ -136,10 +136,10 @@ export default function TeacherDashboard() {
     <div className="space-y-6 p-6">
       <div>
         <h1 className="text-3xl font-bold">
-          {language === 'ar' ? 'لوحة المعلم' : 'Teacher Dashboard'}
+          {language === 'ar' ? 'لوحة المعلم' : language === 'hi' ? 'शिक्षक डैशबोर्ड' : 'Teacher Dashboard'}
         </h1>
         <p className="text-muted-foreground">
-          {language === 'ar' ? 'إدارة الفصول والطلاب' : 'Manage your classes and students'}
+          {language === 'ar' ? 'إدارة الفصول والطلاب' : language === 'hi' ? 'अपनी कक्षाओं और छात्रों का प्रबंधन करें' : 'Manage your classes and students'}
         </p>
       </div>
 
@@ -150,24 +150,24 @@ export default function TeacherDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {[
           {
-            title: language === 'ar' ? 'إجمالي الطلاب' : 'Total Students',
+            title: language === 'ar' ? 'إجمالي الطلاب' : language === 'hi' ? 'कुल छात्र' : 'Total Students',
             value: stats.totalStudents,
-            subtitle: `${stats.totalClasses} ${language === 'ar' ? 'فصول' : 'classes'}`,
+            subtitle: `${stats.totalClasses} ${language === 'ar' ? 'فصول' : language === 'hi' ? 'कक्षाएं' : 'classes'}`,
             icon: GraduationCap,
             iconColor: 'text-primary',
           },
           {
-            title: language === 'ar' ? 'الحضور اليوم' : "Today's Attendance",
+            title: language === 'ar' ? 'الحضور اليوم' : language === 'hi' ? 'आज की उपस्थिति' : "Today's Attendance",
             value: stats.todayAttendance,
-            subtitle: `${stats.attendanceRate}% ${language === 'ar' ? 'معدل الحضور' : 'attendance rate'}`,
+            subtitle: `${stats.attendanceRate}% ${language === 'ar' ? 'معدل الحضور' : language === 'hi' ? 'उपस्थिति दर' : 'attendance rate'}`,
             subtitleColor: 'text-green-500',
             icon: Clock,
             iconColor: 'text-emerald-500',
           },
           {
-            title: language === 'ar' ? 'الامتحانات القادمة' : 'Upcoming Exams',
+            title: language === 'ar' ? 'الامتحانات القادمة' : language === 'hi' ? 'आगामी परीक्षाएं' : 'Upcoming Exams',
             value: stats.upcomingExams,
-            subtitle: language === 'ar' ? 'قادمة' : 'scheduled',
+            subtitle: language === 'ar' ? 'قادمة' : language === 'hi' ? 'निर्धारित' : 'scheduled',
             icon: FileText,
             iconColor: 'text-amber-500',
           },
@@ -200,13 +200,13 @@ export default function TeacherDashboard() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Calendar className="h-5 w-5" />
-            {language === 'ar' ? 'جدول اليوم' : "Today's Schedule"}
+            {language === 'ar' ? 'جدول اليوم' : language === 'hi' ? 'आज का शेड्यूल' : "Today's Schedule"}
           </CardTitle>
         </CardHeader>
         <CardContent>
           {todaySchedule.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              {language === 'ar' ? 'لا توجد حصص اليوم' : 'No classes scheduled for today'}
+              {language === 'ar' ? 'لا توجد حصص اليوم' : language === 'hi' ? 'आज कोई कक्षा निर्धारित नहीं' : 'No classes scheduled for today'}
             </div>
           ) : (
             <div className="space-y-4">
@@ -218,18 +218,20 @@ export default function TeacherDashboard() {
                       <div className="font-medium">
                         {language === 'ar' 
                           ? `الصف ${item.classes?.grade} ${item.classes?.section}`
+                          : language === 'hi'
+                          ? `कक्षा ${item.classes?.grade}${item.classes?.section}`
                           : `Class ${item.classes?.grade}${item.classes?.section}`}
                       </div>
                       <div className="text-sm text-muted-foreground">{item.subject}</div>
                       {item.room && (
                         <div className="text-xs text-muted-foreground">
-                          {language === 'ar' ? 'الغرفة:' : 'Room:'} {item.room}
+                          {language === 'ar' ? 'الغرفة:' : language === 'hi' ? 'कमरा:' : 'Room:'} {item.room}
                         </div>
                       )}
                     </div>
                   </div>
                   <Button size="sm" variant="ghost" onClick={() => navigate('/dashboard/classes')}>
-                    {language === 'ar' ? 'عرض' : 'View'}
+                    {language === 'ar' ? 'عرض' : language === 'hi' ? 'देखें' : 'View'}
                   </Button>
                 </div>
               ))}

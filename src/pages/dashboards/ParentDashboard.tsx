@@ -67,7 +67,7 @@ const ChildCard = memo(({
               </Badge>
             </div>
             <p className="text-sm text-muted-foreground mt-0.5">
-              {language === 'ar' ? `الفصل: ${child.class}` : `Class: ${child.class}`}
+              {language === 'ar' ? `الفصل: ${child.class}` : language === 'hi' ? `कक्षा: ${child.class}` : `Class: ${child.class}`}
             </p>
           </div>
           
@@ -75,7 +75,7 @@ const ChildCard = memo(({
           <div className="flex items-center gap-2">
             <div className="text-right">
               <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
-                {language === 'ar' ? 'الرصيد' : 'Balance'}
+                {language === 'ar' ? 'الرصيد' : language === 'hi' ? 'शेष' : 'Balance'}
               </p>
               <p className="font-bold text-primary text-lg">
                 {child.wallet_balance || 0}
@@ -118,11 +118,11 @@ const PendingStudentCard = memo(({
                 : `${student.first_name} ${student.last_name}`}
             </p>
             <p className="text-xs text-muted-foreground">
-              {language === 'ar' ? 'في انتظار موافقة الإدارة' : 'Waiting for admin approval'}
+              {language === 'ar' ? 'في انتظار موافقة الإدارة' : language === 'hi' ? 'प्रशासन की स्वीकृति की प्रतीक्षा' : 'Waiting for admin approval'}
             </p>
           </div>
           <Badge variant="outline" className="border-warning/50 text-warning bg-warning/10 rounded">
-            {language === 'ar' ? 'قيد المراجعة' : 'Pending'}
+            {language === 'ar' ? 'قيد المراجعة' : language === 'hi' ? 'लंबित' : 'Pending'}
           </Badge>
         </div>
       </GlassCardContent>
@@ -198,7 +198,7 @@ export default function ParentDashboard() {
         filter: `parent_id=eq.${user.id}`
       }, () => {
         loadParentData();
-        toast.success(language === 'ar' ? 'تم تحديث البيانات' : 'Data updated');
+        toast.success(language === 'ar' ? 'تم تحديث البيانات' : language === 'hi' ? 'डेटा अपडेट हुआ' : 'Data updated');
       })
       .subscribe();
 
@@ -222,11 +222,15 @@ export default function ParentDashboard() {
         <h1 className="text-2xl md:text-3xl font-bold">
           {language === 'ar' 
             ? `مرحباً${profile?.full_name ? `, ${profile.full_name}` : ''}` 
+            : language === 'hi' 
+            ? `स्वागत है${profile?.full_name ? `, ${profile.full_name}` : ''}`
             : `Welcome${profile?.full_name ? `, ${profile.full_name}` : ''}`}
         </h1>
         <p className="text-muted-foreground text-sm mt-1">
           {language === 'ar' 
             ? 'إدارة حسابات أطفالك بسهولة'
+            : language === 'hi'
+            ? 'अपने बच्चों के खातों को आसानी से प्रबंधित करें'
             : 'Manage your children\'s accounts easily'}
         </p>
       </motion.div>
@@ -246,7 +250,7 @@ export default function ParentDashboard() {
                 </div>
                 <div>
                   <p className="text-sm opacity-90">
-                    {language === 'ar' ? 'إجمالي رصيد المحفظة' : 'Total Wallet Balance'}
+                    {language === 'ar' ? 'إجمالي رصيد المحفظة' : language === 'hi' ? 'कुल वॉलेट बैलेंस' : 'Total Wallet Balance'}
                   </p>
                   <p className="text-3xl font-bold mt-1">
                     {totalBalance.toFixed(2)}
@@ -262,7 +266,7 @@ export default function ParentDashboard() {
                 className="gap-2 bg-white/20 hover:bg-white/30 text-white border-0"
               >
                 <TrendingUp className="h-4 w-4" />
-                {language === 'ar' ? 'شحن' : 'Top Up'}
+                {language === 'ar' ? 'شحن' : language === 'hi' ? 'टॉप अप' : 'Top Up'}
               </Button>
             </div>
           </GlassCardContent>
@@ -277,7 +281,7 @@ export default function ParentDashboard() {
         transition={{ delay: 0.2 }}
       >
         <h2 className="text-lg font-semibold">
-          {language === 'ar' ? 'أطفالي' : 'My Children'}
+          {language === 'ar' ? 'أطفالي' : language === 'hi' ? 'मेरे बच्चे' : 'My Children'}
         </h2>
         {profile?.expected_students_count && profile.registered_students_count < profile.expected_students_count && (
           <Button 
@@ -287,7 +291,7 @@ export default function ParentDashboard() {
             className="text-primary gap-1"
           >
             <UserPlus className="h-4 w-4" />
-            {language === 'ar' ? 'إضافة' : 'Add'}
+            {language === 'ar' ? 'إضافة' : language === 'hi' ? 'जोड़ें' : 'Add'}
           </Button>
         )}
       </motion.div>
@@ -335,11 +339,13 @@ export default function ParentDashboard() {
                   <GraduationCap className="h-14 w-14 text-primary" />
                 </div>
                 <h3 className="text-xl font-semibold mb-2">
-                  {language === 'ar' ? 'سجل طالبك الأول' : 'Register Your First Student'}
+                  {language === 'ar' ? 'سجل طالبك الأول' : language === 'hi' ? 'अपने पहले छात्र को पंजीकृत करें' : 'Register Your First Student'}
                 </h3>
                 <p className="text-muted-foreground mb-6 text-center text-sm max-w-sm">
                   {language === 'ar' 
                     ? 'ابدأ بإضافة معلومات طفلك للوصول إلى جميع خدمات المدرسة'
+                    : language === 'hi'
+                    ? 'सभी स्कूल सेवाओं तक पहुंचने के लिए अपने बच्चे की जानकारी जोड़कर शुरू करें'
                     : 'Start by adding your child\'s information to access all school services'}
                 </p>
                 <Button 
@@ -348,7 +354,7 @@ export default function ParentDashboard() {
                   className="gap-2 shadow-lg"
                 >
                   <UserPlus className="h-5 w-5" />
-                  {language === 'ar' ? 'تسجيل طالب' : 'Register Student'}
+                  {language === 'ar' ? 'تسجيل طالب' : language === 'hi' ? 'छात्र पंजीकृत करें' : 'Register Student'}
                 </Button>
               </GlassCardContent>
             </GlassCard>
