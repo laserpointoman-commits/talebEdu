@@ -103,9 +103,11 @@ export default function RegisterStudent() {
 
       if (studentError) throw studentError;
 
-      toast.success(
+          toast.success(
         language === 'en'
           ? 'Student registered successfully!'
+          : language === 'hi'
+          ? 'छात्र सफलतापूर्वक पंजीकृत!'
           : 'تم تسجيل الطالب بنجاح!'
       );
 
@@ -113,7 +115,7 @@ export default function RegisterStudent() {
       setShowSuccessDialog(true);
     } catch (error: any) {
       console.error('Error registering student:', error);
-      toast.error(error.message || (language === 'en' ? 'Failed to register student' : 'فشل تسجيل الطالب'));
+      toast.error(error.message || (language === 'en' ? 'Failed to register student' : language === 'hi' ? 'छात्र पंजीकृत करने में विफल' : 'فشل تسجيل الطالب'));
     } finally {
       setLoading(false);
     }
@@ -163,10 +165,10 @@ export default function RegisterStudent() {
             />
             <div>
               <h1 className="text-2xl font-bold text-primary">
-                {language === 'en' ? 'Register Student' : 'تسجيل طالب'}
+                {language === 'en' ? 'Register Student' : language === 'hi' ? 'छात्र पंजीकरण' : 'تسجيل طالب'}
               </h1>
               <p className="text-sm text-muted-foreground">
-                {language === 'en' ? 'Add your child to the system' : 'أضف طفلك إلى النظام'}
+                {language === 'en' ? 'Add your child to the system' : language === 'hi' ? 'अपने बच्चे को सिस्टम में जोड़ें' : 'أضف طفلك إلى النظام'}
               </p>
             </div>
           </div>
@@ -174,11 +176,11 @@ export default function RegisterStudent() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}
+            onClick={() => setLanguage(language === 'en' ? 'ar' : language === 'ar' ? 'hi' : 'en')}
             className="gap-2"
           >
             <Globe className="h-4 w-4" />
-            {language === 'en' ? 'العربية' : 'English'}
+            {language === 'en' ? 'العربية' : language === 'ar' ? 'हिन्दी' : 'English'}
           </Button>
         </div>
 
@@ -187,7 +189,7 @@ export default function RegisterStudent() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <UserPlus className="h-5 w-5" />
-              {language === 'en' ? 'Student Information' : 'معلومات الطالب'}
+              {language === 'en' ? 'Student Information' : language === 'hi' ? 'छात्र जानकारी' : 'معلومات الطالب'}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -195,19 +197,19 @@ export default function RegisterStudent() {
               <Tabs value={activeTab} onValueChange={setActiveTab}>
                 <TabsList className="grid w-full grid-cols-5">
                   <TabsTrigger value="basic">
-                    {language === 'en' ? 'Basic' : 'أساسي'}
+                    {language === 'en' ? 'Basic' : language === 'hi' ? 'बुनियादी' : 'أساسي'}
                   </TabsTrigger>
                   <TabsTrigger value="personal">
-                    {language === 'en' ? 'Personal' : 'شخصي'}
+                    {language === 'en' ? 'Personal' : language === 'hi' ? 'व्यक्तिगत' : 'شخصي'}
                   </TabsTrigger>
                   <TabsTrigger value="parent">
-                    {language === 'en' ? 'Parent' : 'ولي الأمر'}
+                    {language === 'en' ? 'Parent' : language === 'hi' ? 'अभिभावक' : 'ولي الأمر'}
                   </TabsTrigger>
                   <TabsTrigger value="medical">
-                    {language === 'en' ? 'Medical' : 'طبي'}
+                    {language === 'en' ? 'Medical' : language === 'hi' ? 'चिकित्सा' : 'طبي'}
                   </TabsTrigger>
                   <TabsTrigger value="transport">
-                    {language === 'en' ? 'Transport' : 'النقل'}
+                    {language === 'en' ? 'Transport' : language === 'hi' ? 'परिवहन' : 'النقل'}
                   </TabsTrigger>
                 </TabsList>
 
@@ -215,7 +217,7 @@ export default function RegisterStudent() {
                 <TabsContent value="basic" className="space-y-4">
                   <div className="grid md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label>{language === 'en' ? 'First Name (English)' : 'الاسم الأول (English)'} *</Label>
+                      <Label>{language === 'en' ? 'First Name (English)' : language === 'hi' ? 'पहला नाम (अंग्रेजी)' : 'الاسم الأول (English)'} *</Label>
                       <Input
                         value={formData.first_name}
                         onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
@@ -224,7 +226,7 @@ export default function RegisterStudent() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>{language === 'en' ? 'First Name (Arabic)' : 'الاسم الأول (عربي)'} *</Label>
+                      <Label>{language === 'en' ? 'First Name (Arabic)' : language === 'hi' ? 'पहला नाम (अरबी)' : 'الاسم الأول (عربي)'} *</Label>
                       <Input
                         value={formData.first_name_ar}
                         onChange={(e) => setFormData({ ...formData, first_name_ar: e.target.value })}
@@ -233,7 +235,7 @@ export default function RegisterStudent() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>{language === 'en' ? 'Last Name (English)' : 'اسم العائلة (English)'} *</Label>
+                      <Label>{language === 'en' ? 'Last Name (English)' : language === 'hi' ? 'अंतिम नाम (अंग्रेजी)' : 'اسم العائلة (English)'} *</Label>
                       <Input
                         value={formData.last_name}
                         onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
@@ -242,7 +244,7 @@ export default function RegisterStudent() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>{language === 'en' ? 'Last Name (Arabic)' : 'اسم العائلة (عربي)'} *</Label>
+                      <Label>{language === 'en' ? 'Last Name (Arabic)' : language === 'hi' ? 'अंतिम नाम (अरबी)' : 'اسم العائلة (عربي)'} *</Label>
                       <Input
                         value={formData.last_name_ar}
                         onChange={(e) => setFormData({ ...formData, last_name_ar: e.target.value })}
@@ -251,7 +253,7 @@ export default function RegisterStudent() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>{language === 'en' ? 'Date of Birth' : 'تاريخ الميلاد'} *</Label>
+                      <Label>{language === 'en' ? 'Date of Birth' : language === 'hi' ? 'जन्म तिथि' : 'تاريخ الميلاد'} *</Label>
                       <Input
                         type="date"
                         value={formData.date_of_birth}
@@ -260,19 +262,19 @@ export default function RegisterStudent() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>{language === 'en' ? 'Gender' : 'الجنس'} *</Label>
+                      <Label>{language === 'en' ? 'Gender' : language === 'hi' ? 'लिंग' : 'الجنس'} *</Label>
                       <Select value={formData.gender} onValueChange={(value) => setFormData({ ...formData, gender: value })}>
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="male">{language === 'en' ? 'Male' : 'ذكر'}</SelectItem>
-                          <SelectItem value="female">{language === 'en' ? 'Female' : 'أنثى'}</SelectItem>
+                          <SelectItem value="male">{language === 'en' ? 'Male' : language === 'hi' ? 'पुरुष' : 'ذكر'}</SelectItem>
+                          <SelectItem value="female">{language === 'en' ? 'Female' : language === 'hi' ? 'महिला' : 'أنثى'}</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label>{language === 'en' ? 'Grade' : 'الصف'} *</Label>
+                      <Label>{language === 'en' ? 'Grade' : language === 'hi' ? 'कक्षा' : 'الصف'} *</Label>
                       <Input
                         value={formData.grade}
                         onChange={(e) => setFormData({ ...formData, grade: e.target.value })}
@@ -280,7 +282,7 @@ export default function RegisterStudent() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>{language === 'en' ? 'Class' : 'الفصل'}</Label>
+                      <Label>{language === 'en' ? 'Class' : language === 'hi' ? 'सेक्शन' : 'الفصل'}</Label>
                       <Input
                         value={formData.class}
                         onChange={(e) => setFormData({ ...formData, class: e.target.value })}
@@ -293,14 +295,14 @@ export default function RegisterStudent() {
                 <TabsContent value="personal" className="space-y-4">
                   <div className="grid md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label>{language === 'en' ? 'Nationality' : 'الجنسية'}</Label>
+                      <Label>{language === 'en' ? 'Nationality' : language === 'hi' ? 'राष्ट्रीयता' : 'الجنسية'}</Label>
                       <Input
                         value={formData.nationality}
                         onChange={(e) => setFormData({ ...formData, nationality: e.target.value })}
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>{language === 'en' ? 'Blood Type' : 'فصيلة الدم'}</Label>
+                      <Label>{language === 'en' ? 'Blood Type' : language === 'hi' ? 'रक्त समूह' : 'فصيلة الدم'}</Label>
                       <Select value={formData.blood_type} onValueChange={(value) => setFormData({ ...formData, blood_type: value })}>
                         <SelectTrigger>
                           <SelectValue />
@@ -318,7 +320,7 @@ export default function RegisterStudent() {
                       </Select>
                     </div>
                     <div className="space-y-2 md:col-span-2">
-                      <Label>{language === 'en' ? 'Address' : 'العنوان'}</Label>
+                      <Label>{language === 'en' ? 'Address' : language === 'hi' ? 'पता' : 'العنوان'}</Label>
                       <Textarea
                         value={formData.address}
                         onChange={(e) => setFormData({ ...formData, address: e.target.value })}
@@ -326,7 +328,7 @@ export default function RegisterStudent() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>{language === 'en' ? 'Phone' : 'الهاتف'}</Label>
+                      <Label>{language === 'en' ? 'Phone' : language === 'hi' ? 'फोन' : 'الهاتف'}</Label>
                       <Input
                         type="tel"
                         value={formData.phone}
@@ -341,14 +343,14 @@ export default function RegisterStudent() {
                 <TabsContent value="parent" className="space-y-4">
                   <div className="grid md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label>{language === 'en' ? 'Parent Name' : 'اسم ولي الأمر'}</Label>
+                      <Label>{language === 'en' ? 'Parent Name' : language === 'hi' ? 'अभिभावक का नाम' : 'اسم ولي الأمر'}</Label>
                       <Input
                         value={formData.parent_name}
                         onChange={(e) => setFormData({ ...formData, parent_name: e.target.value })}
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>{language === 'en' ? 'Parent Email' : 'البريد الإلكتروني لولي الأمر'}</Label>
+                      <Label>{language === 'en' ? 'Parent Email' : language === 'hi' ? 'अभिभावक ईमेल' : 'البريد الإلكتروني لولي الأمر'}</Label>
                       <Input
                         type="email"
                         value={formData.parent_email}
@@ -357,7 +359,7 @@ export default function RegisterStudent() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>{language === 'en' ? 'Parent Phone' : 'هاتف ولي الأمر'}</Label>
+                      <Label>{language === 'en' ? 'Parent Phone' : language === 'hi' ? 'अभिभावक फोन' : 'هاتف ولي الأمر'}</Label>
                       <Input
                         type="tel"
                         value={formData.parent_phone}
@@ -372,21 +374,21 @@ export default function RegisterStudent() {
                 <TabsContent value="medical" className="space-y-4">
                   <div className="space-y-4">
                     <div className="space-y-2">
-                      <Label>{language === 'en' ? 'Medical Conditions' : 'الحالات الطبية'}</Label>
+                      <Label>{language === 'en' ? 'Medical Conditions' : language === 'hi' ? 'चिकित्सा स्थितियां' : 'الحالات الطبية'}</Label>
                       <Textarea
                         value={formData.medical_conditions}
                         onChange={(e) => setFormData({ ...formData, medical_conditions: e.target.value })}
                         rows={4}
-                        placeholder={language === 'en' ? 'Any medical conditions...' : 'أي حالات طبية...'}
+                        placeholder={language === 'en' ? 'Any medical conditions...' : language === 'hi' ? 'कोई चिकित्सा स्थिति...' : 'أي حالات طبية...'}
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>{language === 'en' ? 'Allergies' : 'الحساسية'}</Label>
+                      <Label>{language === 'en' ? 'Allergies' : language === 'hi' ? 'एलर्जी' : 'الحساسية'}</Label>
                       <Textarea
                         value={formData.allergies}
                         onChange={(e) => setFormData({ ...formData, allergies: e.target.value })}
                         rows={4}
-                        placeholder={language === 'en' ? 'Any allergies...' : 'أي حساسية...'}
+                        placeholder={language === 'en' ? 'Any allergies...' : language === 'hi' ? 'कोई एलर्जी...' : 'أي حساسية...'}
                       />
                     </div>
                   </div>
@@ -395,14 +397,14 @@ export default function RegisterStudent() {
                 {/* Transportation Tab */}
                 <TabsContent value="transport" className="space-y-4">
                   <div className="flex items-center justify-between mb-4">
-                    <Label>{language === 'en' ? 'Needs Transportation' : 'يحتاج نقل'}</Label>
+                    <Label>{language === 'en' ? 'Needs Transportation' : language === 'hi' ? 'परिवहन आवश्यक' : 'يحتاج نقل'}</Label>
                     <Switch checked={needsTransportation} onCheckedChange={setNeedsTransportation} />
                   </div>
 
                   {needsTransportation && (
                     <div className="space-y-4">
                       <div className="space-y-2">
-                        <Label>{language === 'en' ? 'Home Location' : 'موقع المنزل'}</Label>
+                        <Label>{language === 'en' ? 'Home Location' : language === 'hi' ? 'घर का स्थान' : 'موقع المنزل'}</Label>
                         <HomeLocationMap
                           onLocationSelect={handleLocationSelect}
                           language={language}
@@ -410,35 +412,35 @@ export default function RegisterStudent() {
                       </div>
                       <div className="grid md:grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label>{language === 'en' ? 'Home Address' : 'عنوان المنزل'}</Label>
+                          <Label>{language === 'en' ? 'Home Address' : language === 'hi' ? 'घर का पता' : 'عنوان المنزل'}</Label>
                           <Input
                             value={formData.home_address}
                             onChange={(e) => setFormData({ ...formData, home_address: e.target.value })}
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label>{language === 'en' ? 'Building Number' : 'رقم المبنى'}</Label>
+                          <Label>{language === 'en' ? 'Building Number' : language === 'hi' ? 'भवन संख्या' : 'رقم المبنى'}</Label>
                           <Input
                             value={formData.building_number}
                             onChange={(e) => setFormData({ ...formData, building_number: e.target.value })}
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label>{language === 'en' ? 'Street Name' : 'اسم الشارع'}</Label>
+                          <Label>{language === 'en' ? 'Street Name' : language === 'hi' ? 'सड़क का नाम' : 'اسم الشارع'}</Label>
                           <Input
                             value={formData.street_name}
                             onChange={(e) => setFormData({ ...formData, street_name: e.target.value })}
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label>{language === 'en' ? 'Area' : 'المنطقة'}</Label>
+                          <Label>{language === 'en' ? 'Area' : language === 'hi' ? 'क्षेत्र' : 'المنطقة'}</Label>
                           <Input
                             value={formData.area}
                             onChange={(e) => setFormData({ ...formData, area: e.target.value })}
                           />
                         </div>
                         <div className="space-y-2 md:col-span-2">
-                          <Label>{language === 'en' ? 'Special Instructions' : 'تعليمات خاصة'}</Label>
+                          <Label>{language === 'en' ? 'Special Instructions' : language === 'hi' ? 'विशेष निर्देश' : 'تعليمات خاصة'}</Label>
                           <Textarea
                             value={formData.special_instructions}
                             onChange={(e) => setFormData({ ...formData, special_instructions: e.target.value })}
@@ -458,11 +460,11 @@ export default function RegisterStudent() {
                   variant="outline"
                   onClick={() => navigate('/dashboard')}
                 >
-                  {language === 'en' ? 'Cancel' : 'إلغاء'}
+                  {language === 'en' ? 'Cancel' : language === 'hi' ? 'रद्द करें' : 'إلغاء'}
                 </Button>
                 <Button type="submit" disabled={loading}>
                   {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  {language === 'en' ? 'Register Student' : 'تسجيل الطالب'}
+                  {language === 'en' ? 'Register Student' : language === 'hi' ? 'छात्र पंजीकृत करें' : 'تسجيل الطالب'}
                 </Button>
               </div>
             </form>
@@ -478,11 +480,13 @@ export default function RegisterStudent() {
               <CheckCircle className="h-16 w-16 text-green-500" />
             </div>
             <DialogTitle className="text-center text-2xl">
-              {language === 'en' ? 'Student Registered!' : 'تم التسجيل بنجاح!'}
+              {language === 'en' ? 'Student Registered!' : language === 'hi' ? 'छात्र पंजीकृत!' : 'تم التسجيل بنجاح!'}
             </DialogTitle>
             <DialogDescription className="text-center">
               {language === 'en' 
                 ? 'The student has been successfully added to your account. What would you like to do next?'
+                : language === 'hi'
+                ? 'छात्र आपके खाते में सफलतापूर्वक जोड़ा गया है। आप आगे क्या करना चाहेंगे?'
                 : 'تم إضافة الطالب بنجاح إلى حسابك. ماذا تريد أن تفعل بعد ذلك؟'}
             </DialogDescription>
           </DialogHeader>
@@ -493,13 +497,13 @@ export default function RegisterStudent() {
               className="flex-1"
             >
               <UserPlus className="mr-2 h-4 w-4" />
-              {language === 'en' ? 'Register Another Student' : 'تسجيل طالب آخر'}
+              {language === 'en' ? 'Register Another Student' : language === 'hi' ? 'एक और छात्र पंजीकृत करें' : 'تسجيل طالب آخر'}
             </Button>
             <Button
               onClick={() => navigate('/dashboard')}
               className="flex-1"
             >
-              {language === 'en' ? 'Go to Dashboard' : 'الذهاب إلى لوحة التحكم'}
+              {language === 'en' ? 'Go to Dashboard' : language === 'hi' ? 'डैशबोर्ड पर जाएं' : 'الذهاب إلى لوحة التحكم'}
             </Button>
           </DialogFooter>
         </DialogContent>
