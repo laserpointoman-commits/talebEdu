@@ -180,17 +180,20 @@ export default function AllBusesMap({ buses }: AllBusesMapProps) {
       hasValidLocations = true;
       bounds.extend([displayLocation.longitude, displayLocation.latitude]);
       
-      if (!markers.current.has(bus.id)) {
-        // Create new marker
-        const el = createMarkerElement(bus);
-        const marker = new mapboxgl.Marker({ element: el, anchor: 'bottom' })
-          .setLngLat([displayLocation.longitude, displayLocation.latitude])
-          .addTo(map.current!);
-        markers.current.set(bus.id, marker);
-      } else {
-        // Update existing marker position
-        markers.current.get(bus.id)?.setLngLat([displayLocation.longitude, displayLocation.latitude]);
+      const hasLiveLocation = !!location;
+      
+      // Remove existing marker to recreate with correct status
+      if (markers.current.has(bus.id)) {
+        markers.current.get(bus.id)?.remove();
+        markers.current.delete(bus.id);
       }
+      
+      // Create marker with live location status
+      const el = createMarkerElement(bus, hasLiveLocation);
+      const marker = new mapboxgl.Marker({ element: el, anchor: 'bottom' })
+        .setLngLat([displayLocation.longitude, displayLocation.latitude])
+        .addTo(map.current!);
+      markers.current.set(bus.id, marker);
     });
 
     // Fit map to show all buses
@@ -235,9 +238,8 @@ export default function AllBusesMap({ buses }: AllBusesMapProps) {
     }
   };
 
-  const createMarkerElement = (bus: BusInfo) => {
-    const isActive = bus.status === 'active';
-    
+  const createMarkerElement = (bus: BusInfo, hasLiveLocation: boolean) => {
+    const isActive = hasLiveLocation;
     const container = document.createElement('div');
     container.className = 'bus-pin-container';
     container.style.position = 'relative';
