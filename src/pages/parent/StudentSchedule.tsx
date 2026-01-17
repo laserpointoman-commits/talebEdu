@@ -3,11 +3,11 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, Clock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import LogoLoader from '@/components/LogoLoader';
+import PageHeader from '@/components/layouts/PageHeader';
 
 interface ScheduleItem {
   id: string;
@@ -92,16 +92,19 @@ export default function StudentSchedule() {
   }, {} as Record<string, ScheduleItem[]>);
 
   return (
-    <div className="space-y-6 p-4 md:p-6 max-w-4xl mx-auto pb-24">
-      {/* Header */}
-      <div className="flex items-center gap-4">
-        <div className="flex-1">
-          <h1 className="text-xl md:text-2xl font-bold">
-            {language === 'ar' ? 'جدول الحصص' : 'Class Schedule'}
-          </h1>
-          <p className="text-sm text-muted-foreground">{studentName}</p>
+    <div className="min-h-screen bg-background">
+      <PageHeader />
+      
+      <div className="space-y-6 p-4 max-w-4xl mx-auto pb-24" style={{ paddingTop: 'calc(4.5rem + env(safe-area-inset-top))' }}>
+        {/* Header */}
+        <div className="flex items-center gap-4">
+          <div className="flex-1">
+            <h1 className="text-xl md:text-2xl font-bold">
+              {language === 'ar' ? 'جدول الحصص' : 'Class Schedule'}
+            </h1>
+            <p className="text-sm text-muted-foreground">{studentName}</p>
+          </div>
         </div>
-      </div>
 
       {/* Schedule by Day */}
       <div className="space-y-4">
@@ -144,6 +147,7 @@ export default function StudentSchedule() {
             </CardContent>
           </Card>
         ))}
+      </div>
       </div>
     </div>
   );

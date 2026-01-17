@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
@@ -15,11 +15,11 @@ import {
   ShoppingBag,
   Store,
   Wallet,
-  User,
-  MapPin
+  User
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import LogoLoader from '@/components/LogoLoader';
+import PageHeader from '@/components/layouts/PageHeader';
 
 interface StudentData {
   id: string;
@@ -223,16 +223,19 @@ export default function StudentDetails() {
     : `${student.first_name} ${student.last_name}`;
 
   return (
-    <div className="space-y-6 p-6">
-      {/* Header */}
-      <div className="flex items-center gap-4">
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold">{studentName}</h1>
-          <p className="text-muted-foreground">
-            {student.grade} - {student.class}
-          </p>
+    <div className="min-h-screen bg-background">
+      <PageHeader />
+      
+      <div className="space-y-6 p-4 pt-20" style={{ paddingTop: 'calc(4.5rem + env(safe-area-inset-top))' }}>
+        {/* Student Name Header */}
+        <div className="flex items-center gap-4">
+          <div className="flex-1">
+            <h1 className="text-2xl font-bold">{studentName}</h1>
+            <p className="text-muted-foreground">
+              {student.grade} - {student.class}
+            </p>
+          </div>
         </div>
-      </div>
 
       {/* Student Info Card */}
       <Card>
@@ -308,5 +311,6 @@ export default function StudentDetails() {
         ))}
       </div>
     </div>
+  </div>
   );
 }

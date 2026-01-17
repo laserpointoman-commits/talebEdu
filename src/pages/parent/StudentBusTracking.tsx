@@ -9,14 +9,13 @@ import {
   Bus,
   MapPin,
   User,
-  Clock,
-  Phone,
-  History
+  Phone
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import LogoLoader from '@/components/LogoLoader';
 import BoardingHistory from '@/components/tracking/BoardingHistory';
 import BusMap from '@/components/tracking/BusMap';
+import PageHeader from '@/components/layouts/PageHeader';
 
 export default function StudentBusTracking() {
   const { studentId } = useParams();
@@ -152,16 +151,19 @@ export default function StudentBusTracking() {
     : `${student?.first_name} ${student?.last_name}`;
 
   return (
-    <div className="space-y-6 p-6">
-      {/* Header */}
-      <div className="flex items-center gap-4">
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold">
-            {language === 'ar' ? 'تتبع حافلة المدرسة' : 'School Bus Tracking'}
-          </h1>
-          <p className="text-muted-foreground">{studentName}</p>
+    <div className="min-h-screen bg-background">
+      <PageHeader />
+      
+      <div className="space-y-6 p-4 pt-20" style={{ paddingTop: 'calc(4.5rem + env(safe-area-inset-top))' }}>
+        {/* Header */}
+        <div className="flex items-center gap-4">
+          <div className="flex-1">
+            <h1 className="text-2xl font-bold">
+              {language === 'ar' ? 'تتبع حافلة المدرسة' : 'School Bus Tracking'}
+            </h1>
+            <p className="text-muted-foreground">{studentName}</p>
+          </div>
         </div>
-      </div>
 
       {/* Trip Status */}
       <Card className={activeTrip ? 'border-green-500 bg-green-500/5' : ''}>
@@ -350,6 +352,7 @@ export default function StudentBusTracking() {
           </CardContent>
         </Card>
       )}
+      </div>
     </div>
   );
 }

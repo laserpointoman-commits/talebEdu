@@ -17,6 +17,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import LogoLoader from '@/components/LogoLoader';
+import PageHeader from '@/components/layouts/PageHeader';
 import {
   Dialog,
   DialogContent,
@@ -230,16 +231,19 @@ export default function StudentWalletControl() {
     : `${student?.first_name} ${student?.last_name}`;
 
   return (
-    <div className="space-y-6 p-4 md:p-6 max-w-4xl mx-auto pb-24">
-      {/* Header */}
-      <div className="flex items-center gap-4">
-        <div className="flex-1">
-          <h1 className="text-xl md:text-2xl font-bold">
-            {language === 'ar' ? 'إدارة المحفظة' : 'Wallet Management'}
-          </h1>
-          <p className="text-sm text-muted-foreground">{studentName}</p>
+    <div className="min-h-screen bg-background">
+      <PageHeader />
+      
+      <div className="space-y-6 p-4 max-w-4xl mx-auto pb-24" style={{ paddingTop: 'calc(4.5rem + env(safe-area-inset-top))' }}>
+        {/* Header */}
+        <div className="flex items-center gap-4">
+          <div className="flex-1">
+            <h1 className="text-xl md:text-2xl font-bold">
+              {language === 'ar' ? 'إدارة المحفظة' : 'Wallet Management'}
+            </h1>
+            <p className="text-sm text-muted-foreground">{studentName}</p>
+          </div>
         </div>
-      </div>
 
       {/* Student Wallet Balance */}
       <Card className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground">
@@ -409,6 +413,7 @@ export default function StudentWalletControl() {
           ? (language === 'ar' ? 'جاري الحفظ...' : 'Saving...') 
           : (language === 'ar' ? 'حفظ الإعدادات' : 'Save Settings')}
       </Button>
+      </div>
     </div>
   );
 }
