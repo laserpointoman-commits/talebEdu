@@ -3,11 +3,26 @@ import mapboxgl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Bus, User, MapPin, Clock, Users, Calendar } from 'lucide-react';
+import { format } from 'date-fns';
 
 interface BusInfo {
   id: string;
   bus_number: string;
   status?: string;
+}
+
+interface BusDetails {
+  id: string;
+  bus_number: string;
+  model: string | null;
+  capacity: number;
+  year: number | null;
+  status: string | null;
+  driver_name: string | null;
+  supervisor_name: string | null;
+  student_count: number;
 }
 
 interface BusLocationData {
@@ -29,6 +44,9 @@ export default function AllBusesMap({ buses }: AllBusesMapProps) {
   const [busLocations, setBusLocations] = useState<Map<string, BusLocationData>>(new Map());
   const [mapStatus, setMapStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   const [mapError, setMapError] = useState<string | null>(null);
+  const [selectedBus, setSelectedBus] = useState<BusDetails | null>(null);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [loadingDetails, setLoadingDetails] = useState(false);
 
   // Initialize map
   useEffect(() => {
@@ -238,6 +256,49 @@ export default function AllBusesMap({ buses }: AllBusesMapProps) {
     }
   };
 
+  const fetchBusDetails = async (busId: string) => {
+    setLoadingDetails(true);
+    try {
+      // Fetch bus with driver and supervisor
+      const { data: busData, error: busError } = await supabase
+        .from('buses')
+        .select(`
+          id, bus_number, model, capacity, year, status,
+          drivers!buses_driver_id_fkey(profiles(full_name)),
+          profiles!buses_supervisor_id_fkey(full_name)
+        `)
+        .eq('id', busId)
+        .single();
+
+      if (busError) throw busError;
+
+      // Count students assigned to this bus
+      const { count: studentCount } = await supabase
+        .from('student_bus_assignments')
+        .select('*', { count: 'exact', head: true })
+        .eq('bus_id', busId);
+
+      const details: BusDetails = {
+        id: busData.id,
+        bus_number: busData.bus_number,
+        model: busData.model,
+        capacity: busData.capacity,
+        year: busData.year,
+        status: busData.status,
+        driver_name: (busData.drivers as any)?.profiles?.full_name || null,
+        supervisor_name: (busData.profiles as any)?.full_name || null,
+        student_count: studentCount || 0,
+      };
+
+      setSelectedBus(details);
+      setIsSheetOpen(true);
+    } catch (error) {
+      console.error('Error fetching bus details:', error);
+    } finally {
+      setLoadingDetails(false);
+    }
+  };
+
   const createMarkerElement = (bus: BusInfo, hasLiveLocation: boolean) => {
     const isActive = hasLiveLocation;
     const container = document.createElement('div');
@@ -246,6 +307,12 @@ export default function AllBusesMap({ buses }: AllBusesMapProps) {
     container.style.display = 'flex';
     container.style.flexDirection = 'column';
     container.style.alignItems = 'center';
+    container.style.cursor = 'pointer';
+
+    // Add click handler
+    container.addEventListener('click', () => {
+      fetchBusDetails(bus.id);
+    });
 
     // Label (always visible above pin)
     const labelWrap = document.createElement('div');
@@ -406,6 +473,112 @@ export default function AllBusesMap({ buses }: AllBusesMapProps) {
           </div>
         </div>
       </div>
+
+      {/* Bus Details Sheet */}
+      <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+        <SheetContent side="bottom" className="rounded-t-2xl max-h-[70vh]">
+          <SheetHeader className="pb-4">
+            <SheetTitle className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                <Bus className="w-6 h-6 text-primary" />
+              </div>
+              <div className="text-start">
+                <div className="text-xl font-bold">
+                  {language === 'ar' ? 'حافلة' : 'Bus'} {selectedBus?.bus_number}
+                </div>
+                {selectedBus?.model && (
+                  <div className="text-sm text-muted-foreground font-normal">
+                    {selectedBus.model}
+                  </div>
+                )}
+              </div>
+            </SheetTitle>
+          </SheetHeader>
+
+          {loadingDetails ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+            </div>
+          ) : selectedBus && (
+            <div className="space-y-4 pb-6">
+              {/* Status Badge */}
+              <div className="flex items-center gap-2">
+                <div className={`px-3 py-1.5 rounded-full text-sm font-medium ${
+                  busLocations.has(selectedBus.id) 
+                    ? 'bg-primary/10 text-primary' 
+                    : 'bg-red-500/10 text-red-500'
+                }`}>
+                  {busLocations.has(selectedBus.id) 
+                    ? (language === 'ar' ? '🟢 نشطة - تتبع مباشر' : '🟢 Active - Live Tracking')
+                    : (language === 'ar' ? '🔴 غير نشطة' : '🔴 Inactive')
+                  }
+                </div>
+              </div>
+
+              {/* Details Grid */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-muted/50 rounded-xl p-4">
+                  <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                    <User className="w-4 h-4" />
+                    <span className="text-xs">{language === 'ar' ? 'السائق' : 'Driver'}</span>
+                  </div>
+                  <div className="font-semibold text-sm">
+                    {selectedBus.driver_name || (language === 'ar' ? 'غير معين' : 'Not Assigned')}
+                  </div>
+                </div>
+
+                <div className="bg-muted/50 rounded-xl p-4">
+                  <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                    <User className="w-4 h-4" />
+                    <span className="text-xs">{language === 'ar' ? 'المشرف' : 'Supervisor'}</span>
+                  </div>
+                  <div className="font-semibold text-sm">
+                    {selectedBus.supervisor_name || (language === 'ar' ? 'غير معين' : 'Not Assigned')}
+                  </div>
+                </div>
+
+                <div className="bg-muted/50 rounded-xl p-4">
+                  <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                    <Users className="w-4 h-4" />
+                    <span className="text-xs">{language === 'ar' ? 'الطلاب' : 'Students'}</span>
+                  </div>
+                  <div className="font-semibold text-sm">
+                    {selectedBus.student_count} / {selectedBus.capacity}
+                  </div>
+                </div>
+
+                <div className="bg-muted/50 rounded-xl p-4">
+                  <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                    <Calendar className="w-4 h-4" />
+                    <span className="text-xs">{language === 'ar' ? 'سنة الصنع' : 'Year'}</span>
+                  </div>
+                  <div className="font-semibold text-sm">
+                    {selectedBus.year || '-'}
+                  </div>
+                </div>
+              </div>
+
+              {/* Last Location Update */}
+              {busLocations.has(selectedBus.id) && busLocations.get(selectedBus.id)?.last_updated && (
+                <div className="bg-primary/5 rounded-xl p-4">
+                  <div className="flex items-center gap-2 text-primary mb-1">
+                    <MapPin className="w-4 h-4" />
+                    <span className="text-xs font-medium">
+                      {language === 'ar' ? 'آخر تحديث للموقع' : 'Last Location Update'}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <Clock className="w-3.5 h-3.5 text-muted-foreground" />
+                    <span>
+                      {format(new Date(busLocations.get(selectedBus.id)!.last_updated!), 'PPp')}
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
