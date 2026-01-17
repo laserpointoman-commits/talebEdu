@@ -13,6 +13,7 @@ import { EnhancedMessageBubble } from './EnhancedMessageBubble';
 import { ChatInput } from './ChatInput';
 import { MessengerSettingsWithTheme } from './MessengerSettingsWithTheme';
 import { MessengerContacts } from './MessengerContacts';
+import { MessengerCalls } from './MessengerCalls';
 import { DesktopChatItem } from './DesktopChatItem';
 import { TypingIndicator } from './TypingIndicator';
 import { OnlineStatusBadge } from './OnlineStatusBadge';
@@ -62,6 +63,7 @@ interface MessengerDesktopLayoutProps {
   pinnedChats?: Set<string>;
   canPin?: boolean;
   isArabic?: boolean;
+  searchUsers?: (query: string) => Promise<any[]>;
 }
 
 type SidebarTab = 'chats' | 'groups' | 'contacts' | 'calls' | 'settings';
@@ -94,7 +96,8 @@ export function MessengerDesktopLayout({
   onMarkAllRead,
   pinnedChats = new Set(),
   canPin = false,
-  isArabic
+  isArabic,
+  searchUsers
 }: MessengerDesktopLayoutProps) {
   const [activeTab, setActiveTab] = useState<SidebarTab>('chats');
   const [searchTerm, setSearchTerm] = useState('');
@@ -333,48 +336,12 @@ export function MessengerDesktopLayout({
               isArabic={isArabic}
             />
           ) : activeTab === 'calls' ? (
-            <div className="py-4">
-              {callLogs.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-16 px-6">
-                  <div 
-                    className="h-20 w-20 rounded-full flex items-center justify-center mb-4"
-                    style={{ backgroundColor: colors.bgTertiary }}
-                  >
-                    <PhoneCall className="h-10 w-10" style={{ color: colors.textMuted }} />
-                  </div>
-                  <p className="text-center" style={{ color: colors.textSecondary }}>
-                    {t('No calls yet', 'لا توجد مكالمات')}
-                  </p>
-                </div>
-              ) : (
-                callLogs.map((call) => (
-                  <div
-                    key={call.id}
-                    className="flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors hover:bg-white/5"
-                    style={{ borderBottom: `1px solid ${colors.divider}` }}
-                  >
-                    <Avatar className="h-12 w-12">
-                      <AvatarFallback style={{ backgroundColor: colors.accent }}>
-                        {call.caller_name?.charAt(0) || '?'}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <p style={{ color: colors.textPrimary }}>{call.caller_name}</p>
-                      <p className="text-xs" style={{ color: colors.textMuted }}>
-                        {call.call_type} • {format(new Date(call.started_at), 'MMM d, HH:mm')}
-                      </p>
-                    </div>
-                    <Button variant="ghost" size="icon" className="rounded-full">
-                      {call.call_type === 'video' ? (
-                        <Video className="h-5 w-5" style={{ color: colors.accent }} />
-                      ) : (
-                        <Phone className="h-5 w-5" style={{ color: colors.accent }} />
-                      )}
-                    </Button>
-                  </div>
-                ))
-              )}
-            </div>
+            <MessengerCalls 
+              callLogs={callLogs} 
+              isArabic={isArabic} 
+              searchUsers={searchUsers}
+              currentUserId={user?.id}
+            />
           ) : (
             <>
               {/* Archived (only for chats) */}

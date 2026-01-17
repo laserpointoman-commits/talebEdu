@@ -378,6 +378,7 @@ function MessengerContent() {
           pinnedChats={pinnedChats}
           canPin={canPin}
           isArabic={isArabic}
+          searchUsers={searchUsers}
         />
 
         <Dialog open={showNewChat} onOpenChange={setShowNewChat}>
@@ -808,6 +809,15 @@ function MessengerContent() {
               </SwipeableChatItem>
             ))}
           </ScrollArea>
+        )}
+
+        {activeTab === 'calls' && (
+          <MessengerCalls 
+            callLogs={callLogs} 
+            isArabic={isArabic} 
+            searchUsers={searchUsers}
+            currentUserId={user?.id}
+          />
         )}
 
         {activeTab === 'contacts' && (
