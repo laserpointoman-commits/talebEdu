@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -83,6 +83,11 @@ export default function BusTracking() {
   // Admin and driver roles can view all buses
   const isAdminView = effectiveRole === 'admin' || effectiveRole === 'driver' || effectiveRole === 'developer';
 
+  const busesForMap = useMemo(
+    () => buses.map((b) => ({ id: b.id, bus_number: b.bus_number, status: b.status })),
+    [buses]
+  );
+
   return (
     <div className="space-y-6 p-4 md:p-6">
       <div>
@@ -109,7 +114,7 @@ export default function BusTracking() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <AllBusesMap buses={buses.map(b => ({ id: b.id, bus_number: b.bus_number, status: b.status }))} />
+                  <AllBusesMap buses={busesForMap} />
                 </CardContent>
               </Card>
 

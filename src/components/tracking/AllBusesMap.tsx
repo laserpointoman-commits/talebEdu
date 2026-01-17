@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import mapboxgl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { supabase } from '@/integrations/supabase/client';
@@ -42,6 +42,17 @@ export default function AllBusesMap({ buses }: AllBusesMapProps) {
   const map = useRef<mapboxgl.Map | null>(null);
   const markers = useRef<Map<string, mapboxgl.Marker>>(new Map());
   const hasAutoFittedRef = useRef(false);
+  const userInteractedRef = useRef(false);
+
+  const busIdsKey = useMemo(() => {
+    // Stable key so rerenders don't look like the bus list changed
+    return buses
+      .map((b) => b.id)
+      .slice()
+      .sort()
+      .join('|');
+  }, [buses]);
+
   const [busLocations, setBusLocations] = useState<Map<string, BusLocationData>>(new Map());
   const [activeBusIds, setActiveBusIds] = useState<Set<string>>(new Set());
   const [mapStatus, setMapStatus] = useState<'loading' | 'ready' | 'error'>('loading');
@@ -59,6 +70,7 @@ export default function AllBusesMap({ buses }: AllBusesMapProps) {
 
     let m: mapboxgl.Map | null = null;
     let handleWindowResize: (() => void) | null = null;
+    let onMoveStart: ((e: any) => void) | null = null;
 
     try {
       const osmRasterStyle: any = {
@@ -87,6 +99,12 @@ export default function AllBusesMap({ buses }: AllBusesMapProps) {
 
       map.current = m;
       m.addControl(new mapboxgl.NavigationControl(), 'top-right');
+
+      // If the user moves the map, stop all auto-fit behavior
+      onMoveStart = (e: any) => {
+        if (e?.originalEvent) userInteractedRef.current = true;
+      };
+      m.on('movestart', onMoveStart);
 
       const onLoad = () => {
         setMapStatus('ready');
@@ -123,6 +141,7 @@ export default function AllBusesMap({ buses }: AllBusesMapProps) {
         window.removeEventListener('resize', handleWindowResize!);
         m?.off('load', onLoad);
         m?.off('error', onError);
+        if (onMoveStart) m?.off('movestart', onMoveStart);
         markers.current.forEach(marker => marker.remove());
         markers.current.clear();
         m?.remove();
@@ -138,12 +157,12 @@ export default function AllBusesMap({ buses }: AllBusesMapProps) {
 
   // Load all bus locations + active trips
   useEffect(() => {
-    // Allow auto-fit again when the bus list changes, but don't keep re-centering on every location update
+    // Allow auto-fit again only when the set of bus IDs changes
     hasAutoFittedRef.current = false;
 
     loadAllBusLocations();
     loadActiveTrips();
-  }, [buses]);
+  }, [busIdsKey]);
 
   // Subscribe to real-time updates for all buses
   useEffect(() => {
@@ -261,7 +280,7 @@ export default function AllBusesMap({ buses }: AllBusesMapProps) {
     });
 
     // Auto-fit only once (otherwise the map keeps re-centering while you pinch/zoom)
-    if (!hasAutoFittedRef.current && hasValidLocations && bounds.getNorthEast() && bounds.getSouthWest()) {
+    if (!userInteractedRef.current && !hasAutoFittedRef.current && hasValidLocations && bounds.getNorthEast() && bounds.getSouthWest()) {
       hasAutoFittedRef.current = true;
       map.current.fitBounds(bounds, {
         padding: 60,
