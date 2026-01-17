@@ -137,19 +137,17 @@ export default function BottomNavigation() {
                   className="relative flex flex-col items-center justify-center"
                   whileTap={{ scale: 0.9 }}
                 >
-                  {/* Elevated home button */}
+                  {/* Full blue circle home button */}
                   <motion.div
                     className={cn(
-                      "relative -mt-5 flex items-center justify-center w-13 h-13 rounded-xl shadow-md transition-all duration-200",
-                      active 
-                        ? "bg-primary shadow-primary/20" 
-                        : "bg-primary/90"
+                      "relative -mt-6 flex items-center justify-center w-14 h-14 rounded-full bg-primary shadow-lg shadow-primary/30 transition-all duration-200",
+                      active && "ring-4 ring-primary/20"
                     )}
-                    whileHover={{ scale: 1.02 }}
+                    whileHover={{ scale: 1.05 }}
                   >
                     <Icon 
                       className="h-6 w-6 text-primary-foreground" 
-                      strokeWidth={2}
+                      strokeWidth={2.5}
                     />
                   </motion.div>
                   
