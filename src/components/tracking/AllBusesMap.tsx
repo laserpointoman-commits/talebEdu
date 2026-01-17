@@ -8,6 +8,7 @@ interface BusInfo {
   id: string;
   bus_number: string;
   status?: string;
+  hasLocation?: boolean;
 }
 
 interface BusLocationData {
@@ -158,31 +159,41 @@ export default function AllBusesMap({ buses }: AllBusesMapProps) {
     };
   }, [buses]);
 
-  // Update markers when locations change
+  // Update markers when locations change or buses load
   useEffect(() => {
     if (!map.current || mapStatus !== 'ready') return;
 
     const bounds = new mapboxgl.LngLatBounds();
     let hasValidLocations = false;
+    
+    // Default location (Oman center) for buses without GPS data
+    const defaultLocation = { latitude: 23.588, longitude: 58.4059 };
 
-    buses.forEach(bus => {
+    buses.forEach((bus, index) => {
       const location = busLocations.get(bus.id);
       
-      if (location) {
-        hasValidLocations = true;
-        bounds.extend([location.longitude, location.latitude]);
-        
-        if (!markers.current.has(bus.id)) {
-          // Create new marker
-          const el = createMarkerElement(bus);
-          const marker = new mapboxgl.Marker({ element: el, anchor: 'bottom' })
-            .setLngLat([location.longitude, location.latitude])
-            .addTo(map.current!);
-          markers.current.set(bus.id, marker);
-        } else {
-          // Update existing marker position
-          markers.current.get(bus.id)?.setLngLat([location.longitude, location.latitude]);
-        }
+      // Use actual location if available, otherwise use offset default location
+      const displayLocation = location || {
+        latitude: defaultLocation.latitude + (index * 0.008),
+        longitude: defaultLocation.longitude + (index * 0.008),
+      };
+      
+      hasValidLocations = true;
+      bounds.extend([displayLocation.longitude, displayLocation.latitude]);
+      
+      // Pass whether bus has real location data
+      const busWithLocationStatus = { ...bus, hasLocation: !!location };
+      
+      if (!markers.current.has(bus.id)) {
+        // Create new marker
+        const el = createMarkerElement(busWithLocationStatus);
+        const marker = new mapboxgl.Marker({ element: el, anchor: 'bottom' })
+          .setLngLat([displayLocation.longitude, displayLocation.latitude])
+          .addTo(map.current!);
+        markers.current.set(bus.id, marker);
+      } else {
+        // Update existing marker position
+        markers.current.get(bus.id)?.setLngLat([displayLocation.longitude, displayLocation.latitude]);
       }
     });
 
@@ -252,15 +263,19 @@ export default function AllBusesMap({ buses }: AllBusesMapProps) {
 
     const label = document.createElement('div');
     label.className = 'bus-pin-label';
-    label.textContent = `${language === 'ar' ? 'حافلة' : 'Bus'} ${bus.bus_number}`;
-    label.style.background = 'hsl(var(--card))';
-    label.style.color = 'hsl(var(--card-foreground))';
+    // Show "No GPS" indicator for buses without location data
+    const labelText = bus.hasLocation === false 
+      ? `${language === 'ar' ? 'حافلة' : 'Bus'} ${bus.bus_number} (${language === 'ar' ? 'بدون GPS' : 'No GPS'})`
+      : `${language === 'ar' ? 'حافلة' : 'Bus'} ${bus.bus_number}`;
+    label.textContent = labelText;
+    label.style.background = bus.hasLocation === false ? 'hsl(0, 72%, 51%)' : 'hsl(var(--card))';
+    label.style.color = bus.hasLocation === false ? '#ffffff' : 'hsl(var(--card-foreground))';
     label.style.padding = '6px 10px';
     label.style.borderRadius = '8px';
     label.style.fontSize = '13px';
     label.style.fontWeight = '700';
     label.style.whiteSpace = 'nowrap';
-    label.style.border = '1px solid hsl(var(--border))';
+    label.style.border = bus.hasLocation === false ? '1px solid hsl(0, 72%, 45%)' : '1px solid hsl(var(--border))';
     label.style.boxShadow = '0 6px 16px hsl(var(--foreground) / 0.18)';
 
     const arrow = document.createElement('div');
@@ -268,7 +283,7 @@ export default function AllBusesMap({ buses }: AllBusesMapProps) {
     arrow.style.height = '0';
     arrow.style.borderLeft = '6px solid transparent';
     arrow.style.borderRight = '6px solid transparent';
-    arrow.style.borderTop = '6px solid hsl(var(--card))';
+    arrow.style.borderTop = bus.hasLocation === false ? '6px solid hsl(0, 72%, 51%)' : '6px solid hsl(var(--card))';
     arrow.style.filter = 'drop-shadow(0 1px 0 hsl(var(--border)))';
     arrow.style.marginTop = '-1px';
 
@@ -358,7 +373,7 @@ export default function AllBusesMap({ buses }: AllBusesMapProps) {
 
       {/* Legend */}
       <div className="absolute bottom-4 left-4 bg-card/95 backdrop-blur-sm rounded-lg p-3 shadow-lg border">
-        <div className="flex items-center gap-3 text-xs">
+        <div className="flex flex-wrap items-center gap-3 text-xs">
           <div className="flex items-center gap-1.5">
             <div className="w-3 h-3 rounded-full bg-primary" />
             <span>{language === 'ar' ? 'نشطة' : 'Active'}</span>
@@ -366,6 +381,10 @@ export default function AllBusesMap({ buses }: AllBusesMapProps) {
           <div className="flex items-center gap-1.5">
             <div className="w-3 h-3 rounded-full bg-red-500" />
             <span>{language === 'ar' ? 'غير نشطة' : 'Inactive'}</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-3 h-3 rounded-full bg-red-500 opacity-60" />
+            <span>{language === 'ar' ? 'بدون GPS' : 'No GPS'}</span>
           </div>
         </div>
       </div>
