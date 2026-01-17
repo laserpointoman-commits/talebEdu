@@ -15,6 +15,7 @@ import AddDriverForm from '@/components/forms/AddDriverForm';
 import { supabase } from '@/integrations/supabase/client';
 import LogoLoader from '@/components/LogoLoader';
 import { formatDistanceToNow } from 'date-fns';
+import { useActiveBusTrips } from '@/hooks/use-active-bus-trips';
 
 interface BusInfo {
   id: string;
@@ -37,6 +38,7 @@ export default function Transport() {
   const { t, language } = useLanguage();
   const navigate = useNavigate();
   const [buses, setBuses] = useState<BusInfo[]>([]);
+  const { activeBusIds: activeTripBusIds } = useActiveBusTrips(buses.map((b) => b.id));
   const [loading, setLoading] = useState(true);
   const [selectedBus, setSelectedBus] = useState<BusInfo | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -112,23 +114,23 @@ export default function Transport() {
 
           const driver = bus.drivers?.profiles;
 
-          return {
-            id: bus.id,
-            busNumber: bus.bus_number,
-            driverName: driver?.full_name || 'No Driver',
-            driverNameAr: driver?.full_name_ar || driver?.full_name || 'لا يوجد سائق',
-            driverPhone: driver?.phone || 'N/A',
-            driverImage: driver?.avatar_url || '',
-            capacity: bus.capacity || 0,
-            currentStudents: count || 0,
-            route: route?.route_name || 'No Route',
-            routeName: language === 'ar' ? (route?.route_name_ar || route?.route_name || 'لا يوجد مسار') : (route?.route_name || 'No Route'),
-            status: bus.status || 'active',
-            lastLocation: location?.current_stop || 'Unknown',
-            lastUpdate: location?.timestamp 
-              ? formatDistanceToNow(new Date(location.timestamp), { addSuffix: true })
-              : 'No data'
-          } as BusInfo;
+            return {
+              id: bus.id,
+              busNumber: bus.bus_number,
+              driverName: driver?.full_name || 'No Driver',
+              driverNameAr: driver?.full_name_ar || driver?.full_name || 'لا يوجد سائق',
+              driverPhone: driver?.phone || 'N/A',
+              driverImage: driver?.avatar_url || '',
+              capacity: bus.capacity || 0,
+              currentStudents: count || 0,
+              route: route?.route_name || 'No Route',
+              routeName: language === 'ar' ? (route?.route_name_ar || route?.route_name || 'لا يوجد مسار') : (route?.route_name || 'No Route'),
+              status: (bus.status as any) || 'inactive',
+              lastLocation: location?.current_stop || 'Unknown',
+              lastUpdate: location?.timestamp 
+                ? formatDistanceToNow(new Date(location.timestamp), { addSuffix: true })
+                : 'No data'
+            } as BusInfo;
         })
       );
 
@@ -191,7 +193,7 @@ export default function Transport() {
     return <LogoLoader fullScreen />;
   }
 
-  const activeBuses = buses.filter(bus => bus.status === 'active');
+  const activeBuses = buses.filter(bus => bus.status !== 'maintenance' && activeTripBusIds.has(bus.id));
   const totalCapacity = buses.reduce((sum, bus) => sum + bus.capacity, 0);
   const totalStudents = buses.reduce((sum, bus) => sum + bus.currentStudents, 0);
 
@@ -282,15 +284,17 @@ export default function Transport() {
                 <div className="flex items-center gap-2">
                   <Bus className="h-5 w-5 text-primary" />
                   <CardTitle className="text-lg">{bus.busNumber}</CardTitle>
-                  {bus.status === 'active' && (
+                  {bus.status !== 'maintenance' && activeTripBusIds.has(bus.id) && (
                     <div className="w-2 h-2 bg-success rounded-full animate-pulse" />
                   )}
                 </div>
-                <Badge className={getStatusColor(bus.status)}>
-                  {bus.status === 'active' && <Activity className="h-3 w-3 mr-1" />}
-                  {bus.status === 'active' ? (language === 'ar' ? 'نشط' : 'active') :
-                   bus.status === 'inactive' ? (language === 'ar' ? 'غير نشط' : 'inactive') :
-                   (language === 'ar' ? 'صيانة' : 'maintenance')}
+                <Badge className={getStatusColor(bus.status === 'maintenance' ? 'maintenance' : (activeTripBusIds.has(bus.id) ? 'active' : 'inactive'))}>
+                  {bus.status !== 'maintenance' && activeTripBusIds.has(bus.id) && <Activity className="h-3 w-3 mr-1" />}
+                  {bus.status === 'maintenance'
+                    ? (language === 'ar' ? 'صيانة' : 'maintenance')
+                    : (activeTripBusIds.has(bus.id)
+                        ? (language === 'ar' ? 'نشط' : 'active')
+                        : (language === 'ar' ? 'غير نشط' : 'inactive'))}
                 </Badge>
               </div>
             </CardHeader>

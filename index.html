@@ -28,18 +28,32 @@
     <meta name="twitter:image" content="/app-icon.jpg" />
     
     <script>
-      // Register service worker for offline support
+      // Register service worker for offline support (and force-refresh on updates)
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
           navigator.serviceWorker.register('/sw.js')
-            .then(registration => {
-              console.log('Service Worker registered:', registration);
-              // Register for background sync
-              if ('sync' in registration) {
-                registration.sync.register('sync-data')
-                  .then(() => console.log('Background sync registered'))
-                  .catch(err => console.log('Background sync failed:', err));
-              }
+            .then((registration) => {
+              // Always check for a newer worker
+              registration.update();
+
+              let refreshing = false;
+              navigator.serviceWorker.addEventListener('controllerchange', () => {
+                if (refreshing) return;
+                refreshing = true;
+                window.location.reload();
+              });
+
+              registration.addEventListener('updatefound', () => {
+                const newWorker = registration.installing;
+                if (!newWorker) return;
+
+                newWorker.addEventListener('statechange', () => {
+                  if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                    // Tell the new SW to activate immediately
+                    newWorker.postMessage({ type: 'SKIP_WAITING' });
+                  }
+                });
+              });
             })
             .catch(err => console.log('Service Worker registration failed:', err));
         });
