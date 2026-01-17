@@ -8,7 +8,6 @@ interface BusInfo {
   id: string;
   bus_number: string;
   status?: string;
-  hasLocation?: boolean;
 }
 
 interface BusLocationData {
@@ -166,7 +165,7 @@ export default function AllBusesMap({ buses }: AllBusesMapProps) {
     const bounds = new mapboxgl.LngLatBounds();
     let hasValidLocations = false;
     
-    // Default location (Oman center) for buses without GPS data
+    // Default location (Oman center) for buses without location data
     const defaultLocation = { latitude: 23.588, longitude: 58.4059 };
 
     buses.forEach((bus, index) => {
@@ -181,12 +180,9 @@ export default function AllBusesMap({ buses }: AllBusesMapProps) {
       hasValidLocations = true;
       bounds.extend([displayLocation.longitude, displayLocation.latitude]);
       
-      // Pass whether bus has real location data
-      const busWithLocationStatus = { ...bus, hasLocation: !!location };
-      
       if (!markers.current.has(bus.id)) {
         // Create new marker
-        const el = createMarkerElement(busWithLocationStatus);
+        const el = createMarkerElement(bus);
         const marker = new mapboxgl.Marker({ element: el, anchor: 'bottom' })
           .setLngLat([displayLocation.longitude, displayLocation.latitude])
           .addTo(map.current!);
@@ -263,19 +259,15 @@ export default function AllBusesMap({ buses }: AllBusesMapProps) {
 
     const label = document.createElement('div');
     label.className = 'bus-pin-label';
-    // Show "No GPS" indicator for buses without location data
-    const labelText = bus.hasLocation === false 
-      ? `${language === 'ar' ? 'حافلة' : 'Bus'} ${bus.bus_number} (${language === 'ar' ? 'بدون GPS' : 'No GPS'})`
-      : `${language === 'ar' ? 'حافلة' : 'Bus'} ${bus.bus_number}`;
-    label.textContent = labelText;
-    label.style.background = bus.hasLocation === false ? 'hsl(0, 72%, 51%)' : 'hsl(var(--card))';
-    label.style.color = bus.hasLocation === false ? '#ffffff' : 'hsl(var(--card-foreground))';
+    label.textContent = `${language === 'ar' ? 'حافلة' : 'Bus'} ${bus.bus_number}`;
+    label.style.background = 'hsl(var(--card))';
+    label.style.color = 'hsl(var(--card-foreground))';
     label.style.padding = '6px 10px';
     label.style.borderRadius = '8px';
     label.style.fontSize = '13px';
     label.style.fontWeight = '700';
     label.style.whiteSpace = 'nowrap';
-    label.style.border = bus.hasLocation === false ? '1px solid hsl(0, 72%, 45%)' : '1px solid hsl(var(--border))';
+    label.style.border = '1px solid hsl(var(--border))';
     label.style.boxShadow = '0 6px 16px hsl(var(--foreground) / 0.18)';
 
     const arrow = document.createElement('div');
@@ -283,7 +275,7 @@ export default function AllBusesMap({ buses }: AllBusesMapProps) {
     arrow.style.height = '0';
     arrow.style.borderLeft = '6px solid transparent';
     arrow.style.borderRight = '6px solid transparent';
-    arrow.style.borderTop = bus.hasLocation === false ? '6px solid hsl(0, 72%, 51%)' : '6px solid hsl(var(--card))';
+    arrow.style.borderTop = '6px solid hsl(var(--card))';
     arrow.style.filter = 'drop-shadow(0 1px 0 hsl(var(--border)))';
     arrow.style.marginTop = '-1px';
 
@@ -291,24 +283,7 @@ export default function AllBusesMap({ buses }: AllBusesMapProps) {
     labelWrap.appendChild(arrow);
     container.appendChild(labelWrap);
 
-    // Pulse effect for active buses
-    if (bus.status === 'active') {
-      const pulse = document.createElement('div');
-      pulse.className = 'bus-pin-pulse';
-      pulse.style.position = 'absolute';
-      pulse.style.left = '50%';
-      pulse.style.top = '50%';
-      pulse.style.transform = 'translate(-50%, -50%)';
-      pulse.style.width = '44px';
-      pulse.style.height = '44px';
-      pulse.style.borderRadius = '9999px';
-      pulse.style.background = 'hsl(var(--primary) / 0.35)';
-      pulse.style.animation = 'busPinPulse 2s ease-out infinite';
-      pulse.style.zIndex = '1';
-      container.appendChild(pulse);
-    }
-
-    // Bus pin with beautiful icon
+    // Bus pin with beautiful icon - create first so pulse can be positioned relative to it
     const pin = document.createElement('div');
     pin.className = 'bus-pin';
     pin.style.width = '48px';
@@ -327,14 +302,38 @@ export default function AllBusesMap({ buses }: AllBusesMapProps) {
     pin.style.color = '#ffffff';
     pin.style.position = 'relative';
     pin.style.zIndex = '2';
-    // More detailed and beautiful school bus icon
     pin.innerHTML = `
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
         <path d="M4 16c0 .88.39 1.67 1 2.22V20c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h8v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1.78c.61-.55 1-1.34 1-2.22V6c0-3.5-3.58-4-8-4s-8 .5-8 4v10zm3.5 1c-.83 0-1.5-.67-1.5-1.5S6.67 14 7.5 14s1.5.67 1.5 1.5S8.33 17 7.5 17zm9 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM18 11H6V6h12v5z"/>
       </svg>
     `;
 
-    container.appendChild(pin);
+    // Create a wrapper for pin and pulse to center them together
+    const pinWrapper = document.createElement('div');
+    pinWrapper.style.position = 'relative';
+    pinWrapper.style.display = 'flex';
+    pinWrapper.style.alignItems = 'center';
+    pinWrapper.style.justifyContent = 'center';
+
+    // Pulse effect for active buses - centered behind the pin
+    if (bus.status === 'active') {
+      const pulse = document.createElement('div');
+      pulse.className = 'bus-pin-pulse';
+      pulse.style.position = 'absolute';
+      pulse.style.left = '50%';
+      pulse.style.top = '50%';
+      pulse.style.transform = 'translate(-50%, -50%)';
+      pulse.style.width = '56px';
+      pulse.style.height = '56px';
+      pulse.style.borderRadius = '9999px';
+      pulse.style.background = 'hsl(var(--primary) / 0.4)';
+      pulse.style.animation = 'busPinPulse 2s ease-out infinite';
+      pulse.style.zIndex = '1';
+      pinWrapper.appendChild(pulse);
+    }
+
+    pinWrapper.appendChild(pin);
+    container.appendChild(pinWrapper);
     return container;
   };
 
@@ -373,7 +372,7 @@ export default function AllBusesMap({ buses }: AllBusesMapProps) {
 
       {/* Legend */}
       <div className="absolute bottom-4 left-4 bg-card/95 backdrop-blur-sm rounded-lg p-3 shadow-lg border">
-        <div className="flex flex-wrap items-center gap-3 text-xs">
+        <div className="flex items-center gap-3 text-xs">
           <div className="flex items-center gap-1.5">
             <div className="w-3 h-3 rounded-full bg-primary" />
             <span>{language === 'ar' ? 'نشطة' : 'Active'}</span>
@@ -381,10 +380,6 @@ export default function AllBusesMap({ buses }: AllBusesMapProps) {
           <div className="flex items-center gap-1.5">
             <div className="w-3 h-3 rounded-full bg-red-500" />
             <span>{language === 'ar' ? 'غير نشطة' : 'Inactive'}</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded-full bg-red-500 opacity-60" />
-            <span>{language === 'ar' ? 'بدون GPS' : 'No GPS'}</span>
           </div>
         </div>
       </div>
