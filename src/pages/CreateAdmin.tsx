@@ -4,17 +4,21 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { getText } from '@/utils/i18n';
 
 export default function CreateAdmin() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const { language } = useLanguage();
+  const t = (en: string, ar: string, hi: string) => getText(language, en, ar, hi);
 
   const createAdminAccount = async () => {
     if (!email || !password) {
       toast({
-        title: 'Error',
-        description: 'Please enter both email and password',
+        title: t('Error', 'خطأ', 'त्रुटि'),
+        description: t('Please enter both email and password', 'يرجى إدخال البريد الإلكتروني وكلمة المرور', 'कृपया ईमेल और पासवर्ड दोनों दर्ज करें'),
         variant: 'destructive'
       });
       return;
@@ -48,8 +52,12 @@ export default function CreateAdmin() {
         }
 
         toast({
-          title: 'Success!',
-          description: `Admin account created! Email: ${email}, Password: ${password}. You can now login.`
+          title: t('Success!', 'نجاح!', 'सफलता!'),
+          description: t(
+            `Admin account created! Email: ${email}, Password: ${password}. You can now login.`,
+            `تم إنشاء حساب المسؤول! البريد: ${email}، كلمة المرور: ${password}. يمكنك الآن تسجيل الدخول.`,
+            `एडमिन अकाउंट बनाया गया! ईमेल: ${email}, पासवर्ड: ${password}. अब आप लॉगिन कर सकते हैं।`
+          )
         });
 
         // Clear form
@@ -59,8 +67,8 @@ export default function CreateAdmin() {
     } catch (error: any) {
       console.error('Error creating admin:', error);
       toast({
-        title: 'Error',
-        description: error.message || 'Failed to create admin account',
+        title: t('Error', 'خطأ', 'त्रुटि'),
+        description: error.message || t('Failed to create admin account', 'فشل في إنشاء حساب المسؤول', 'एडमिन अकाउंट बनाने में विफल'),
         variant: 'destructive'
       });
     } finally {
@@ -72,13 +80,13 @@ export default function CreateAdmin() {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>Create Admin Account</CardTitle>
+          <CardTitle>{t('Create Admin Account', 'إنشاء حساب المسؤول', 'एडमिन अकाउंट बनाएं')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
             <Input
               type="email"
-              placeholder="Enter admin email"
+              placeholder={t('Enter admin email', 'أدخل بريد المسؤول', 'एडमिन ईमेल दर्ज करें')}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
@@ -86,7 +94,7 @@ export default function CreateAdmin() {
           <div>
             <Input
               type="password"
-              placeholder="Enter password"
+              placeholder={t('Enter password', 'أدخل كلمة المرور', 'पासवर्ड दर्ज करें')}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
@@ -96,12 +104,12 @@ export default function CreateAdmin() {
             disabled={loading}
             className="w-full"
           >
-            {loading ? 'Creating...' : 'Create Admin Account'}
+            {loading ? t('Creating...', 'جاري الإنشاء...', 'बना रहा है...') : t('Create Admin Account', 'إنشاء حساب المسؤول', 'एडमिन अकाउंट बनाएं')}
           </Button>
           <div className="text-sm text-muted-foreground">
-            <p>Suggested credentials:</p>
-            <p>Email: admin2@talebedu.com</p>
-            <p>Password: Admin123</p>
+            <p>{t('Suggested credentials:', 'بيانات مقترحة:', 'सुझाए गए क्रेडेंशियल्स:')}</p>
+            <p>{t('Email:', 'البريد:', 'ईमेल:')} admin2@talebedu.com</p>
+            <p>{t('Password:', 'كلمة المرور:', 'पासवर्ड:')} Admin123</p>
           </div>
         </CardContent>
       </Card>
