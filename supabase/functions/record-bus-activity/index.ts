@@ -33,6 +33,20 @@ serve(async (req) => {
 
     const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
 
+    // Rate limiting: max 60 requests per minute per bus
+    const { data: allowed } = await supabase.rpc('check_rate_limit', {
+      p_identifier: busId,
+      p_action_type: 'bus_boarding',
+      p_max_requests: 60
+    });
+    
+    if (allowed === false) {
+      return new Response(
+        JSON.stringify({ error: 'Rate limit exceeded', retry_after: 60 }),
+        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Retry-After': '60' } }
+      );
+    }
+
     let student: any = null;
     if (studentId) {
       const { data } = await supabase.from('students').select('id, first_name, last_name, first_name_ar, last_name_ar, parent_id, nfc_id').eq('id', studentId).single();

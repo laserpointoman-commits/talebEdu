@@ -29,9 +29,22 @@ serve(async (req) => {
     const body: AttendanceRequest = await req.json();
     const { studentNfcId, studentId, deviceId, location, action, nfcVerified = true, manualEntry = false } = body;
 
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+
+    // Rate limiting: max 10 requests per minute per device
+    const { data: allowed } = await supabase.rpc('check_rate_limit', {
+      p_identifier: deviceId,
+      p_action_type: 'attendance',
+      p_max_requests: 60 // 60 per minute = 1 per second max
+    });
+    
+    if (allowed === false) {
+      console.warn(`Rate limit exceeded for device: ${deviceId}`);
+      return new Response(
+        JSON.stringify({ error: 'Rate limit exceeded', retry_after: 60 }),
+        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Retry-After': '60' } }
+      );
+    }
 
     // Fast student lookup
     let student: any = null;

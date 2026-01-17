@@ -2659,6 +2659,7 @@ export type Database = {
           notification_type: string
           parent_id: string
           processed_at: string | null
+          processing_started_at: string | null
           status: string | null
           student_id: string | null
           title: string
@@ -2676,6 +2677,7 @@ export type Database = {
           notification_type: string
           parent_id: string
           processed_at?: string | null
+          processing_started_at?: string | null
           status?: string | null
           student_id?: string | null
           title: string
@@ -2693,6 +2695,7 @@ export type Database = {
           notification_type?: string
           parent_id?: string
           processed_at?: string | null
+          processing_started_at?: string | null
           status?: string | null
           student_id?: string | null
           title?: string
@@ -3815,6 +3818,30 @@ export type Database = {
           role?: Database["public"]["Enums"]["user_role"]
           title?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      rate_limits: {
+        Row: {
+          action_type: string
+          id: string
+          identifier: string
+          request_count: number | null
+          window_start: string
+        }
+        Insert: {
+          action_type: string
+          id?: string
+          identifier: string
+          request_count?: number | null
+          window_start?: string
+        }
+        Update: {
+          action_type?: string
+          id?: string
+          identifier?: string
+          request_count?: number | null
+          window_start?: string
         }
         Relationships: []
       }
@@ -4947,6 +4974,16 @@ export type Database = {
         }
         Relationships: []
       }
+      system_health: {
+        Row: {
+          failed_notifications: number | null
+          pending_notifications: number | null
+          today_attendance: number | null
+          today_bus_activity: number | null
+          total_students: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       accept_friend_request: { Args: { request_id: string }; Returns: boolean }
@@ -5000,6 +5037,15 @@ export type Database = {
         Args: { recipient_id: string; sender_id: string }
         Returns: boolean
       }
+      check_rate_limit: {
+        Args: {
+          p_action_type: string
+          p_identifier: string
+          p_max_requests?: number
+        }
+        Returns: boolean
+      }
+      cleanup_rate_limits: { Args: never; Returns: number }
       create_auth_user: {
         Args: { p_email: string; p_metadata?: Json; p_password: string }
         Returns: string
@@ -5016,6 +5062,15 @@ export type Database = {
       get_default_notifications_by_role: {
         Args: { p_role: Database["public"]["Enums"]["user_role"] }
         Returns: Database["public"]["Enums"]["notification_type"][]
+      }
+      get_notification_queue_stats: {
+        Args: never
+        Returns: {
+          failed_count: number
+          pending_count: number
+          processing_count: number
+          sent_today: number
+        }[]
       }
       get_or_create_conversation: {
         Args: { other_student_id: string }
@@ -5173,6 +5228,7 @@ export type Database = {
         Args: { test_user_id: string }
         Returns: undefined
       }
+      unstick_notifications: { Args: never; Returns: number }
       update_profile_parent: {
         Args: { p_parent_user_id: string; p_profile_id: string }
         Returns: undefined
