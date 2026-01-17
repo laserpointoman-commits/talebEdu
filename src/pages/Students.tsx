@@ -342,14 +342,16 @@ export default function Students() {
       <PageHeader
         title="Students"
         titleAr="الطلاب"
+        titleHi="छात्र"
         subtitle="Manage and view all student profiles"
         subtitleAr="إدارة وعرض جميع ملفات الطلاب"
+        subtitleHi="सभी छात्र प्रोफाइल प्रबंधित करें और देखें"
         actions={
           <div className="flex gap-2">
             {selectedStudents.length > 0 && user?.role === 'admin' && (
               <Button onClick={handleBulkDelete} variant="destructive" size="sm">
                 <Trash2 className="h-4 w-4 mr-2" />
-                {language === 'en' ? `Delete (${selectedStudents.length})` : `حذف (${selectedStudents.length})`}
+                {language === 'en' ? `Delete (${selectedStudents.length})` : language === 'hi' ? `हटाएं (${selectedStudents.length})` : `حذف (${selectedStudents.length})`}
               </Button>
             )}
             <Button onClick={() => setIsRegistrationOpen(true)} size="sm">
@@ -365,7 +367,7 @@ export default function Students() {
         <>
           <div className="mb-6">
             <h3 className="text-lg font-semibold mb-4">
-              {language === 'en' ? 'Select a Class' : 'اختر فصلاً'}
+              {language === 'en' ? 'Select a Class' : language === 'hi' ? 'एक कक्षा चुनें' : 'اختر فصلاً'}
             </h3>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {teacherClasses.map((cls) => (
@@ -380,13 +382,13 @@ export default function Students() {
                     </div>
                     <div className="text-center">
                       <p className="font-semibold text-lg">
-                        {language === 'en' ? `Class ${cls.name}` : `الصف ${cls.name}`}
+                        {language === 'en' ? `Class ${cls.name}` : language === 'hi' ? `कक्षा ${cls.name}` : `الصف ${cls.name}`}
                       </p>
                       <p className="text-sm text-muted-foreground">
-                        {language === 'en' ? `Grade ${cls.grade} - Section ${cls.section}` : `الصف ${cls.grade} - القسم ${cls.section}`}
+                        {language === 'en' ? `Grade ${cls.grade} - Section ${cls.section}` : language === 'hi' ? `ग्रेड ${cls.grade} - सेक्शन ${cls.section}` : `الصف ${cls.grade} - القسم ${cls.section}`}
                       </p>
                       <p className="text-xs text-muted-foreground mt-1">
-                        {cls.total_students || 0} {language === 'en' ? 'students' : 'طالب'}
+                        {cls.total_students || 0} {language === 'en' ? 'students' : language === 'hi' ? 'छात्र' : 'طالب'}
                       </p>
                     </div>
                   </CardContent>
@@ -405,11 +407,11 @@ export default function Students() {
             variant="outline"
             size="sm"
           >
-            {language === 'en' ? '← Back to Classes' : '→ العودة إلى الفصول'}
+            {language === 'en' ? '← Back to Classes' : language === 'hi' ? '← कक्षाओं पर वापस जाएं' : '→ العودة إلى الفصول'}
           </Button>
           <div className="text-lg font-medium">
-            {language === 'en' ? `Class ${selectedClass.name}` : `الصف ${selectedClass.name}`} - 
-            {language === 'en' ? ` Grade ${selectedClass.grade}` : ` الصف ${selectedClass.grade}`}
+            {language === 'en' ? `Class ${selectedClass.name}` : language === 'hi' ? `कक्षा ${selectedClass.name}` : `الصف ${selectedClass.name}`} - 
+            {language === 'en' ? ` Grade ${selectedClass.grade}` : language === 'hi' ? ` ग्रेड ${selectedClass.grade}` : ` الصف ${selectedClass.grade}`}
           </div>
         </div>
       )}
@@ -420,7 +422,7 @@ export default function Students() {
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
             <Input
-              placeholder={language === 'en' ? 'Search by name, NFC, or barcode...' : 'البحث بالاسم أو NFC أو الباركود...'}
+              placeholder={language === 'en' ? 'Search by name, NFC, or barcode...' : language === 'hi' ? 'नाम, NFC, या बारकोड से खोजें...' : 'البحث بالاسم أو NFC أو الباركود...'}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10 number-display"
@@ -429,7 +431,7 @@ export default function Students() {
           </div>
           <Button variant="outline" onClick={handleNfcScan}>
             <Nfc className="h-4 w-4 mr-2" />
-            {language === 'en' ? 'Scan NFC' : 'مسح NFC'}
+            {language === 'en' ? 'Scan NFC' : language === 'hi' ? 'NFC स्कैन करें' : 'مسح NFC'}
           </Button>
         </div>
       )}

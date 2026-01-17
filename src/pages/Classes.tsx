@@ -175,7 +175,7 @@ export default function Classes() {
     } catch (error: any) {
       console.error('Error fetching classes:', error);
       toast({
-        title: language === 'en' ? 'Error' : 'خطأ',
+        title: language === 'en' ? 'Error' : language === 'hi' ? 'त्रुटि' : 'خطأ',
         description: error.message,
         variant: 'destructive',
       });
@@ -238,8 +238,8 @@ export default function Classes() {
       if (error) throw error;
 
       toast({
-        title: language === 'en' ? 'Success' : 'نجاح',
-        description: language === 'en' ? 'Class created successfully' : 'تم إنشاء الصف بنجاح',
+        title: language === 'en' ? 'Success' : language === 'hi' ? 'सफलता' : 'نجاح',
+        description: language === 'en' ? 'Class created successfully' : language === 'hi' ? 'कक्षा सफलतापूर्वक बनाई गई' : 'تم إنشاء الصف بنجاح',
       });
 
       setIsCreateDialogOpen(false);
@@ -247,7 +247,7 @@ export default function Classes() {
       fetchClasses();
     } catch (error: any) {
       toast({
-        title: language === 'en' ? 'Error' : 'خطأ',
+        title: language === 'en' ? 'Error' : language === 'hi' ? 'त्रुटि' : 'خطأ',
         description: error.message,
         variant: 'destructive',
       });
@@ -272,8 +272,8 @@ export default function Classes() {
       if (error) throw error;
 
       toast({
-        title: language === 'en' ? 'Success' : 'نجاح',
-        description: language === 'en' ? 'Schedule added successfully' : 'تم إضافة الجدول بنجاح',
+        title: language === 'en' ? 'Success' : language === 'hi' ? 'सफलता' : 'نجاح',
+        description: language === 'en' ? 'Schedule added successfully' : language === 'hi' ? 'शेड्यूल सफलतापूर्वक जोड़ा गया' : 'تم إضافة الجدول بنجاح',
       });
 
       setIsScheduleDialogOpen(false);
@@ -281,7 +281,7 @@ export default function Classes() {
       fetchClasses();
     } catch (error: any) {
       toast({
-        title: language === 'en' ? 'Error' : 'خطأ',
+        title: language === 'en' ? 'Error' : language === 'hi' ? 'त्रुटि' : 'خطأ',
         description: error.message,
         variant: 'destructive',
       });
@@ -304,14 +304,14 @@ export default function Classes() {
       if (error) throw error;
 
       toast({
-        title: language === 'en' ? 'Success' : 'نجاح',
-        description: language === 'en' ? 'Class deleted successfully' : 'تم حذف الصف بنجاح',
+        title: language === 'en' ? 'Success' : language === 'hi' ? 'सफलता' : 'نجاح',
+        description: language === 'en' ? 'Class deleted successfully' : language === 'hi' ? 'कक्षा सफलतापूर्वक हटाई गई' : 'تم حذف الصف بنجاح',
       });
 
       fetchClasses();
     } catch (error: any) {
       toast({
-        title: language === 'en' ? 'Error' : 'خطأ',
+        title: language === 'en' ? 'Error' : language === 'hi' ? 'त्रुटि' : 'خطأ',
         description: error.message,
         variant: 'destructive',
       });
@@ -360,8 +360,8 @@ export default function Classes() {
         .eq('id', selectedClass.id);
 
       toast({
-        title: language === 'en' ? 'Success' : 'نجاح',
-        description: language === 'en' ? 'Students assigned successfully' : 'تم تعيين الطلاب بنجاح',
+        title: language === 'en' ? 'Success' : language === 'hi' ? 'सफलता' : 'نجاح',
+        description: language === 'en' ? 'Students assigned successfully' : language === 'hi' ? 'छात्र सफलतापूर्वक नियुक्त किए गए' : 'تم تعيين الطلاب بنجاح',
       });
 
       setIsStudentsDialogOpen(false);
@@ -369,7 +369,7 @@ export default function Classes() {
       fetchAllStudents();
     } catch (error: any) {
       toast({
-        title: language === 'en' ? 'Error' : 'خطأ',
+        title: language === 'en' ? 'Error' : language === 'hi' ? 'त्रुटि' : 'خطأ',
         description: error.message,
         variant: 'destructive',
       });
@@ -407,15 +407,17 @@ export default function Classes() {
       <PageHeader
         title="Classes"
         titleAr="الصفوف"
+        titleHi="कक्षाएँ"
         subtitle="Manage classes and assign students"
         subtitleAr="إدارة الصفوف وتعيين الطلاب"
+        subtitleHi="कक्षाओं का प्रबंधन करें और छात्रों को नियुक्त करें"
       />
 
       {effectiveRole === 'admin' && (
         <div className="flex justify-end">
           <Button onClick={() => setIsCreateDialogOpen(true)}>
             <Plus className="h-4 w-4 mr-2" />
-            {language === 'en' ? 'Add Class' : 'إضافة صف'}
+            {language === 'en' ? 'Add Class' : language === 'hi' ? 'कक्षा जोड़ें' : 'إضافة صف'}
           </Button>
         </div>
       )}
@@ -440,21 +442,21 @@ export default function Classes() {
               <div className="grid grid-cols-2 gap-2 text-sm">
                 <div className="flex items-center gap-2">
                   <GraduationCap className="h-4 w-4 text-muted-foreground" />
-                  <span>{language === 'en' ? 'Grade' : 'الصف'}: {classInfo.grade}</span>
+                  <span>{language === 'en' ? 'Grade' : language === 'hi' ? 'ग्रेड' : 'الصف'}: {classInfo.grade}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <BookOpen className="h-4 w-4 text-muted-foreground" />
-                  <span>{language === 'en' ? 'Section' : 'الشعبة'}: {classInfo.section}</span>
+                  <span>{language === 'en' ? 'Section' : language === 'hi' ? 'सेक्शन' : 'الشعبة'}: {classInfo.section}</span>
                 </div>
                 {classInfo.room && (
                   <div className="flex items-center gap-2">
                     <MapPin className="h-4 w-4 text-muted-foreground" />
-                    <span>{language === 'en' ? 'Room' : 'الغرفة'}: {classInfo.room}</span>
+                    <span>{language === 'en' ? 'Room' : language === 'hi' ? 'कमरा' : 'الغرفة'}: {classInfo.room}</span>
                   </div>
                 )}
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4 text-muted-foreground" />
-                  <span>{classInfo.class_schedules.length} {language === 'en' ? 'schedules' : 'جداول'}</span>
+                  <span>{classInfo.class_schedules.length} {language === 'en' ? 'schedules' : language === 'hi' ? 'शेड्यूल' : 'جداول'}</span>
                 </div>
               </div>
 
@@ -480,7 +482,7 @@ export default function Classes() {
                   </div>
                   {classInfo.students.length > 5 && (
                     <span className="text-sm text-muted-foreground">
-                      +{classInfo.students.length - 5} {language === 'en' ? 'more' : 'آخرون'}
+                      +{classInfo.students.length - 5} {language === 'en' ? 'more' : language === 'hi' ? 'और' : 'آخرون'}
                     </span>
                   )}
                 </div>
@@ -495,7 +497,7 @@ export default function Classes() {
                     onClick={() => openStudentsDialog(classInfo)}
                   >
                     <UserPlus className="h-4 w-4 mr-1" />
-                    {language === 'en' ? 'Assign Students' : 'تعيين طلاب'}
+                    {language === 'en' ? 'Assign Students' : language === 'hi' ? 'छात्र नियुक्त करें' : 'تعيين طلاب'}
                   </Button>
                   <Button
                     size="sm"

@@ -167,8 +167,8 @@ const Finance = () => {
     } catch (error) {
       console.error('Error fetching financial data:', error);
       toast({
-        title: language === 'ar' ? 'خطأ' : 'Error',
-        description: language === 'ar' ? 'فشل في تحميل البيانات المالية' : 'Failed to load financial data',
+        title: language === 'ar' ? 'خطأ' : language === 'hi' ? 'त्रुटि' : 'Error',
+        description: language === 'ar' ? 'فشل في تحميل البيانات المالية' : language === 'hi' ? 'वित्तीय डेटा लोड करने में विफल' : 'Failed to load financial data',
         variant: 'destructive'
       });
     } finally {
@@ -187,7 +187,7 @@ const Finance = () => {
         <Card className="w-full max-w-md">
           <CardContent className="pt-6">
             <p className="text-center text-muted-foreground">
-              {language === 'ar' ? 'ليس لديك صلاحية لعرض هذه الصفحة' : 'You do not have permission to view this page'}
+              {language === 'ar' ? 'ليس لديك صلاحية لعرض هذه الصفحة' : language === 'hi' ? 'इस पृष्ठ को देखने की अनुमति नहीं है' : 'You do not have permission to view this page'}
             </p>
           </CardContent>
         </Card>
@@ -209,14 +209,16 @@ const Finance = () => {
         <PageHeader
           title="Financial System"
           titleAr="النظام المالي"
+          titleHi="वित्तीय प्रणाली"
           subtitle="Comprehensive Financial Dashboard"
           subtitleAr="لوحة التحكم المالية الشاملة"
+          subtitleHi="व्यापक वित्तीय डैशबोर्ड"
           actions={
             <div className="flex gap-2">
               <AddTransactionDialog onTransactionAdded={fetchFinancialData} />
               <Button className="bg-gradient-to-r from-primary to-primary/80" variant="outline" size="sm">
                 <Download className="mr-2 h-4 w-4" />
-                {language === 'ar' ? 'تصدير' : 'Export'}
+                {language === 'ar' ? 'تصدير' : language === 'hi' ? 'निर्यात' : 'Export'}
               </Button>
             </div>
           }
@@ -232,13 +234,13 @@ const Finance = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-green-600 dark:text-green-400">
-                    {language === 'ar' ? 'إجمالي الإيرادات' : 'Total Revenue'}
+                    {language === 'ar' ? 'إجمالي الإيرادات' : language === 'hi' ? 'कुल राजस्व' : 'Total Revenue'}
                   </p>
                   <p className="text-2xl font-bold text-green-700 dark:text-green-300">
                     {formatCurrency(totalRevenue)}
                   </p>
                   <div className="flex items-center mt-2 text-green-600 dark:text-green-400">
-                    <span className="text-sm">{language === 'ar' ? 'الإجمالي' : 'Total'}</span>
+                    <span className="text-sm">{language === 'ar' ? 'الإجمالي' : language === 'hi' ? 'कुल' : 'Total'}</span>
                   </div>
                 </div>
                 <div className="h-12 w-12 rounded-full bg-green-200 dark:bg-green-800 flex items-center justify-center">
@@ -256,13 +258,13 @@ const Finance = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-red-600 dark:text-red-400">
-                    {language === 'ar' ? 'إجمالي المصروفات' : 'Total Expenses'}
+                    {language === 'ar' ? 'إجمالي المصروفات' : language === 'hi' ? 'कुल खर्च' : 'Total Expenses'}
                   </p>
                   <p className="text-2xl font-bold text-red-700 dark:text-red-300">
                     {formatCurrency(totalExpenses)}
                   </p>
                   <div className="flex items-center mt-2 text-red-600 dark:text-red-400">
-                    <span className="text-sm">{language === 'ar' ? 'الإجمالي' : 'Total'}</span>
+                    <span className="text-sm">{language === 'ar' ? 'الإجمالي' : language === 'hi' ? 'कुल' : 'Total'}</span>
                   </div>
                 </div>
                 <div className="h-12 w-12 rounded-full bg-red-200 dark:bg-red-800 flex items-center justify-center">
@@ -280,13 +282,13 @@ const Finance = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-blue-600 dark:text-blue-400">
-                    {language === 'ar' ? 'صافي الدخل' : 'Net Income'}
+                    {language === 'ar' ? 'صافي الدخل' : language === 'hi' ? 'शुद्ध आय' : 'Net Income'}
                   </p>
                   <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">
                     {formatCurrency(netIncome)}
                   </p>
                   <div className="flex items-center mt-2 text-blue-600 dark:text-blue-400">
-                    <span className="text-sm">{language === 'ar' ? 'الإجمالي' : 'Total'}</span>
+                    <span className="text-sm">{language === 'ar' ? 'الإجمالي' : language === 'hi' ? 'कुल' : 'Total'}</span>
                   </div>
                 </div>
                 <div className="h-12 w-12 rounded-full bg-blue-200 dark:bg-blue-800 flex items-center justify-center">
@@ -304,14 +306,14 @@ const Finance = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-purple-600 dark:text-purple-400">
-                    {language === 'ar' ? 'الرسوم المستحقة' : 'Outstanding Fees'}
+                    {language === 'ar' ? 'الرسوم المستحقة' : language === 'hi' ? 'बकाया शुल्क' : 'Outstanding Fees'}
                   </p>
                   <p className="text-2xl font-bold text-purple-700 dark:text-purple-300">
                     {formatCurrency(outstandingFees)}
                   </p>
                   <div className="flex items-center mt-2 text-purple-600 dark:text-purple-400">
                     <Clock className="h-4 w-4 mr-1" />
-                    <span className="text-sm">{language === 'ar' ? 'مستحق' : 'Outstanding'}</span>
+                    <span className="text-sm">{language === 'ar' ? 'مستحق' : language === 'hi' ? 'बकाया' : 'Outstanding'}</span>
                   </div>
                 </div>
                 <div className="h-12 w-12 rounded-full bg-purple-200 dark:bg-purple-800 flex items-center justify-center">
@@ -328,25 +330,25 @@ const Finance = () => {
             <TabsTrigger value="transactions" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-3 flex items-center">
               <FileText className={`w-6 h-6 mr-2 ${language === 'ar' ? 'ml-2' : ''} text-blue-500 [&[data-state=active]]:text-primary-foreground`} />
               <span className="[&[data-state=active]]:text-primary-foreground">
-                {language === 'ar' ? 'المعاملات' : 'Transactions'}
+                {language === 'ar' ? 'المعاملات' : language === 'hi' ? 'लेनदेन' : 'Transactions'}
               </span>
             </TabsTrigger>
             <TabsTrigger value="overview" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-3 flex items-center">
               <TrendingUp className={`w-6 h-6 mr-2 ${language === 'ar' ? 'ml-2' : ''} text-green-500 [&[data-state=active]]:text-primary-foreground`} />
               <span className="[&[data-state=active]]:text-primary-foreground">
-                {language === 'ar' ? 'نظرة عامة' : 'Overview'}
+                {language === 'ar' ? 'نظرة عامة' : language === 'hi' ? 'अवलोकन' : 'Overview'}
               </span>
             </TabsTrigger>
             <TabsTrigger value="revenue" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-3 flex items-center">
               <Wallet className={`w-6 h-6 mr-2 ${language === 'ar' ? 'ml-2' : ''} text-yellow-500 [&[data-state=active]]:text-primary-foreground`} />
               <span className="[&[data-state=active]]:text-primary-foreground">
-                {language === 'ar' ? 'الإيرادات' : 'Revenue'}
+                {language === 'ar' ? 'الإيرادات' : language === 'hi' ? 'राजस्व' : 'Revenue'}
               </span>
             </TabsTrigger>
             <TabsTrigger value="analysis" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-3 flex items-center">
               <Calendar className={`w-6 h-6 mr-2 ${language === 'ar' ? 'ml-2' : ''} text-purple-500 [&[data-state=active]]:text-primary-foreground`} />
               <span className="[&[data-state=active]]:text-primary-foreground">
-                {language === 'ar' ? 'التحليل' : 'Analysis'}
+                {language === 'ar' ? 'التحليل' : language === 'hi' ? 'विश्लेषण' : 'Analysis'}
               </span>
             </TabsTrigger>
           </TabsList>
@@ -359,7 +361,7 @@ const Finance = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <Card className="border-0 shadow-lg">
                 <CardHeader>
-                  <CardTitle>{language === 'ar' ? 'الأداء المالي الشهري' : 'Monthly Financial Performance'}</CardTitle>
+                  <CardTitle>{language === 'ar' ? 'الأداء المالي الشهري' : language === 'hi' ? 'मासिक वित्तीय प्रदर्शन' : 'Monthly Financial Performance'}</CardTitle>
                 </CardHeader>
                 <CardContent className="p-2 sm:p-4">
                   <div className="w-full overflow-x-auto">
