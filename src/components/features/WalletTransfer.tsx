@@ -56,7 +56,7 @@ export default function WalletTransfer() {
       setUsers(data || []);
     } catch (error: any) {
       console.error('Error searching users:', error);
-      toast.error(language === 'en' ? 'Failed to search users' : 'فشل البحث عن المستخدمين');
+      toast.error(language === 'en' ? 'Failed to search users' : language === 'hi' ? 'उपयोगकर्ताओं की खोज विफल' : 'فشل البحث عن المستخدمين');
     } finally {
       setSearchLoading(false);
     }
@@ -64,7 +64,7 @@ export default function WalletTransfer() {
 
   const handleTransfer = async () => {
     if (!selectedUser || !amount || parseFloat(amount) <= 0) {
-      toast.error(language === 'en' ? 'Please fill all required fields' : 'يرجى ملء جميع الحقول المطلوبة');
+      toast.error(language === 'en' ? 'Please fill all required fields' : language === 'hi' ? 'कृपया सभी आवश्यक फ़ील्ड भरें' : 'يرجى ملء جميع الحقول المطلوبة');
       return;
     }
 
@@ -81,6 +81,8 @@ export default function WalletTransfer() {
       toast.success(
         language === 'en' 
           ? `Successfully transferred ${amount} OMR to ${selectedUser.full_name}` 
+          : language === 'hi'
+          ? `${selectedUser.full_name} को ${amount} OMR सफलतापूर्वक ट्रांसफर किया गया`
           : `تم تحويل ${amount} ر.ع بنجاح إلى ${selectedUser.full_name}`
       );
 
@@ -97,7 +99,7 @@ export default function WalletTransfer() {
     } catch (error: any) {
       console.error('Transfer error:', error);
       toast.error(
-        error.message || (language === 'en' ? 'Transfer failed' : 'فشل التحويل')
+        error.message || (language === 'en' ? 'Transfer failed' : language === 'hi' ? 'ट्रांसफर विफल' : 'فشل التحويل')
       );
     } finally {
       setLoading(false);
@@ -109,18 +111,20 @@ export default function WalletTransfer() {
       <DialogTrigger asChild>
         <Button variant="secondary" className="gap-2">
           <Send className="h-4 w-4" />
-          {language === 'en' ? 'Transfer Money' : 'تحويل الأموال'}
+          {language === 'en' ? 'Transfer Money' : language === 'hi' ? 'पैसे ट्रांसफर करें' : 'تحويل الأموال'}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Send className="h-5 w-5" />
-            {language === 'en' ? 'Transfer Money' : 'تحويل الأموال'}
+            {language === 'en' ? 'Transfer Money' : language === 'hi' ? 'पैसे ट्रांसफर करें' : 'تحويل الأموال'}
           </DialogTitle>
           <DialogDescription>
             {language === 'en' 
               ? 'Send money to another user\'s wallet' 
+              : language === 'hi'
+              ? 'किसी अन्य उपयोगकर्ता के वॉलेट में पैसे भेजें'
               : 'إرسال الأموال إلى محفظة مستخدم آخر'}
           </DialogDescription>
         </DialogHeader>
@@ -130,10 +134,10 @@ export default function WalletTransfer() {
           <div className="space-y-2">
             <Label className="flex items-center gap-2">
               <User className="h-4 w-4" />
-              {language === 'en' ? 'Recipient' : 'المستلم'}
+              {language === 'en' ? 'Recipient' : language === 'hi' ? 'प्राप्तकर्ता' : 'المستلم'}
             </Label>
             <Input
-              placeholder={language === 'en' ? 'Search by name or email...' : 'البحث بالاسم أو البريد الإلكتروني...'}
+              placeholder={language === 'en' ? 'Search by name or email...' : language === 'hi' ? 'नाम या ईमेल से खोजें...' : 'البحث بالاسم أو البريد الإلكتروني...'}
               value={searchTerm}
               onChange={(e) => {
                 setSearchTerm(e.target.value);
@@ -179,7 +183,7 @@ export default function WalletTransfer() {
                         setSearchTerm('');
                       }}
                     >
-                      {language === 'en' ? 'Change' : 'تغيير'}
+                      {language === 'en' ? 'Change' : language === 'hi' ? 'बदलें' : 'تغيير'}
                     </Button>
                   </div>
                 </CardContent>
@@ -191,7 +195,7 @@ export default function WalletTransfer() {
           <div className="space-y-2">
             <Label className="flex items-center gap-2">
               <DollarSign className="h-4 w-4" />
-              {language === 'en' ? 'Amount (OMR)' : 'المبلغ (ر.ع)'}
+              {language === 'en' ? 'Amount (OMR)' : language === 'hi' ? 'राशि (OMR)' : 'المبلغ (ر.ع)'}
             </Label>
             <Input
               type="number"
@@ -209,10 +213,10 @@ export default function WalletTransfer() {
           <div className="space-y-2">
             <Label className="flex items-center gap-2">
               <FileText className="h-4 w-4" />
-              {language === 'en' ? 'Notes (Optional)' : 'ملاحظات (اختياري)'}
+              {language === 'en' ? 'Notes (Optional)' : language === 'hi' ? 'नोट्स (वैकल्पिक)' : 'ملاحظات (اختياري)'}
             </Label>
             <Textarea
-              placeholder={language === 'en' ? 'Add a note...' : 'أضف ملاحظة...'}
+              placeholder={language === 'en' ? 'Add a note...' : language === 'hi' ? 'एक नोट जोड़ें...' : 'أضف ملاحظة...'}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={3}
@@ -226,15 +230,15 @@ export default function WalletTransfer() {
               onClick={() => setOpen(false)}
               disabled={loading}
             >
-              {language === 'en' ? 'Cancel' : 'إلغاء'}
+              {language === 'en' ? 'Cancel' : language === 'hi' ? 'रद्द करें' : 'إلغاء'}
             </Button>
             <Button
               onClick={handleTransfer}
               disabled={loading || !selectedUser || !amount}
             >
               {loading
-                ? (language === 'en' ? 'Processing...' : 'جاري المعالجة...')
-                : (language === 'en' ? 'Transfer' : 'تحويل')}
+                ? (language === 'en' ? 'Processing...' : language === 'hi' ? 'प्रोसेस हो रहा है...' : 'جاري المعالجة...')
+                : (language === 'en' ? 'Transfer' : language === 'hi' ? 'ट्रांसफर' : 'تحويل')}
             </Button>
           </div>
         </div>

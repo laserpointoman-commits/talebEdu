@@ -26,12 +26,12 @@ export default function PaymentModal({ feeId, totalAmount = 0, paidAmount = 0, o
 
   const handlePayment = async () => {
     if (!amount || parseFloat(amount) <= 0) {
-      toast.error(language === 'en' ? 'Please enter a valid amount' : 'يرجى إدخال مبلغ صالح');
+      toast.error(language === 'en' ? 'Please enter a valid amount' : language === 'hi' ? 'कृपया एक वैध राशि दर्ज करें' : 'يرجى إدخال مبلغ صالح');
       return;
     }
 
     if (parseFloat(amount) > remaining) {
-      toast.error(language === 'en' ? 'Amount exceeds remaining balance' : 'المبلغ يتجاوز الرصيد المتبقي');
+      toast.error(language === 'en' ? 'Amount exceeds remaining balance' : language === 'hi' ? 'राशि शेष बकाया से अधिक है' : 'المبلغ يتجاوز الرصيد المتبقي');
       return;
     }
 
@@ -55,7 +55,7 @@ export default function PaymentModal({ feeId, totalAmount = 0, paidAmount = 0, o
         });
       }
 
-      toast.success(language === 'en' ? 'Payment successful! Receipt sent to your email.' : 'تم الدفع بنجاح! تم إرسال الإيصال إلى بريدك الإلكتروني.');
+      toast.success(language === 'en' ? 'Payment successful! Receipt sent to your email.' : language === 'hi' ? 'भुगतान सफल! रसीद आपके ईमेल पर भेजी गई।' : 'تم الدفع بنجاح! تم إرسال الإيصال إلى بريدك الإلكتروني.');
       onSuccess?.();
     } catch (error: any) {
       toast.error(error.message);
@@ -92,7 +92,7 @@ export default function PaymentModal({ feeId, totalAmount = 0, paidAmount = 0, o
 
               <div className="space-y-3">
                 <div>
-                  <Label htmlFor="amount">{language === 'en' ? 'Amount to Pay (OMR)' : 'المبلغ المطلوب دفعه (ر.ع)'}</Label>
+                  <Label htmlFor="amount">{language === 'en' ? 'Amount to Pay (OMR)' : language === 'hi' ? 'भुगतान राशि (OMR)' : 'المبلغ المطلوب دفعه (ر.ع)'}</Label>
                   <Input 
                     id="amount" 
                     type="number" 
@@ -107,6 +107,8 @@ export default function PaymentModal({ feeId, totalAmount = 0, paidAmount = 0, o
                   <p className="text-xs text-muted-foreground mt-1">
                     {language === 'en' 
                       ? `You can pay any amount up to ${remaining.toFixed(3)} OMR` 
+                      : language === 'hi'
+                      ? `आप ${remaining.toFixed(3)} OMR तक कोई भी राशि का भुगतान कर सकते हैं`
                       : `يمكنك دفع أي مبلغ يصل إلى ${remaining.toFixed(3)} ر.ع`}
                   </p>
                 </div>
@@ -119,13 +121,15 @@ export default function PaymentModal({ feeId, totalAmount = 0, paidAmount = 0, o
               >
                 <Wallet className="h-4 w-4 mr-2" />
                 {processing 
-                  ? (language === 'en' ? 'Processing...' : 'جاري المعالجة...')
-                  : (language === 'en' ? 'Pay from Wallet' : 'الدفع من المحفظة')}
+                  ? (language === 'en' ? 'Processing...' : language === 'hi' ? 'प्रोसेस हो रहा है...' : 'جاري المعالجة...')
+                  : (language === 'en' ? 'Pay from Wallet' : language === 'hi' ? 'वॉलेट से भुगतान करें' : 'الدفع من المحفظة')}
               </Button>
 
               <p className="text-xs text-center text-muted-foreground">
                 {language === 'en' 
                   ? 'Payment will be deducted from your wallet balance' 
+                  : language === 'hi'
+                  ? 'भुगतान आपके वॉलेट बैलेंस से काटा जाएगा'
                   : 'سيتم خصم المبلغ من رصيد محفظتك'}
               </p>
             </div>

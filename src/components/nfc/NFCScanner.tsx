@@ -46,18 +46,18 @@ export default function NFCScanner({
         await handleNFCScan(nfcData);
       });
       
-      toast.success(language === 'ar' ? 'بدأ المسح المستمر' : 'Continuous scanning started');
+      toast.success(language === 'ar' ? 'بدأ المسح المستمر' : language === 'hi' ? 'लगातार स्कैनिंग शुरू' : 'Continuous scanning started');
     } catch (error) {
       console.error('Error starting NFC scan:', error);
       setIsScanning(false);
-      toast.error(language === 'ar' ? 'فشل بدء المسح' : 'Failed to start scanning');
+      toast.error(language === 'ar' ? 'فشل بدء المسح' : language === 'hi' ? 'स्कैनिंग शुरू करने में विफल' : 'Failed to start scanning');
     }
   };
 
   const stopScanning = () => {
     nfcService.stopScanning();
     setIsScanning(false);
-    toast.info(language === 'ar' ? 'توقف المسح' : 'Scanning stopped');
+    toast.info(language === 'ar' ? 'توقف المسح' : language === 'hi' ? 'स्कैनिंग बंद' : 'Scanning stopped');
   };
 
   const handleNFCScan = async (nfcData: NFCData) => {
@@ -70,14 +70,14 @@ export default function NFCScanner({
         .single();
         
       if (error || !student) {
-        toast.error(language === 'ar' ? 'الطالب غير موجود' : 'Student not found');
+        toast.error(language === 'ar' ? 'الطالب غير موجود' : language === 'hi' ? 'छात्र नहीं मिला' : 'Student not found');
         return;
       }
       
       await handleScan(student);
     } catch (error) {
       console.error('Error processing NFC scan:', error);
-      toast.error(language === 'ar' ? 'فشل معالجة المسح' : 'Failed to process scan');
+      toast.error(language === 'ar' ? 'فشل معالجة المسح' : language === 'hi' ? 'स्कैन प्रोसेस करने में विफल' : 'Failed to process scan');
     }
   };
 
@@ -206,13 +206,13 @@ export default function NFCScanner({
             timestamp: new Date().toISOString(),
             synced: false
           });
-          toast.warning(language === 'ar' ? 'تم الحفظ للمزامنة لاحقاً' : 'Saved for later sync');
+          toast.warning(language === 'ar' ? 'تم الحفظ للمزامنة لاحقاً' : language === 'hi' ? 'बाद में सिंक के लिए सहेजा गया' : 'Saved for later sync');
         } catch (offlineError) {
           console.error('Failed to save offline:', offlineError);
-          toast.error(language === 'ar' ? 'فشل حفظ المسح' : 'Failed to save scan');
+          toast.error(language === 'ar' ? 'فشل حفظ المسح' : language === 'hi' ? 'स्कैन सहेजने में विफल' : 'Failed to save scan');
         }
       } else {
-        toast.error(language === 'ar' ? 'فشل معالجة المسح' : 'Failed to process scan');
+        toast.error(language === 'ar' ? 'فشل معالجة المسح' : language === 'hi' ? 'स्कैन प्रोसेस करने में विफल' : 'Failed to process scan');
       }
     }
   };
@@ -223,10 +223,10 @@ export default function NFCScanner({
         <CardTitle className="flex items-center justify-between">
           <span className="flex items-center gap-2">
             <Wifi className="h-5 w-5" />
-            {language === 'ar' ? 'ماسح NFC' : 'NFC Scanner'}
+            {language === 'ar' ? 'ماسح NFC' : language === 'hi' ? 'NFC स्कैनर' : 'NFC Scanner'}
           </span>
           <Badge variant="outline">
-            {scanCount} {language === 'ar' ? 'مسح' : 'scans'}
+            {scanCount} {language === 'ar' ? 'مسح' : language === 'hi' ? 'स्कैन' : 'scans'}
           </Badge>
         </CardTitle>
         <CardDescription>
@@ -241,6 +241,8 @@ export default function NFCScanner({
             <p className="text-sm text-orange-600 text-center">
               {language === 'ar' 
                 ? 'NFC غير مدعوم - استخدام وضع المحاكاة'
+                : language === 'hi' 
+                ? 'NFC समर्थित नहीं - सिमुलेशन मोड का उपयोग'
                 : 'NFC not supported - Using simulation mode'}
             </p>
           </div>
@@ -270,10 +272,10 @@ export default function NFCScanner({
                 <Wifi className="h-16 w-16 text-primary" />
               </motion.div>
               <h3 className="text-xl font-semibold mb-2">
-                {language === 'ar' ? 'في انتظار المسح...' : 'Waiting for scan...'}
+                {language === 'ar' ? 'في انتظار المسح...' : language === 'hi' ? 'स्कैन की प्रतीक्षा...' : 'Waiting for scan...'}
               </h3>
               <p className="text-sm text-muted-foreground">
-                {language === 'ar' ? 'ضع سوار NFC بالقرب من الماسح' : 'Hold NFC wristband near scanner'}
+                {language === 'ar' ? 'ضع سوار NFC بالقرب من الماسح' : language === 'hi' ? 'NFC रिस्टबैंड स्कैनर के पास रखें' : 'Hold NFC wristband near scanner'}
               </p>
             </motion.div>
           ) : (
@@ -288,10 +290,10 @@ export default function NFCScanner({
                 <WifiOff className="h-16 w-16 text-muted-foreground" />
               </div>
               <h3 className="text-xl font-semibold mb-2">
-                {language === 'ar' ? 'المسح غير نشط' : 'Scanner Inactive'}
+                {language === 'ar' ? 'المسح غير نشط' : language === 'hi' ? 'स्कैनर निष्क्रिय' : 'Scanner Inactive'}
               </h3>
               <p className="text-sm text-muted-foreground">
-                {language === 'ar' ? 'انقر على "بدء المسح" للمتابعة' : 'Click "Start Scanning" to begin'}
+                {language === 'ar' ? 'انقر على "بدء المسح" للمتابعة' : language === 'hi' ? 'शुरू करने के लिए "स्कैनिंग शुरू करें" क्लिक करें' : 'Click "Start Scanning" to begin'}
               </p>
             </motion.div>
           )}
@@ -307,7 +309,7 @@ export default function NFCScanner({
             <CheckCircle className="h-5 w-5 text-green-600" />
             <div>
               <p className="text-sm font-medium">
-                {language === 'ar' ? 'آخر مسح' : 'Last Scanned'}
+                {language === 'ar' ? 'آخر مسح' : language === 'hi' ? 'अंतिम स्कैन' : 'Last Scanned'}
               </p>
               <p className="text-sm text-muted-foreground">{lastScanned}</p>
             </div>
@@ -320,19 +322,19 @@ export default function NFCScanner({
               {isNFCSupported ? (
                 <>
                   <Wifi className="mr-2 h-4 w-4" />
-                  {language === 'ar' ? 'بدء المسح' : 'Start Scanning'}
+                  {language === 'ar' ? 'بدء المسح' : language === 'hi' ? 'स्कैनिंग शुरू करें' : 'Start Scanning'}
                 </>
               ) : (
                 <>
                   <Loader2 className="mr-2 h-4 w-4" />
-                  {language === 'ar' ? 'بدء المسح' : 'Start Scanning'}
+                  {language === 'ar' ? 'بدء المسح' : language === 'hi' ? 'स्कैनिंग शुरू करें' : 'Start Scanning'}
                 </>
               )}
             </Button>
           ) : (
             <Button onClick={stopScanning} variant="destructive" className="flex-1" size="lg">
               <WifiOff className="mr-2 h-4 w-4" />
-              {language === 'ar' ? 'إيقاف المسح' : 'Stop Scanning'}
+              {language === 'ar' ? 'إيقاف المسح' : language === 'hi' ? 'स्कैनिंग बंद करें' : 'Stop Scanning'}
             </Button>
           )}
           
@@ -343,7 +345,7 @@ export default function NFCScanner({
               variant="outline"
               size="lg"
             >
-              {language === 'ar' ? 'اختبار' : 'Test'}
+              {language === 'ar' ? 'اختبار' : language === 'hi' ? 'परीक्षण' : 'Test'}
             </Button>
           )}
         </div>
@@ -352,7 +354,7 @@ export default function NFCScanner({
         {recentScans.length > 0 && (
           <div className="space-y-2">
             <p className="text-sm font-medium">
-              {language === 'ar' ? 'آخر المسحات' : 'Recent Scans'}
+              {language === 'ar' ? 'آخر المسحات' : language === 'hi' ? 'हाल के स्कैन' : 'Recent Scans'}
             </p>
             <div className="space-y-1 max-h-[120px] overflow-y-auto">
               {recentScans.map((scan, idx) => (
@@ -369,13 +371,13 @@ export default function NFCScanner({
         <div className="grid grid-cols-2 gap-3">
           <div className="p-3 bg-muted/50 rounded-lg">
             <p className="text-xs text-muted-foreground">
-              {language === 'ar' ? 'إجمالي المسح اليوم' : 'Total Scans Today'}
+              {language === 'ar' ? 'إجمالي المسح اليوم' : language === 'hi' ? 'आज कुल स्कैन' : 'Total Scans Today'}
             </p>
             <p className="text-2xl font-bold">{scanCount}</p>
           </div>
           <div className="p-3 bg-muted/50 rounded-lg">
             <p className="text-xs text-muted-foreground">
-              {language === 'ar' ? 'الموقع' : 'Location'}
+              {language === 'ar' ? 'الموقع' : language === 'hi' ? 'स्थान' : 'Location'}
             </p>
             <p className="text-sm font-medium truncate">{location}</p>
           </div>

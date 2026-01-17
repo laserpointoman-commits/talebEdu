@@ -35,13 +35,13 @@ export default function MealCart({ cartItems, onUpdateCart, onCheckout, walletBa
   const [paymentMethod, setPaymentMethod] = useState<'visa' | 'wallet'>('wallet');
 
   const daysOfWeek = [
-    { value: 'monday', label: language === 'en' ? 'Monday' : 'الإثنين' },
-    { value: 'tuesday', label: language === 'en' ? 'Tuesday' : 'الثلاثاء' },
-    { value: 'wednesday', label: language === 'en' ? 'Wednesday' : 'الأربعاء' },
-    { value: 'thursday', label: language === 'en' ? 'Thursday' : 'الخميس' },
-    { value: 'friday', label: language === 'en' ? 'Friday' : 'الجمعة' },
-    { value: 'saturday', label: language === 'en' ? 'Saturday' : 'السبت' },
-    { value: 'sunday', label: language === 'en' ? 'Sunday' : 'الأحد' }
+    { value: 'monday', label: language === 'en' ? 'Monday' : language === 'hi' ? 'सोमवार' : 'الإثنين' },
+    { value: 'tuesday', label: language === 'en' ? 'Tuesday' : language === 'hi' ? 'मंगलवार' : 'الثلاثاء' },
+    { value: 'wednesday', label: language === 'en' ? 'Wednesday' : language === 'hi' ? 'बुधवार' : 'الأربعاء' },
+    { value: 'thursday', label: language === 'en' ? 'Thursday' : language === 'hi' ? 'गुरुवार' : 'الخميس' },
+    { value: 'friday', label: language === 'en' ? 'Friday' : language === 'hi' ? 'शुक्रवार' : 'الجمعة' },
+    { value: 'saturday', label: language === 'en' ? 'Saturday' : language === 'hi' ? 'शनिवार' : 'السبت' },
+    { value: 'sunday', label: language === 'en' ? 'Sunday' : language === 'hi' ? 'रविवार' : 'الأحد' }
   ];
 
   const totalAmount = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
@@ -61,17 +61,19 @@ export default function MealCart({ cartItems, onUpdateCart, onCheckout, walletBa
     const updatedItems = cartItems.filter(item => item.id !== itemId);
     onUpdateCart(updatedItems);
     toast({
-      title: language === 'en' ? 'Item Removed' : 'تم حذف العنصر',
-      description: language === 'en' ? 'Item removed from cart' : 'تم حذف العنصر من السلة',
+      title: language === 'en' ? 'Item Removed' : language === 'hi' ? 'आइटम हटाया गया' : 'تم حذف العنصر',
+      description: language === 'en' ? 'Item removed from cart' : language === 'hi' ? 'कार्ट से आइटम हटाया गया' : 'تم حذف العنصر من السلة',
     });
   };
 
   const handleCheckout = () => {
     if (paymentMethod === 'wallet' && walletBalance < totalAmount) {
       toast({
-        title: language === 'en' ? 'Insufficient Balance' : 'رصيد غير كافي',
+        title: language === 'en' ? 'Insufficient Balance' : language === 'hi' ? 'अपर्याप्त शेष' : 'رصيد غير كافي',
         description: language === 'en' 
           ? 'Your wallet balance is insufficient for this purchase' 
+          : language === 'hi' 
+          ? 'इस खरीद के लिए आपके वॉलेट में अपर्याप्त शेष है'
           : 'رصيد محفظتك غير كافي لهذا الشراء',
         variant: 'destructive',
       });
@@ -82,9 +84,11 @@ export default function MealCart({ cartItems, onUpdateCart, onCheckout, walletBa
     setIsCheckoutOpen(false);
     
     toast({
-      title: language === 'en' ? 'Order Confirmed' : 'تم تأكيد الطلب',
+      title: language === 'en' ? 'Order Confirmed' : language === 'hi' ? 'ऑर्डर की पुष्टि' : 'تم تأكيد الطلب',
       description: language === 'en' 
         ? `Payment of OMR ${totalAmount.toFixed(2)} processed via ${paymentMethod === 'visa' ? 'Visa' : 'Wallet'}` 
+        : language === 'hi'
+        ? `OMR ${totalAmount.toFixed(2)} का भुगतान ${paymentMethod === 'visa' ? 'वीज़ा' : 'वॉलेट'} से संसाधित`
         : `تمت معالجة دفعة بقيمة ${totalAmount.toFixed(2)} ر.ع عبر ${paymentMethod === 'visa' ? 'فيزا' : 'المحفظة'}`,
     });
   };
@@ -94,7 +98,7 @@ export default function MealCart({ cartItems, onUpdateCart, onCheckout, walletBa
       <Card className="p-8 text-center">
         <ShoppingCart className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
         <p className="text-muted-foreground">
-          {language === 'en' ? 'Your cart is empty' : 'سلة التسوق فارغة'}
+          {language === 'en' ? 'Your cart is empty' : language === 'hi' ? 'आपकी कार्ट खाली है' : 'سلة التسوق فارغة'}
         </p>
       </Card>
     );
@@ -106,7 +110,7 @@ export default function MealCart({ cartItems, onUpdateCart, onCheckout, walletBa
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <ShoppingCart className="h-5 w-5" />
-            {language === 'en' ? 'Shopping Cart' : 'سلة التسوق'}
+            {language === 'en' ? 'Shopping Cart' : language === 'hi' ? 'शॉपिंग कार्ट' : 'سلة التسوق'}
             <Badge className="ml-auto">{cartItems.length}</Badge>
           </CardTitle>
         </CardHeader>
@@ -121,10 +125,10 @@ export default function MealCart({ cartItems, onUpdateCart, onCheckout, walletBa
                     {language === 'en' ? item.mealName : item.mealNameAr}
                   </h4>
                   <p className="text-sm text-muted-foreground">
-                    {language === 'en' ? `For: ${item.studentName}` : `لـ: ${item.studentName}`}
+                    {language === 'en' ? `For: ${item.studentName}` : language === 'hi' ? `के लिए: ${item.studentName}` : `لـ: ${item.studentName}`}
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    {language === 'en' ? `Every ${dayLabel}` : `كل ${dayLabel}`} • {item.servingTime === 'breakfast' ? '7-9 AM' : '12-2 PM'}
+                    {language === 'en' ? `Every ${dayLabel}` : language === 'hi' ? `हर ${dayLabel}` : `كل ${dayLabel}`} • {item.servingTime === 'breakfast' ? '7-9 AM' : '12-2 PM'}
                   </p>
                   <p className="font-semibold text-primary mt-1">
                     OMR {(item.price * item.quantity).toFixed(2)}
@@ -163,7 +167,7 @@ export default function MealCart({ cartItems, onUpdateCart, onCheckout, walletBa
           
           <div className="border-t pt-4">
             <div className="flex justify-between text-lg font-semibold">
-              <span>{language === 'en' ? 'Total:' : 'المجموع:'}</span>
+              <span>{language === 'en' ? 'Total:' : language === 'hi' ? 'कुल:' : 'المجموع:'}</span>
               <span className="text-primary">OMR {totalAmount.toFixed(2)}</span>
             </div>
             <Button 
@@ -172,7 +176,7 @@ export default function MealCart({ cartItems, onUpdateCart, onCheckout, walletBa
               onClick={() => setIsCheckoutOpen(true)}
             >
               <CreditCard className="h-4 w-4 mr-2" />
-              {language === 'en' ? 'Proceed to Checkout' : 'المتابعة للدفع'}
+              {language === 'en' ? 'Proceed to Checkout' : language === 'hi' ? 'चेकआउट के लिए आगे बढ़ें' : 'المتابعة للدفع'}
             </Button>
           </div>
         </CardContent>
@@ -182,7 +186,7 @@ export default function MealCart({ cartItems, onUpdateCart, onCheckout, walletBa
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {language === 'en' ? 'Select Payment Method' : 'اختر طريقة الدفع'}
+              {language === 'en' ? 'Select Payment Method' : language === 'hi' ? 'भुगतान विधि चुनें' : 'اختر طريقة الدفع'}
             </DialogTitle>
           </DialogHeader>
           
@@ -190,13 +194,13 @@ export default function MealCart({ cartItems, onUpdateCart, onCheckout, walletBa
             <div className="p-4 bg-muted/50 rounded-lg">
               <div className="flex justify-between mb-2">
                 <span className="text-sm text-muted-foreground">
-                  {language === 'en' ? 'Total Amount:' : 'المبلغ الإجمالي:'}
+                  {language === 'en' ? 'Total Amount:' : language === 'hi' ? 'कुल राशि:' : 'المبلغ الإجمالي:'}
                 </span>
                 <span className="font-semibold">OMR {totalAmount.toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-sm text-muted-foreground">
-                  {language === 'en' ? 'Items:' : 'العناصر:'}
+                  {language === 'en' ? 'Items:' : language === 'hi' ? 'आइटम:' : 'العناصر:'}
                 </span>
                 <span>{cartItems.length}</span>
               </div>
@@ -208,14 +212,14 @@ export default function MealCart({ cartItems, onUpdateCart, onCheckout, walletBa
                 <Label htmlFor="wallet" className="flex-1 cursor-pointer">
                   <div className="flex items-center gap-2">
                     <Wallet className="h-4 w-4" />
-                    <span>{language === 'en' ? 'Wallet' : 'المحفظة'}</span>
+                    <span>{language === 'en' ? 'Wallet' : language === 'hi' ? 'वॉलेट' : 'المحفظة'}</span>
                     <Badge variant="outline" className="ml-auto">
                       OMR {walletBalance.toFixed(2)}
                     </Badge>
                   </div>
                   {walletBalance < totalAmount && (
                     <p className="text-xs text-destructive mt-1">
-                      {language === 'en' ? 'Insufficient balance' : 'رصيد غير كافي'}
+                      {language === 'en' ? 'Insufficient balance' : language === 'hi' ? 'अपर्याप्त शेष' : 'رصيد غير كافي'}
                     </p>
                   )}
                 </Label>
@@ -226,7 +230,7 @@ export default function MealCart({ cartItems, onUpdateCart, onCheckout, walletBa
                 <Label htmlFor="visa" className="flex-1 cursor-pointer">
                   <div className="flex items-center gap-2">
                     <CreditCard className="h-4 w-4" />
-                    <span>{language === 'en' ? 'Visa Card' : 'بطاقة فيزا'}</span>
+                    <span>{language === 'en' ? 'Visa Card' : language === 'hi' ? 'वीज़ा कार्ड' : 'بطاقة فيزا'}</span>
                   </div>
                 </Label>
               </div>
@@ -235,13 +239,13 @@ export default function MealCart({ cartItems, onUpdateCart, onCheckout, walletBa
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsCheckoutOpen(false)}>
-              {language === 'en' ? 'Cancel' : 'إلغاء'}
+              {language === 'en' ? 'Cancel' : language === 'hi' ? 'रद्द करें' : 'إلغاء'}
             </Button>
             <Button 
               onClick={handleCheckout}
               disabled={paymentMethod === 'wallet' && walletBalance < totalAmount}
             >
-              {language === 'en' ? 'Confirm Payment' : 'تأكيد الدفع'}
+              {language === 'en' ? 'Confirm Payment' : language === 'hi' ? 'भुगतान की पुष्टि करें' : 'تأكيد الدفع'}
             </Button>
           </DialogFooter>
         </DialogContent>
