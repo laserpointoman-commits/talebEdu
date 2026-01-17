@@ -219,13 +219,19 @@ export default function SupervisorDashboard() {
       await loadBusStudents(busId);
 
       const today = new Date().toISOString().split('T')[0];
-      const { data: activeTrip } = await supabase
+      const { data: activeTrip, error: activeTripError } = await supabase
         .from('bus_trips')
         .select('*')
         .eq('bus_id', busId)
         .eq('status', 'in_progress')
         .gte('created_at', `${today}T00:00:00`)
-        .single();
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (activeTripError) {
+        console.warn('Active trip lookup error:', activeTripError);
+      }
 
       if (activeTrip) {
         setCurrentTrip(activeTrip);
