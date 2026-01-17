@@ -189,8 +189,8 @@ export default function Teachers() {
         .eq('id', selectedTeacher.id);
 
       toast({
-        title: language === 'en' ? 'Success' : 'نجاح',
-        description: language === 'en' ? 'Classes assigned successfully' : 'تم تعيين الصفوف بنجاح',
+        title: language === 'en' ? 'Success' : language === 'hi' ? 'सफलता' : 'نجاح',
+        description: language === 'en' ? 'Classes assigned successfully' : language === 'hi' ? 'कक्षाएँ सफलतापूर्वक नियुक्त की गईं' : 'تم تعيين الصفوف بنجاح',
       });
 
       setIsClassAssignDialogOpen(false);
@@ -198,7 +198,7 @@ export default function Teachers() {
       fetchClasses();
     } catch (error: any) {
       toast({
-        title: language === 'en' ? 'Error' : 'خطأ',
+        title: language === 'en' ? 'Error' : language === 'hi' ? 'त्रुटि' : 'خطأ',
         description: error.message,
         variant: 'destructive',
       });
@@ -226,7 +226,7 @@ export default function Teachers() {
     } catch (error: any) {
       console.error('Error fetching teachers:', error);
       toast({
-        title: language === 'en' ? 'Error' : 'خطأ',
+        title: language === 'en' ? 'Error' : language === 'hi' ? 'त्रुटि' : 'خطأ',
         description: error.message,
         variant: 'destructive',
       });
@@ -306,8 +306,8 @@ export default function Teachers() {
     } catch (error) {
       console.error('Error preparing edit form:', error);
       toast({
-        title: language === 'en' ? 'Error' : 'خطأ',
-        description: 'Failed to load teacher data',
+        title: language === 'en' ? 'Error' : language === 'hi' ? 'त्रुटि' : 'خطأ',
+        description: language === 'en' ? 'Failed to load teacher data' : language === 'hi' ? 'शिक्षक डेटा लोड करने में विफल' : 'فشل في تحميل بيانات المعلم',
         variant: 'destructive',
       });
     }
@@ -366,13 +366,13 @@ export default function Teachers() {
 
       toast({
         title: t('common.save'),
-        description: language === 'en' ? 'Teacher profile updated successfully' : 'تم تحديث ملف المعلم بنجاح',
+        description: language === 'en' ? 'Teacher profile updated successfully' : language === 'hi' ? 'शिक्षक प्रोफाइल सफलतापूर्वक अपडेट किया गया' : 'تم تحديث ملف المعلم بنجاح',
       });
       setIsEditDialogOpen(false);
       fetchTeachers();
     } catch (error: any) {
       toast({
-        title: language === 'en' ? 'Error' : 'خطأ',
+        title: language === 'en' ? 'Error' : language === 'hi' ? 'त्रुटि' : 'خطأ',
         description: error.message,
         variant: 'destructive',
       });
@@ -407,8 +407,8 @@ export default function Teachers() {
       }
 
       toast({
-        title: language === 'en' ? 'Success' : 'نجاح',
-        description: language === 'en' ? 'Teacher deleted successfully' : 'تم حذف المعلم بنجاح',
+        title: language === 'en' ? 'Success' : language === 'hi' ? 'सफलता' : 'نجاح',
+        description: language === 'en' ? 'Teacher deleted successfully' : language === 'hi' ? 'शिक्षक सफलतापूर्वक हटाया गया' : 'تم حذف المعلم بنجاح',
       });
       
       setIsDeleteDialogOpen(false);
@@ -416,7 +416,7 @@ export default function Teachers() {
       fetchTeachers();
     } catch (error) {
       toast({
-        title: language === 'en' ? 'Error' : 'خطأ',
+        title: language === 'en' ? 'Error' : language === 'hi' ? 'त्रुटि' : 'خطأ',
         description: (error as Error).message,
         variant: 'destructive',
       });
@@ -714,7 +714,7 @@ export default function Teachers() {
                   onClick={() => openClassAssignDialog(teacher)}
                 >
                   <GraduationCap className="h-4 w-4 mr-1" />
-                  {language === 'en' ? 'Assign Classes' : 'تعيين صفوف'}
+                  {language === 'en' ? 'Assign Classes' : language === 'hi' ? 'कक्षाएँ नियुक्त करें' : 'تعيين صفوف'}
                 </Button>
                 <Button
                   variant="outline"
@@ -734,29 +734,29 @@ export default function Teachers() {
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {language === 'en' ? 'Create Teacher Account' : 'إنشاء حساب معلم'}
+              {language === 'en' ? 'Create Teacher Account' : language === 'hi' ? 'शिक्षक खाता बनाएं' : 'إنشاء حساب معلم'}
             </DialogTitle>
           </DialogHeader>
           <Tabs defaultValue="basic" className="w-full">
             <TabsList className="grid w-full grid-cols-5">
-              <TabsTrigger value="basic">{language === 'en' ? 'Basic' : 'أساسي'}</TabsTrigger>
-              <TabsTrigger value="professional">{language === 'en' ? 'Professional' : 'مهني'}</TabsTrigger>
-              <TabsTrigger value="personal">{language === 'en' ? 'Personal' : 'شخصي'}</TabsTrigger>
-              <TabsTrigger value="address">{language === 'en' ? 'Address' : 'العنوان'}</TabsTrigger>
-              <TabsTrigger value="financial">{language === 'en' ? 'Financial' : 'مالي'}</TabsTrigger>
+              <TabsTrigger value="basic">{language === 'en' ? 'Basic' : language === 'hi' ? 'मूल' : 'أساسي'}</TabsTrigger>
+              <TabsTrigger value="professional">{language === 'en' ? 'Professional' : language === 'hi' ? 'पेशेवर' : 'مهني'}</TabsTrigger>
+              <TabsTrigger value="personal">{language === 'en' ? 'Personal' : language === 'hi' ? 'व्यक्तिगत' : 'شخصي'}</TabsTrigger>
+              <TabsTrigger value="address">{language === 'en' ? 'Address' : language === 'hi' ? 'पता' : 'العنوان'}</TabsTrigger>
+              <TabsTrigger value="financial">{language === 'en' ? 'Financial' : language === 'hi' ? 'वित्तीय' : 'مالي'}</TabsTrigger>
             </TabsList>
             
             <TabsContent value="basic" className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>{language === 'en' ? 'Name' : 'الاسم'}</Label>
+                  <Label>{language === 'en' ? 'Name' : language === 'hi' ? 'नाम' : 'الاسم'}</Label>
                   <Input
                     value={addForm.name}
                     onChange={(e) => setAddForm({ ...addForm, name: e.target.value })}
                   />
                 </div>
                 <div>
-                  <Label>{language === 'en' ? 'Name (Arabic)' : 'الاسم بالعربية'}</Label>
+                  <Label>{language === 'en' ? 'Name (Arabic)' : language === 'hi' ? 'नाम (अरबी)' : 'الاسم بالعربية'}</Label>
                   <Input
                     value={addForm.nameAr}
                     onChange={(e) => setAddForm({ ...addForm, nameAr: e.target.value })}
@@ -766,7 +766,7 @@ export default function Teachers() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>{language === 'en' ? 'Email' : 'البريد الإلكتروني'}</Label>
+                  <Label>{language === 'en' ? 'Email' : language === 'hi' ? 'ईमेल' : 'البريد الإلكتروني'}</Label>
                   <Input
                     type="email"
                     value={addForm.email}
@@ -775,7 +775,7 @@ export default function Teachers() {
                   />
                 </div>
                 <div>
-                  <Label>{language === 'en' ? 'Password' : 'كلمة المرور'}</Label>
+                  <Label>{language === 'en' ? 'Password' : language === 'hi' ? 'पासवर्ड' : 'كلمة المرور'}</Label>
                   <div className="relative" dir="ltr">
                     <Input
                       type={showPassword ? "text" : "password"}
@@ -798,7 +798,7 @@ export default function Teachers() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>{language === 'en' ? 'Phone' : 'الهاتف'}</Label>
+                  <Label>{language === 'en' ? 'Phone' : language === 'hi' ? 'फ़ोन' : 'الهاتف'}</Label>
                   <Input
                     value={addForm.phone}
                     onChange={(e) => setAddForm({ ...addForm, phone: e.target.value })}
@@ -806,7 +806,7 @@ export default function Teachers() {
                   />
                 </div>
                 <div>
-                  <Label>{language === 'en' ? 'Join Date' : 'تاريخ الانضمام'}</Label>
+                  <Label>{language === 'en' ? 'Join Date' : language === 'hi' ? 'शामिल होने की तारीख' : 'تاريخ الانضمام'}</Label>
                   <Input
                     type="date"
                     value={addForm.joinDate}
@@ -819,32 +819,32 @@ export default function Teachers() {
             <TabsContent value="professional" className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>{language === 'en' ? 'Subjects' : 'المواد'}</Label>
+                  <Label>{language === 'en' ? 'Subjects' : language === 'hi' ? 'विषय' : 'المواد'}</Label>
                   <Input
                     value={addForm.subjects}
                     onChange={(e) => setAddForm({ ...addForm, subjects: e.target.value })}
-                    placeholder={language === 'en' ? 'e.g., Math, Science' : 'مثل: الرياضيات، العلوم'}
+                    placeholder={language === 'en' ? 'e.g., Math, Science' : language === 'hi' ? 'जैसे, गणित, विज्ञान' : 'مثل: الرياضيات، العلوم'}
                   />
                 </div>
                 <div>
-                  <Label>{language === 'en' ? 'Classes' : 'الصفوف'}</Label>
+                  <Label>{language === 'en' ? 'Classes' : language === 'hi' ? 'कक्षाएँ' : 'الصفوف'}</Label>
                   <Input
                     value={addForm.classes}
                     onChange={(e) => setAddForm({ ...addForm, classes: e.target.value })}
-                    placeholder={language === 'en' ? 'e.g., 5A, 5B' : 'مثل: 5أ، 5ب'}
+                    placeholder={language === 'en' ? 'e.g., 5A, 5B' : language === 'hi' ? 'जैसे, 5A, 5B' : 'مثل: 5أ، 5ب'}
                   />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>{language === 'en' ? 'Qualification' : 'المؤهل'}</Label>
+                  <Label>{language === 'en' ? 'Qualification' : language === 'hi' ? 'योग्यता' : 'المؤهل'}</Label>
                   <Input
                     value={addForm.qualification}
                     onChange={(e) => setAddForm({ ...addForm, qualification: e.target.value })}
                   />
                 </div>
                 <div>
-                  <Label>{language === 'en' ? 'Experience (years)' : 'الخبرة (سنوات)'}</Label>
+                  <Label>{language === 'en' ? 'Experience (years)' : language === 'hi' ? 'अनुभव (वर्ष)' : 'الخبرة (سنوات)'}</Label>
                   <Input
                     type="number"
                     value={addForm.experience}
@@ -854,14 +854,14 @@ export default function Teachers() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>{language === 'en' ? 'Specialization' : 'التخصص'}</Label>
+                  <Label>{language === 'en' ? 'Specialization' : language === 'hi' ? 'विशेषज्ञता' : 'التخصص'}</Label>
                   <Input
                     value={addForm.specialization}
                     onChange={(e) => setAddForm({ ...addForm, specialization: e.target.value })}
                   />
                 </div>
                 <div>
-                  <Label>{language === 'en' ? 'Previous School' : 'المدرسة السابقة'}</Label>
+                  <Label>{language === 'en' ? 'Previous School' : language === 'hi' ? 'पिछला स्कूल' : 'المدرسة السابقة'}</Label>
                   <Input
                     value={addForm.previousSchool}
                     onChange={(e) => setAddForm({ ...addForm, previousSchool: e.target.value })}
@@ -873,14 +873,14 @@ export default function Teachers() {
             <TabsContent value="personal" className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>{language === 'en' ? 'Civil ID' : 'البطاقة المدنية'}</Label>
+                  <Label>{language === 'en' ? 'Civil ID' : language === 'hi' ? 'सिविल आईडी' : 'البطاقة المدنية'}</Label>
                   <Input
                     value={addForm.civilId}
                     onChange={(e) => setAddForm({ ...addForm, civilId: e.target.value })}
                   />
                 </div>
                 <div>
-                  <Label>{language === 'en' ? 'Passport Number' : 'رقم جواز السفر'}</Label>
+                  <Label>{language === 'en' ? 'Passport Number' : language === 'hi' ? 'पासपोर्ट नंबर' : 'رقم جواز السفر'}</Label>
                   <Input
                     value={addForm.passportNumber}
                     onChange={(e) => setAddForm({ ...addForm, passportNumber: e.target.value })}
@@ -889,7 +889,7 @@ export default function Teachers() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>{language === 'en' ? 'Date of Birth' : 'تاريخ الميلاد'}</Label>
+                  <Label>{language === 'en' ? 'Date of Birth' : language === 'hi' ? 'जन्म तिथि' : 'تاريخ الميلاد'}</Label>
                   <Input
                     type="date"
                     value={addForm.dateOfBirth}
@@ -897,37 +897,37 @@ export default function Teachers() {
                   />
                 </div>
                 <div>
-                  <Label>{language === 'en' ? 'Gender' : 'الجنس'}</Label>
+                  <Label>{language === 'en' ? 'Gender' : language === 'hi' ? 'लिंग' : 'الجنس'}</Label>
                   <Select value={addForm.gender} onValueChange={(value) => setAddForm({ ...addForm, gender: value })}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="male">{language === 'en' ? 'Male' : 'ذكر'}</SelectItem>
-                      <SelectItem value="female">{language === 'en' ? 'Female' : 'أنثى'}</SelectItem>
+                      <SelectItem value="male">{language === 'en' ? 'Male' : language === 'hi' ? 'पुरुष' : 'ذكر'}</SelectItem>
+                      <SelectItem value="female">{language === 'en' ? 'Female' : language === 'hi' ? 'महिला' : 'أنثى'}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>{language === 'en' ? 'Nationality' : 'الجنسية'}</Label>
+                  <Label>{language === 'en' ? 'Nationality' : language === 'hi' ? 'राष्ट्रीयता' : 'الجنسية'}</Label>
                   <Input
                     value={addForm.nationality}
                     onChange={(e) => setAddForm({ ...addForm, nationality: e.target.value })}
                   />
                 </div>
                 <div>
-                  <Label>{language === 'en' ? 'Marital Status' : 'الحالة الاجتماعية'}</Label>
+                  <Label>{language === 'en' ? 'Marital Status' : language === 'hi' ? 'वैवाहिक स्थिति' : 'الحالة الاجتماعية'}</Label>
                   <Select value={addForm.maritalStatus} onValueChange={(value) => setAddForm({ ...addForm, maritalStatus: value })}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="single">{language === 'en' ? 'Single' : 'أعزب'}</SelectItem>
-                      <SelectItem value="married">{language === 'en' ? 'Married' : 'متزوج'}</SelectItem>
-                      <SelectItem value="divorced">{language === 'en' ? 'Divorced' : 'مطلق'}</SelectItem>
-                      <SelectItem value="widowed">{language === 'en' ? 'Widowed' : 'أرمل'}</SelectItem>
+                      <SelectItem value="single">{language === 'en' ? 'Single' : language === 'hi' ? 'अविवाहित' : 'أعزب'}</SelectItem>
+                      <SelectItem value="married">{language === 'en' ? 'Married' : language === 'hi' ? 'विवाहित' : 'متزوج'}</SelectItem>
+                      <SelectItem value="divorced">{language === 'en' ? 'Divorced' : language === 'hi' ? 'तलाकशुदा' : 'مطلق'}</SelectItem>
+                      <SelectItem value="widowed">{language === 'en' ? 'Widowed' : language === 'hi' ? 'विधवा/विधुर' : 'أرمل'}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -936,7 +936,7 @@ export default function Teachers() {
             
             <TabsContent value="address" className="space-y-4">
               <div>
-                <Label>{language === 'en' ? 'Address' : 'العنوان'}</Label>
+                <Label>{language === 'en' ? 'Address' : language === 'hi' ? 'पता' : 'العنوان'}</Label>
                 <Input
                   value={addForm.address}
                   onChange={(e) => setAddForm({ ...addForm, address: e.target.value })}
@@ -944,21 +944,21 @@ export default function Teachers() {
               </div>
               <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <Label>{language === 'en' ? 'City' : 'المدينة'}</Label>
+                  <Label>{language === 'en' ? 'City' : language === 'hi' ? 'शहर' : 'المدينة'}</Label>
                   <Input
                     value={addForm.city}
                     onChange={(e) => setAddForm({ ...addForm, city: e.target.value })}
                   />
                 </div>
                 <div>
-                  <Label>{language === 'en' ? 'Country' : 'البلد'}</Label>
+                  <Label>{language === 'en' ? 'Country' : language === 'hi' ? 'देश' : 'البلد'}</Label>
                   <Input
                     value={addForm.country}
                     onChange={(e) => setAddForm({ ...addForm, country: e.target.value })}
                   />
                 </div>
                 <div>
-                  <Label>{language === 'en' ? 'Postal Code' : 'الرمز البريدي'}</Label>
+                  <Label>{language === 'en' ? 'Postal Code' : language === 'hi' ? 'पिन कोड' : 'الرمز البريدي'}</Label>
                   <Input
                     value={addForm.postalCode}
                     onChange={(e) => setAddForm({ ...addForm, postalCode: e.target.value })}
@@ -967,21 +967,21 @@ export default function Teachers() {
               </div>
               <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <Label>{language === 'en' ? 'Emergency Contact Name' : 'اسم جهة الاتصال الطارئ'}</Label>
+                  <Label>{language === 'en' ? 'Emergency Contact Name' : language === 'hi' ? 'आपातकालीन संपर्क नाम' : 'اسم جهة الاتصال الطارئ'}</Label>
                   <Input
                     value={addForm.emergencyContactName}
                     onChange={(e) => setAddForm({ ...addForm, emergencyContactName: e.target.value })}
                   />
                 </div>
                 <div>
-                  <Label>{language === 'en' ? 'Emergency Phone' : 'هاتف الطوارئ'}</Label>
+                  <Label>{language === 'en' ? 'Emergency Phone' : language === 'hi' ? 'आपातकालीन फ़ोन' : 'هاتف الطوارئ'}</Label>
                   <Input
                     value={addForm.emergencyContactPhone}
                     onChange={(e) => setAddForm({ ...addForm, emergencyContactPhone: e.target.value })}
                   />
                 </div>
                 <div>
-                  <Label>{language === 'en' ? 'Relation' : 'صلة القرابة'}</Label>
+                  <Label>{language === 'en' ? 'Relation' : language === 'hi' ? 'संबंध' : 'صلة القرابة'}</Label>
                   <Input
                     value={addForm.emergencyContactRelation}
                     onChange={(e) => setAddForm({ ...addForm, emergencyContactRelation: e.target.value })}
@@ -993,14 +993,14 @@ export default function Teachers() {
             <TabsContent value="financial" className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>{language === 'en' ? 'Bank Name' : 'اسم البنك'}</Label>
+                  <Label>{language === 'en' ? 'Bank Name' : language === 'hi' ? 'बैंक का नाम' : 'اسم البنك'}</Label>
                   <Input
                     value={addForm.bankName}
                     onChange={(e) => setAddForm({ ...addForm, bankName: e.target.value })}
                   />
                 </div>
                 <div>
-                  <Label>{language === 'en' ? 'IBAN' : 'رقم الآيبان'}</Label>
+                  <Label>{language === 'en' ? 'IBAN' : language === 'hi' ? 'IBAN' : 'رقم الآيبان'}</Label>
                   <Input
                     value={addForm.iban}
                     onChange={(e) => setAddForm({ ...addForm, iban: e.target.value })}
@@ -1009,14 +1009,14 @@ export default function Teachers() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>{language === 'en' ? 'Account Number' : 'رقم الحساب'}</Label>
+                  <Label>{language === 'en' ? 'Account Number' : language === 'hi' ? 'खाता नंबर' : 'رقم الحساب'}</Label>
                   <Input
                     value={addForm.accountNumber}
                     onChange={(e) => setAddForm({ ...addForm, accountNumber: e.target.value })}
                   />
                 </div>
                 <div>
-                  <Label>{language === 'en' ? 'Monthly Salary (OMR)' : 'الراتب الشهري (ر.ع)'}</Label>
+                  <Label>{language === 'en' ? 'Monthly Salary (OMR)' : language === 'hi' ? 'मासिक वेतन (OMR)' : 'الراتب الشهري (ر.ع)'}</Label>
                   <Input
                     type="number"
                     value={addForm.salary}
@@ -1026,36 +1026,36 @@ export default function Teachers() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>{language === 'en' ? 'Insurance Number' : 'رقم التأمين'}</Label>
+                  <Label>{language === 'en' ? 'Insurance Number' : language === 'hi' ? 'बीमा नंबर' : 'رقم التأمين'}</Label>
                   <Input
                     value={addForm.insuranceNumber}
                     onChange={(e) => setAddForm({ ...addForm, insuranceNumber: e.target.value })}
                   />
                 </div>
                 <div>
-                  <Label>{language === 'en' ? 'Contract Type' : 'نوع العقد'}</Label>
+                  <Label>{language === 'en' ? 'Contract Type' : language === 'hi' ? 'अनुबंध प्रकार' : 'نوع العقد'}</Label>
                   <Select value={addForm.contractType} onValueChange={(value) => setAddForm({ ...addForm, contractType: value })}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="full-time">{language === 'en' ? 'Full Time' : 'دوام كامل'}</SelectItem>
-                      <SelectItem value="part-time">{language === 'en' ? 'Part Time' : 'دوام جزئي'}</SelectItem>
-                      <SelectItem value="contract">{language === 'en' ? 'Contract' : 'عقد'}</SelectItem>
+                      <SelectItem value="full-time">{language === 'en' ? 'Full Time' : language === 'hi' ? 'पूर्णकालिक' : 'دوام كامل'}</SelectItem>
+                      <SelectItem value="part-time">{language === 'en' ? 'Part Time' : language === 'hi' ? 'अंशकालिक' : 'دوام جزئي'}</SelectItem>
+                      <SelectItem value="contract">{language === 'en' ? 'Contract' : language === 'hi' ? 'अनुबंध' : 'عقد'}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>{language === 'en' ? 'Visa Number' : 'رقم التأشيرة'}</Label>
+                  <Label>{language === 'en' ? 'Visa Number' : language === 'hi' ? 'वीजा नंबर' : 'رقم التأشيرة'}</Label>
                   <Input
                     value={addForm.visaNumber}
                     onChange={(e) => setAddForm({ ...addForm, visaNumber: e.target.value })}
                   />
                 </div>
                 <div>
-                  <Label>{language === 'en' ? 'Visa Expiry' : 'انتهاء التأشيرة'}</Label>
+                  <Label>{language === 'en' ? 'Visa Expiry' : language === 'hi' ? 'वीजा समाप्ति' : 'انتهاء التأشيرة'}</Label>
                   <Input
                     type="date"
                     value={addForm.visaExpiry}
@@ -1070,7 +1070,7 @@ export default function Teachers() {
               {t('common.cancel')}
             </Button>
             <Button onClick={handleAddTeacher}>
-              {language === 'en' ? 'Create Account' : 'إنشاء الحساب'}
+              {language === 'en' ? 'Create Account' : language === 'hi' ? 'खाता बनाएं' : 'إنشاء الحساب'}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1081,11 +1081,13 @@ export default function Teachers() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {language === 'en' ? 'Delete Teacher' : 'حذف المعلم'}
+              {language === 'en' ? 'Delete Teacher' : language === 'hi' ? 'शिक्षक हटाएं' : 'حذف المعلم'}
             </AlertDialogTitle>
             <AlertDialogDescription>
               {language === 'en' 
                 ? `Are you sure you want to delete ${teacherToDelete?.profiles?.full_name}? This action cannot be undone.`
+                : language === 'hi'
+                ? `क्या आप वाकई ${teacherToDelete?.profiles?.full_name} को हटाना चाहते हैं? यह क्रिया पूर्ववत नहीं की जा सकती।`
                 : `هل أنت متأكد من حذف ${teacherToDelete?.profiles?.full_name_ar || teacherToDelete?.profiles?.full_name}؟ لا يمكن التراجع عن هذا الإجراء.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -1094,7 +1096,7 @@ export default function Teachers() {
               {t('common.cancel')}
             </AlertDialogCancel>
             <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground">
-              {language === 'en' ? 'Delete' : 'حذف'}
+              {language === 'en' ? 'Delete' : language === 'hi' ? 'हटाएं' : 'حذف'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
