@@ -123,18 +123,16 @@ function DashboardLayout({ children }: DashboardLayoutProps) {
 
         {/* Left Section - Back/Menu, Home, Language */}
         <div className="flex items-center gap-1.5 md:gap-3 w-auto">
-          {/* Back Button - Show on all pages except main dashboard */}
-          {!isMainDashboard && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleBack}
-              className="h-9 w-9 md:h-10 md:w-10 rounded-xl hover:bg-primary/10"
-              aria-label="Go back"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-          )}
+          {/* Back Button - Show on ALL pages */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleBack}
+            className="h-9 w-9 md:h-10 md:w-10 rounded-xl hover:bg-primary/10"
+            aria-label="Go back"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
           {/* Desktop Toggle */}
           <Button
             variant="ghost"
