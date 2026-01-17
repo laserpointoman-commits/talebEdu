@@ -72,14 +72,14 @@ export default function ExamManagement() {
     setExams([...exams, exam]);
     setIsAddDialogOpen(false);
     setNewExam({ status: 'draft', createdBy: user?.id });
-    toast.success(language === 'en' ? 'Exam saved as draft' : 'تم حفظ الامتحان كمسودة');
+    toast.success(language === 'en' ? 'Exam saved as draft' : language === 'hi' ? 'परीक्षा ड्राफ्ट के रूप में सहेजी गई' : 'تم حفظ الامتحان كمسودة');
   };
 
   const handleSubmitForApproval = (examId: string) => {
     setExams(exams.map(exam => 
       exam.id === examId ? { ...exam, status: 'pending_approval' as const } : exam
     ));
-    toast.info(language === 'en' ? 'Exam submitted for approval' : 'تم إرسال الامتحان للموافقة');
+    toast.info(language === 'en' ? 'Exam submitted for approval' : language === 'hi' ? 'परीक्षा अनुमोदन के लिए जमा की गई' : 'تم إرسال الامتحان للموافقة');
   };
 
   const handleApproveExam = (examId: string) => {
@@ -91,18 +91,18 @@ export default function ExamManagement() {
         approvalDate: new Date().toISOString()
       } : exam
     ));
-    toast.success(language === 'en' ? 'Exam approved and notifications sent' : 'تمت الموافقة على الامتحان وإرسال الإشعارات');
+    toast.success(language === 'en' ? 'Exam approved and notifications sent' : language === 'hi' ? 'परीक्षा स्वीकृत और सूचनाएं भेजी गईं' : 'تمت الموافقة على الامتحان وإرسال الإشعارات');
     setIsApprovalDialogOpen(false);
   };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'draft':
-        return <Badge variant="secondary">{language === 'en' ? 'Draft' : 'مسودة'}</Badge>;
+        return <Badge variant="secondary">{language === 'en' ? 'Draft' : language === 'hi' ? 'ड्राफ्ट' : 'مسودة'}</Badge>;
       case 'pending_approval':
-        return <Badge className="bg-yellow-500/10 text-yellow-600 border-yellow-500/20">{language === 'en' ? 'Pending Approval' : 'في انتظار الموافقة'}</Badge>;
+        return <Badge className="bg-yellow-500/10 text-yellow-600 border-yellow-500/20">{language === 'en' ? 'Pending Approval' : language === 'hi' ? 'अनुमोदन लंबित' : 'في انتظار الموافقة'}</Badge>;
       case 'approved':
-        return <Badge className="bg-green-500/10 text-green-600 border-green-500/20">{language === 'en' ? 'Approved' : 'معتمد'}</Badge>;
+        return <Badge className="bg-green-500/10 text-green-600 border-green-500/20">{language === 'en' ? 'Approved' : language === 'hi' ? 'स्वीकृत' : 'معتمد'}</Badge>;
       default:
         return null;
     }
@@ -116,10 +116,10 @@ export default function ExamManagement() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">
-            {language === 'en' ? 'Exam Management' : 'إدارة الامتحانات'}
+            {language === 'en' ? 'Exam Management' : language === 'hi' ? 'परीक्षा प्रबंधन' : 'إدارة الامتحانات'}
           </h2>
           <p className="text-muted-foreground">
-            {language === 'en' ? 'Create and manage exam schedules' : 'إنشاء وإدارة جداول الامتحانات'}
+            {language === 'en' ? 'Create and manage exam schedules' : language === 'hi' ? 'परीक्षा कार्यक्रम बनाएं और प्रबंधित करें' : 'إنشاء وإدارة جداول الامتحانات'}
           </p>
         </div>
         {isTeacher && (
@@ -127,43 +127,43 @@ export default function ExamManagement() {
             <DialogTrigger asChild>
               <Button>
                 <Plus className="h-4 w-4 mr-2" />
-                {language === 'en' ? 'Add Exam' : 'إضافة امتحان'}
+                {language === 'en' ? 'Add Exam' : language === 'hi' ? 'परीक्षा जोड़ें' : 'إضافة امتحان'}
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl">
               <DialogHeader>
-                <DialogTitle>{language === 'en' ? 'Add New Exam' : 'إضافة امتحان جديد'}</DialogTitle>
+                <DialogTitle>{language === 'en' ? 'Add New Exam' : language === 'hi' ? 'नई परीक्षा जोड़ें' : 'إضافة امتحان جديد'}</DialogTitle>
               </DialogHeader>
               <div className="grid gap-4 py-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label>{language === 'en' ? 'Subject' : 'المادة'}</Label>
+                    <Label>{language === 'en' ? 'Subject' : language === 'hi' ? 'विषय' : 'المادة'}</Label>
                     <Input
                       value={newExam.subject || ''}
                       onChange={(e) => setNewExam({ ...newExam, subject: e.target.value })}
                     />
                   </div>
                   <div>
-                    <Label>{language === 'en' ? 'Exam Type' : 'نوع الامتحان'}</Label>
+                    <Label>{language === 'en' ? 'Exam Type' : language === 'hi' ? 'परीक्षा प्रकार' : 'نوع الامتحان'}</Label>
                     <Select 
                       value={newExam.examType}
                       onValueChange={(value) => setNewExam({ ...newExam, examType: value })}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder={language === 'en' ? 'Select type' : 'اختر النوع'} />
+                        <SelectValue placeholder={language === 'en' ? 'Select type' : language === 'hi' ? 'प्रकार चुनें' : 'اختر النوع'} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="midterm">{language === 'en' ? 'Midterm' : 'منتصف الفصل'}</SelectItem>
-                        <SelectItem value="final">{language === 'en' ? 'Final' : 'نهائي'}</SelectItem>
-                        <SelectItem value="quiz">{language === 'en' ? 'Quiz' : 'اختبار قصير'}</SelectItem>
-                        <SelectItem value="lab">{language === 'en' ? 'Lab Exam' : 'اختبار عملي'}</SelectItem>
+                        <SelectItem value="midterm">{language === 'en' ? 'Midterm' : language === 'hi' ? 'मध्यावधि' : 'منتصف الفصل'}</SelectItem>
+                        <SelectItem value="final">{language === 'en' ? 'Final' : language === 'hi' ? 'अंतिम' : 'نهائي'}</SelectItem>
+                        <SelectItem value="quiz">{language === 'en' ? 'Quiz' : language === 'hi' ? 'प्रश्नोत्तरी' : 'اختبار قصير'}</SelectItem>
+                        <SelectItem value="lab">{language === 'en' ? 'Lab Exam' : language === 'hi' ? 'प्रयोगशाला परीक्षा' : 'اختبار عملي'}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label>{language === 'en' ? 'Class' : 'الصف'}</Label>
+                    <Label>{language === 'en' ? 'Class' : language === 'hi' ? 'कक्षा' : 'الصف'}</Label>
                     <Select 
                       value={newExam.classId}
                       onValueChange={(value) => {
@@ -172,7 +172,7 @@ export default function ExamManagement() {
                       }}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder={language === 'en' ? 'Select class' : 'اختر الصف'} />
+                        <SelectValue placeholder={language === 'en' ? 'Select class' : language === 'hi' ? 'कक्षा चुनें' : 'اختر الصف'} />
                       </SelectTrigger>
                       <SelectContent>
                         {classes.map(cls => (
@@ -182,7 +182,7 @@ export default function ExamManagement() {
                     </Select>
                   </div>
                   <div>
-                    <Label>{language === 'en' ? 'Date' : 'التاريخ'}</Label>
+                    <Label>{language === 'en' ? 'Date' : language === 'hi' ? 'तारीख' : 'التاريخ'}</Label>
                     <Input
                       type="date"
                       value={newExam.date || ''}
@@ -192,7 +192,7 @@ export default function ExamManagement() {
                 </div>
                 <div className="grid grid-cols-3 gap-4">
                   <div>
-                    <Label>{language === 'en' ? 'Time' : 'الوقت'}</Label>
+                    <Label>{language === 'en' ? 'Time' : language === 'hi' ? 'समय' : 'الوقت'}</Label>
                     <Input
                       type="time"
                       value={newExam.time || ''}
@@ -200,15 +200,15 @@ export default function ExamManagement() {
                     />
                   </div>
                   <div>
-                    <Label>{language === 'en' ? 'Duration' : 'المدة'}</Label>
+                    <Label>{language === 'en' ? 'Duration' : language === 'hi' ? 'अवधि' : 'المدة'}</Label>
                     <Input
                       value={newExam.duration || ''}
                       onChange={(e) => setNewExam({ ...newExam, duration: e.target.value })}
-                      placeholder={language === 'en' ? '2 hours' : 'ساعتان'}
+                      placeholder={language === 'en' ? '2 hours' : language === 'hi' ? '2 घंटे' : 'ساعتان'}
                     />
                   </div>
                   <div>
-                    <Label>{language === 'en' ? 'Room' : 'القاعة'}</Label>
+                    <Label>{language === 'en' ? 'Room' : language === 'hi' ? 'कमरा' : 'القاعة'}</Label>
                     <Input
                       value={newExam.room || ''}
                       onChange={(e) => setNewExam({ ...newExam, room: e.target.value })}
@@ -216,20 +216,20 @@ export default function ExamManagement() {
                   </div>
                 </div>
                 <div>
-                  <Label>{language === 'en' ? 'Syllabus' : 'المنهج'}</Label>
+                  <Label>{language === 'en' ? 'Syllabus' : language === 'hi' ? 'पाठ्यक्रम' : 'المنهج'}</Label>
                   <Textarea
                     value={newExam.syllabus || ''}
                     onChange={(e) => setNewExam({ ...newExam, syllabus: e.target.value })}
-                    placeholder={language === 'en' ? 'Enter syllabus details...' : 'أدخل تفاصيل المنهج...'}
+                    placeholder={language === 'en' ? 'Enter syllabus details...' : language === 'hi' ? 'पाठ्यक्रम विवरण दर्ज करें...' : 'أدخل تفاصيل المنهج...'}
                   />
                 </div>
               </div>
               <div className="flex justify-end gap-2">
                 <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-                  {language === 'en' ? 'Cancel' : 'إلغاء'}
+                  {language === 'en' ? 'Cancel' : language === 'hi' ? 'रद्द करें' : 'إلغاء'}
                 </Button>
                 <Button onClick={handleAddExam}>
-                  {language === 'en' ? 'Save as Draft' : 'حفظ كمسودة'}
+                  {language === 'en' ? 'Save as Draft' : language === 'hi' ? 'ड्राफ्ट के रूप में सहेजें' : 'حفظ كمسودة'}
                 </Button>
               </div>
             </DialogContent>
@@ -263,21 +263,21 @@ export default function ExamManagement() {
                 <div className="flex items-center gap-2">
                   <Clock className="h-4 w-4 text-muted-foreground" />
                   <div>
-                    <p className="text-xs text-muted-foreground">{language === 'en' ? 'Duration' : 'المدة'}</p>
+                    <p className="text-xs text-muted-foreground">{language === 'en' ? 'Duration' : language === 'hi' ? 'अवधि' : 'المدة'}</p>
                     <p className="text-sm font-medium">{exam.duration}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <MapPin className="h-4 w-4 text-muted-foreground" />
                   <div>
-                    <p className="text-xs text-muted-foreground">{language === 'en' ? 'Location' : 'المكان'}</p>
+                    <p className="text-xs text-muted-foreground">{language === 'en' ? 'Location' : language === 'hi' ? 'स्थान' : 'المكان'}</p>
                     <p className="text-sm font-medium">{exam.room}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 col-span-2">
                   <FileText className="h-4 w-4 text-muted-foreground" />
                   <div>
-                    <p className="text-xs text-muted-foreground">{language === 'en' ? 'Syllabus' : 'المنهج'}</p>
+                    <p className="text-xs text-muted-foreground">{language === 'en' ? 'Syllabus' : language === 'hi' ? 'पाठ्यक्रम' : 'المنهج'}</p>
                     <p className="text-sm font-medium">{exam.syllabus}</p>
                   </div>
                 </div>
@@ -302,26 +302,28 @@ export default function ExamManagement() {
                     <DialogTrigger asChild>
                       <Button size="sm" onClick={() => setSelectedExam(exam)}>
                         <CheckCircle className="h-4 w-4 mr-2" />
-                        {language === 'en' ? 'Approve' : 'موافقة'}
+                        {language === 'en' ? 'Approve' : language === 'hi' ? 'स्वीकृत करें' : 'موافقة'}
                       </Button>
                     </DialogTrigger>
                     <DialogContent>
                       <DialogHeader>
-                        <DialogTitle>{language === 'en' ? 'Approve Exam' : 'الموافقة على الامتحان'}</DialogTitle>
+                        <DialogTitle>{language === 'en' ? 'Approve Exam' : language === 'hi' ? 'परीक्षा स्वीकृत करें' : 'الموافقة على الامتحان'}</DialogTitle>
                       </DialogHeader>
                       <div className="py-4">
                         <p className="text-sm text-muted-foreground">
                           {language === 'en' 
                             ? 'Approving this exam will send notifications to all students and parents in the selected class.'
+                            : language === 'hi'
+                            ? 'इस परीक्षा को स्वीकृत करने से चयनित कक्षा के सभी छात्रों और अभिभावकों को सूचनाएं भेजी जाएंगी।'
                             : 'الموافقة على هذا الامتحان ستؤدي إلى إرسال إشعارات لجميع الطلاب وأولياء الأمور في الصف المحدد.'}
                         </p>
                       </div>
                       <div className="flex justify-end gap-2">
                         <Button variant="outline" onClick={() => setIsApprovalDialogOpen(false)}>
-                          {language === 'en' ? 'Cancel' : 'إلغاء'}
+                          {language === 'en' ? 'Cancel' : language === 'hi' ? 'रद्द करें' : 'إلغاء'}
                         </Button>
                         <Button onClick={() => selectedExam && handleApproveExam(selectedExam.id)}>
-                          {language === 'en' ? 'Approve & Notify' : 'موافقة وإشعار'}
+                          {language === 'en' ? 'Approve & Notify' : language === 'hi' ? 'स्वीकृत करें और सूचित करें' : 'موافقة وإشعار'}
                         </Button>
                       </div>
                     </DialogContent>
