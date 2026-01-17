@@ -240,8 +240,12 @@ export function ChatInput({
             value={message}
             onChange={(e) => handleMessageChange(e.target.value)}
             onKeyPress={handleKeyPress}
-            className="flex-1 bg-transparent border-0 text-sm focus-visible:ring-0 p-0 h-auto"
-            style={{ color: colors.textPrimary }}
+            className="flex-1 bg-transparent border-0 text-sm focus-visible:ring-0 focus:ring-0 focus:outline-none p-0 h-auto shadow-none outline-none"
+            style={{ 
+              color: colors.textPrimary,
+              WebkitTapHighlightColor: 'transparent',
+              WebkitAppearance: 'none'
+            }}
           />
           <Button 
             variant="ghost" 
