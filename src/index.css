@@ -330,9 +330,7 @@ All colors MUST be HSL.
     --shadow-glow-success: 0 0 20px hsl(160 84% 45% / 0.6);
     --shadow-glow-warning: 0 0 20px hsl(45 100% 55% / 0.6);
   }
-}
 
-@layer base {
   * {
     @apply border-border;
   }
