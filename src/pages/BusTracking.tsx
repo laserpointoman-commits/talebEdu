@@ -88,15 +88,18 @@ export default function BusTracking() {
     return <LogoLoader fullScreen />;
   }
 
+  const t = (en: string, ar: string, hi: string) => 
+    language === 'ar' ? ar : language === 'hi' ? hi : en;
+
   return (
     <div className="space-y-6 p-4 md:p-6">
       <div>
         <h1 className="text-3xl font-bold flex items-center gap-2">
           <Bus className="h-8 w-8 text-primary" />
-          {language === 'ar' ? 'تتبع الحافلة المباشر' : 'Live Bus Tracking'}
+          {t('Live Bus Tracking', 'تتبع الحافلة المباشر', 'लाइव बस ट्रैकिंग')}
         </h1>
         <p className="text-muted-foreground">
-          {language === 'ar' ? 'تتبع موقع الحافلة ونشاط الطلاب مباشرة' : 'Track bus location and student activity in real-time'}
+          {t('Track bus location and student activity in real-time', 'تتبع موقع الحافلة ونشاط الطلاب مباشرة', 'वास्तविक समय में बस की स्थिति और छात्र गतिविधि ट्रैक करें')}
         </p>
       </div>
 
@@ -110,7 +113,7 @@ export default function BusTracking() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Navigation className="h-5 w-5 text-primary" />
-                    {language === 'ar' ? 'خريطة جميع الحافلات' : 'All Buses Map'}
+                    {t('All Buses Map', 'خريطة جميع الحافلات', 'सभी बसों का नक्शा')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -121,7 +124,7 @@ export default function BusTracking() {
               {/* Bus details grid */}
               <div>
                 <h2 className="text-lg font-semibold mb-4">
-                  {language === 'ar' ? 'تفاصيل الحافلات' : 'Bus Details'}
+                  {t('Bus Details', 'تفاصيل الحافلات', 'बस विवरण')}
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {buses.map((bus) => (
@@ -135,39 +138,39 @@ export default function BusTracking() {
                           <CardTitle className="flex items-center justify-between text-base">
                             <span className="flex items-center gap-2">
                               <Bus className="h-4 w-4 text-primary" />
-                              {language === 'ar' ? 'حافلة' : 'Bus'} {bus.bus_number}
+                              {t('Bus', 'حافلة', 'बस')} {bus.bus_number}
                             </span>
                             <Badge 
                               variant={activeTripBusIds.has(bus.id) ? 'default' : 'secondary'}
                               className="capitalize text-xs"
                             >
                               {activeTripBusIds.has(bus.id)
-                                ? (language === 'ar' ? '🟢 رحلة نشطة' : '🟢 Active Trip')
-                                : (language === 'ar' ? '🔴 لا توجد رحلة' : '🔴 No Active Trip')}
+                                ? t('🟢 Active Trip', '🟢 رحلة نشطة', '🟢 सक्रिय यात्रा')
+                                : t('🔴 No Active Trip', '🔴 لا توجد رحلة', '🔴 कोई सक्रिय यात्रा नहीं')}
                             </Badge>
                           </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-2 pt-0">
                           <BusInfoItem
                             icon={<Bus className="h-4 w-4" />}
-                            label={language === 'ar' ? 'الموديل' : 'Model'}
+                            label={t('Model', 'الموديل', 'मॉडल')}
                             value={bus.model || 'N/A'}
                           />
                           <BusInfoItem
                             icon={<MapPin className="h-4 w-4" />}
-                            label={language === 'ar' ? 'المسار' : 'Route'}
+                            label={t('Route', 'المسار', 'मार्ग')}
                             value={
                               bus.bus_routes?.[0]
                                 ? (language === 'ar' 
                                     ? bus.bus_routes[0].route_name_ar 
                                     : bus.bus_routes[0].route_name)
-                                : (language === 'ar' ? 'غير محدد' : 'Not assigned')
+                                : t('Not assigned', 'غير محدد', 'असाइन नहीं किया गया')
                             }
                           />
                           <BusInfoItem
                             icon={<Clock className="h-4 w-4" />}
-                            label={language === 'ar' ? 'السعة' : 'Capacity'}
-                            value={`${bus.capacity} ${language === 'ar' ? 'مقعد' : 'seats'}`}
+                            label={t('Capacity', 'السعة', 'क्षमता')}
+                            value={`${bus.capacity} ${t('seats', 'مقعد', 'सीटें')}`}
                           />
                         </CardContent>
                       </Card>
@@ -180,7 +183,7 @@ export default function BusTracking() {
             <Card>
               <CardContent className="pt-6">
                 <div className="text-center text-muted-foreground">
-                  {language === 'ar' ? 'لا توجد حافلات مسجلة' : 'No buses registered'}
+                  {t('No buses registered', 'لا توجد حافلات مسجلة', 'कोई बस पंजीकृत नहीं')}
                 </div>
               </CardContent>
             </Card>
@@ -215,7 +218,7 @@ export default function BusTracking() {
                       <CardHeader>
                         <CardTitle className="text-lg flex items-center gap-2">
                           <Navigation className="h-5 w-5" />
-                          {language === 'ar' ? 'موقع الحافلة' : 'Bus Location'}
+                          {t('Bus Location', 'موقع الحافلة', 'बस स्थान')}
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
@@ -236,24 +239,24 @@ export default function BusTracking() {
                         <CardHeader>
                           <CardTitle className="text-lg flex items-center gap-2">
                             <Clock className="h-5 w-5" />
-                            {language === 'ar' ? 'معلومات الحافلة' : 'Bus Information'}
+                            {t('Bus Information', 'معلومات الحافلة', 'बस जानकारी')}
                           </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-3">
                           <BusInfoItem
                             icon={<Bus className="h-4 w-4" />}
-                            label={language === 'ar' ? 'رقم الحافلة' : 'Bus Number'}
+                            label={t('Bus Number', 'رقم الحافلة', 'बस नंबर')}
                             value={child.bus_route_id}
                           />
                           <BusInfoItem
                             icon={<MapPin className="h-4 w-4" />}
-                            label={language === 'ar' ? 'المحطة الحالية' : 'Current Stop'}
-                            value={language === 'ar' ? 'جاري التحميل...' : 'Loading...'}
+                            label={t('Current Stop', 'المحطة الحالية', 'वर्तमान स्टॉप')}
+                            value={t('Loading...', 'جاري التحميل...', 'लोड हो रहा है...')}
                           />
                           <BusInfoItem
                             icon={<Clock className="h-4 w-4" />}
-                            label={language === 'ar' ? 'الوقت المقدر للوصول' : 'Estimated Arrival'}
-                            value={language === 'ar' ? 'جاري الحساب...' : 'Calculating...'}
+                            label={t('Estimated Arrival', 'الوقت المقدر للوصول', 'अनुमानित आगमन')}
+                            value={t('Calculating...', 'جاري الحساب...', 'गणना हो रही है...')}
                           />
                         </CardContent>
                       </Card>
@@ -266,12 +269,10 @@ export default function BusTracking() {
                         <AlertCircle className="h-5 w-5 text-amber-500 mt-0.5" />
                         <div>
                           <p className="font-medium mb-1">
-                            {language === 'ar' ? 'لا يوجد حافلة' : 'No Bus Assigned'}
+                            {t('No Bus Assigned', 'لا يوجد حافلة', 'कोई बस असाइन नहीं')}
                           </p>
                           <p className="text-sm text-muted-foreground">
-                            {language === 'ar' 
-                              ? 'لم يتم تعيين حافلة لهذا الطالب بعد'
-                              : 'This student has not been assigned to a bus yet'}
+                            {t('This student has not been assigned to a bus yet', 'لم يتم تعيين حافلة لهذا الطالب بعد', 'इस छात्र को अभी तक कोई बस असाइन नहीं की गई है')}
                           </p>
                         </div>
                       </div>
@@ -284,7 +285,7 @@ export default function BusTracking() {
             <Card>
               <CardContent className="pt-6">
                 <div className="text-center text-muted-foreground">
-                  {language === 'ar' ? 'لا يوجد أطفال مسجلين' : 'No children registered'}
+                  {t('No children registered', 'لا يوجد أطفال مسجلين', 'कोई बच्चा पंजीकृत नहीं')}
                 </div>
               </CardContent>
             </Card>
@@ -298,7 +299,7 @@ export default function BusTracking() {
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
                 <Navigation className="h-5 w-5" />
-                {language === 'ar' ? 'موقع الحافلة' : 'Bus Location'}
+                {t('Bus Location', 'موقع الحافلة', 'बस स्थान')}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -314,7 +315,7 @@ export default function BusTracking() {
         <Card>
           <CardContent className="pt-6">
             <div className="text-center text-muted-foreground">
-              {language === 'ar' ? 'لا توجد بيانات طالب' : 'No student data found'}
+              {t('No student data found', 'لا توجد بيانات طالب', 'कोई छात्र डेटा नहीं मिला')}
             </div>
           </CardContent>
         </Card>
