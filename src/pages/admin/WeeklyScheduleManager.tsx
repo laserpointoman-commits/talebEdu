@@ -100,8 +100,8 @@ export default function WeeklyScheduleManager() {
   const [schedules, setSchedules] = useState<ScheduleEntry[]>([]);
   const [classes, setClasses] = useState<ClassInfo[]>([]);
   const [teachers, setTeachers] = useState<Teacher[]>([]);
-  const [filterGrade, setFilterGrade] = useState<string>('all');
-  const [filterSection, setFilterSection] = useState<string>('all');
+  const [filterGrade, setFilterGrade] = useState<string>('');
+  const [filterSection, setFilterSection] = useState<string>('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   
   // Dialog states
@@ -207,11 +207,17 @@ export default function WeeklyScheduleManager() {
       if (teachersError) throw teachersError;
       setTeachers(teachersData || []);
 
-      // Auto-select first grade if none selected
-      if (filterGrade === 'all' && classesData && classesData.length > 0) {
+      // Auto-select first grade and section if none selected
+      if (!filterGrade && classesData && classesData.length > 0) {
         const grades = [...new Set(classesData.map(c => c.grade))].sort();
         if (grades.length > 0) {
           setFilterGrade(grades[0]);
+        }
+      }
+      if (!filterSection && classesData && classesData.length > 0) {
+        const sections = [...new Set(classesData.map(c => c.section))].sort();
+        if (sections.length > 0) {
+          setFilterSection(sections[0]);
         }
       }
 
@@ -458,8 +464,8 @@ export default function WeeklyScheduleManager() {
   const filteredSchedules = schedules.filter(s => {
     const classInfo = classes.find(c => c.id === s.class_id);
     if (!classInfo) return false;
-    const matchesGrade = filterGrade === 'all' || classInfo.grade === filterGrade;
-    const matchesSection = filterSection === 'all' || classInfo.section === filterSection;
+    const matchesGrade = !filterGrade || classInfo.grade === filterGrade;
+    const matchesSection = !filterSection || classInfo.section === filterSection;
     return matchesGrade && matchesSection;
   });
 
@@ -573,14 +579,14 @@ export default function WeeklyScheduleManager() {
 
   const printSchedule = () => {
     let selectedClassName = '';
-    if (filterGrade !== 'all' && filterSection !== 'all') {
+    if (filterGrade && filterSection) {
       selectedClassName = `${language === 'en' ? 'Grade' : language === 'hi' ? 'ग्रेड' : 'الصف'} ${filterGrade} - ${language === 'en' ? 'Section' : language === 'hi' ? 'सेक्शन' : 'الشعبة'} ${filterSection}`;
-    } else if (filterGrade !== 'all') {
+    } else if (filterGrade) {
       selectedClassName = `${language === 'en' ? 'Grade' : language === 'hi' ? 'ग्रेड' : 'الصف'} ${filterGrade}`;
-    } else if (filterSection !== 'all') {
+    } else if (filterSection) {
       selectedClassName = `${language === 'en' ? 'Section' : language === 'hi' ? 'सेक्शन' : 'الشعبة'} ${filterSection}`;
     } else {
-      selectedClassName = language === 'en' ? 'All Classes' : language === 'hi' ? 'सभी कक्षाएं' : 'جميع الصفوف';
+      selectedClassName = language === 'en' ? 'Weekly Schedule' : language === 'hi' ? 'साप्ताहिक शेड्यूल' : 'الجدول الأسبوعي';
     }
     
     const printWindow = window.open('', '_blank');
@@ -909,9 +915,6 @@ export default function WeeklyScheduleManager() {
                 <SelectValue placeholder={language === 'en' ? 'Grade' : language === 'hi' ? 'ग्रेड' : 'الصف'} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">
-                  {language === 'en' ? 'All Grades' : language === 'hi' ? 'सभी ग्रेड' : 'جميع الصفوف'}
-                </SelectItem>
                 {uniqueGrades.map(grade => (
                   <SelectItem key={grade} value={grade}>
                     {language === 'en' ? `Grade ${grade}` : language === 'hi' ? `ग्रेड ${grade}` : `الصف ${grade}`}
@@ -926,9 +929,6 @@ export default function WeeklyScheduleManager() {
               <SelectValue placeholder={language === 'en' ? 'Section' : language === 'hi' ? 'सेक्शन' : 'الشعبة'} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">
-                {language === 'en' ? 'All Sections' : language === 'hi' ? 'सभी सेक्शन' : 'جميع الشعب'}
-              </SelectItem>
               {uniqueSections.map(section => (
                 <SelectItem key={section} value={section}>
                   {language === 'en' ? `Section ${section}` : language === 'hi' ? `सेक्शन ${section}` : `الشعبة ${section}`}
@@ -936,16 +936,6 @@ export default function WeeklyScheduleManager() {
               ))}
             </SelectContent>
           </Select>
-
-          {(filterGrade !== 'all' || filterSection !== 'all') && (
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => { setFilterGrade('all'); setFilterSection('all'); }}
-            >
-              {language === 'en' ? 'Clear' : language === 'hi' ? 'साफ़ करें' : 'مسح'}
-            </Button>
-          )}
 
           <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as 'grid' | 'list')}>
             <TabsList className="grid grid-cols-2 w-[160px]">
