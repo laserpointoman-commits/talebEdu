@@ -464,6 +464,66 @@ export default function WeeklyScheduleManager() {
     return subject; // Return original if no translation found
   };
 
+  // Get teacher name based on current language
+  const getTeacherName = (profile: { full_name: string; full_name_ar: string | null } | null) => {
+    if (!profile) return '';
+    if (language === 'ar' && profile.full_name_ar) {
+      return profile.full_name_ar;
+    }
+    return profile.full_name;
+  };
+
+  // Translate room name (e.g., "Room 101" -> "غرفة 101" or "कक्ष 101")
+  const getRoomName = (room: string | null) => {
+    if (!room) return '';
+    if (language === 'en') return room;
+    
+    // Handle "Room X" pattern
+    const roomMatch = room.match(/^Room\s*(\d+)$/i);
+    if (roomMatch) {
+      return language === 'ar' ? `غرفة ${roomMatch[1]}` : `कक्ष ${roomMatch[1]}`;
+    }
+    
+    // Handle "Lab X" or "Laboratory" pattern
+    const labMatch = room.match(/^Lab(?:oratory)?\s*(\d*)$/i);
+    if (labMatch) {
+      const num = labMatch[1] || '';
+      return language === 'ar' ? `مختبر ${num}`.trim() : `प्रयोगशाला ${num}`.trim();
+    }
+    
+    // Handle "Gym" or "Gymnasium"
+    if (/^gym(?:nasium)?$/i.test(room)) {
+      return language === 'ar' ? 'الصالة الرياضية' : 'व्यायामशाला';
+    }
+    
+    // Handle "Library"
+    if (/^library$/i.test(room)) {
+      return language === 'ar' ? 'المكتبة' : 'पुस्तकालय';
+    }
+    
+    // Handle "Art Room"
+    if (/^art\s*room$/i.test(room)) {
+      return language === 'ar' ? 'غرفة الفنون' : 'कला कक्ष';
+    }
+    
+    // Handle "Music Room"
+    if (/^music\s*room$/i.test(room)) {
+      return language === 'ar' ? 'غرفة الموسيقى' : 'संगीत कक्ष';
+    }
+    
+    // Handle "Computer Lab"
+    if (/^computer\s*lab$/i.test(room)) {
+      return language === 'ar' ? 'مختبر الحاسوب' : 'कंप्यूटर प्रयोगशाला';
+    }
+    
+    // Handle "Science Lab"
+    if (/^science\s*lab$/i.test(room)) {
+      return language === 'ar' ? 'مختبر العلوم' : 'विज्ञान प्रयोगशाला';
+    }
+    
+    return room; // Return original if no pattern matched
+  };
+
   // Get unique times from filtered schedules for grid display
   const gridTimeSlots = useMemo(() => {
     const times = [...new Set(filteredSchedules.map(s => s.time))];
@@ -659,8 +719,8 @@ export default function WeeklyScheduleManager() {
                     <div class="schedule-item">
                       <div class="subject">${getSubjectName(s.subject)}</div>
                       <div class="class-name">${s.classes?.name || `${s.classes?.grade}-${s.classes?.section}`}</div>
-                      ${s.teachers?.profiles?.full_name ? `<div class="teacher">${language === 'ar' && s.teachers?.profiles?.full_name_ar ? s.teachers.profiles.full_name_ar : s.teachers.profiles.full_name}</div>` : ''}
-                      ${s.room ? `<div class="room">${s.room}</div>` : ''}
+                      ${s.teachers?.profiles ? `<div class="teacher">${getTeacherName(s.teachers.profiles)}</div>` : ''}
+                      ${s.room ? `<div class="room">${getRoomName(s.room)}</div>` : ''}
                     </div>
                   `).join('')}</td>`;
                 }).join('')}
@@ -927,16 +987,16 @@ export default function WeeklyScheduleManager() {
                                     <div className="text-muted-foreground truncate">
                                       {schedule.classes?.name || `${schedule.classes?.grade}-${schedule.classes?.section}`}
                                     </div>
-                                    {schedule.teachers?.profiles?.full_name && (
+                                    {schedule.teachers?.profiles && (
                                       <div className="text-muted-foreground truncate flex items-center gap-1">
                                         <User className="h-2.5 w-2.5" />
-                                        {schedule.teachers.profiles.full_name}
+                                        {getTeacherName(schedule.teachers.profiles)}
                                       </div>
                                     )}
                                     {schedule.room && (
                                       <div className="text-muted-foreground truncate flex items-center gap-1">
                                         <MapPin className="h-2.5 w-2.5" />
-                                        {schedule.room}
+                                        {getRoomName(schedule.room)}
                                       </div>
                                     )}
                                     
@@ -1018,16 +1078,16 @@ export default function WeeklyScheduleManager() {
                                     </Badge>
                                   </div>
                                   <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
-                                    {schedule.teachers?.profiles?.full_name && (
+                                    {schedule.teachers?.profiles && (
                                       <span className="flex items-center gap-1">
                                         <User className="h-3 w-3" />
-                                        {schedule.teachers.profiles.full_name}
+                                        {getTeacherName(schedule.teachers.profiles)}
                                       </span>
                                     )}
                                     {schedule.room && (
                                       <span className="flex items-center gap-1">
                                         <MapPin className="h-3 w-3" />
-                                        {schedule.room}
+                                        {getRoomName(schedule.room)}
                                       </span>
                                     )}
                                   </div>
