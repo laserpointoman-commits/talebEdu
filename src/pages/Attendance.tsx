@@ -99,13 +99,19 @@ export default function Attendance() {
     } catch (error: any) {
       console.error('Error fetching attendance:', error);
       toast({
-        title: language === 'en' ? 'Error' : 'خطأ',
+        title: getText('Error', 'خطأ', 'त्रुटि'),
         description: error.message,
         variant: 'destructive',
       });
     } finally {
       setLoading(false);
     }
+  };
+
+  const getText = (en: string, ar: string, hi: string) => {
+    if (language === 'ar') return ar;
+    if (language === 'hi') return hi;
+    return en;
   };
 
   const fetchStudents = async () => {
@@ -132,8 +138,8 @@ export default function Attendance() {
   const handleMarkAttendance = async () => {
     if (!newAttendance.student_id || !newAttendance.time) {
       toast({
-        title: language === 'en' ? 'Error' : 'خطأ',
-        description: language === 'en' ? 'Please fill all required fields' : 'يرجى ملء جميع الحقول المطلوبة',
+        title: getText('Error', 'خطأ', 'त्रुटि'),
+        description: getText('Please fill all required fields', 'يرجى ملء جميع الحقول المطلوبة', 'कृपया सभी आवश्यक फ़ील्ड भरें'),
         variant: 'destructive',
       });
       return;
@@ -156,8 +162,8 @@ export default function Attendance() {
       if (error) throw error;
 
       toast({
-        title: language === 'en' ? 'Success' : 'نجاح',
-        description: language === 'en' ? 'Attendance marked successfully' : 'تم تسجيل الحضور بنجاح',
+        title: getText('Success', 'نجاح', 'सफलता'),
+        description: getText('Attendance marked successfully', 'تم تسجيل الحضور بنجاح', 'उपस्थिति सफलतापूर्वक दर्ज की गई'),
       });
 
       setIsMarkAttendanceOpen(false);
@@ -171,7 +177,7 @@ export default function Attendance() {
       fetchAttendanceRecords();
     } catch (error: any) {
       toast({
-        title: language === 'en' ? 'Error' : 'خطأ',
+        title: getText('Error', 'خطأ', 'त्रुटि'),
         description: error.message,
         variant: 'destructive',
       });
@@ -210,8 +216,8 @@ export default function Attendance() {
 
   const handleExportReport = () => {
     toast({
-      title: language === 'en' ? 'Report Generated' : 'تم إنشاء التقرير',
-      description: language === 'en' ? 'Attendance report has been generated' : 'تم إنشاء تقرير الحضور',
+      title: getText('Report Generated', 'تم إنشاء التقرير', 'रिपोर्ट बनाई गई'),
+      description: getText('Attendance report has been generated', 'تم إنشاء تقرير الحضور', 'उपस्थिति रिपोर्ट बनाई गई'),
     });
   };
 
@@ -240,10 +246,10 @@ export default function Attendance() {
           <div className="flex gap-2">
             <Button variant="outline" onClick={handleExportReport} size="sm">
               <Download className="h-4 w-4 mr-2" />
-              {language === 'en' ? 'Export' : 'تصدير'}
+              {getText('Export', 'تصدير', 'निर्यात')}
             </Button>
             <Button onClick={() => setIsMarkAttendanceOpen(true)} size="sm">
-              {language === 'en' ? 'Mark' : 'تسجيل'}
+              {getText('Mark', 'تسجيل', 'चिह्नित करें')}
             </Button>
           </div>
         }
@@ -254,7 +260,7 @@ export default function Attendance() {
         <CardContent className="pt-6">
           <div className="grid gap-4 md:grid-cols-6">
             <div className="space-y-2">
-              <Label>{language === 'en' ? 'Date' : 'التاريخ'}</Label>
+              <Label>{getText('Date', 'التاريخ', 'तारीख')}</Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
@@ -280,11 +286,11 @@ export default function Attendance() {
               </Popover>
             </div>
             <div className="space-y-2">
-              <Label>{language === 'en' ? 'Search' : 'البحث'}</Label>
+              <Label>{getText('Search', 'البحث', 'खोजें')}</Label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                 <Input
-                  placeholder={language === 'en' ? 'Search students...' : 'البحث عن الطلاب...'}
+                  placeholder={getText('Search students...', 'البحث عن الطلاب...', 'छात्रों को खोजें...')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
@@ -292,29 +298,29 @@ export default function Attendance() {
               </div>
             </div>
             <div className="space-y-2">
-              <Label>{language === 'en' ? 'Type' : 'النوع'}</Label>
+              <Label>{getText('Type', 'النوع', 'प्रकार')}</Label>
               <Select value={filterType} onValueChange={setFilterType}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">{language === 'en' ? 'All Types' : 'جميع الأنواع'}</SelectItem>
-                  <SelectItem value="school">{language === 'en' ? 'School' : 'المدرسة'}</SelectItem>
-                  <SelectItem value="bus">{language === 'en' ? 'Bus' : 'الحافلة'}</SelectItem>
+                  <SelectItem value="all">{getText('All Types', 'جميع الأنواع', 'सभी प्रकार')}</SelectItem>
+                  <SelectItem value="school">{getText('School', 'المدرسة', 'स्कूल')}</SelectItem>
+                  <SelectItem value="bus">{getText('Bus', 'الحافلة', 'बस')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>{language === 'en' ? 'Status' : 'الحالة'}</Label>
+              <Label>{getText('Status', 'الحالة', 'स्थिति')}</Label>
               <Select value={filterStatus} onValueChange={setFilterStatus}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">{language === 'en' ? 'All Status' : 'جميع الحالات'}</SelectItem>
-                  <SelectItem value="present">{language === 'en' ? 'Present' : 'حاضر'}</SelectItem>
-                  <SelectItem value="absent">{language === 'en' ? 'Absent' : 'غائب'}</SelectItem>
-                  <SelectItem value="late">{language === 'en' ? 'Late' : 'متأخر'}</SelectItem>
+                  <SelectItem value="all">{getText('All Status', 'جميع الحالات', 'सभी स्थिति')}</SelectItem>
+                  <SelectItem value="present">{getText('Present', 'حاضر', 'उपस्थित')}</SelectItem>
+                  <SelectItem value="absent">{getText('Absent', 'غائب', 'अनुपस्थित')}</SelectItem>
+                  <SelectItem value="late">{getText('Late', 'متأخر', 'देर से')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -325,14 +331,14 @@ export default function Attendance() {
       {/* Attendance Records */}
       <Card>
         <CardHeader>
-          <CardTitle>{language === 'en' ? 'Attendance Records' : 'سجلات الحضور'}</CardTitle>
+          <CardTitle>{getText('Attendance Records', 'سجلات الحضور', 'उपस्थिति रिकॉर्ड')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
             {filteredRecords.length === 0 ? (
               <div className="text-center py-8">
                 <p className="text-muted-foreground">
-                  {language === 'en' ? 'No attendance records found for this date' : 'لا توجد سجلات حضور لهذا التاريخ'}
+                  {getText('No attendance records found for this date', 'لا توجد سجلات حضور لهذا التاريخ', 'इस तारीख के लिए कोई उपस्थिति रिकॉर्ड नहीं मिला')}
                 </p>
               </div>
             ) : (
@@ -360,12 +366,12 @@ export default function Attendance() {
                   <div className="flex items-center gap-3">
                     <Badge className={`${getStatusColor(record.status)} flex items-center gap-1`}>
                       {getStatusIcon(record.status)}
-                      {record.status === 'present' ? (language === 'en' ? 'Present' : 'حاضر') :
-                       record.status === 'absent' ? (language === 'en' ? 'Absent' : 'غائب') :
-                       (language === 'en' ? 'Late' : 'متأخر')}
+                      {record.status === 'present' ? getText('Present', 'حاضر', 'उपस्थित') :
+                       record.status === 'absent' ? getText('Absent', 'غائب', 'अनुपस्थित') :
+                       getText('Late', 'متأخر', 'देर से')}
                     </Badge>
                     <Badge variant="outline">
-                      {record.type === 'school' ? (language === 'en' ? 'School' : 'المدرسة') : (language === 'en' ? 'Bus' : 'الحافلة')}
+                      {record.type === 'school' ? getText('School', 'المدرسة', 'स्कूल') : getText('Bus', 'الحافلة', 'बस')}
                     </Badge>
                   </div>
                 </div>
@@ -380,15 +386,15 @@ export default function Attendance() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {language === 'en' ? 'Mark Attendance' : 'تسجيل الحضور'}
+              {getText('Mark Attendance', 'تسجيل الحضور', 'उपस्थिति दर्ज करें')}
             </DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div>
-              <Label>{language === 'en' ? 'Student' : 'الطالب'}</Label>
+              <Label>{getText('Student', 'الطالب', 'छात्र')}</Label>
               <Select value={newAttendance.student_id} onValueChange={(value) => setNewAttendance({ ...newAttendance, student_id: value })}>
                 <SelectTrigger>
-                  <SelectValue placeholder={language === 'en' ? 'Select a student' : 'اختر طالباً'} />
+                  <SelectValue placeholder={getText('Select a student', 'اختر طالباً', 'एक छात्र चुनें')} />
                 </SelectTrigger>
                 <SelectContent>
                   {students.map((student) => (
@@ -403,34 +409,34 @@ export default function Attendance() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>{language === 'en' ? 'Type' : 'النوع'}</Label>
+                <Label>{getText('Type', 'النوع', 'प्रकार')}</Label>
                 <Select value={newAttendance.type} onValueChange={(value: 'school' | 'bus') => setNewAttendance({ ...newAttendance, type: value })}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="school">{language === 'en' ? 'School' : 'المدرسة'}</SelectItem>
-                    <SelectItem value="bus">{language === 'en' ? 'Bus' : 'الحافلة'}</SelectItem>
+                    <SelectItem value="school">{getText('School', 'المدرسة', 'स्कूल')}</SelectItem>
+                    <SelectItem value="bus">{getText('Bus', 'الحافلة', 'बस')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label>{language === 'en' ? 'Status' : 'الحالة'}</Label>
+                <Label>{getText('Status', 'الحالة', 'स्थिति')}</Label>
                 <Select value={newAttendance.status} onValueChange={(value: 'present' | 'absent' | 'late') => setNewAttendance({ ...newAttendance, status: value })}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="present">{language === 'en' ? 'Present' : 'حاضر'}</SelectItem>
-                    <SelectItem value="absent">{language === 'en' ? 'Absent' : 'غائب'}</SelectItem>
-                    <SelectItem value="late">{language === 'en' ? 'Late' : 'متأخر'}</SelectItem>
+                    <SelectItem value="present">{getText('Present', 'حاضر', 'उपस्थित')}</SelectItem>
+                    <SelectItem value="absent">{getText('Absent', 'غائب', 'अनुपस्थित')}</SelectItem>
+                    <SelectItem value="late">{getText('Late', 'متأخر', 'देर से')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="time">{language === 'en' ? 'Time' : 'الوقت'}</Label>
+                <Label htmlFor="time">{getText('Time', 'الوقت', 'समय')}</Label>
                 <Input
                   id="time"
                   type="time"
@@ -439,7 +445,7 @@ export default function Attendance() {
                 />
               </div>
               <div>
-                <Label htmlFor="location">{language === 'en' ? 'Location (Optional)' : 'الموقع (اختياري)'}</Label>
+                <Label htmlFor="location">{getText('Location (Optional)', 'الموقع (اختياري)', 'स्थान (वैकल्पिक)')}</Label>
                 <Input
                   id="location"
                   value={newAttendance.location}

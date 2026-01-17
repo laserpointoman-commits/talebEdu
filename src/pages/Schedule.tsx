@@ -135,15 +135,23 @@ export default function Schedule() {
     }
   };
 
+  const getText = (en: string, ar: string, hi: string) => {
+    if (language === 'ar') return ar;
+    if (language === 'hi') return hi;
+    return en;
+  };
+
   const downloadClassSchedule = () => {
     if (todaySchedule.length === 0) {
-      toast.error(language === 'en' ? 'No schedule to download' : 'لا يوجد جدول للتنزيل');
+      toast.error(getText('No schedule to download', 'لا يوجد جدول للتنزيل', 'डाउनलोड करने के लिए कोई शेड्यूल नहीं'));
       return;
     }
 
-    const headers = language === 'en' 
-      ? ['Time', 'Subject', 'Teacher', 'Room', 'Class']
-      : ['الوقت', 'المادة', 'المدرس', 'القاعة', 'الصف'];
+    const headers = getText(
+      'Time,Subject,Teacher,Room,Class',
+      'الوقت,المادة,المدرس,القاعة,الصف',
+      'समय,विषय,शिक्षक,कमरा,कक्षा'
+    ).split(',');
     
     const csvContent = [
       headers.join(','),
@@ -158,7 +166,7 @@ export default function Schedule() {
     link.download = `class_schedule_${new Date().toISOString().split('T')[0]}.csv`;
     link.click();
 
-    toast.success(language === 'en' ? 'Class schedule downloaded successfully' : 'تم تنزيل جدول الحصص بنجاح');
+    toast.success(getText('Class schedule downloaded successfully', 'تم تنزيل جدول الحصص بنجاح', 'कक्षा का शेड्यूल सफलतापूर्वक डाउनलोड हो गया'));
   };
 
   if (loading) {
@@ -189,7 +197,7 @@ export default function Schedule() {
             {todaySchedule.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
                 <Clock className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>{language === 'en' ? 'No classes scheduled for this day' : 'لا توجد حصص مجدولة لهذا اليوم'}</p>
+                <p>{getText('No classes scheduled for this day', 'لا توجد حصص مجدولة لهذا اليوم', 'इस दिन के लिए कोई कक्षा निर्धारित नहीं है')}</p>
               </div>
             ) : (
               <div className="space-y-3" dir={dir}>
