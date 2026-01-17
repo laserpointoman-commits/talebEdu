@@ -79,53 +79,53 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Base Colors - Enhanced */
-    --background: 220 25% 98%;
+    /* Base Colors - Clean & Light */
+    --background: 210 20% 99%;
     --foreground: 222 47% 11%;
-    --background-secondary: 220 20% 96%;
+    --background-secondary: 210 15% 97%;
 
-    /* Card Colors with Glassmorphic Support */
-    --card: 0 0% 100% / 0.7;
+    /* Card Colors - Enhanced Glass */
+    --card: 0 0% 100%;
     --card-foreground: 222 47% 11%;
     --card-solid: 0 0% 100%;
     
-    /* Glass Effect Variables */
-    --glass-background: 0 0% 100% / 0.6;
-    --glass-border: 220 20% 90% / 0.5;
-    --glass-shadow: 220 15% 50% / 0.08;
+    /* Glass Effect Variables - Refined */
+    --glass-background: 0 0% 100% / 0.7;
+    --glass-border: 210 20% 92% / 0.8;
+    --glass-shadow: 210 30% 70% / 0.1;
 
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
 
-    /* Primary Color Spectrum */
-    --primary: 211 100% 50%;
+    /* Primary Color Spectrum - Vibrant Blue */
+    --primary: 217 91% 60%;
     --primary-foreground: 0 0% 100%;
-    --primary-light: 211 100% 65%;
-    --primary-lighter: 211 100% 85%;
-    --primary-dark: 211 100% 35%;
-    --primary-darker: 211 100% 25%;
-    --primary-glow: 211 100% 70%;
+    --primary-light: 217 91% 75%;
+    --primary-lighter: 217 91% 90%;
+    --primary-dark: 217 91% 45%;
+    --primary-darker: 217 91% 30%;
+    --primary-glow: 217 91% 70%;
 
     /* Secondary Color Spectrum */
-    --secondary: 180 50% 45%;
-    --secondary-foreground: 0 0% 100%;
-    --secondary-light: 180 50% 65%;
-    --secondary-dark: 180 50% 30%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222 47% 11%;
+    --secondary-light: 210 40% 98%;
+    --secondary-dark: 210 40% 90%;
 
-    /* Accent Color Spectrum */
-    --accent: 186 76% 52%;
+    /* Accent Color Spectrum - Cyan */
+    --accent: 190 84% 46%;
     --accent-foreground: 0 0% 100%;
-    --accent-light: 186 76% 70%;
-    --accent-dark: 186 76% 35%;
+    --accent-light: 190 84% 65%;
+    --accent-dark: 190 84% 35%;
 
     /* Muted Colors */
-    --muted: 210 40% 96%;
+    --muted: 210 30% 96%;
     --muted-foreground: 215 16% 47%;
 
     /* Status Colors */
-    --success: 142 71% 45%;
+    --success: 152 76% 42%;
     --success-foreground: 0 0% 100%;
-    --success-light: 142 71% 65%;
+    --success-light: 152 76% 60%;
 
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
@@ -135,43 +135,43 @@ All colors MUST be HSL.
     --info-foreground: 0 0% 100%;
     --info-light: 199 89% 68%;
 
-    --destructive: 0 84% 60%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
-    --destructive-light: 0 84% 75%;
+    --destructive-light: 0 72% 70%;
 
     /* Border & Input */
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 211 100% 50%;
+    --border: 214 20% 92%;
+    --input: 214 20% 92%;
+    --ring: 217 91% 60%;
 
-    /* Border Radius */
-    --radius: 0.75rem;
-    --radius-lg: 1rem;
-    --radius-xl: 1.5rem;
+    /* Border Radius - Larger for modern look */
+    --radius: 1rem;
+    --radius-lg: 1.25rem;
+    --radius-xl: 1.75rem;
 
     /* Sidebar */
-    --sidebar-background: 211 100% 97%;
+    --sidebar-background: 0 0% 100% / 0.8;
     --sidebar-foreground: 222 47% 11%;
-    --sidebar-primary: 211 100% 50%;
+    --sidebar-primary: 217 91% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 211 100% 95%;
+    --sidebar-accent: 217 91% 97%;
     --sidebar-accent-foreground: 222 47% 11%;
-    --sidebar-border: 214 32% 91%;
-    --sidebar-ring: 211 100% 50%;
+    --sidebar-border: 214 20% 92%;
+    --sidebar-ring: 217 91% 60%;
     
-    /* Dynamic Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(211 100% 50%), hsl(186 76% 52%), hsl(211 100% 65%));
-    --gradient-primary-shift: linear-gradient(135deg, hsl(211 100% 65%), hsl(186 76% 52%), hsl(211 100% 50%));
-    --gradient-secondary: linear-gradient(135deg, hsl(180 50% 45%), hsl(186 76% 52%), hsl(199 89% 48%));
-    --gradient-accent: linear-gradient(135deg, hsl(186 76% 52%), hsl(199 89% 48%), hsl(211 100% 50%));
-    --gradient-success: linear-gradient(135deg, hsl(142 71% 45%), hsl(142 71% 65%));
-    --gradient-warning: linear-gradient(135deg, hsl(38 92% 50%), hsl(38 92% 70%));
-    --gradient-hero: linear-gradient(135deg, hsl(211 100% 50%) 0%, hsl(186 76% 52%) 50%, hsl(199 89% 48%) 100%);
-    --gradient-card: linear-gradient(135deg, hsl(0 0% 100% / 0.9), hsl(210 40% 98% / 0.7));
-    --gradient-card-hover: linear-gradient(135deg, hsl(0 0% 100% / 0.95), hsl(210 40% 98% / 0.85));
-    --gradient-mesh: radial-gradient(at 40% 20%, hsl(211 100% 85% / 0.3) 0px, transparent 50%),
-                     radial-gradient(at 80% 0%, hsl(186 76% 82% / 0.3) 0px, transparent 50%),
-                     radial-gradient(at 0% 50%, hsl(199 89% 78% / 0.2) 0px, transparent 50%);
+    /* Dynamic Gradients - Refined */
+    --gradient-primary: linear-gradient(135deg, hsl(217 91% 60%), hsl(190 84% 46%));
+    --gradient-primary-shift: linear-gradient(135deg, hsl(190 84% 46%), hsl(217 91% 60%));
+    --gradient-secondary: linear-gradient(135deg, hsl(210 40% 96%), hsl(217 91% 97%));
+    --gradient-accent: linear-gradient(135deg, hsl(190 84% 46%), hsl(217 91% 60%));
+    --gradient-success: linear-gradient(135deg, hsl(152 76% 42%), hsl(152 76% 55%));
+    --gradient-warning: linear-gradient(135deg, hsl(38 92% 50%), hsl(38 92% 65%));
+    --gradient-hero: linear-gradient(135deg, hsl(217 91% 60%) 0%, hsl(190 84% 46%) 50%, hsl(217 91% 70%) 100%);
+    --gradient-card: linear-gradient(180deg, hsl(0 0% 100% / 0.95), hsl(210 40% 99% / 0.9));
+    --gradient-card-hover: linear-gradient(180deg, hsl(0 0% 100%), hsl(210 40% 98% / 0.95));
+    --gradient-mesh: radial-gradient(ellipse 80% 50% at 50% -20%, hsl(217 91% 90% / 0.5), transparent),
+                     radial-gradient(ellipse 60% 40% at 100% 50%, hsl(190 84% 90% / 0.3), transparent),
+                     radial-gradient(ellipse 50% 30% at 0% 80%, hsl(217 91% 95% / 0.4), transparent);
     
     /* Neumorphic Shadows */
     --shadow-sm: 0 1px 2px 0 hsl(222 47% 11% / 0.05);
@@ -221,94 +221,94 @@ All colors MUST be HSL.
   }
 
   .dark {
-    /* Base Colors - Enhanced Dark */
-    --background: 222 84% 5%;
+    /* Base Colors - Clean Dark */
+    --background: 222 47% 6%;
     --foreground: 210 40% 98%;
-    --background-secondary: 222 84% 7%;
+    --background-secondary: 222 47% 8%;
 
-    /* Card Colors with Glassmorphic Support */
-    --card: 222 47% 11% / 0.7;
+    /* Card Colors - Enhanced Glass Dark */
+    --card: 222 47% 10%;
     --card-foreground: 210 40% 98%;
-    --card-solid: 222 47% 11%;
+    --card-solid: 222 47% 10%;
     
     /* Glass Effect Variables - Dark */
-    --glass-background: 222 47% 11% / 0.5;
-    --glass-border: 217 33% 25% / 0.5;
-    --glass-shadow: 0 0% 0% / 0.3;
+    --glass-background: 222 47% 12% / 0.8;
+    --glass-border: 217 33% 20% / 0.6;
+    --glass-shadow: 0 0% 0% / 0.4;
 
-    --popover: 222 47% 11%;
+    --popover: 222 47% 10%;
     --popover-foreground: 210 40% 98%;
 
     /* Primary Color Spectrum */
-    --primary: 211 100% 55%;
+    --primary: 217 91% 65%;
     --primary-foreground: 0 0% 100%;
-    --primary-light: 211 100% 70%;
-    --primary-lighter: 211 100% 85%;
-    --primary-dark: 211 100% 40%;
-    --primary-darker: 211 100% 30%;
-    --primary-glow: 211 100% 75%;
+    --primary-light: 217 91% 75%;
+    --primary-lighter: 217 91% 85%;
+    --primary-dark: 217 91% 50%;
+    --primary-darker: 217 91% 40%;
+    --primary-glow: 217 91% 70%;
 
     /* Secondary Color Spectrum */
-    --secondary: 180 50% 50%;
-    --secondary-foreground: 0 0% 100%;
-    --secondary-light: 180 50% 70%;
-    --secondary-dark: 180 50% 35%;
+    --secondary: 222 47% 15%;
+    --secondary-foreground: 210 40% 98%;
+    --secondary-light: 222 47% 20%;
+    --secondary-dark: 222 47% 10%;
 
     /* Accent Color Spectrum */
-    --accent: 186 76% 57%;
+    --accent: 190 84% 55%;
     --accent-foreground: 0 0% 100%;
-    --accent-light: 186 76% 75%;
-    --accent-dark: 186 76% 40%;
+    --accent-light: 190 84% 70%;
+    --accent-dark: 190 84% 40%;
 
     /* Muted Colors */
-    --muted: 217 33% 17%;
+    --muted: 222 47% 15%;
     --muted-foreground: 215 20% 65%;
 
     /* Status Colors */
-    --success: 142 71% 50%;
+    --success: 152 76% 48%;
     --success-foreground: 0 0% 100%;
-    --success-light: 142 71% 70%;
+    --success-light: 152 76% 65%;
 
     --warning: 38 92% 55%;
     --warning-foreground: 0 0% 100%;
-    --warning-light: 38 92% 75%;
+    --warning-light: 38 92% 70%;
 
-    --info: 199 89% 53%;
+    --info: 199 89% 55%;
     --info-foreground: 0 0% 100%;
-    --info-light: 199 89% 73%;
+    --info-light: 199 89% 70%;
 
-    --destructive: 0 84% 65%;
+    --destructive: 0 72% 56%;
     --destructive-foreground: 0 0% 100%;
-    --destructive-light: 0 84% 80%;
+    --destructive-light: 0 72% 70%;
 
     /* Border & Input */
-    --border: 217 33% 17%;
-    --input: 217 33% 17%;
-    --ring: 211 100% 55%;
+    --border: 222 47% 18%;
+    --input: 222 47% 18%;
+    --ring: 217 91% 65%;
 
     /* Sidebar */
-    --sidebar-background: 222 47% 8%;
+    --sidebar-background: 222 47% 8% / 0.9;
     --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 211 100% 55%;
+    --sidebar-primary: 217 91% 65%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 222 47% 15%;
     --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 217 33% 17%;
-    --sidebar-ring: 211 100% 55%;
+    --sidebar-border: 222 47% 18%;
+    --sidebar-ring: 217 91% 65%;
     
     /* Dynamic Gradients - Dark */
-    --gradient-primary: linear-gradient(135deg, hsl(211 100% 55%), hsl(186 76% 57%), hsl(211 100% 70%));
-    --gradient-primary-shift: linear-gradient(135deg, hsl(211 100% 70%), hsl(186 76% 57%), hsl(211 100% 55%));
-    --gradient-secondary: linear-gradient(135deg, hsl(180 50% 50%), hsl(186 76% 57%), hsl(199 89% 53%));
-    --gradient-accent: linear-gradient(135deg, hsl(186 76% 57%), hsl(199 89% 53%), hsl(211 100% 55%));
-    --gradient-success: linear-gradient(135deg, hsl(142 71% 50%), hsl(142 71% 70%));
-    --gradient-warning: linear-gradient(135deg, hsl(38 92% 55%), hsl(38 92% 75%));
-    --gradient-hero: linear-gradient(135deg, hsl(211 100% 55%) 0%, hsl(186 76% 57%) 50%, hsl(199 89% 53%) 100%);
-    --gradient-card: linear-gradient(135deg, hsl(222 47% 11% / 0.9), hsl(222 47% 15% / 0.7));
-    --gradient-card-hover: linear-gradient(135deg, hsl(222 47% 11% / 0.95), hsl(222 47% 15% / 0.85));
-    --gradient-mesh: radial-gradient(at 40% 20%, hsl(211 100% 35% / 0.2) 0px, transparent 50%),
-                     radial-gradient(at 80% 0%, hsl(186 76% 37% / 0.2) 0px, transparent 50%),
-                     radial-gradient(at 0% 50%, hsl(199 89% 33% / 0.15) 0px, transparent 50%);
+    --gradient-primary: linear-gradient(135deg, hsl(217 91% 65%), hsl(190 84% 55%));
+    --gradient-primary-shift: linear-gradient(135deg, hsl(190 84% 55%), hsl(217 91% 65%));
+    --gradient-secondary: linear-gradient(135deg, hsl(222 47% 15%), hsl(222 47% 20%));
+    --gradient-accent: linear-gradient(135deg, hsl(190 84% 55%), hsl(217 91% 65%));
+    --gradient-success: linear-gradient(135deg, hsl(152 76% 48%), hsl(152 76% 60%));
+    --gradient-warning: linear-gradient(135deg, hsl(38 92% 55%), hsl(38 92% 70%));
+    --gradient-hero: linear-gradient(135deg, hsl(217 91% 65%) 0%, hsl(190 84% 55%) 50%, hsl(217 91% 75%) 100%);
+    --gradient-card: linear-gradient(180deg, hsl(222 47% 12% / 0.95), hsl(222 47% 10% / 0.9));
+    --gradient-card-hover: linear-gradient(180deg, hsl(222 47% 15%), hsl(222 47% 12% / 0.95));
+    --gradient-mesh: radial-gradient(ellipse 80% 50% at 50% -20%, hsl(217 91% 30% / 0.3), transparent),
+                     radial-gradient(ellipse 60% 40% at 100% 50%, hsl(190 84% 30% / 0.2), transparent),
+                     radial-gradient(ellipse 50% 30% at 0% 80%, hsl(217 91% 25% / 0.25), transparent);
     
     /* Neumorphic Shadows - Dark */
     --shadow-sm: 0 1px 2px 0 hsl(0 0% 0% / 0.3);
