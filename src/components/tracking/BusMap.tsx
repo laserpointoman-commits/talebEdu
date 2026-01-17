@@ -197,60 +197,87 @@ export default function BusMap({ busId, studentLocation }: BusMapProps) {
     if (!map.current) return;
 
     if (!busMarker.current) {
-      // Custom pin that shows an exact anchor point (no bouncing/moving)
-      const container = document.createElement('div');
-      container.className = 'bus-marker';
-      container.style.display = 'flex';
-      container.style.flexDirection = 'column';
-      container.style.alignItems = 'center';
+      // Root is zero-size; anchor='center' means GPS point is exactly at (0,0)
+      const root = document.createElement('div');
+      root.className = 'bus-marker-root';
+      root.style.position = 'relative';
+      root.style.width = '0';
+      root.style.height = '0';
+
+      // Visible marker positioned above the anchor point
+      const wrapper = document.createElement('div');
+      wrapper.style.position = 'absolute';
+      wrapper.style.left = '50%';
+      wrapper.style.bottom = '0';
+      wrapper.style.transform = 'translateX(-50%)';
+      wrapper.style.display = 'flex';
+      wrapper.style.flexDirection = 'column';
+      wrapper.style.alignItems = 'center';
+
+      const pinSize = 36;
+      const pinWrap = document.createElement('div');
+      pinWrap.style.position = 'relative';
+      pinWrap.style.width = `${pinSize}px`;
+      pinWrap.style.height = `${pinSize}px`;
+
+      const pulse = document.createElement('div');
+      pulse.style.position = 'absolute';
+      pulse.style.inset = '-8px';
+      pulse.style.borderRadius = '9999px';
+      pulse.style.background = 'hsl(var(--primary) / 0.35)';
+      pulse.style.animation = 'busPinPulse 2s ease-out infinite';
+      pinWrap.appendChild(pulse);
 
       const pin = document.createElement('div');
-      pin.style.width = '44px';
-      pin.style.height = '44px';
+      pin.style.width = '100%';
+      pin.style.height = '100%';
       pin.style.borderRadius = '9999px';
       pin.style.display = 'flex';
       pin.style.alignItems = 'center';
       pin.style.justifyContent = 'center';
       pin.style.background = 'hsl(var(--primary))';
-      pin.style.color = 'hsl(var(--primary-foreground))';
-      pin.style.border = '3px solid hsl(var(--background))';
-      pin.style.boxShadow = '0 8px 24px hsl(var(--primary) / 0.35), 0 4px 8px hsl(var(--foreground) / 0.1)';
-      pin.innerHTML =
-        '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 12h18"/><path d="M8 6V4"/><path d="M16 6V4"/><circle cx="7" cy="17" r="1"/><circle cx="17" cy="17" r="1"/></svg>';
+      pin.style.color = '#fff';
+      pin.style.border = '2px solid hsl(var(--background))';
+      pin.style.boxShadow = '0 4px 12px hsl(var(--foreground) / 0.2)';
+      pin.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M4 16c0 .88.39 1.67 1 2.22V20c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h8v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1.78c.61-.55 1-1.34 1-2.22V6c0-3.5-3.58-4-8-4s-8 .5-8 4v10zm3.5 1c-.83 0-1.5-.67-1.5-1.5S6.67 14 7.5 14s1.5.67 1.5 1.5S8.33 17 7.5 17zm9 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM18 11H6V6h12v5z"/></svg>`;
+      pinWrap.appendChild(pin);
 
       const pointer = document.createElement('div');
       pointer.style.width = '0';
       pointer.style.height = '0';
-      pointer.style.borderLeft = '8px solid transparent';
-      pointer.style.borderRight = '8px solid transparent';
-      pointer.style.borderTop = '12px solid hsl(var(--primary))';
-      pointer.style.marginTop = '-2px';
-      pointer.style.filter = 'drop-shadow(0 2px 4px hsl(var(--foreground) / 0.25))';
-
-      // Zero-sized anchor so the dot center is EXACTLY the GPS coordinate
-      const anchorPoint = document.createElement('div');
-      anchorPoint.style.position = 'relative';
-      anchorPoint.style.width = '0';
-      anchorPoint.style.height = '0';
+      pointer.style.borderLeft = '6px solid transparent';
+      pointer.style.borderRight = '6px solid transparent';
+      pointer.style.borderTop = '10px solid hsl(var(--primary))';
+      pointer.style.marginTop = '-1px';
 
       const dot = document.createElement('div');
-      dot.style.position = 'absolute';
-      dot.style.left = '-6px';
-      dot.style.top = '-6px';
-      dot.style.width = '12px';
-      dot.style.height = '12px';
+      dot.style.width = '10px';
+      dot.style.height = '10px';
       dot.style.borderRadius = '9999px';
       dot.style.background = 'hsl(var(--background))';
       dot.style.border = '2px solid hsl(var(--primary))';
-      dot.style.boxShadow = '0 1px 3px hsl(var(--foreground) / 0.35)';
+      dot.style.boxShadow = '0 1px 3px hsl(var(--foreground) / 0.3)';
+      dot.style.marginTop = '-1px';
 
-      anchorPoint.appendChild(dot);
+      wrapper.appendChild(pinWrap);
+      wrapper.appendChild(pointer);
+      wrapper.appendChild(dot);
+      root.appendChild(wrapper);
 
-      container.appendChild(pin);
-      container.appendChild(pointer);
-      container.appendChild(anchorPoint);
+      // Add pulse animation keyframes if not present
+      if (!document.getElementById('bus-marker-pulse-style')) {
+        const style = document.createElement('style');
+        style.id = 'bus-marker-pulse-style';
+        style.textContent = `
+          @keyframes busPinPulse {
+            0% { transform: scale(1); opacity: 0.55; }
+            100% { transform: scale(1.7); opacity: 0; }
+          }
+        `;
+        document.head.appendChild(style);
+      }
 
-      busMarker.current = new mapboxgl.Marker({ element: container, anchor: 'bottom' })
+      busMarker.current = new mapboxgl.Marker({ element: root, anchor: 'center' })
         .setLngLat([location.longitude, location.latitude])
         .setPopup(new mapboxgl.Popup().setText(language === 'ar' ? 'موقع الحافلة' : 'Bus Location'))
         .addTo(map.current);

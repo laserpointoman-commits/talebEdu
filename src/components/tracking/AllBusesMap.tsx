@@ -273,7 +273,8 @@ export default function AllBusesMap({ buses }: AllBusesMapProps) {
       }
 
       const el = createMarkerElement(bus, isActiveBus);
-      const marker = new mapboxgl.Marker({ element: el, anchor: 'bottom' })
+      // anchor='center' on zero-size element = GPS point is exactly at center
+      const marker = new mapboxgl.Marker({ element: el, anchor: 'center' })
         .setLngLat([location.longitude, location.latitude])
         .addTo(map.current!);
       markers.current.set(bus.id, marker);
@@ -389,167 +390,140 @@ export default function AllBusesMap({ buses }: AllBusesMapProps) {
 
   const createMarkerElement = (bus: BusInfo, hasLiveLocation: boolean) => {
     const isActive = hasLiveLocation;
-    const container = document.createElement('div');
-    container.className = 'bus-pin-container';
-    container.dataset.busId = bus.id;
-    container.dataset.active = isActive ? 'true' : 'false';
-    container.style.position = 'relative';
-    container.style.display = 'flex';
-    container.style.flexDirection = 'column';
-    container.style.alignItems = 'center';
-    container.style.cursor = 'pointer';
 
-    // Add click handler
-    container.addEventListener('click', () => {
+    // Root element is a zero-size div; marker anchor='center' means (0,0) = GPS point
+    const root = document.createElement('div');
+    root.className = 'bus-marker-root';
+    root.dataset.busId = bus.id;
+    root.dataset.active = isActive ? 'true' : 'false';
+    root.style.position = 'relative';
+    root.style.width = '0';
+    root.style.height = '0';
+    root.style.cursor = 'pointer';
+
+    root.addEventListener('click', () => {
       fetchBusDetails(bus.id);
     });
 
-    // Label (always visible above pin)
+    // Visible marker elements positioned absolutely around center
+    const wrapper = document.createElement('div');
+    wrapper.style.position = 'absolute';
+    wrapper.style.left = '50%';
+    wrapper.style.bottom = '0';
+    wrapper.style.transform = 'translateX(-50%)';
+    wrapper.style.display = 'flex';
+    wrapper.style.flexDirection = 'column';
+    wrapper.style.alignItems = 'center';
+
+    // Label above pin
     const labelWrap = document.createElement('div');
-    labelWrap.style.position = 'absolute';
-    labelWrap.style.left = '50%';
-    labelWrap.style.bottom = '100%';
-    labelWrap.style.transform = 'translateX(-50%)';
-    labelWrap.style.marginBottom = '8px';
-    labelWrap.style.zIndex = '10';
-    labelWrap.style.pointerEvents = 'none';
+    labelWrap.style.marginBottom = '6px';
     labelWrap.style.display = 'flex';
     labelWrap.style.flexDirection = 'column';
     labelWrap.style.alignItems = 'center';
+    labelWrap.style.pointerEvents = 'none';
 
     const label = document.createElement('div');
-    label.className = 'bus-pin-label';
     label.textContent = `${language === 'ar' ? 'حافلة' : 'Bus'} ${bus.bus_number}`;
     label.style.background = 'hsl(var(--card))';
     label.style.color = 'hsl(var(--card-foreground))';
-    label.style.padding = '6px 10px';
-    label.style.borderRadius = '8px';
-    label.style.fontSize = '13px';
+    label.style.padding = '5px 8px';
+    label.style.borderRadius = '6px';
+    label.style.fontSize = '12px';
     label.style.fontWeight = '700';
     label.style.whiteSpace = 'nowrap';
     label.style.border = '1px solid hsl(var(--border))';
-    label.style.boxShadow = '0 6px 16px hsl(var(--foreground) / 0.18)';
+    label.style.boxShadow = '0 4px 12px hsl(var(--foreground) / 0.15)';
 
-    const arrow = document.createElement('div');
-    arrow.style.width = '0';
-    arrow.style.height = '0';
-    arrow.style.borderLeft = '6px solid transparent';
-    arrow.style.borderRight = '6px solid transparent';
-    arrow.style.borderTop = '6px solid hsl(var(--card))';
-    arrow.style.filter = 'drop-shadow(0 1px 0 hsl(var(--border)))';
-    arrow.style.marginTop = '-1px';
+    const labelArrow = document.createElement('div');
+    labelArrow.style.width = '0';
+    labelArrow.style.height = '0';
+    labelArrow.style.borderLeft = '5px solid transparent';
+    labelArrow.style.borderRight = '5px solid transparent';
+    labelArrow.style.borderTop = '5px solid hsl(var(--card))';
+    labelArrow.style.marginTop = '-1px';
 
     labelWrap.appendChild(label);
-    labelWrap.appendChild(arrow);
-    container.appendChild(labelWrap);
+    labelWrap.appendChild(labelArrow);
 
-    // Create a wrapper for pin and pulse - fixed size for proper centering
-    const pinWrapper = document.createElement('div');
-    pinWrapper.style.position = 'relative';
-    pinWrapper.style.width = '56px';
-    pinWrapper.style.height = '56px';
-    pinWrapper.style.display = 'flex';
-    pinWrapper.style.alignItems = 'center';
-    pinWrapper.style.justifyContent = 'center';
-
-    // Pulse effect for active buses - absolutely centered
-    if (isActive) {
-      const pulse = document.createElement('div');
-      pulse.className = 'bus-pin-pulse';
-      pulse.style.position = 'absolute';
-      pulse.style.left = '0';
-      pulse.style.top = '0';
-      pulse.style.right = '0';
-      pulse.style.bottom = '0';
-      pulse.style.borderRadius = '9999px';
-      pulse.style.background = 'hsl(var(--primary) / 0.4)';
-      pulse.style.animation = 'busPinPulse 2s ease-out infinite';
-      pulse.style.zIndex = '1';
-      pinWrapper.appendChild(pulse);
+    // Add inactive badge
+    if (!isActive) {
+      const tag = document.createElement('div');
+      tag.textContent = language === 'ar' ? 'متوقفة' : 'Inactive';
+      tag.style.marginTop = '2px';
+      tag.style.padding = '2px 5px';
+      tag.style.borderRadius = '4px';
+      tag.style.fontSize = '9px';
+      tag.style.fontWeight = '600';
+      tag.style.background = 'hsl(var(--destructive))';
+      tag.style.color = '#fff';
+      tag.style.textTransform = 'uppercase';
+      labelWrap.appendChild(tag);
     }
 
-    // Bus pin with beautiful icon
+    // Pin circle
+    const pinSize = 36;
+    const pinWrap = document.createElement('div');
+    pinWrap.style.position = 'relative';
+    pinWrap.style.width = `${pinSize}px`;
+    pinWrap.style.height = `${pinSize}px`;
+
+    if (isActive) {
+      const pulse = document.createElement('div');
+      pulse.style.position = 'absolute';
+      pulse.style.inset = '-8px';
+      pulse.style.borderRadius = '9999px';
+      pulse.style.background = 'hsl(var(--primary) / 0.35)';
+      pulse.style.animation = 'busPinPulse 2s ease-out infinite';
+      pinWrap.appendChild(pulse);
+    }
+
     const pin = document.createElement('div');
-    pin.className = 'bus-pin';
-    pin.style.width = '44px';
-    pin.style.height = '44px';
+    pin.style.width = '100%';
+    pin.style.height = '100%';
     pin.style.borderRadius = '9999px';
     pin.style.display = 'flex';
     pin.style.alignItems = 'center';
     pin.style.justifyContent = 'center';
-    pin.style.border = '3px solid hsl(var(--background))';
-    pin.style.boxShadow = isActive 
-      ? '0 8px 24px hsl(var(--primary) / 0.35), 0 4px 8px hsl(var(--foreground) / 0.1)' 
-      : '0 8px 24px hsla(0, 72%, 51%, 0.35), 0 4px 8px hsl(var(--foreground) / 0.1)';
-    pin.style.background = isActive 
-      ? 'linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.85))' 
-      : 'linear-gradient(135deg, hsl(0, 72%, 51%), hsl(0, 72%, 45%))';
-    pin.style.color = '#ffffff';
-    pin.style.position = 'relative';
-    pin.style.zIndex = '2';
-    pin.innerHTML = `
-      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M4 16c0 .88.39 1.67 1 2.22V20c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h8v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1.78c.61-.55 1-1.34 1-2.22V6c0-3.5-3.58-4-8-4s-8 .5-8 4v10zm3.5 1c-.83 0-1.5-.67-1.5-1.5S6.67 14 7.5 14s1.5.67 1.5 1.5S8.33 17 7.5 17zm9 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM18 11H6V6h12v5z"/>
-      </svg>
-    `;
+    pin.style.background = isActive
+      ? 'hsl(var(--primary))'
+      : 'hsl(var(--destructive))';
+    pin.style.color = '#fff';
+    pin.style.border = '2px solid hsl(var(--background))';
+    pin.style.boxShadow = '0 4px 12px hsl(var(--foreground) / 0.2)';
+    pin.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M4 16c0 .88.39 1.67 1 2.22V20c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h8v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1.78c.61-.55 1-1.34 1-2.22V6c0-3.5-3.58-4-8-4s-8 .5-8 4v10zm3.5 1c-.83 0-1.5-.67-1.5-1.5S6.67 14 7.5 14s1.5.67 1.5 1.5S8.33 17 7.5 17zm9 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM18 11H6V6h12v5z"/></svg>`;
+    pinWrap.appendChild(pin);
 
-    pinWrapper.appendChild(pin);
-    
-    // Pin pointer - its tip marks the GPS point
+    // Pointer triangle
     const pointer = document.createElement('div');
     pointer.style.width = '0';
     pointer.style.height = '0';
-    pointer.style.borderLeft = '8px solid transparent';
-    pointer.style.borderRight = '8px solid transparent';
+    pointer.style.borderLeft = '6px solid transparent';
+    pointer.style.borderRight = '6px solid transparent';
     pointer.style.borderTop = isActive
-      ? '12px solid hsl(var(--primary))'
-      : '12px solid hsl(var(--destructive))';
-    pointer.style.marginTop = '-2px';
-    pointer.style.filter = 'drop-shadow(0 2px 4px hsl(var(--foreground) / 0.25))';
+      ? '10px solid hsl(var(--primary))'
+      : '10px solid hsl(var(--destructive))';
+    pointer.style.marginTop = '-1px';
 
-    // Zero-sized anchor so the dot center is EXACTLY the GPS coordinate (no zoom-dependent pixel offset)
-    const anchorPoint = document.createElement('div');
-    anchorPoint.style.position = 'relative';
-    anchorPoint.style.width = '0';
-    anchorPoint.style.height = '0';
-
-    const preciseDot = document.createElement('div');
-    preciseDot.style.position = 'absolute';
-    preciseDot.style.left = '-6px';
-    preciseDot.style.top = '-6px';
-    preciseDot.style.width = '12px';
-    preciseDot.style.height = '12px';
-    preciseDot.style.borderRadius = '9999px';
-    preciseDot.style.background = 'hsl(var(--background))';
-    preciseDot.style.border = isActive
+    // GPS dot at exact anchor point
+    const dot = document.createElement('div');
+    dot.style.width = '10px';
+    dot.style.height = '10px';
+    dot.style.borderRadius = '9999px';
+    dot.style.background = 'hsl(var(--background))';
+    dot.style.border = isActive
       ? '2px solid hsl(var(--primary))'
       : '2px solid hsl(var(--destructive))';
-    preciseDot.style.boxShadow = '0 1px 3px hsl(var(--foreground) / 0.35)';
+    dot.style.boxShadow = '0 1px 3px hsl(var(--foreground) / 0.3)';
+    dot.style.marginTop = '-1px';
 
-    anchorPoint.appendChild(preciseDot);
+    wrapper.appendChild(labelWrap);
+    wrapper.appendChild(pinWrap);
+    wrapper.appendChild(pointer);
+    wrapper.appendChild(dot);
+    root.appendChild(wrapper);
 
-    container.appendChild(pinWrapper);
-    container.appendChild(pointer);
-    container.appendChild(anchorPoint);
-
-    // Add "Inactive" badge inside the label for inactive buses (so it doesn't affect anchor)
-    if (!isActive) {
-      const inactiveTag = document.createElement('div');
-      inactiveTag.className = 'bus-inactive-tag';
-      inactiveTag.textContent = language === 'ar' ? 'متوقفة' : 'Inactive';
-      inactiveTag.style.marginTop = '2px';
-      inactiveTag.style.padding = '2px 6px';
-      inactiveTag.style.borderRadius = '4px';
-      inactiveTag.style.fontSize = '9px';
-      inactiveTag.style.fontWeight = '600';
-      inactiveTag.style.background = 'hsl(0, 72%, 51%)';
-      inactiveTag.style.color = '#ffffff';
-      inactiveTag.style.textTransform = 'uppercase';
-      inactiveTag.style.letterSpacing = '0.5px';
-      labelWrap.appendChild(inactiveTag);
-    }
-
-    return container;
+    return root;
   };
 
   const activeBusCount = activeBusIds.size;
