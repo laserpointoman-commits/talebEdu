@@ -612,124 +612,17 @@ export default function WeeklyScheduleManager() {
         <title>${language === 'en' ? 'Weekly Schedule' : language === 'hi' ? 'साप्ताहिक शेड्यूल' : 'الجدول الأسبوعي'} - ${selectedClassName}</title>
         <style>
           @page {
-            size: A4 landscape;
-            margin: 5mm;
-          }
-          * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-          }
-          html, body {
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-          }
-          body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            font-size: 7px;
-            line-height: 1.2;
-            color: #1a1a1a;
-            background: white;
-            direction: ${language === 'ar' ? 'rtl' : 'ltr'};
-          }
-          .header {
-            text-align: center;
-            margin-bottom: 6px;
-            padding-bottom: 4px;
-            border-bottom: 1px solid #3b82f6;
-          }
-          .header h1 {
-            font-size: 14px;
-            font-weight: 700;
-            color: #1e40af;
-            margin-bottom: 2px;
-          }
-          .header .subtitle {
-            font-size: 10px;
-            color: #6b7280;
-          }
-          .header .date {
-            font-size: 8px;
-            color: #9ca3af;
-            margin-top: 2px;
-          }
-          table {
-            width: 100%;
-            border-collapse: collapse;
-            table-layout: fixed;
-          }
-          th, td {
-            border: 1px solid #d1d5db;
-            padding: 2px 1px;
-            text-align: center;
-            vertical-align: top;
-            overflow: hidden;
-          }
-          th {
-            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-            color: white;
-            font-weight: 600;
-            font-size: 8px;
-            padding: 4px 2px;
-          }
-          th:first-child {
-            width: 50px;
-          }
-          .time-cell {
-            background: #f8fafc;
-            font-weight: 600;
-            font-size: 6px;
-            color: #475569;
-          }
-          .schedule-item {
-            background: #eff6ff;
-            border-radius: 2px;
-            padding: 1px;
-            margin: 0;
-            text-align: ${language === 'ar' ? 'right' : 'left'};
-          }
-          .schedule-item .subject {
-            font-weight: 600;
-            color: #1e40af;
-            font-size: 6px;
-            margin-bottom: 0;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-          }
-          .schedule-item .class-name {
-            font-size: 5px;
-            color: #3b82f6;
-            margin-bottom: 0;
-          }
-          .schedule-item .teacher {
-            font-size: 5px;
-            color: #6b7280;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-          }
-          .schedule-item .room {
-            font-size: 5px;
-            color: #9ca3af;
-          }
-          .empty-cell {
-            background: #fafafa;
-          }
-          .footer {
-            margin-top: 4px;
-            text-align: center;
-            font-size: 6px;
-            color: #9ca3af;
-            padding-top: 4px;
-            border-top: 1px solid #e5e7eb;
+            size: landscape;
+            margin: 8mm;
           }
           @media print {
+            @page {
+              size: landscape;
+              margin: 8mm;
+            }
             html, body {
-              width: 297mm;
-              height: 210mm;
-              overflow: hidden;
+              width: 100%;
+              height: auto;
             }
             body { 
               -webkit-print-color-adjust: exact; 
@@ -738,9 +631,105 @@ export default function WeeklyScheduleManager() {
             table {
               page-break-inside: avoid;
             }
-            tr {
-              page-break-inside: avoid;
-            }
+          }
+          * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+          }
+          body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 10px;
+            line-height: 1.3;
+            color: #1a1a1a;
+            background: white;
+            direction: ${language === 'ar' ? 'rtl' : 'ltr'};
+          }
+          .header {
+            text-align: center;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #3b82f6;
+          }
+          .header h1 {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1e40af;
+            margin-bottom: 4px;
+          }
+          .header .subtitle {
+            font-size: 14px;
+            color: #374151;
+            font-weight: 600;
+          }
+          .header .date {
+            font-size: 10px;
+            color: #6b7280;
+            margin-top: 4px;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+          }
+          th, td {
+            border: 1px solid #d1d5db;
+            padding: 4px 3px;
+            text-align: center;
+            vertical-align: top;
+          }
+          th {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+            font-weight: 600;
+            font-size: 11px;
+            padding: 6px 4px;
+          }
+          th:first-child {
+            width: 70px;
+          }
+          .time-cell {
+            background: #f8fafc;
+            font-weight: 600;
+            font-size: 9px;
+            color: #475569;
+          }
+          .schedule-item {
+            background: #eff6ff;
+            border-radius: 3px;
+            padding: 3px;
+            margin: 1px 0;
+            text-align: ${language === 'ar' ? 'right' : 'left'};
+          }
+          .schedule-item .subject {
+            font-weight: 600;
+            color: #1e40af;
+            font-size: 9px;
+            margin-bottom: 1px;
+          }
+          .schedule-item .class-name {
+            font-size: 8px;
+            color: #3b82f6;
+            margin-bottom: 1px;
+          }
+          .schedule-item .teacher {
+            font-size: 8px;
+            color: #6b7280;
+          }
+          .schedule-item .room {
+            font-size: 7px;
+            color: #9ca3af;
+          }
+          .empty-cell {
+            background: #fafafa;
+          }
+          .footer {
+            margin-top: 10px;
+            text-align: center;
+            font-size: 8px;
+            color: #9ca3af;
+            padding-top: 6px;
+            border-top: 1px solid #e5e7eb;
           }
         </style>
       </head>
