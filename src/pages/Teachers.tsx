@@ -503,8 +503,8 @@ export default function Teachers() {
         if (empError) console.error('Error creating employee record:', empError);
 
         toast({
-          title: language === 'en' ? 'Success' : 'نجاح',
-          description: language === 'en' ? 'Teacher account created successfully' : 'تم إنشاء حساب المعلم بنجاح',
+          title: language === 'en' ? 'Success' : language === 'hi' ? 'सफलता' : 'نجاح',
+          description: language === 'en' ? 'Teacher account created successfully' : language === 'hi' ? 'शिक्षक खाता सफलतापूर्वक बनाया गया' : 'تم إنشاء حساب المعلم بنجاح',
         });
         
         setIsAddDialogOpen(false);
@@ -552,13 +552,13 @@ export default function Teachers() {
     } catch (error) {
       if (error instanceof z.ZodError) {
         toast({
-          title: language === 'en' ? 'Validation Error' : 'خطأ في التحقق',
+          title: language === 'en' ? 'Validation Error' : language === 'hi' ? 'सत्यापन त्रुटि' : 'خطأ في التحقق',
           description: error.errors[0].message,
           variant: 'destructive',
         });
       } else {
         toast({
-          title: language === 'en' ? 'Error' : 'خطأ',
+          title: language === 'en' ? 'Error' : language === 'hi' ? 'त्रुटि' : 'خطأ',
           description: (error as Error).message,
           variant: 'destructive',
         });
@@ -587,12 +587,14 @@ export default function Teachers() {
       <PageHeader
         title="Teachers"
         titleAr="المعلمين"
+        titleHi="शिक्षक"
         subtitle="Manage and view all teacher profiles"
         subtitleAr="إدارة وعرض جميع ملفات المعلمين"
+        subtitleHi="सभी शिक्षक प्रोफाइल प्रबंधित करें और देखें"
         actions={
           <Button onClick={() => setIsAddDialogOpen(true)} size="sm">
             <UserPlus className="h-4 w-4 mr-2" />
-            {language === 'en' ? 'Add' : 'إضافة'}
+            {language === 'en' ? 'Add' : language === 'hi' ? 'जोड़ें' : 'إضافة'}
           </Button>
         }
       />
@@ -600,7 +602,7 @@ export default function Teachers() {
       <div className="relative">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
         <Input
-          placeholder={language === 'en' ? 'Search by name, email or employee ID...' : 'البحث بالاسم أو البريد أو رقم الموظف...'}
+          placeholder={language === 'en' ? 'Search by name, email or employee ID...' : language === 'hi' ? 'नाम, ईमेल या कर्मचारी आईडी से खोजें...' : 'البحث بالاسم أو البريد أو رقم الموظف...'}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="pl-10"
@@ -668,8 +670,8 @@ export default function Teachers() {
                 <div className="flex items-center gap-2">
                   <Calendar className="h-3 w-3 text-muted-foreground" />
                   <span className="text-xs">
-                    {language === 'en' ? 'Experience: ' : 'الخبرة: '}
-                    {teacher.experience_years || 5} {language === 'en' ? 'years' : 'سنوات'}
+                    {language === 'en' ? 'Experience: ' : language === 'hi' ? 'अनुभव: ' : 'الخبرة: '}
+                    {teacher.experience_years || 5} {language === 'en' ? 'years' : language === 'hi' ? 'वर्ष' : 'سنوات'}
                   </span>
                 </div>
               </div>
@@ -678,7 +680,7 @@ export default function Teachers() {
               <div className="mt-3 pt-3 border-t">
                 <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1">
                   <GraduationCap className="h-3 w-3" />
-                  {language === 'en' ? 'Assigned Classes:' : 'الصفوف المعينة:'}
+                  {language === 'en' ? 'Assigned Classes:' : language === 'hi' ? 'नियुक्त कक्षाएँ:' : 'الصفوف المعينة:'}
                 </p>
                 <div className="flex flex-wrap gap-1">
                   {(() => {
@@ -687,7 +689,7 @@ export default function Teachers() {
                     if (assignedClasses.length === 0) {
                       return (
                         <span className="text-xs text-muted-foreground italic">
-                          {language === 'en' ? 'No classes assigned' : 'لا يوجد صفوف معينة'}
+                          {language === 'en' ? 'No classes assigned' : language === 'hi' ? 'कोई कक्षा नियुक्त नहीं' : 'لا يوجد صفوف معينة'}
                         </span>
                       );
                     }

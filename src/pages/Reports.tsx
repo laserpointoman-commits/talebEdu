@@ -158,28 +158,28 @@ export default function Reports() {
 
   const stats = [
     {
-      title: language === 'en' ? 'Total Students' : 'إجمالي الطلاب',
+      title: language === 'en' ? 'Total Students' : language === 'hi' ? 'कुल छात्र' : 'إجمالي الطلاب',
       value: studentCount.toString(),
       change: '+5%',
       icon: Users,
       color: 'text-primary'
     },
     {
-      title: language === 'en' ? 'Attendance Rate' : 'معدل الحضور',
+      title: language === 'en' ? 'Attendance Rate' : language === 'hi' ? 'उपस्थिति दर' : 'معدل الحضور',
       value: `${attendanceStats?.rate || 0}%`,
       change: '+2%',
       icon: CheckCircle,
       color: 'text-success'
     },
     {
-      title: language === 'en' ? 'Active Buses' : 'الحافلات النشطة',
+      title: language === 'en' ? 'Active Buses' : language === 'hi' ? 'सक्रिय बसें' : 'الحافلات النشطة',
       value: busCount.toString(),
       change: '0',
       icon: Bus,
       color: 'text-accent'
     },
     {
-      title: language === 'en' ? 'This Month Revenue' : 'إيرادات هذا الشهر',
+      title: language === 'en' ? 'This Month Revenue' : language === 'hi' ? 'इस महीने का राजस्व' : 'إيرادات هذا الشهر',
       value: `${financialStats?.income || 0}`,
       change: '+8%',
       icon: DollarSign,
@@ -190,15 +190,15 @@ export default function Reports() {
   const getStatusBadge = (status: string) => {
     const statusMap = {
       completed: { 
-        label: language === 'en' ? 'Completed' : 'مكتمل', 
+        label: language === 'en' ? 'Completed' : language === 'hi' ? 'पूर्ण' : 'مكتمل', 
         variant: 'default' as const 
       },
       pending: { 
-        label: language === 'en' ? 'Pending' : 'قيد الانتظار', 
+        label: language === 'en' ? 'Pending' : language === 'hi' ? 'लंबित' : 'قيد الانتظار', 
         variant: 'outline' as const 
       },
       processing: { 
-        label: language === 'en' ? 'Processing' : 'قيد المعالجة', 
+        label: language === 'en' ? 'Processing' : language === 'hi' ? 'प्रक्रिया में' : 'قيد المعالجة', 
         variant: 'secondary' as const 
       }
     };
@@ -246,11 +246,13 @@ export default function Reports() {
         <div>
           <h2 className="text-3xl font-bold tracking-tight flex items-center gap-2">
             <FileText className="h-8 w-8" />
-            {language === 'en' ? 'My Reports' : 'تقاريري'}
+            {language === 'en' ? 'My Reports' : language === 'hi' ? 'मेरी रिपोर्ट' : 'تقاريري'}
           </h2>
           <p className="text-muted-foreground mt-1">
             {language === 'en' 
               ? 'View and manage your driving reports'
+              : language === 'hi'
+              ? 'अपनी ड्राइविंग रिपोर्ट देखें और प्रबंधित करें'
               : 'عرض وإدارة تقارير القيادة الخاصة بك'}
           </p>
         </div>
@@ -262,7 +264,7 @@ export default function Reports() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">
-                    {language === 'en' ? 'Total Reports' : 'إجمالي التقارير'}
+                    {language === 'en' ? 'Total Reports' : language === 'hi' ? 'कुल रिपोर्ट' : 'إجمالي التقارير'}
                   </p>
                   <p className="text-2xl font-bold">{driverReports.length}</p>
                 </div>
@@ -275,7 +277,7 @@ export default function Reports() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">
-                    {language === 'en' ? 'This Month' : 'هذا الشهر'}
+                    {language === 'en' ? 'This Month' : language === 'hi' ? 'इस महीने' : 'هذا الشهر'}
                   </p>
                   <p className="text-2xl font-bold">{driverReports.length}</p>
                 </div>
@@ -288,7 +290,7 @@ export default function Reports() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">
-                    {language === 'en' ? 'Incidents' : 'الحوادث'}
+                    {language === 'en' ? 'Incidents' : language === 'hi' ? 'घटनाएं' : 'الحوادث'}
                   </p>
                   <p className="text-2xl font-bold">0</p>
                 </div>
@@ -301,7 +303,7 @@ export default function Reports() {
         {/* Reports List */}
         <Card>
           <CardHeader>
-            <CardTitle>{language === 'en' ? 'Recent Reports' : 'التقارير الأخيرة'}</CardTitle>
+            <CardTitle>{language === 'en' ? 'Recent Reports' : language === 'hi' ? 'हाल की रिपोर्ट' : 'التقارير الأخيرة'}</CardTitle>
           </CardHeader>
           <CardContent>
             <ScrollArea className="h-96">
@@ -356,17 +358,19 @@ export default function Reports() {
         <div>
           <h2 className="text-3xl font-bold tracking-tight flex items-center gap-2">
             <FileText className="h-8 w-8" />
-            {language === 'en' ? 'Reports & Analytics' : 'التقارير والتحليلات'}
+            {language === 'en' ? 'Reports & Analytics' : language === 'hi' ? 'रिपोर्ट और विश्लेषिकी' : 'التقارير والتحليلات'}
           </h2>
           <p className="text-muted-foreground mt-1">
             {language === 'en' 
               ? 'Generate and view comprehensive school reports'
+              : language === 'hi'
+              ? 'व्यापक स्कूल रिपोर्ट बनाएं और देखें'
               : 'إنشاء وعرض تقارير المدرسة الشاملة'}
           </p>
         </div>
         <Button className="gap-2">
           <Download className="h-4 w-4" />
-          {language === 'en' ? 'Export All' : 'تصدير الكل'}
+          {language === 'en' ? 'Export All' : language === 'hi' ? 'सभी निर्यात करें' : 'تصدير الكل'}
         </Button>
       </div>
 
@@ -382,7 +386,7 @@ export default function Reports() {
                   <p className={`text-xs mt-1 ${
                     stat.change.startsWith('+') ? 'text-success' : 'text-muted-foreground'
                   }`}>
-                    {stat.change} {language === 'en' ? 'from last month' : 'من الشهر الماضي'}
+                    {stat.change} {language === 'en' ? 'from last month' : language === 'hi' ? 'पिछले महीने से' : 'من الشهر الماضي'}
                   </p>
                 </div>
                 <stat.icon className={`h-8 w-8 ${stat.color}`} />
@@ -397,68 +401,68 @@ export default function Reports() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Filter className="h-5 w-5" />
-            {language === 'en' ? 'Filters' : 'الفلاتر'}
+            {language === 'en' ? 'Filters' : language === 'hi' ? 'फ़िल्टर' : 'الفلاتر'}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-4">
             <div>
-              <Label>{language === 'en' ? 'Search' : 'بحث'}</Label>
+              <Label>{language === 'en' ? 'Search' : language === 'hi' ? 'खोजें' : 'بحث'}</Label>
               <Input
-                placeholder={language === 'en' ? 'Search reports...' : 'البحث في التقارير...'}
+                placeholder={language === 'en' ? 'Search reports...' : language === 'hi' ? 'रिपोर्ट खोजें...' : 'البحث في التقارير...'}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
             <div>
-              <Label>{language === 'en' ? 'Type' : 'النوع'}</Label>
+              <Label>{language === 'en' ? 'Type' : language === 'hi' ? 'प्रकार' : 'النوع'}</Label>
               <Select value={selectedType} onValueChange={setSelectedType}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">
-                    {language === 'en' ? 'All Types' : 'جميع الأنواع'}
+                    {language === 'en' ? 'All Types' : language === 'hi' ? 'सभी प्रकार' : 'جميع الأنواع'}
                   </SelectItem>
                   <SelectItem value="attendance">
-                    {language === 'en' ? 'Attendance' : 'الحضور'}
+                    {language === 'en' ? 'Attendance' : language === 'hi' ? 'उपस्थिति' : 'الحضور'}
                   </SelectItem>
                   <SelectItem value="transport">
-                    {language === 'en' ? 'Transport' : 'النقل'}
+                    {language === 'en' ? 'Transport' : language === 'hi' ? 'परिवहन' : 'النقل'}
                   </SelectItem>
                   <SelectItem value="performance">
-                    {language === 'en' ? 'Performance' : 'الأداء'}
+                    {language === 'en' ? 'Performance' : language === 'hi' ? 'प्रदर्शन' : 'الأداء'}
                   </SelectItem>
                   <SelectItem value="financial">
-                    {language === 'en' ? 'Financial' : 'المالية'}
+                    {language === 'en' ? 'Financial' : language === 'hi' ? 'वित्तीय' : 'المالية'}
                   </SelectItem>
                   <SelectItem value="incident">
-                    {language === 'en' ? 'Incidents' : 'الحوادث'}
+                    {language === 'en' ? 'Incidents' : language === 'hi' ? 'घटनाएं' : 'الحوادث'}
                   </SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div>
-              <Label>{language === 'en' ? 'Date Range' : 'النطاق الزمني'}</Label>
+              <Label>{language === 'en' ? 'Date Range' : language === 'hi' ? 'तिथि सीमा' : 'النطاق الزمني'}</Label>
               <Select value={selectedDateRange} onValueChange={setSelectedDateRange}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="today">
-                    {language === 'en' ? 'Today' : 'اليوم'}
+                    {language === 'en' ? 'Today' : language === 'hi' ? 'आज' : 'اليوم'}
                   </SelectItem>
                   <SelectItem value="thisWeek">
-                    {language === 'en' ? 'This Week' : 'هذا الأسبوع'}
+                    {language === 'en' ? 'This Week' : language === 'hi' ? 'इस सप्ताह' : 'هذا الأسبوع'}
                   </SelectItem>
                   <SelectItem value="thisMonth">
-                    {language === 'en' ? 'This Month' : 'هذا الشهر'}
+                    {language === 'en' ? 'This Month' : language === 'hi' ? 'इस महीने' : 'هذا الشهر'}
                   </SelectItem>
                   <SelectItem value="lastMonth">
-                    {language === 'en' ? 'Last Month' : 'الشهر الماضي'}
+                    {language === 'en' ? 'Last Month' : language === 'hi' ? 'पिछला महीना' : 'الشهر الماضي'}
                   </SelectItem>
                   <SelectItem value="thisYear">
-                    {language === 'en' ? 'This Year' : 'هذه السنة'}
+                    {language === 'en' ? 'This Year' : language === 'hi' ? 'इस साल' : 'هذه السنة'}
                   </SelectItem>
                 </SelectContent>
               </Select>
