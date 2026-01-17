@@ -20,6 +20,7 @@ interface ScheduleItem {
 
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'];
 const DAYS_AR = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس'];
+const DAYS_HI = ['रविवार', 'सोमवार', 'मंगलवार', 'बुधवार', 'गुरुवार'];
 
 export default function StudentSchedule() {
   const { studentId } = useParams();
@@ -100,7 +101,7 @@ export default function StudentSchedule() {
         <div className="flex items-center gap-4">
           <div className="flex-1">
             <h1 className="text-xl md:text-2xl font-bold">
-              {language === 'ar' ? 'جدول الحصص' : 'Class Schedule'}
+              {language === 'ar' ? 'جدول الحصص' : language === 'hi' ? 'कक्षा का शेड्यूल' : 'Class Schedule'}
             </h1>
             <p className="text-sm text-muted-foreground">{studentName}</p>
           </div>
@@ -113,7 +114,7 @@ export default function StudentSchedule() {
             <CardHeader className="py-3 px-4">
               <CardTitle className="text-base flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-primary" />
-                {language === 'ar' ? DAYS_AR[index] : day}
+                {language === 'ar' ? DAYS_AR[index] : language === 'hi' ? DAYS_HI[index] : day}
               </CardTitle>
             </CardHeader>
             <CardContent className="p-4 pt-0 space-y-3">
@@ -141,7 +142,7 @@ export default function StudentSchedule() {
                 ))
               ) : (
                 <p className="text-sm text-muted-foreground text-center py-4">
-                  {language === 'ar' ? 'لا توجد حصص' : 'No classes scheduled'}
+                  {language === 'ar' ? 'لا توجد حصص' : language === 'hi' ? 'कोई कक्षा निर्धारित नहीं' : 'No classes scheduled'}
                 </p>
               )}
             </CardContent>

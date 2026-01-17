@@ -61,6 +61,7 @@ interface ScheduleEntry {
 
 const DAYS_EN = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const DAYS_AR = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+const DAYS_HI = ['रविवार', 'सोमवार', 'मंगलवार', 'बुधवार', 'गुरुवार', 'शुक्रवार', 'शनिवार'];
 const WORK_DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'];
 
 const DEFAULT_TIME_SLOTS = [
@@ -185,7 +186,7 @@ export default function WeeklyScheduleManager() {
     } catch (error: any) {
       console.error('Error fetching data:', error);
       toast({
-        title: language === 'en' ? 'Error' : 'خطأ',
+        title: language === 'en' ? 'Error' : language === 'hi' ? 'त्रुटि' : 'خطأ',
         description: error.message,
         variant: 'destructive',
       });
@@ -231,8 +232,8 @@ export default function WeeklyScheduleManager() {
   const handleAddSchedule = async (force = false) => {
     if (!formData.class_id || !formData.day || !formData.time || !formData.subject) {
       toast({
-        title: language === 'en' ? 'Missing Fields' : 'حقول مفقودة',
-        description: language === 'en' ? 'Please fill all required fields' : 'يرجى ملء جميع الحقول المطلوبة',
+        title: language === 'en' ? 'Missing Fields' : language === 'hi' ? 'गुम फ़ील्ड' : 'حقول مفقودة',
+        description: language === 'en' ? 'Please fill all required fields' : language === 'hi' ? 'कृपया सभी आवश्यक फ़ील्ड भरें' : 'يرجى ملء جميع الحقول المطلوبة',
         variant: 'destructive',
       });
       return;
@@ -270,8 +271,8 @@ export default function WeeklyScheduleManager() {
       if (error) throw error;
 
       toast({
-        title: language === 'en' ? 'Success' : 'نجاح',
-        description: language === 'en' ? 'Schedule entry added successfully' : 'تم إضافة الجدول بنجاح',
+        title: language === 'en' ? 'Success' : language === 'hi' ? 'सफलता' : 'نجاح',
+        description: language === 'en' ? 'Schedule entry added successfully' : language === 'hi' ? 'शेड्यूल प्रविष्टि सफलतापूर्वक जोड़ी गई' : 'تم إضافة الجدول بنجاح',
       });
 
       setIsAddDialogOpen(false);
@@ -282,7 +283,7 @@ export default function WeeklyScheduleManager() {
       fetchData();
     } catch (error: any) {
       toast({
-        title: language === 'en' ? 'Error' : 'خطأ',
+        title: language === 'en' ? 'Error' : language === 'hi' ? 'त्रुटि' : 'خطأ',
         description: error.message,
         variant: 'destructive',
       });
@@ -326,8 +327,8 @@ export default function WeeklyScheduleManager() {
       if (error) throw error;
 
       toast({
-        title: language === 'en' ? 'Success' : 'نجاح',
-        description: language === 'en' ? 'Schedule updated successfully' : 'تم تحديث الجدول بنجاح',
+        title: language === 'en' ? 'Success' : language === 'hi' ? 'सफलता' : 'نجاح',
+        description: language === 'en' ? 'Schedule updated successfully' : language === 'hi' ? 'शेड्यूल सफलतापूर्वक अपडेट किया गया' : 'تم تحديث الجدول بنجاح',
       });
 
       setIsEditDialogOpen(false);
@@ -339,7 +340,7 @@ export default function WeeklyScheduleManager() {
       fetchData();
     } catch (error: any) {
       toast({
-        title: language === 'en' ? 'Error' : 'خطأ',
+        title: language === 'en' ? 'Error' : language === 'hi' ? 'त्रुटि' : 'خطأ',
         description: error.message,
         variant: 'destructive',
       });
@@ -372,8 +373,8 @@ export default function WeeklyScheduleManager() {
       if (error) throw error;
 
       toast({
-        title: language === 'en' ? 'Success' : 'نجاح',
-        description: language === 'en' ? 'Schedule entry deleted' : 'تم حذف الجدول',
+        title: language === 'en' ? 'Success' : language === 'hi' ? 'सफलता' : 'نجاح',
+        description: language === 'en' ? 'Schedule entry deleted' : language === 'hi' ? 'शेड्यूल प्रविष्टि हटाई गई' : 'تم حذف الجدول',
       });
 
       setIsDeleteDialogOpen(false);
@@ -381,7 +382,7 @@ export default function WeeklyScheduleManager() {
       fetchData();
     } catch (error: any) {
       toast({
-        title: language === 'en' ? 'Error' : 'خطأ',
+        title: language === 'en' ? 'Error' : language === 'hi' ? 'त्रुटि' : 'خطأ',
         description: error.message,
         variant: 'destructive',
       });
@@ -454,8 +455,8 @@ export default function WeeklyScheduleManager() {
     link.click();
 
     toast({
-      title: language === 'en' ? 'Exported' : 'تم التصدير',
-      description: language === 'en' ? 'Schedule exported successfully' : 'تم تصدير الجدول بنجاح',
+      title: language === 'en' ? 'Exported' : language === 'hi' ? 'निर्यात किया गया' : 'تم التصدير',
+      description: language === 'en' ? 'Schedule exported successfully' : language === 'hi' ? 'शेड्यूल सफलतापूर्वक निर्यात किया गया' : 'تم تصدير الجدول بنجاح',
     });
   };
 
@@ -463,7 +464,7 @@ export default function WeeklyScheduleManager() {
     return (
       <div className="flex items-center justify-center h-[50vh]">
         <p className="text-muted-foreground">
-          {language === 'en' ? "You don't have permission to view this page" : 'ليس لديك إذن لعرض هذه الصفحة'}
+          {language === 'en' ? "You don't have permission to view this page" : language === 'hi' ? 'आपको इस पृष्ठ को देखने की अनुमति नहीं है' : 'ليس لديك إذن لعرض هذه الصفحة'}
         </p>
       </div>
     );
@@ -477,10 +478,10 @@ export default function WeeklyScheduleManager() {
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label>{language === 'en' ? 'Class' : 'الصف'} *</Label>
+          <Label>{language === 'en' ? 'Class' : language === 'hi' ? 'कक्षा' : 'الصف'} *</Label>
           <Select value={formData.class_id} onValueChange={(v) => setFormData(prev => ({ ...prev, class_id: v }))}>
             <SelectTrigger>
-              <SelectValue placeholder={language === 'en' ? 'Select class' : 'اختر الصف'} />
+              <SelectValue placeholder={language === 'en' ? 'Select class' : language === 'hi' ? 'कक्षा चुनें' : 'اختر الصف'} />
             </SelectTrigger>
             <SelectContent>
               {classes.map(c => (
@@ -493,15 +494,15 @@ export default function WeeklyScheduleManager() {
         </div>
 
         <div className="space-y-2">
-          <Label>{language === 'en' ? 'Day' : 'اليوم'} *</Label>
+          <Label>{language === 'en' ? 'Day' : language === 'hi' ? 'दिन' : 'اليوم'} *</Label>
           <Select value={formData.day} onValueChange={(v) => setFormData(prev => ({ ...prev, day: v }))}>
             <SelectTrigger>
-              <SelectValue placeholder={language === 'en' ? 'Select day' : 'اختر اليوم'} />
+              <SelectValue placeholder={language === 'en' ? 'Select day' : language === 'hi' ? 'दिन चुनें' : 'اختر اليوم'} />
             </SelectTrigger>
             <SelectContent>
               {WORK_DAYS.map((day) => (
                 <SelectItem key={day} value={day}>
-                  {language === 'en' ? day : DAYS_AR[DAYS_EN.indexOf(day)]}
+                  {language === 'en' ? day : language === 'hi' ? DAYS_HI[DAYS_EN.indexOf(day)] : DAYS_AR[DAYS_EN.indexOf(day)]}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -511,12 +512,12 @@ export default function WeeklyScheduleManager() {
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label>{language === 'en' ? 'Time' : 'الوقت'} *</Label>
+          <Label>{language === 'en' ? 'Time' : language === 'hi' ? 'समय' : 'الوقت'} *</Label>
           <Input
             type="text"
             value={formData.time}
             onChange={(e) => setFormData(prev => ({ ...prev, time: e.target.value }))}
-            placeholder={language === 'en' ? 'e.g., 08:30 or 08:30 - 09:15' : 'مثال: 08:30'}
+            placeholder={language === 'en' ? 'e.g., 08:30 or 08:30 - 09:15' : language === 'hi' ? 'जैसे, 08:30' : 'مثال: 08:30'}
             list="time-suggestions"
           />
           <datalist id="time-suggestions">
@@ -527,12 +528,12 @@ export default function WeeklyScheduleManager() {
         </div>
 
         <div className="space-y-2">
-          <Label>{language === 'en' ? 'Subject' : 'المادة'} *</Label>
+          <Label>{language === 'en' ? 'Subject' : language === 'hi' ? 'विषय' : 'المادة'} *</Label>
           <Input
             type="text"
             value={formData.subject}
             onChange={(e) => setFormData(prev => ({ ...prev, subject: e.target.value }))}
-            placeholder={language === 'en' ? 'Enter subject name' : 'أدخل اسم المادة'}
+            placeholder={language === 'en' ? 'Enter subject name' : language === 'hi' ? 'विषय का नाम दर्ज करें' : 'أدخل اسم المادة'}
             list="subject-suggestions"
           />
           <datalist id="subject-suggestions">
@@ -545,17 +546,17 @@ export default function WeeklyScheduleManager() {
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label>{language === 'en' ? 'Teacher' : 'المعلم'}</Label>
+          <Label>{language === 'en' ? 'Teacher' : language === 'hi' ? 'शिक्षक' : 'المعلم'}</Label>
           <Select 
             value={formData.teacher_id || 'none'} 
             onValueChange={(v) => setFormData(prev => ({ ...prev, teacher_id: v === 'none' ? '' : v }))}
           >
             <SelectTrigger>
-              <SelectValue placeholder={language === 'en' ? 'Select teacher' : 'اختر المعلم'} />
+              <SelectValue placeholder={language === 'en' ? 'Select teacher' : language === 'hi' ? 'शिक्षक चुनें' : 'اختر المعلم'} />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="none">
-                {language === 'en' ? 'No teacher assigned' : 'لم يتم تعيين معلم'}
+                {language === 'en' ? 'No teacher assigned' : language === 'hi' ? 'कोई शिक्षक नियुक्त नहीं' : 'لم يتم تعيين معلم'}
               </SelectItem>
               {teachers.map(t => (
                 <SelectItem key={t.id} value={t.id}>
@@ -569,11 +570,11 @@ export default function WeeklyScheduleManager() {
         </div>
 
         <div className="space-y-2">
-          <Label>{language === 'en' ? 'Room' : 'الغرفة'}</Label>
+          <Label>{language === 'en' ? 'Room' : language === 'hi' ? 'कमरा' : 'الغرفة'}</Label>
           <Input
             value={formData.room}
             onChange={(e) => setFormData(prev => ({ ...prev, room: e.target.value }))}
-            placeholder={language === 'en' ? 'e.g., Room 101' : 'مثال: غرفة 101'}
+            placeholder={language === 'en' ? 'e.g., Room 101' : language === 'hi' ? 'जैसे, कमरा 101' : 'مثال: غرفة 101'}
           />
         </div>
       </div>
@@ -585,8 +586,10 @@ export default function WeeklyScheduleManager() {
       <PageHeader
         title="Weekly Schedule"
         titleAr="الجدول الأسبوعي"
+        titleHi="साप्ताहिक शेड्यूल"
         subtitle="View and manage class schedules across all classes"
         subtitleAr="عرض وإدارة جداول الحصص لجميع الصفوف"
+        subtitleHi="सभी कक्षाओं के शेड्यूल देखें और प्रबंधित करें"
       />
 
       {/* Actions Bar */}
@@ -596,11 +599,11 @@ export default function WeeklyScheduleManager() {
             <Filter className="h-4 w-4 text-muted-foreground" />
             <Select value={selectedClass} onValueChange={setSelectedClass}>
               <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder={language === 'en' ? 'Filter by class' : 'تصفية حسب الصف'} />
+                <SelectValue placeholder={language === 'en' ? 'Filter by class' : language === 'hi' ? 'कक्षा द्वारा फ़िल्टर करें' : 'تصفية حسب الصف'} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">
-                  {language === 'en' ? 'All Classes' : 'جميع الصفوف'}
+                  {language === 'en' ? 'All Classes' : language === 'hi' ? 'सभी कक्षाएं' : 'جميع الصفوف'}
                 </SelectItem>
                 {classes.map(c => (
                   <SelectItem key={c.id} value={c.id}>
@@ -613,8 +616,8 @@ export default function WeeklyScheduleManager() {
 
           <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as 'grid' | 'list')}>
             <TabsList className="grid grid-cols-2 w-[160px]">
-              <TabsTrigger value="grid">{language === 'en' ? 'Grid' : 'شبكة'}</TabsTrigger>
-              <TabsTrigger value="list">{language === 'en' ? 'List' : 'قائمة'}</TabsTrigger>
+              <TabsTrigger value="grid">{language === 'en' ? 'Grid' : language === 'hi' ? 'ग्रिड' : 'شبكة'}</TabsTrigger>
+              <TabsTrigger value="list">{language === 'en' ? 'List' : language === 'hi' ? 'सूची' : 'قائمة'}</TabsTrigger>
             </TabsList>
           </Tabs>
         </div>
@@ -622,15 +625,15 @@ export default function WeeklyScheduleManager() {
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={fetchData}>
             <RefreshCw className="h-4 w-4 mr-2" />
-            {language === 'en' ? 'Refresh' : 'تحديث'}
+            {language === 'en' ? 'Refresh' : language === 'hi' ? 'रिफ्रेश' : 'تحديث'}
           </Button>
           <Button variant="outline" size="sm" onClick={exportSchedule}>
             <Download className="h-4 w-4 mr-2" />
-            {language === 'en' ? 'Export' : 'تصدير'}
+            {language === 'en' ? 'Export' : language === 'hi' ? 'निर्यात' : 'تصدير'}
           </Button>
           <Button onClick={() => setIsAddDialogOpen(true)}>
             <Plus className="h-4 w-4 mr-2" />
-            {language === 'en' ? 'Add Schedule' : 'إضافة جدول'}
+            {language === 'en' ? 'Add Schedule' : language === 'hi' ? 'शेड्यूल जोड़ें' : 'إضافة جدول'}
           </Button>
         </div>
       </div>
@@ -642,15 +645,17 @@ export default function WeeklyScheduleManager() {
             {gridTimeSlots.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
                 <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>{language === 'en' ? 'No schedules found' : 'لم يتم العثور على جداول'}</p>
+                <p>{language === 'en' ? 'No schedules found' : language === 'hi' ? 'कोई शेड्यूल नहीं मिला' : 'لم يتم العثور على جداول'}</p>
                 <p className="text-sm mt-1">
                   {language === 'en' 
                     ? 'Add schedules from the Classes page or click "Add Schedule" above' 
+                    : language === 'hi'
+                    ? 'कक्षाएं पेज से शेड्यूल जोड़ें या ऊपर "शेड्यूल जोड़ें" क्लिक करें'
                     : 'أضف جداول من صفحة الصفوف أو اضغط "إضافة جدول" أعلاه'}
                 </p>
                 <Button className="mt-4" onClick={() => setIsAddDialogOpen(true)}>
                   <Plus className="h-4 w-4 mr-2" />
-                  {language === 'en' ? 'Add First Schedule' : 'إضافة أول جدول'}
+                  {language === 'en' ? 'Add First Schedule' : language === 'hi' ? 'पहला शेड्यूल जोड़ें' : 'إضافة أول جدول'}
                 </Button>
               </div>
             ) : (
@@ -659,11 +664,11 @@ export default function WeeklyScheduleManager() {
                   <thead>
                     <tr className="bg-muted/50">
                       <th className="border p-3 text-left font-medium w-[120px]">
-                        {language === 'en' ? 'Time' : 'الوقت'}
+                        {language === 'en' ? 'Time' : language === 'hi' ? 'समय' : 'الوقت'}
                       </th>
                       {WORK_DAYS.map((day) => (
                         <th key={day} className="border p-3 text-center font-medium">
-                          {language === 'en' ? day : DAYS_AR[DAYS_EN.indexOf(day)]}
+                          {language === 'en' ? day : language === 'hi' ? DAYS_HI[DAYS_EN.indexOf(day)] : DAYS_AR[DAYS_EN.indexOf(day)]}
                         </th>
                       ))}
                     </tr>
