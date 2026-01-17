@@ -270,7 +270,7 @@ export default function Sidebar({ onItemClick }: SidebarProps = {}) {
           </Button>
           <div className="mt-2 px-2 py-1 rounded-md bg-primary/10 text-xs text-center">
             <Code className="inline h-3 w-3 mr-1" />
-            Viewing as: {sessionStorage.getItem('developerViewRole')}
+            {dir === 'rtl' ? `العرض كـ: ${sessionStorage.getItem('developerViewRole')}` : `Viewing as: ${sessionStorage.getItem('developerViewRole')}`}
           </div>
         </div>
       )}

@@ -8,6 +8,7 @@ import LogoLoader from "@/components/LogoLoader";
 import WalletTopUp from "@/components/wallet/WalletTopUp";
 import TransactionHistory from "@/components/wallet/TransactionHistory";
 import LowBalanceAlert from "@/components/wallet/LowBalanceAlert";
+import { getText } from "@/utils/i18n";
 
 export default function Wallet() {
   const { user } = useAuth();
@@ -75,15 +76,17 @@ export default function Wallet() {
     return <LogoLoader fullScreen />;
   }
 
+  const t = (en: string, ar: string, hi: string) => getText(language, en, ar, hi);
+
   return (
     <div className="space-y-6 p-4 md:p-6">
       <div>
         <h1 className="text-3xl font-bold flex items-center gap-2">
           <WalletIcon className="h-8 w-8 text-primary" />
-          {language === 'ar' ? 'المحفظة الرقمية' : 'Digital Wallet'}
+          {t('Digital Wallet', 'المحفظة الرقمية', 'डिजिटल वॉलेट')}
         </h1>
         <p className="text-muted-foreground">
-          {language === 'ar' ? 'إدارة رصيدك والمعاملات المالية' : 'Manage your balance and transactions'}
+          {t('Manage your balance and transactions', 'إدارة رصيدك والمعاملات المالية', 'अपना बैलेंस और लेनदेन प्रबंधित करें')}
         </p>
       </div>
 
@@ -95,23 +98,23 @@ export default function Wallet() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <WalletIcon className="h-5 w-5" />
-            {language === 'ar' ? 'الرصيد الحالي' : 'Current Balance'}
+            {t('Current Balance', 'الرصيد الحالي', 'वर्तमान शेष')}
           </CardTitle>
         </CardHeader>
         <CardContent>
           {balance !== null ? (
             <>
               <div className="text-5xl font-bold mb-2">
-                {balance.toFixed(2)} {language === 'ar' ? 'ريال' : 'OMR'}
+                {balance.toFixed(2)} {t('OMR', 'ريال', 'OMR')}
               </div>
               <p className="text-primary-foreground/80">
-                {language === 'ar' ? 'متاح للإنفاق' : 'Available to spend'}
+                {t('Available to spend', 'متاح للإنفاق', 'खर्च के लिए उपलब्ध')}
               </p>
             </>
           ) : (
             <div className="flex items-center gap-2">
               <Loader2 className="h-5 w-5 animate-spin" />
-              <span>{language === 'ar' ? 'جاري التحميل...' : 'Loading...'}</span>
+              <span>{t('Loading...', 'جاري التحميل...', 'लोड हो रहा है...')}</span>
             </div>
           )}
         </CardContent>
