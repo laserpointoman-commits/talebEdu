@@ -110,6 +110,12 @@ export default function Canteen() {
     }
   };
 
+  const getText = (en: string, ar: string, hi: string) => {
+    if (language === 'ar') return ar;
+    if (language === 'hi') return hi;
+    return en;
+  };
+
   // Only show canteen for students and parents
   if (effectiveRole !== 'student' && effectiveRole !== 'parent' && effectiveRole !== 'admin' && effectiveRole !== 'developer') {
     return (
@@ -117,12 +123,14 @@ export default function Canteen() {
         <Card className="p-8 text-center">
           <Package className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
           <h3 className="text-lg font-semibold mb-2">
-            {language === 'en' ? 'Access Restricted' : 'الوصول مقيد'}
+            {getText('Access Restricted', 'الوصول مقيد', 'पहुंच प्रतिबंधित')}
           </h3>
           <p className="text-muted-foreground">
-            {language === 'en' 
-              ? 'This section is available for students and parents only'
-              : 'هذا القسم متاح للطلاب والآباء فقط'}
+            {getText(
+              'This section is available for students and parents only',
+              'هذا القسم متاح للطلاب والآباء فقط',
+              'यह अनुभाग केवल छात्रों और अभिभावकों के लिए उपलब्ध है'
+            )}
           </p>
         </Card>
       </div>
@@ -139,7 +147,7 @@ export default function Canteen() {
       <div>
         <h2 className="text-3xl font-bold tracking-tight">{t('dashboard.canteen')}</h2>
         <p className="text-muted-foreground">
-          {language === 'en' ? 'School canteen menu' : 'قائمة المقصف المدرسي'}
+          {getText('School canteen menu', 'قائمة المقصف المدرسي', 'स्कूल कैंटीन मेन्यू')}
         </p>
       </div>
 
@@ -151,7 +159,7 @@ export default function Canteen() {
               <Wallet className="h-5 w-5 text-primary" />
               <div>
                 <p className="text-sm text-muted-foreground">
-                  {language === 'en' ? 'Wallet Balance' : 'رصيد المحفظة'}
+                  {getText('Wallet Balance', 'رصيد المحفظة', 'वॉलेट बैलेंस')}
                 </p>
                 <p className="text-2xl font-bold text-primary">
                   {language === 'ar' ? `${walletBalance.toFixed(2)} ر.ع` : `OMR ${walletBalance.toFixed(2)}`}
@@ -164,7 +172,7 @@ export default function Canteen() {
 
       {/* Menu Items - Read Only View */}
       <div>
-        <h3 className="text-lg font-semibold mb-4">{language === 'en' ? 'Menu Items' : 'قائمة الطعام'}</h3>
+        <h3 className="text-lg font-semibold mb-4">{getText('Menu Items', 'قائمة الطعام', 'मेन्यू आइटम')}</h3>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {menuItems.map((item) => (
             <Card key={item.id} className="hover:shadow-lg transition-shadow">
@@ -172,7 +180,7 @@ export default function Canteen() {
                 <div className="flex items-center justify-between">
                   <item.icon className="h-8 w-8 text-primary" />
                   <Badge variant={item.available ? 'default' : 'secondary'}>
-                    {item.available ? (language === 'en' ? 'Available' : 'متوفر') : (language === 'en' ? 'Sold Out' : 'نفذ')}
+                    {item.available ? getText('Available', 'متوفر', 'उपलब्ध') : getText('Sold Out', 'نفذ', 'बिक गया')}
                   </Badge>
                 </div>
               </CardHeader>
@@ -194,7 +202,7 @@ export default function Canteen() {
       {purchaseHistory.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>{language === 'en' ? 'Recent Purchases' : 'المشتريات الأخيرة'}</CardTitle>
+            <CardTitle>{getText('Recent Purchases', 'المشتريات الأخيرة', 'हाल की खरीदारी')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
@@ -207,7 +215,7 @@ export default function Canteen() {
                         {language === 'ar' ? purchase.description_ar || purchase.description : purchase.description}
                       </p>
                       <p className="text-sm text-muted-foreground">
-                        {new Date(purchase.created_at).toLocaleString(language === 'ar' ? 'ar-SA' : 'en-US')}
+                        {new Date(purchase.created_at).toLocaleString(language === 'ar' ? 'ar-SA' : language === 'hi' ? 'hi-IN' : 'en-US')}
                       </p>
                     </div>
                   </div>
