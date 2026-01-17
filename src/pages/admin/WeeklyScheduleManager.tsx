@@ -613,41 +613,46 @@ export default function WeeklyScheduleManager() {
         <style>
           @page {
             size: A4 landscape;
-            margin: 10mm;
+            margin: 5mm;
           }
           * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
           }
+          html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+          }
           body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            font-size: 9px;
-            line-height: 1.3;
+            font-size: 7px;
+            line-height: 1.2;
             color: #1a1a1a;
             background: white;
             direction: ${language === 'ar' ? 'rtl' : 'ltr'};
           }
           .header {
             text-align: center;
-            margin-bottom: 12px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #3b82f6;
+            margin-bottom: 6px;
+            padding-bottom: 4px;
+            border-bottom: 1px solid #3b82f6;
           }
           .header h1 {
-            font-size: 18px;
+            font-size: 14px;
             font-weight: 700;
             color: #1e40af;
-            margin-bottom: 4px;
+            margin-bottom: 2px;
           }
           .header .subtitle {
-            font-size: 12px;
+            font-size: 10px;
             color: #6b7280;
           }
           .header .date {
-            font-size: 10px;
+            font-size: 8px;
             color: #9ca3af;
-            margin-top: 4px;
+            margin-top: 2px;
           }
           table {
             width: 100%;
@@ -656,65 +661,86 @@ export default function WeeklyScheduleManager() {
           }
           th, td {
             border: 1px solid #d1d5db;
-            padding: 4px 3px;
+            padding: 2px 1px;
             text-align: center;
             vertical-align: top;
+            overflow: hidden;
           }
           th {
             background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
             color: white;
             font-weight: 600;
-            font-size: 10px;
-            padding: 8px 4px;
+            font-size: 8px;
+            padding: 4px 2px;
           }
           th:first-child {
-            width: 60px;
+            width: 50px;
           }
           .time-cell {
             background: #f8fafc;
             font-weight: 600;
-            font-size: 8px;
+            font-size: 6px;
             color: #475569;
           }
           .schedule-item {
             background: #eff6ff;
-            border-radius: 4px;
-            padding: 3px;
-            margin: 1px;
+            border-radius: 2px;
+            padding: 1px;
+            margin: 0;
             text-align: ${language === 'ar' ? 'right' : 'left'};
           }
           .schedule-item .subject {
             font-weight: 600;
             color: #1e40af;
-            font-size: 8px;
-            margin-bottom: 1px;
+            font-size: 6px;
+            margin-bottom: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
           }
           .schedule-item .class-name {
-            font-size: 7px;
+            font-size: 5px;
             color: #3b82f6;
-            margin-bottom: 1px;
+            margin-bottom: 0;
           }
           .schedule-item .teacher {
-            font-size: 7px;
+            font-size: 5px;
             color: #6b7280;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
           }
           .schedule-item .room {
-            font-size: 6px;
+            font-size: 5px;
             color: #9ca3af;
           }
           .empty-cell {
             background: #fafafa;
           }
           .footer {
-            margin-top: 12px;
+            margin-top: 4px;
             text-align: center;
-            font-size: 8px;
+            font-size: 6px;
             color: #9ca3af;
-            padding-top: 8px;
+            padding-top: 4px;
             border-top: 1px solid #e5e7eb;
           }
           @media print {
-            body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            html, body {
+              width: 297mm;
+              height: 210mm;
+              overflow: hidden;
+            }
+            body { 
+              -webkit-print-color-adjust: exact; 
+              print-color-adjust: exact; 
+            }
+            table {
+              page-break-inside: avoid;
+            }
+            tr {
+              page-break-inside: avoid;
+            }
           }
         </style>
       </head>
