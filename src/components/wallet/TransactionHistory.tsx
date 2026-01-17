@@ -105,13 +105,13 @@ export default function TransactionHistory() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <History className="h-5 w-5" />
-          {language === 'ar' ? 'سجل المعاملات' : 'Transaction History'}
+          {language === 'ar' ? 'سجل المعاملات' : language === 'hi' ? 'लेनदेन इतिहास' : 'Transaction History'}
         </CardTitle>
       </CardHeader>
       <CardContent>
         {transactions.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
-            {language === 'ar' ? 'لا توجد معاملات بعد' : 'No transactions yet'}
+            {language === 'ar' ? 'لا توجد معاملات بعد' : language === 'hi' ? 'अभी तक कोई लेनदेन नहीं' : 'No transactions yet'}
           </div>
         ) : (
           <ScrollArea className="h-[400px] pr-4">
@@ -151,7 +151,7 @@ export default function TransactionHistory() {
                       {Math.abs(transaction.amount).toFixed(2)} OMR
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {language === 'ar' ? 'الرصيد:' : 'Balance:'} {transaction.balance_after.toFixed(2)}
+                      {language === 'ar' ? 'الرصيد:' : language === 'hi' ? 'शेष:' : 'Balance:'} {transaction.balance_after.toFixed(2)}
                     </p>
                   </div>
                 </div>
