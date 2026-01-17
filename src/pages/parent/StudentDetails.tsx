@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { motion } from 'framer-motion';
 import { 
   Calendar,
   GraduationCap,
@@ -288,27 +289,40 @@ export default function StudentDetails() {
         </CardContent>
       </Card>
 
-      {/* Feature Cards Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-        {featureCards.map((feature) => (
-          <Card 
-            key={feature.id}
-            className="cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02]"
-            onClick={() => navigate(feature.href)}
-          >
-            <CardContent className="p-6">
-              <div className={`h-12 w-12 rounded-lg ${feature.color} flex items-center justify-center mb-4`}>
-                <feature.icon className="h-6 w-6 text-white" />
+      {/* Feature Cards Grid - Floating Icon Design */}
+      <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+        {featureCards.map((feature, index) => {
+          const iconColors = [
+            'text-blue-500',
+            'text-purple-500',
+            'text-red-500',
+            'text-green-500',
+            'text-orange-500',
+            'text-teal-500',
+            'text-yellow-500',
+            'text-pink-500',
+            'text-indigo-500',
+          ];
+          return (
+            <motion.button
+              key={feature.id}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.03, duration: 0.2 }}
+              whileHover={{ y: -3 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => navigate(feature.href)}
+              className="flex flex-col items-center gap-2 p-3 cursor-pointer group"
+            >
+              <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-card shadow-lg shadow-foreground/5 group-hover:shadow-xl group-hover:shadow-foreground/10 transition-shadow flex items-center justify-center">
+                <feature.icon className={`h-7 w-7 md:h-8 md:w-8 ${iconColors[index % iconColors.length]}`} />
               </div>
-              <h3 className="font-semibold mb-1">
+              <span className="text-xs text-center font-medium text-muted-foreground group-hover:text-foreground transition-colors line-clamp-2">
                 {language === 'ar' ? feature.titleAr : feature.titleEn}
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                {language === 'ar' ? feature.descAr : feature.descEn}
-              </p>
-            </CardContent>
-          </Card>
-        ))}
+              </span>
+            </motion.button>
+          );
+        })}
       </div>
     </div>
   </div>

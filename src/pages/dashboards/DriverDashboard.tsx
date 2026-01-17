@@ -4,6 +4,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { motion } from 'framer-motion';
+import { cn } from '@/lib/utils';
 import NFCScanner from "@/components/nfc/NFCScanner";
 import { Bus, MapPin, Users, AlertTriangle, CheckCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -147,43 +149,46 @@ export default function DriverDashboard() {
       {/* Quick Actions - At the top */}
       <QuickActions />
 
-      {/* Bus Status */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {language === 'ar' ? 'رقم الحافلة' : 'Bus Number'}
-            </CardTitle>
-            <Bus className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{busData?.bus_number || 'N/A'}</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {language === 'ar' ? 'الطلاب على متن الحافلة' : 'Students On Board'}
-            </CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{boardedCount} / {students.length}</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {language === 'ar' ? 'التوقف التالي' : 'Next Stop'}
-            </CardTitle>
-            <MapPin className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{nextStop || 'N/A'}</div>
-          </CardContent>
-        </Card>
+      {/* Bus Status - Floating Icon Design */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {[
+          {
+            title: language === 'ar' ? 'رقم الحافلة' : 'Bus Number',
+            value: busData?.bus_number || 'N/A',
+            icon: Bus,
+            iconColor: 'text-primary',
+          },
+          {
+            title: language === 'ar' ? 'الطلاب على متن الحافلة' : 'Students On Board',
+            value: `${boardedCount} / ${students.length}`,
+            icon: Users,
+            iconColor: 'text-emerald-500',
+          },
+          {
+            title: language === 'ar' ? 'التوقف التالي' : 'Next Stop',
+            value: nextStop || 'N/A',
+            icon: MapPin,
+            iconColor: 'text-amber-500',
+          },
+        ].map((stat, index) => (
+          <motion.div
+            key={stat.title}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.05, duration: 0.2 }}
+            className="bg-card rounded-xl p-4 hover:shadow-lg transition-shadow"
+          >
+            <div className="flex items-start gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-background shadow-lg shadow-foreground/5 flex items-center justify-center shrink-0">
+                <stat.icon className={cn("h-6 w-6", stat.iconColor)} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-muted-foreground">{stat.title}</p>
+                <p className="text-xl font-bold mt-0.5">{stat.value}</p>
+              </div>
+            </div>
+          </motion.div>
+        ))}
       </div>
 
       {/* NFC Scanner for Bus Boarding */}

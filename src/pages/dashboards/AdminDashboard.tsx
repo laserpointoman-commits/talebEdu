@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
   Users, 
   GraduationCap, 
@@ -16,6 +15,8 @@ import { Badge } from "@/components/ui/badge";
 import { SystemMonitor } from "@/components/admin/SystemMonitor";
 import { ActivityFeed } from "@/components/admin/ActivityFeed";
 import { QuickActions } from "@/components/admin/QuickActions";
+import { motion } from 'framer-motion';
+import { cn } from '@/lib/utils';
 
 export default function AdminDashboard() {
   const { language } = useLanguage();
@@ -125,83 +126,78 @@ export default function AdminDashboard() {
       {/* Quick Actions - At the top */}
       <QuickActions />
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="hover:shadow-lg transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {language === 'en' ? 'Total Students' : 'إجمالي الطلاب'}
-            </CardTitle>
-            <GraduationCap className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalStudents}</div>
-            <div className="flex items-center text-xs text-muted-foreground mt-1">
-              {stats.studentsChange >= 0 ? (
-                <ArrowUpRight className="h-3 w-3 text-green-500 mr-1" />
-              ) : (
-                <ArrowDownRight className="h-3 w-3 text-red-500 mr-1" />
-              )}
-              <span className={stats.studentsChange >= 0 ? 'text-green-600' : 'text-red-600'}>
-                {Math.abs(stats.studentsChange)}
-              </span>
-              <span className="ml-1">{language === 'en' ? 'this month' : 'هذا الشهر'}</span>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Stats Grid - Floating Icon Design */}
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+        {[
+          {
+            title: language === 'en' ? 'Total Students' : 'إجمالي الطلاب',
+            value: stats.totalStudents,
+            change: stats.studentsChange,
+            icon: GraduationCap,
+            iconColor: 'text-primary',
+          },
+          {
+            title: language === 'en' ? 'Total Teachers' : 'إجمالي المعلمين',
+            value: stats.totalTeachers,
+            change: stats.teachersChange,
+            icon: Users,
+            iconColor: 'text-emerald-500',
+          },
+          {
+            title: language === 'en' ? 'Active Buses' : 'الحافلات النشطة',
+            value: stats.activeBuses,
+            subtitle: language === 'en' ? 'Operational' : 'قيد التشغيل',
+            icon: Bus,
+            iconColor: 'text-amber-500',
+          },
+          {
+            title: language === 'en' ? 'Total Wallet Balance' : 'إجمالي رصيد المحفظة',
+            value: `${stats.totalWalletBalance.toFixed(2)} OMR`,
+            subtitle: language === 'en' ? 'Combined balance' : 'الرصيد الإجمالي',
+            icon: Wallet,
+            iconColor: 'text-violet-500',
+          },
+        ].map((stat, index) => (
+          <motion.div
+            key={stat.title}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.05, duration: 0.2 }}
+            className="bg-card rounded-xl p-4 hover:shadow-lg transition-shadow"
+          >
+            <div className="flex items-start gap-3">
+              {/* Floating Icon */}
+              <div className="w-12 h-12 rounded-2xl bg-background shadow-lg shadow-foreground/5 flex items-center justify-center shrink-0">
+                <stat.icon className={cn("h-6 w-6", stat.iconColor)} />
+              </div>
 
-        <Card className="hover:shadow-lg transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {language === 'en' ? 'Total Teachers' : 'إجمالي المعلمين'}
-            </CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalTeachers}</div>
-            <div className="flex items-center text-xs text-muted-foreground mt-1">
-              {stats.teachersChange >= 0 ? (
-                <ArrowUpRight className="h-3 w-3 text-green-500 mr-1" />
-              ) : (
-                <ArrowDownRight className="h-3 w-3 text-red-500 mr-1" />
-              )}
-              <span className={stats.teachersChange >= 0 ? 'text-green-600' : 'text-red-600'}>
-                {Math.abs(stats.teachersChange)}
-              </span>
-              <span className="ml-1">{language === 'en' ? 'this month' : 'هذا الشهر'}</span>
+              {/* Content */}
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-muted-foreground truncate">{stat.title}</p>
+                <p className="text-xl font-bold mt-0.5">{stat.value}</p>
+                {stat.change !== undefined && (
+                  <div className="flex items-center text-xs text-muted-foreground mt-1">
+                    {stat.change >= 0 ? (
+                      <ArrowUpRight className="h-3 w-3 text-green-500 mr-1" />
+                    ) : (
+                      <ArrowDownRight className="h-3 w-3 text-red-500 mr-1" />
+                    )}
+                    <span className={stat.change >= 0 ? 'text-green-600' : 'text-red-600'}>
+                      {Math.abs(stat.change)}
+                    </span>
+                    <span className="ml-1">{language === 'en' ? 'this month' : 'هذا الشهر'}</span>
+                  </div>
+                )}
+                {stat.subtitle && (
+                  <div className="flex items-center text-xs mt-1">
+                    <TrendingUp className="h-3 w-3 text-green-500 mr-1" />
+                    <span className="text-green-600">{stat.subtitle}</span>
+                  </div>
+                )}
+              </div>
             </div>
-          </CardContent>
-        </Card>
-
-        <Card className="hover:shadow-lg transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {language === 'en' ? 'Active Buses' : 'الحافلات النشطة'}
-            </CardTitle>
-            <Bus className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.activeBuses}</div>
-            <p className="text-xs text-green-600 mt-1">
-              {language === 'en' ? 'Operational' : 'قيد التشغيل'}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="hover:shadow-lg transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {language === 'en' ? 'Total Wallet Balance' : 'إجمالي رصيد المحفظة'}
-            </CardTitle>
-            <Wallet className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalWalletBalance.toFixed(2)} OMR</div>
-            <div className="flex items-center text-xs mt-1">
-              <TrendingUp className="h-3 w-3 text-green-500 mr-1" />
-              <span className="text-green-600">{language === 'en' ? 'Combined balance' : 'الرصيد الإجمالي'}</span>
-            </div>
-          </CardContent>
-        </Card>
+          </motion.div>
+        ))}
       </div>
 
       {/* System Monitor and Activity Feed */}
