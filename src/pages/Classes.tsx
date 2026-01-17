@@ -16,7 +16,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import { PageHeader } from '@/components/ui/page-header';
-import { BookOpen, Users, Clock, Calendar, Plus, Trash2, GraduationCap, MapPin, Search, UserPlus, Eye, User } from 'lucide-react';
+import { BookOpen, Users, Clock, Calendar, Plus, Trash2, GraduationCap, MapPin, Search, UserPlus, Eye, User, Filter } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 interface Student {
@@ -93,6 +93,8 @@ export default function Classes() {
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [studentSearchTerm, setStudentSearchTerm] = useState('');
   const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
+  const [filterGrade, setFilterGrade] = useState<string>('all');
+  const [filterSection, setFilterSection] = useState<string>('all');
   
   const [newClass, setNewClass] = useState({
     name: '',
@@ -390,6 +392,17 @@ export default function Classes() {
   const unassignedStudents = filteredStudents.filter(s => !selectedStudentIds.includes(s.id) && !s.class_id);
   const otherClassStudents = filteredStudents.filter(s => !selectedStudentIds.includes(s.id) && s.class_id && s.class_id !== selectedClass?.id);
 
+  // Get unique grades and sections for filtering
+  const uniqueGrades = [...new Set(classes.map(c => c.grade))].sort();
+  const uniqueSections = [...new Set(classes.map(c => c.section))].sort();
+
+  // Filter classes based on selected filters
+  const filteredClasses = classes.filter(c => {
+    const matchesGrade = filterGrade === 'all' || c.grade === filterGrade;
+    const matchesSection = filterSection === 'all' || c.section === filterSection;
+    return matchesGrade && matchesSection;
+  });
+
   if (effectiveRole !== 'admin' && effectiveRole !== 'teacher' && effectiveRole !== 'developer') {
     return (
       <div className="flex items-center justify-center h-[50vh]">
@@ -413,17 +426,65 @@ export default function Classes() {
         subtitleHi="कक्षाओं का प्रबंधन करें और छात्रों को नियुक्त करें"
       />
 
-      {effectiveRole === 'admin' && (
-        <div className="flex justify-end">
+      {/* Filters */}
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4 text-muted-foreground" />
+            <Select value={filterGrade} onValueChange={setFilterGrade}>
+              <SelectTrigger className="w-[140px]">
+                <SelectValue placeholder={language === 'en' ? 'Grade' : language === 'hi' ? 'ग्रेड' : 'الصف'} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">
+                  {language === 'en' ? 'All Grades' : language === 'hi' ? 'सभी ग्रेड' : 'جميع الصفوف'}
+                </SelectItem>
+                {uniqueGrades.map(grade => (
+                  <SelectItem key={grade} value={grade}>
+                    {language === 'en' ? `Grade ${grade}` : language === 'hi' ? `ग्रेड ${grade}` : `الصف ${grade}`}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <Select value={filterSection} onValueChange={setFilterSection}>
+            <SelectTrigger className="w-[140px]">
+              <SelectValue placeholder={language === 'en' ? 'Section' : language === 'hi' ? 'सेक्शन' : 'الشعبة'} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">
+                {language === 'en' ? 'All Sections' : language === 'hi' ? 'सभी सेक्शन' : 'جميع الشعب'}
+              </SelectItem>
+              {uniqueSections.map(section => (
+                <SelectItem key={section} value={section}>
+                  {language === 'en' ? `Section ${section}` : language === 'hi' ? `सेक्शन ${section}` : `الشعبة ${section}`}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {(filterGrade !== 'all' || filterSection !== 'all') && (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => { setFilterGrade('all'); setFilterSection('all'); }}
+            >
+              {language === 'en' ? 'Clear' : language === 'hi' ? 'साफ़ करें' : 'مسح'}
+            </Button>
+          )}
+        </div>
+
+        {effectiveRole === 'admin' && (
           <Button onClick={() => setIsCreateDialogOpen(true)}>
             <Plus className="h-4 w-4 mr-2" />
             {language === 'en' ? 'Add Class' : language === 'hi' ? 'कक्षा जोड़ें' : 'إضافة صف'}
           </Button>
-        </div>
-      )}
+        )}
+      </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {classes.map((classInfo) => (
+        {filteredClasses.map((classInfo) => (
           <Card key={classInfo.id} className="hover:shadow-lg transition-shadow">
             <CardHeader className="pb-3">
               <div className="flex justify-between items-start">
