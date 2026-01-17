@@ -5,7 +5,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
 
-mapboxgl.accessToken = 'pk.eyJ1IjoidGFsZWJlZHUiLCJhIjoiY200OHU1eDlwMDFhZzJscXR5NDU3MjR2ciJ9.EO9KTHfH6TYWHgMK_gFmQg';
+mapboxgl.accessToken = '';
+// Using OpenStreetMap raster tiles for the base map (no Mapbox token required).
 
 interface BusMapProps {
   busId: string;
@@ -33,9 +34,26 @@ export default function BusMap({ busId, studentLocation }: BusMapProps) {
     let handleWindowResize: (() => void) | null = null;
 
     try {
+      const osmRasterStyle: any = {
+        version: 8,
+        sources: {
+          osm: {
+            type: 'raster',
+            tiles: [
+              'https://a.tile.openstreetmap.org/{z}/{x}/{y}.png',
+              'https://b.tile.openstreetmap.org/{z}/{x}/{y}.png',
+              'https://c.tile.openstreetmap.org/{z}/{x}/{y}.png',
+            ],
+            tileSize: 256,
+            attribution: '© OpenStreetMap contributors',
+          },
+        },
+        layers: [{ id: 'osm', type: 'raster', source: 'osm' }],
+      };
+
       m = new mapboxgl.Map({
         container: mapContainer.current,
-        style: 'mapbox://styles/mapbox/streets-v12',
+        style: osmRasterStyle,
         center: [58.4059, 23.588], // Oman center
         zoom: 12,
       });
@@ -124,10 +142,9 @@ export default function BusMap({ busId, studentLocation }: BusMapProps) {
         el.style.width = '30px';
         el.style.height = '30px';
         el.style.borderRadius = '50%';
-        el.style.backgroundColor = '#10b981';
-        el.style.border = '3px solid white';
-        el.style.boxShadow = '0 2px 4px rgba(0,0,0,0.3)';
-
+        el.style.backgroundColor = 'hsl(var(--success))';
+        el.style.border = '3px solid hsl(var(--background))';
+        el.style.boxShadow = '0 2px 6px hsl(var(--foreground) / 0.25)';
         studentMarker.current = new mapboxgl.Marker(el)
           .setLngLat([studentLocation.lng, studentLocation.lat])
           .setPopup(new mapboxgl.Popup().setText(language === 'ar' ? 'موقع الطالب' : 'Student Location'))
@@ -174,16 +191,16 @@ export default function BusMap({ busId, studentLocation }: BusMapProps) {
       el.style.width = '50px';
       el.style.height = '50px';
       el.style.borderRadius = '50%';
-      el.style.backgroundColor = '#3b82f6';
-      el.style.border = '4px solid white';
-      el.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.5)';
+      el.style.backgroundColor = 'hsl(var(--primary))';
+      el.style.border = '4px solid hsl(var(--background))';
+      el.style.boxShadow = '0 6px 18px hsl(var(--primary) / 0.35)';
       el.style.display = 'flex';
       el.style.alignItems = 'center';
       el.style.justifyContent = 'center';
+      el.style.color = 'hsl(var(--primary-foreground))';
       el.style.animation = 'bounce 1s ease-in-out infinite';
       el.innerHTML =
-        '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 12h18"/><path d="M8 6V4"/><path d="M16 6V4"/><circle cx="7" cy="17" r="1"/><circle cx="17" cy="17" r="1"/></svg>';
-
+        '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 12h18"/><path d="M8 6V4"/><path d="M16 6V4"/><circle cx="7" cy="17" r="1"/><circle cx="17" cy="17" r="1"/></svg>';
       // Add bounce animation styles (once)
       if (!document.getElementById('bus-marker-bounce-style')) {
         const style = document.createElement('style');
