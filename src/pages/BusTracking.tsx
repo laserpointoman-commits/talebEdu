@@ -76,10 +76,6 @@ export default function BusTracking() {
     }
   };
 
-  if (loading) {
-    return <LogoLoader fullScreen />;
-  }
-
   // Admin and driver roles can view all buses
   const isAdminView = effectiveRole === 'admin' || effectiveRole === 'driver' || effectiveRole === 'developer';
 
@@ -87,6 +83,10 @@ export default function BusTracking() {
     () => buses.map((b) => ({ id: b.id, bus_number: b.bus_number, status: b.status })),
     [buses]
   );
+
+  if (loading) {
+    return <LogoLoader fullScreen />;
+  }
 
   return (
     <div className="space-y-6 p-4 md:p-6">
