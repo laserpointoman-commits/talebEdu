@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
 
-mapboxgl.accessToken = 'pk.eyJ1IjoibG92YWJsZSIsImEiOiJjbTNvOHQ4bXQweWw0MmpzYm13eXN2OXNjIn0.HeLw4TQRBqMbTnlMjo4Bbw';
+mapboxgl.accessToken = 'pk.eyJ1IjoidGFsZWJlZHUiLCJhIjoiY200OHU1eDlwMDFhZzJscXR5NDU3MjR2ciJ9.EO9KTHfH6TYWHgMK_gFmQg';
 
 interface BusMapProps {
   busId: string;
