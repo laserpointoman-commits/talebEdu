@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,7 +22,8 @@ import {
   Loader2,
   ShieldAlert,
   X,
-  GraduationCap
+  GraduationCap,
+  MapPin
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -83,8 +84,80 @@ export default function SupervisorDashboard() {
   const [showAbsentConfirm, setShowAbsentConfirm] = useState(false);
   const [selectedStudentForAbsent, setSelectedStudentForAbsent] = useState<StudentStatus | null>(null);
   const [scanCount, setScanCount] = useState(0);
+  const [isTrackingLocation, setIsTrackingLocation] = useState(false);
   const scanningRef = useRef(false);
   const shouldContinueScanning = useRef(false);
+  const locationWatchId = useRef<number | null>(null);
+
+  // Send GPS location to backend
+  const sendLocationUpdate = useCallback(async (position: GeolocationPosition) => {
+    if (!busData?.id || !isTripActive) return;
+    
+    try {
+      const { error } = await supabase.functions.invoke('update-bus-location', {
+        body: {
+          busId: busData.id,
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          speed: position.coords.speed || 0,
+          heading: position.coords.heading || 0,
+        }
+      });
+      
+      if (error) {
+        console.error('Error sending location:', error);
+      } else {
+        console.log('Location sent:', position.coords.latitude, position.coords.longitude);
+      }
+    } catch (err) {
+      console.error('Failed to send location update:', err);
+    }
+  }, [busData?.id, isTripActive]);
+
+  // Start GPS tracking when trip is active
+  const startLocationTracking = useCallback(() => {
+    if (locationWatchId.current !== null) return;
+    
+    if (!navigator.geolocation) {
+      toast.error(language === 'ar' ? 'تتبع الموقع غير مدعوم' : 'Location tracking not supported');
+      return;
+    }
+
+    setIsTrackingLocation(true);
+    
+    // Get initial position immediately
+    navigator.geolocation.getCurrentPosition(
+      (pos) => sendLocationUpdate(pos),
+      (err) => console.error('Initial position error:', err),
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+
+    // Watch position continuously
+    locationWatchId.current = navigator.geolocation.watchPosition(
+      (pos) => sendLocationUpdate(pos),
+      (err) => {
+        console.error('Location watch error:', err);
+        toast.error(language === 'ar' ? 'خطأ في تتبع الموقع' : 'Location tracking error');
+      },
+      { 
+        enableHighAccuracy: true, 
+        timeout: 30000,
+        maximumAge: 5000  // Send updates every 5 seconds minimum
+      }
+    );
+    
+    console.log('Location tracking started');
+  }, [sendLocationUpdate, language]);
+
+  // Stop GPS tracking
+  const stopLocationTracking = useCallback(() => {
+    if (locationWatchId.current !== null) {
+      navigator.geolocation.clearWatch(locationWatchId.current);
+      locationWatchId.current = null;
+      setIsTrackingLocation(false);
+      console.log('Location tracking stopped');
+    }
+  }, []);
 
   useEffect(() => {
     if (user) {
@@ -94,9 +167,19 @@ export default function SupervisorDashboard() {
         cleanup();
         shouldContinueScanning.current = false;
         scanningRef.current = false;
+        stopLocationTracking();
       };
     }
-  }, [user]);
+  }, [user, stopLocationTracking]);
+
+  // Start/stop location tracking based on trip status
+  useEffect(() => {
+    if (isTripActive && busData?.id) {
+      startLocationTracking();
+    } else {
+      stopLocationTracking();
+    }
+  }, [isTripActive, busData?.id, startLocationTracking, stopLocationTracking]);
 
   const loadSupervisorData = async () => {
     try {
@@ -490,18 +573,26 @@ export default function SupervisorDashboard() {
               <div>
                 <h1 className="font-bold">{busData.bus_number}</h1>
                 {isTripActive && (
-                  <Badge 
-                    variant="outline"
-                    className={`text-[10px] ${
-                      tripType === 'pickup' 
-                        ? 'bg-blue-500/10 text-blue-600 border-blue-300' 
-                        : 'bg-orange-500/10 text-orange-600 border-orange-300'
-                    }`}
-                  >
-                    {tripType === 'pickup' 
-                      ? (language === 'ar' ? '🏫 للمدرسة' : '🏫 To School')
-                      : (language === 'ar' ? '🏠 للمنزل' : '🏠 To Home')}
-                  </Badge>
+                  <div className="flex items-center gap-1.5">
+                    <Badge 
+                      variant="outline"
+                      className={`text-[10px] ${
+                        tripType === 'pickup' 
+                          ? 'bg-blue-500/10 text-blue-600 border-blue-300' 
+                          : 'bg-orange-500/10 text-orange-600 border-orange-300'
+                      }`}
+                    >
+                      {tripType === 'pickup' 
+                        ? (language === 'ar' ? '🏫 للمدرسة' : '🏫 To School')
+                        : (language === 'ar' ? '🏠 للمنزل' : '🏠 To Home')}
+                    </Badge>
+                    {isTrackingLocation && (
+                      <Badge variant="outline" className="text-[10px] bg-green-500/10 text-green-600 border-green-300">
+                        <MapPin className="h-2.5 w-2.5 mr-0.5 animate-pulse" />
+                        GPS
+                      </Badge>
+                    )}
+                  </div>
                 )}
               </div>
             </div>
