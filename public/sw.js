@@ -1,4 +1,4 @@
-const CACHE_NAME = 'talebedu-v1';
+const CACHE_NAME = 'talebedu-v2';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -12,6 +12,13 @@ self.addEventListener('install', (event) => {
       .then((cache) => cache.addAll(urlsToCache))
   );
   self.skipWaiting();
+});
+
+// Allow the page to trigger immediate activation on updates
+self.addEventListener('message', (event) => {
+  if (event?.data?.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
 
 // Activate event - clean old caches

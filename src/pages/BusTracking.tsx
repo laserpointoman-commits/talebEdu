@@ -11,6 +11,7 @@ import BusMap from "@/components/tracking/BusMap";
 import AllBusesMap from "@/components/tracking/AllBusesMap";
 import BoardingHistory from "@/components/tracking/BoardingHistory";
 import BusInfoItem from "@/components/tracking/BusInfoItem";
+import { useActiveBusTrips } from "@/hooks/use-active-bus-trips";
 
 export default function BusTracking() {
   const { user, profile } = useAuth();
@@ -19,6 +20,7 @@ export default function BusTracking() {
   const [children, setChildren] = useState<any[]>([]);
   const [studentData, setStudentData] = useState<any>(null);
   const [buses, setBuses] = useState<any[]>([]);
+  const { activeBusIds: activeTripBusIds } = useActiveBusTrips(buses.map((b) => b.id));
 
   // Support developer role testing
   const effectiveRole = profile?.role === 'developer'
@@ -131,10 +133,12 @@ export default function BusTracking() {
                               {language === 'ar' ? 'حافلة' : 'Bus'} {bus.bus_number}
                             </span>
                             <Badge 
-                              variant={bus.status === 'active' ? 'default' : 'secondary'}
+                              variant={activeTripBusIds.has(bus.id) ? 'default' : 'secondary'}
                               className="capitalize text-xs"
                             >
-                              {bus.status || 'inactive'}
+                              {activeTripBusIds.has(bus.id)
+                                ? (language === 'ar' ? '🟢 رحلة نشطة' : '🟢 Active Trip')
+                                : (language === 'ar' ? '🔴 لا توجد رحلة' : '🔴 No Active Trip')}
                             </Badge>
                           </CardTitle>
                         </CardHeader>
