@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import mapboxgl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { supabase } from '@/integrations/supabase/client';
@@ -42,6 +42,7 @@ export default function AllBusesMap({ buses }: AllBusesMapProps) {
   const map = useRef<mapboxgl.Map | null>(null);
   const markers = useRef<Map<string, mapboxgl.Marker>>(new Map());
   const [busLocations, setBusLocations] = useState<Map<string, BusLocationData>>(new Map());
+  const [activeBusIds, setActiveBusIds] = useState<Set<string>>(new Set());
   const [mapStatus, setMapStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   const [mapError, setMapError] = useState<string | null>(null);
   const [selectedBus, setSelectedBus] = useState<BusDetails | null>(null);
@@ -134,9 +135,10 @@ export default function AllBusesMap({ buses }: AllBusesMapProps) {
     }
   }, []);
 
-  // Load all bus locations
+  // Load all bus locations + active trips
   useEffect(() => {
     loadAllBusLocations();
+    loadActiveTrips();
   }, [buses]);
 
   // Subscribe to real-time updates for all buses
