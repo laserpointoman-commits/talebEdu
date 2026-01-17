@@ -227,21 +227,30 @@ export default function BusMap({ busId, studentLocation }: BusMapProps) {
       pointer.style.marginTop = '-2px';
       pointer.style.filter = 'drop-shadow(0 2px 4px hsl(var(--foreground) / 0.25))';
 
-      // Precise dot = exact GPS coordinate (bottom center of marker)
+      // Zero-sized anchor so the dot center is EXACTLY the GPS coordinate
+      const anchorPoint = document.createElement('div');
+      anchorPoint.style.position = 'relative';
+      anchorPoint.style.width = '0';
+      anchorPoint.style.height = '0';
+
       const dot = document.createElement('div');
+      dot.style.position = 'absolute';
+      dot.style.left = '-6px';
+      dot.style.top = '-6px';
       dot.style.width = '12px';
       dot.style.height = '12px';
       dot.style.borderRadius = '9999px';
       dot.style.background = 'hsl(var(--background))';
       dot.style.border = '2px solid hsl(var(--primary))';
       dot.style.boxShadow = '0 1px 3px hsl(var(--foreground) / 0.35)';
-      dot.style.marginTop = '-2px';
+
+      anchorPoint.appendChild(dot);
 
       container.appendChild(pin);
       container.appendChild(pointer);
-      container.appendChild(dot);
+      container.appendChild(anchorPoint);
 
-      busMarker.current = new mapboxgl.Marker({ element: container, anchor: 'bottom', offset: [0, 6] })
+      busMarker.current = new mapboxgl.Marker({ element: container, anchor: 'bottom' })
         .setLngLat([location.longitude, location.latitude])
         .setPopup(new mapboxgl.Popup().setText(language === 'ar' ? 'موقع الحافلة' : 'Bus Location'))
         .addTo(map.current);
