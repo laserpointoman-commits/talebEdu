@@ -9,9 +9,9 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 const languages = [
-  { code: 'en', label: 'English', nativeLabel: 'English' },
-  { code: 'ar', label: 'Arabic', nativeLabel: 'العربية' },
-  { code: 'hi', label: 'Hindi', nativeLabel: 'हिन्दी' },
+  { code: 'en', label: 'English', nativeLabel: 'English', flag: '🇬🇧' },
+  { code: 'ar', label: 'Arabic', nativeLabel: 'العربية', flag: '🇸🇦' },
+  { code: 'hi', label: 'Hindi', nativeLabel: 'हिन्दी', flag: '🇮🇳' },
 ] as const;
 
 export function LanguageSwitcher() {
@@ -27,20 +27,23 @@ export function LanguageSwitcher() {
           size="sm"
           className="gap-2"
         >
-          <Globe className="h-4 w-4" />
+          <span className="text-base">{currentLanguage?.flag}</span>
           <span className="hidden sm:inline">
             {currentLanguage?.nativeLabel}
           </span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="min-w-[140px]">
+      <DropdownMenuContent align="end" className="min-w-[160px]">
         {languages.map((lang) => (
           <DropdownMenuItem
             key={lang.code}
             onClick={() => setLanguage(lang.code)}
-            className="flex items-center justify-between cursor-pointer"
+            className="flex items-center justify-between cursor-pointer gap-3"
           >
-            <span>{lang.nativeLabel}</span>
+            <div className="flex items-center gap-2">
+              <span className="text-base">{lang.flag}</span>
+              <span>{lang.nativeLabel}</span>
+            </div>
             {language === lang.code && (
               <Check className="h-4 w-4 text-primary" />
             )}

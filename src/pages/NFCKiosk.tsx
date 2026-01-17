@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import StandaloneNFCScanner from '@/components/devices/StandaloneNFCScanner';
 import { supabase } from '@/integrations/supabase/client';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { getText } from '@/utils/i18n';
 
 export default function NFCKiosk() {
   const [deviceType, setDeviceType] = useState<'entrance' | 'bus'>('entrance');
   const [location, setLocation] = useState('Main Entrance');
   const [deviceId, setDeviceId] = useState<string | undefined>(undefined);
   const [loading, setLoading] = useState(true);
+  const { language } = useLanguage();
+  const t = (en: string, ar: string, hi: string) => getText(language, en, ar, hi);
   
   useEffect(() => {
     loadDeviceConfig();
@@ -49,7 +53,11 @@ export default function NFCKiosk() {
   };
 
   if (loading) {
-    return <div>Loading device configuration...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        {t('Loading device configuration...', 'جاري تحميل تكوين الجهاز...', 'उपकरण कॉन्फ़िगरेशन लोड हो रहा है...')}
+      </div>
+    );
   }
 
   return (
