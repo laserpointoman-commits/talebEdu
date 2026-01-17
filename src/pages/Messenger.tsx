@@ -75,7 +75,10 @@ function MessengerContent() {
     createGroup,
     archiveChat,
     deleteChat,
-    forwardMessage: forwardMessageFn
+    forwardMessage: forwardMessageFn,
+    pinChat,
+    fetchPinnedChats,
+    fetchArchivedChats
   } = useMessenger();
 
   const [activeTab, setActiveTab] = useState<MessengerTab>('chats');
@@ -128,8 +131,10 @@ function MessengerContent() {
       fetchConversations();
       fetchGroups();
       fetchCallLogs();
+      // Load persisted pins
+      fetchPinnedChats().then(setPinnedChats);
     }
-  }, [user?.id, fetchConversations, fetchGroups, fetchCallLogs]);
+  }, [user?.id, fetchConversations, fetchGroups, fetchCallLogs, fetchPinnedChats]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -303,18 +308,24 @@ function MessengerContent() {
     }
   };
 
-  const handlePinChat = (convId: string) => {
-    setPinnedChats(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(convId)) {
-        newSet.delete(convId);
-        toast.success(isArabic ? 'تم إلغاء التثبيت' : isHindi ? 'चैट अनपिन किया गया' : 'Chat unpinned');
-      } else {
-        newSet.add(convId);
-        toast.success(isArabic ? 'تم التثبيت' : isHindi ? 'चैट पिन किया गया' : 'Chat pinned');
-      }
-      return newSet;
-    });
+  const handlePinChat = async (convId: string) => {
+    const success = await pinChat(convId);
+    if (success) {
+      // Toggle local state
+      setPinnedChats(prev => {
+        const newSet = new Set(prev);
+        if (newSet.has(convId)) {
+          newSet.delete(convId);
+          toast.success(isArabic ? 'تم إلغاء التثبيت' : isHindi ? 'चैट अनपिन किया गया' : 'Chat unpinned');
+        } else {
+          newSet.add(convId);
+          toast.success(isArabic ? 'تم التثبيت' : isHindi ? 'चैट पिन किया गया' : 'Chat pinned');
+        }
+        return newSet;
+      });
+    } else {
+      toast.error(isArabic ? 'فشل التثبيت' : isHindi ? 'पिन करने में विफल' : 'Failed to pin chat');
+    }
   };
 
   const handleForwardMessage = async (messageId: string, recipientIds: string[]) => {
@@ -667,6 +678,7 @@ function MessengerContent() {
                 onDelete={() => handleDeleteChat(conv.recipient_id)}
                 onArchive={() => handleArchiveChat(conv.recipient_id)}
                 onPin={() => handlePinChat(conv.recipient_id)}
+                isPinned={pinnedChats.has(conv.recipient_id)}
                 canPin={canPin}
                 isArabic={isArabic}
               >
@@ -699,7 +711,12 @@ function MessengerContent() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
-                      <span className="font-medium truncate" style={{ color: colors.textPrimary }}>{conv.recipient_name}</span>
+                      <div className="flex items-center gap-1">
+                        {pinnedChats.has(conv.recipient_id) && (
+                          <Pin className="h-3.5 w-3.5 shrink-0" style={{ color: colors.accent }} />
+                        )}
+                        <span className="font-medium truncate" style={{ color: colors.textPrimary }}>{conv.recipient_name}</span>
+                      </div>
                       <span className="text-xs" style={{ color: conv.unread_count > 0 ? colors.accentLight : colors.textMuted }}>
                         {conv.last_message_time && formatChatTime(conv.last_message_time)}
                       </span>
@@ -729,6 +746,7 @@ function MessengerContent() {
                 onDelete={() => handleDeleteChat(group.id)}
                 onArchive={() => handleArchiveChat(group.id)}
                 onPin={() => handlePinChat(group.id)}
+                isPinned={pinnedChats.has(group.id)}
                 canPin={canPin}
                 isArabic={isArabic}
               >
@@ -782,6 +800,7 @@ function MessengerContent() {
                 onDelete={() => handleDeleteChat(group.id)}
                 onArchive={() => handleArchiveChat(group.id)}
                 onPin={() => handlePinChat(group.id)}
+                isPinned={pinnedChats.has(group.id)}
                 canPin={canPin}
                 isArabic={isArabic}
               >

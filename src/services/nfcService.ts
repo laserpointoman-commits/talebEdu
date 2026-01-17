@@ -44,6 +44,21 @@ class NFCService {
     this.initPromise = this.initializeNFC();
   }
 
+  /**
+   * Reset NFC service state - call this after logout to ensure
+   * the service is ready for a fresh login session (e.g. NFC PIN login).
+   */
+  reset(): void {
+    console.log('NFC: Resetting service state');
+    this.stopScanning().catch(() => {});
+    this.scanning = false;
+    this.scanCallback = null;
+    if (this.listenerHandle) {
+      try { this.listenerHandle.remove(); } catch {}
+      this.listenerHandle = null;
+    }
+  }
+
   private async initializeNFC(): Promise<void> {
     try {
       console.log('NFC: Initializing...', {

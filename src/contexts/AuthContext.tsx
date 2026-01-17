@@ -155,55 +155,46 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         } catch (resetError) {
           console.error('Failed to reset test account:', resetError);
-          // Continue with logout even if reset fails
         }
       }
       
-      // Show splash screen before logout
-      setShowSplash(true);
-      
-      // Wait for splash animation to start
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      // Clear any stored session data first
-      localStorage.removeItem('developerViewRole');
-      localStorage.removeItem('hasShownInitialSplash'); // Clear for next fresh app load
-      localStorage.clear();
-      sessionStorage.clear();
-      
-      // Try to sign out from Supabase
-      const { error } = await supabase.auth.signOut();
-      
-      // Ignore session_not_found errors as the session might already be invalid
-      if (error && !error.message?.includes('session_not_found')) {
-        console.error('Logout error:', error);
-      }
-      
-      // Clear state regardless of Supabase response
+      // Clear state FIRST so components unmount cleanly before splash
       setUser(null);
       setSession(null);
       setProfile(null);
+      
+      // Clear all storage
+      localStorage.removeItem('developerViewRole');
+      localStorage.removeItem('hasShownInitialSplash');
+      localStorage.clear();
+      sessionStorage.clear();
+      
+      // Sign out from Supabase (scope: local to avoid invalidating other devices)
+      try {
+        await supabase.auth.signOut({ scope: 'local' });
+      } catch (signOutError: any) {
+        // Ignore errors - session might already be gone
+        console.log('SignOut completed with note:', signOutError?.message);
+      }
       
       toast.success('Logged out successfully');
       
-      // Wait for splash screen to complete before redirecting
+      // Small delay then redirect (no splash blocking - allows immediate NFC re-login)
       setTimeout(() => {
         window.location.href = '/auth';
-      }, 1000); // 1 second
+      }, 300);
     } catch (error: any) {
       console.error('Logout error:', error);
-      // Even if there's an error, clear local state and redirect
+      // Clear state and redirect anyway
       setUser(null);
       setSession(null);
       setProfile(null);
       localStorage.clear();
       sessionStorage.clear();
       
-      // Still show splash on error
-      setShowSplash(true);
       setTimeout(() => {
         window.location.href = '/auth';
-      }, 1000); // 1 second
+      }, 300);
     }
   };
 
