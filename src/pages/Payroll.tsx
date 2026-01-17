@@ -14,6 +14,7 @@ import LeaveRequests from '@/components/payroll/LeaveRequests';
 import PayrollReports from '@/components/payroll/PayrollReports';
 import TeacherPayrollView from '@/components/payroll/TeacherPayrollView';
 import { format } from 'date-fns';
+import { getText } from '@/utils/i18n';
 
 export default function Payroll() {
   const { t, language } = useLanguage();
@@ -27,6 +28,8 @@ export default function Payroll() {
     totalPayrollThisMonth: 0,
     averageAttendance: 0
   });
+
+  const txt = (en: string, ar: string, hi: string) => getText(language, en, ar, hi);
 
   useEffect(() => {
     if (profile?.role === 'admin') {
@@ -96,8 +99,8 @@ export default function Payroll() {
     } catch (error) {
       console.error('Error fetching admin data:', error);
       toast({
-        title: t('error'),
-        description: t('Failed to load data'),
+        title: txt('Error', 'خطأ', 'त्रुटि'),
+        description: txt('Failed to load data', 'فشل في تحميل البيانات', 'डेटा लोड करने में विफल'),
         variant: 'destructive'
       });
     } finally {
@@ -123,10 +126,10 @@ export default function Payroll() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-foreground">
-            {t('Payroll Management')}
+            {txt('Payroll Management', 'إدارة الرواتب', 'पेरोल प्रबंधन')}
           </h1>
           <p className="text-muted-foreground mt-1">
-            {t('Manage teacher salaries, attendance, and payments')}
+            {txt('Manage teacher salaries, attendance, and payments', 'إدارة رواتب المعلمين والحضور والمدفوعات', 'शिक्षक वेतन, उपस्थिति और भुगतान प्रबंधित करें')}
           </p>
         </div>
         <Card className="bg-primary/10 border-primary/20">
@@ -134,7 +137,7 @@ export default function Payroll() {
             <div className="flex items-center gap-3">
               <Wallet className="h-8 w-8 text-primary" />
               <div>
-                <p className="text-sm text-muted-foreground">{t('Admin Wallet')}</p>
+                <p className="text-sm text-muted-foreground">{txt('Admin Wallet', 'محفظة المسؤول', 'एडमिन वॉलेट')}</p>
                 <p className="text-2xl font-bold text-primary">
                   {adminWallet.toFixed(3)} OMR
                 </p>
@@ -151,7 +154,7 @@ export default function Payroll() {
             <div className="flex items-center gap-3">
               <Users className="h-8 w-8 text-blue-500" />
               <div>
-                <p className="text-sm text-muted-foreground">{t('Total Teachers')}</p>
+                <p className="text-sm text-muted-foreground">{txt('Total Teachers', 'إجمالي المعلمين', 'कुल शिक्षक')}</p>
                 <p className="text-2xl font-bold">{stats.totalTeachers}</p>
               </div>
             </div>
@@ -163,7 +166,7 @@ export default function Payroll() {
             <div className="flex items-center gap-3">
               <Clock className="h-8 w-8 text-orange-500" />
               <div>
-                <p className="text-sm text-muted-foreground">{t('Pending Payments')}</p>
+                <p className="text-sm text-muted-foreground">{txt('Pending Payments', 'المدفوعات المعلقة', 'लंबित भुगतान')}</p>
                 <p className="text-2xl font-bold">{stats.pendingPayments}</p>
               </div>
             </div>
@@ -175,7 +178,7 @@ export default function Payroll() {
             <div className="flex items-center gap-3">
               <DollarSign className="h-8 w-8 text-green-500" />
               <div>
-                <p className="text-sm text-muted-foreground">{t('Payroll This Month')}</p>
+                <p className="text-sm text-muted-foreground">{txt('Payroll This Month', 'رواتب هذا الشهر', 'इस महीने का पेरोल')}</p>
                 <p className="text-2xl font-bold">{stats.totalPayrollThisMonth.toFixed(3)} OMR</p>
               </div>
             </div>
@@ -187,7 +190,7 @@ export default function Payroll() {
             <div className="flex items-center gap-3">
               <TrendingUp className="h-8 w-8 text-purple-500" />
               <div>
-                <p className="text-sm text-muted-foreground">{t('Average Attendance')}</p>
+                <p className="text-sm text-muted-foreground">{txt('Average Attendance', 'متوسط الحضور', 'औसत उपस्थिति')}</p>
                 <p className="text-2xl font-bold">{stats.averageAttendance}%</p>
               </div>
             </div>
@@ -200,19 +203,19 @@ export default function Payroll() {
         <TabsList className={`grid grid-cols-4 w-full max-w-2xl ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
           <TabsTrigger value="payroll" className="flex items-center gap-2">
             <Wallet className="h-4 w-4" />
-            {t('Payroll')}
+            {txt('Payroll', 'الرواتب', 'पेरोल')}
           </TabsTrigger>
           <TabsTrigger value="attendance" className="flex items-center gap-2">
             <Calendar className="h-4 w-4" />
-            {t('Attendance')}
+            {txt('Attendance', 'الحضور', 'उपस्थिति')}
           </TabsTrigger>
           <TabsTrigger value="leaves" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
-            {t('Leave Requests')}
+            {txt('Leave Requests', 'طلبات الإجازة', 'छुट्टी अनुरोध')}
           </TabsTrigger>
           <TabsTrigger value="reports" className="flex items-center gap-2">
             <TrendingUp className="h-4 w-4" />
-            {t('Reports')}
+            {txt('Reports', 'التقارير', 'रिपोर्ट')}
           </TabsTrigger>
         </TabsList>
 
