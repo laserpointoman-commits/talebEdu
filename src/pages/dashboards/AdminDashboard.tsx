@@ -19,7 +19,7 @@ import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 export default function AdminDashboard() {
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     totalStudents: 0,
@@ -29,6 +29,13 @@ export default function AdminDashboard() {
     studentsChange: 0,
     teachersChange: 0
   });
+
+  // Helper function for translations not in the central system
+  const getText = (en: string, ar: string, hi: string) => {
+    if (language === 'ar') return ar;
+    if (language === 'hi') return hi;
+    return en;
+  };
 
   useEffect(() => {
     loadDashboardData();
@@ -112,14 +119,14 @@ export default function AdminDashboard() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">
-            {language === 'en' ? 'Admin Dashboard' : 'لوحة تحكم المسؤول'}
+            {getText('Admin Dashboard', 'لوحة تحكم المسؤول', 'प्रशासक डैशबोर्ड')}
           </h2>
           <p className="text-muted-foreground">
-            {language === 'en' ? 'Real-time overview and system monitoring' : 'نظرة عامة في الوقت الفعلي ومراقبة النظام'}
+            {getText('Real-time overview and system monitoring', 'نظرة عامة في الوقت الفعلي ومراقبة النظام', 'रियल-टाइम अवलोकन और सिस्टम मॉनिटरिंग')}
           </p>
         </div>
         <Badge variant="outline" className="text-sm">
-          {language === 'ar' ? 'مباشر' : 'Live'} •
+          {getText('Live', 'مباشر', 'लाइव')} •
         </Badge>
       </div>
 
@@ -130,30 +137,30 @@ export default function AdminDashboard() {
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
         {[
           {
-            title: language === 'en' ? 'Total Students' : 'إجمالي الطلاب',
+            title: getText('Total Students', 'إجمالي الطلاب', 'कुल छात्र'),
             value: stats.totalStudents,
             change: stats.studentsChange,
             icon: GraduationCap,
             iconColor: 'text-primary',
           },
           {
-            title: language === 'en' ? 'Total Teachers' : 'إجمالي المعلمين',
+            title: getText('Total Teachers', 'إجمالي المعلمين', 'कुल शिक्षक'),
             value: stats.totalTeachers,
             change: stats.teachersChange,
             icon: Users,
             iconColor: 'text-emerald-500',
           },
           {
-            title: language === 'en' ? 'Active Buses' : 'الحافلات النشطة',
+            title: getText('Active Buses', 'الحافلات النشطة', 'सक्रिय बसें'),
             value: stats.activeBuses,
-            subtitle: language === 'en' ? 'Operational' : 'قيد التشغيل',
+            subtitle: getText('Operational', 'قيد التشغيل', 'परिचालित'),
             icon: Bus,
             iconColor: 'text-amber-500',
           },
           {
-            title: language === 'en' ? 'Total Wallet Balance' : 'إجمالي رصيد المحفظة',
+            title: getText('Total Wallet Balance', 'إجمالي رصيد المحفظة', 'कुल वॉलेट शेष'),
             value: `${stats.totalWalletBalance.toFixed(2)} OMR`,
-            subtitle: language === 'en' ? 'Combined balance' : 'الرصيد الإجمالي',
+            subtitle: getText('Combined balance', 'الرصيد الإجمالي', 'संयुक्त शेष'),
             icon: Wallet,
             iconColor: 'text-violet-500',
           },
@@ -185,7 +192,7 @@ export default function AdminDashboard() {
                     <span className={stat.change >= 0 ? 'text-green-600' : 'text-red-600'}>
                       {Math.abs(stat.change)}
                     </span>
-                    <span className="ml-1">{language === 'en' ? 'this month' : 'هذا الشهر'}</span>
+                    <span className="ml-1">{getText('this month', 'هذا الشهر', 'इस महीने')}</span>
                   </div>
                 )}
                 {stat.subtitle && (

@@ -56,12 +56,16 @@ export default function NetworkStatus() {
               )}
               <AlertDescription>
                 {isOnline
-                  ? language === 'en'
-                    ? 'Connection restored'
-                    : 'تم استعادة الاتصال'
-                  : language === 'en'
-                  ? 'No internet connection'
-                  : 'لا يوجد اتصال بالإنترنت'}
+                  ? language === 'ar'
+                    ? 'تم استعادة الاتصال'
+                    : language === 'hi'
+                    ? 'कनेक्शन बहाल हुआ'
+                    : 'Connection restored'
+                  : language === 'ar'
+                  ? 'لا يوجد اتصال بالإنترنت'
+                  : language === 'hi'
+                  ? 'इंटरनेट कनेक्शन नहीं है'
+                  : 'No internet connection'}
               </AlertDescription>
             </div>
           </Alert>
