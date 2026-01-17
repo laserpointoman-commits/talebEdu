@@ -56,34 +56,41 @@ function DashboardLayout({ children }: DashboardLayoutProps) {
     return <div className="min-h-screen bg-background">{children}</div>;
   }
   
+  // Helper for trilingual text
+  const getText = (en: string, ar: string, hi: string) => {
+    if (language === 'ar') return ar;
+    if (language === 'hi') return hi;
+    return en;
+  };
+
   const roles = [
     { 
       value: 'admin', 
-      label: language === 'ar' ? 'المسؤول' : 'Administrator',
+      label: getText('Administrator', 'المسؤول', 'प्रशासक'),
       icon: Shield,
       color: 'text-red-600'
     },
     { 
       value: 'teacher', 
-      label: language === 'ar' ? 'المعلم' : 'Teacher',
+      label: getText('Teacher', 'المعلم', 'शिक्षक'),
       icon: School,
       color: 'text-blue-600'
     },
     { 
       value: 'parent', 
-      label: language === 'ar' ? 'ولي الأمر' : 'Parent',
+      label: getText('Parent', 'ولي الأمر', 'अभिभावक'),
       icon: Users,
       color: 'text-green-600'
     },
     { 
       value: 'student', 
-      label: language === 'ar' ? 'الطالب' : 'Student',
+      label: getText('Student', 'الطالب', 'छात्र'),
       icon: GraduationCap,
       color: 'text-purple-600'
     },
     { 
       value: 'driver', 
-      label: language === 'ar' ? 'السائق' : 'Driver',
+      label: getText('Driver', 'السائق', 'चालक'),
       icon: Car,
       color: 'text-orange-600'
     },
@@ -197,7 +204,7 @@ function DashboardLayout({ children }: DashboardLayoutProps) {
           {isDeveloper && currentTestRole && (
             <div className={`flex items-center gap-2 ${dir === 'rtl' ? 'flex-row-reverse' : ''}`}>
               <Badge variant="secondary" className="text-xs px-2 hidden sm:inline-flex">
-                {language === 'ar' ? 'وضع الاختبار' : 'Testing'}
+                {getText('Testing', 'وضع الاختبار', 'परीक्षण')}
               </Badge>
               <Select value={currentTestRole} onValueChange={handleRoleSwitch}>
                 <SelectTrigger className="w-[140px] md:w-[180px] h-9 md:h-10 text-sm">
@@ -232,7 +239,7 @@ function DashboardLayout({ children }: DashboardLayoutProps) {
                   <SelectItem value="developer">
                     <div className={`flex items-center gap-2 ${dir === 'rtl' ? 'flex-row-reverse' : ''}`}>
                       <Shield className="h-4 w-4 text-indigo-600" />
-                      <span>{language === 'ar' ? 'العودة للمطور' : 'Back to Developer'}</span>
+                      <span>{getText('Back to Developer', 'العودة للمطور', 'डेवलपर पर वापस जाएं')}</span>
                     </div>
                   </SelectItem>
                 </SelectContent>

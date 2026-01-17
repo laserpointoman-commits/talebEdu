@@ -20,6 +20,7 @@ import {
 interface NavItem {
   title: string;
   titleAr: string;
+  titleHi: string;
   href: string;
   icon: React.ElementType;
 }
@@ -29,45 +30,46 @@ import { Home } from 'lucide-react';
 const getNavItemsForRole = (role: string): { items: NavItem[], homeIndex: number } => {
   const roleSpecificItems: Record<string, NavItem[]> = {
     admin: [
-      { title: 'Students', titleAr: 'الطلاب', href: '/dashboard/students', icon: GraduationCap },
-      { title: 'Messenger', titleAr: 'المراسلة', href: '/dashboard/messages', icon: MessageSquare },
-      { title: 'Finance', titleAr: 'المالية', href: '/dashboard/finance', icon: DollarSign },
+      { title: 'Students', titleAr: 'الطلاب', titleHi: 'छात्र', href: '/dashboard/students', icon: GraduationCap },
+      { title: 'Messenger', titleAr: 'المراسلة', titleHi: 'मैसेंजर', href: '/dashboard/messages', icon: MessageSquare },
+      { title: 'Finance', titleAr: 'المالية', titleHi: 'वित्त', href: '/dashboard/finance', icon: DollarSign },
     ],
     teacher: [
-      { title: 'Classes', titleAr: 'الفصول', href: '/dashboard/classes', icon: Users },
-      { title: 'Schedule', titleAr: 'الجدول', href: '/dashboard/schedule', icon: Calendar },
-      { title: 'Messages', titleAr: 'الرسائل', href: '/dashboard/messages', icon: MessageSquare },
+      { title: 'Classes', titleAr: 'الفصول', titleHi: 'कक्षाएँ', href: '/dashboard/classes', icon: Users },
+      { title: 'Schedule', titleAr: 'الجدول', titleHi: 'समय सारणी', href: '/dashboard/schedule', icon: Calendar },
+      { title: 'Messages', titleAr: 'الرسائل', titleHi: 'संदेश', href: '/dashboard/messages', icon: MessageSquare },
     ],
     parent: [
-      { title: 'Tracking', titleAr: 'التتبع', href: '/dashboard/bus-tracking', icon: MapPin },
-      { title: 'Wallet', titleAr: 'المحفظة', href: '/dashboard/wallet', icon: Wallet },
-      { title: 'Messages', titleAr: 'الرسائل', href: '/dashboard/messages', icon: MessageSquare },
+      { title: 'Tracking', titleAr: 'التتبع', titleHi: 'ट्रैकिंग', href: '/dashboard/bus-tracking', icon: MapPin },
+      { title: 'Wallet', titleAr: 'المحفظة', titleHi: 'वॉलेट', href: '/dashboard/wallet', icon: Wallet },
+      { title: 'Messages', titleAr: 'الرسائل', titleHi: 'संदेश', href: '/dashboard/messages', icon: MessageSquare },
     ],
     student: [
-      { title: 'Schedule', titleAr: 'الجدول', href: '/dashboard/schedule', icon: Calendar },
-      { title: 'Wallet', titleAr: 'المحفظة', href: '/dashboard/wallet', icon: Wallet },
-      { title: 'Canteen', titleAr: 'المقصف', href: '/dashboard/canteen', icon: ShoppingBag },
+      { title: 'Schedule', titleAr: 'الجدول', titleHi: 'समय सारणी', href: '/dashboard/schedule', icon: Calendar },
+      { title: 'Wallet', titleAr: 'المحفظة', titleHi: 'वॉलेट', href: '/dashboard/wallet', icon: Wallet },
+      { title: 'Canteen', titleAr: 'المقصف', titleHi: 'कैंटीन', href: '/dashboard/canteen', icon: ShoppingBag },
     ],
     driver: [
-      { title: 'Tracking', titleAr: 'التتبع', href: '/dashboard/bus-tracking', icon: MapPin },
-      { title: 'Transport', titleAr: 'النقل', href: '/dashboard/transport', icon: Bus },
-      { title: 'Messages', titleAr: 'الرسائل', href: '/dashboard/messages', icon: MessageSquare },
+      { title: 'Tracking', titleAr: 'التتبع', titleHi: 'ट्रैकिंग', href: '/dashboard/bus-tracking', icon: MapPin },
+      { title: 'Transport', titleAr: 'النقل', titleHi: 'परिवहन', href: '/dashboard/transport', icon: Bus },
+      { title: 'Messages', titleAr: 'الرسائل', titleHi: 'संदेश', href: '/dashboard/messages', icon: MessageSquare },
     ],
     finance: [
-      { title: 'Finance', titleAr: 'المالية', href: '/dashboard/finance', icon: DollarSign },
-      { title: 'Fees', titleAr: 'الرسوم', href: '/dashboard/admin/fees', icon: Wallet },
-      { title: 'Messages', titleAr: 'الرسائل', href: '/dashboard/messages', icon: MessageSquare },
+      { title: 'Finance', titleAr: 'المالية', titleHi: 'वित्त', href: '/dashboard/finance', icon: DollarSign },
+      { title: 'Fees', titleAr: 'الرسوم', titleHi: 'शुल्क', href: '/dashboard/admin/fees', icon: Wallet },
+      { title: 'Messages', titleAr: 'الرسائل', titleHi: 'संदेश', href: '/dashboard/messages', icon: MessageSquare },
     ],
     developer: [
-      { title: 'Students', titleAr: 'الطلاب', href: '/dashboard/students', icon: GraduationCap },
-      { title: 'Finance', titleAr: 'المالية', href: '/dashboard/finance', icon: DollarSign },
-      { title: 'Messages', titleAr: 'الرسائل', href: '/dashboard/messages', icon: MessageSquare },
+      { title: 'Students', titleAr: 'الطلاب', titleHi: 'छात्र', href: '/dashboard/students', icon: GraduationCap },
+      { title: 'Finance', titleAr: 'المالية', titleHi: 'वित्त', href: '/dashboard/finance', icon: DollarSign },
+      { title: 'Messages', titleAr: 'الرسائل', titleHi: 'संदेश', href: '/dashboard/messages', icon: MessageSquare },
     ],
   };
 
   const homeItem: NavItem = {
     title: 'Home',
     titleAr: 'الرئيسية',
+    titleHi: 'होम',
     href: '/dashboard',
     icon: Home,
   };
@@ -75,6 +77,7 @@ const getNavItemsForRole = (role: string): { items: NavItem[], homeIndex: number
   const profileItem: NavItem = {
     title: 'Profile',
     titleAr: 'الملف',
+    titleHi: 'प्रोफ़ाइल',
     href: '/dashboard/profile',
     icon: User,
   };
@@ -89,6 +92,12 @@ const getNavItemsForRole = (role: string): { items: NavItem[], homeIndex: number
   const homeIndex = firstHalf.length;
   
   return { items, homeIndex };
+};
+
+const getTitle = (item: NavItem, language: string): string => {
+  if (language === 'ar') return item.titleAr;
+  if (language === 'hi') return item.titleHi;
+  return item.title;
 };
 
 export default function BottomNavigation() {
@@ -160,7 +169,7 @@ export default function BottomNavigation() {
                         : "text-muted-foreground"
                     )}
                   >
-                    {language === 'ar' ? item.titleAr : item.title}
+                    {getTitle(item, language)}
                   </span>
                 </motion.div>
               </NavLink>
@@ -215,7 +224,7 @@ export default function BottomNavigation() {
                       : "text-muted-foreground"
                   )}
                 >
-                  {language === 'ar' ? item.titleAr : item.title}
+                  {getTitle(item, language)}
                 </span>
               </motion.div>
             </NavLink>
