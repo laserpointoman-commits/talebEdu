@@ -99,12 +99,12 @@ export default function BoardingHistory({ studentId, busId, daysToShow = 7 }: Bo
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">
-            {language === 'ar' ? 'سجل الركوب' : 'Boarding History'}
+            {language === 'ar' ? 'سجل الركوب' : language === 'hi' ? 'बोर्डिंग इतिहास' : 'Boarding History'}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-center text-muted-foreground py-8">
-            {language === 'ar' ? 'جاري التحميل...' : 'Loading...'}
+            {language === 'ar' ? 'جاري التحميل...' : language === 'hi' ? 'लोड हो रहा है...' : 'Loading...'}
           </div>
         </CardContent>
       </Card>
@@ -118,10 +118,10 @@ export default function BoardingHistory({ studentId, busId, daysToShow = 7 }: Bo
     yesterday.setDate(yesterday.getDate() - 1);
 
     if (format(date, 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd')) {
-      return language === 'ar' ? 'اليوم' : 'Today';
+      return language === 'ar' ? 'اليوم' : language === 'hi' ? 'आज' : 'Today';
     }
     if (format(date, 'yyyy-MM-dd') === format(yesterday, 'yyyy-MM-dd')) {
-      return language === 'ar' ? 'أمس' : 'Yesterday';
+      return language === 'ar' ? 'أمس' : language === 'hi' ? 'कल' : 'Yesterday';
     }
     return format(date, 'EEEE, MMM dd');
   };
@@ -131,13 +131,17 @@ export default function BoardingHistory({ studentId, busId, daysToShow = 7 }: Bo
       <CardHeader>
         <CardTitle className="text-lg flex items-center gap-2">
           <Clock className="h-5 w-5" />
-          {language === 'ar' ? `سجل الركوب (آخر ${daysToShow} أيام)` : `Boarding History (Last ${daysToShow} Days)`}
+          {language === 'ar' 
+            ? `سجل الركوب (آخر ${daysToShow} أيام)` 
+            : language === 'hi' 
+            ? `बोर्डिंग इतिहास (पिछले ${daysToShow} दिन)` 
+            : `Boarding History (Last ${daysToShow} Days)`}
         </CardTitle>
       </CardHeader>
       <CardContent>
         {logs.length === 0 ? (
           <div className="text-center text-muted-foreground py-8">
-            {language === 'ar' ? 'لا يوجد سجل خلال هذه الفترة' : 'No records in this period'}
+            {language === 'ar' ? 'لا يوجد سجل خلال هذه الفترة' : language === 'hi' ? 'इस अवधि में कोई रिकॉर्ड नहीं' : 'No records in this period'}
           </div>
         ) : (
           <ScrollArea className="h-[400px] pr-4">
@@ -175,8 +179,8 @@ export default function BoardingHistory({ studentId, busId, daysToShow = 7 }: Bo
                                 className="text-xs"
                               >
                                 {log.action === 'boarded' || log.action === 'board'
-                                  ? language === 'ar' ? 'صعود' : 'Boarded'
-                                  : language === 'ar' ? 'نزول' : 'Alighted'}
+                                  ? language === 'ar' ? 'صعود' : language === 'hi' ? 'बोर्ड किया' : 'Boarded'
+                                  : language === 'ar' ? 'نزول' : language === 'hi' ? 'उतरे' : 'Alighted'}
                               </Badge>
                               {log.nfc_verified && (
                                 <Badge variant="outline" className="text-xs">
@@ -185,7 +189,7 @@ export default function BoardingHistory({ studentId, busId, daysToShow = 7 }: Bo
                               )}
                               {log.manual_entry && (
                                 <Badge variant="outline" className="text-xs text-amber-600">
-                                  {language === 'ar' ? 'يدوي' : 'Manual'}
+                                  {language === 'ar' ? 'يدوي' : language === 'hi' ? 'मैनुअल' : 'Manual'}
                                 </Badge>
                               )}
                             </div>

@@ -26,10 +26,10 @@ export default function NFCAttendance() {
     <div className="space-y-6 p-6">
       <div>
         <h1 className="text-3xl font-bold">
-          {language === 'ar' ? 'تسجيل الحضور' : 'Attendance Registration'}
+          {language === 'ar' ? 'تسجيل الحضور' : language === 'hi' ? 'उपस्थिति पंजीकरण' : 'Attendance Registration'}
         </h1>
         <p className="text-muted-foreground">
-          {language === 'ar' ? 'مسح السوار الذكي لتسجيل الحضور' : 'Scan NFC wristband to mark attendance'}
+          {language === 'ar' ? 'مسح السوار الذكي لتسجيل الحضور' : language === 'hi' ? 'उपस्थिति दर्ज करने के लिए NFC रिस्टबैंड स्कैन करें' : 'Scan NFC wristband to mark attendance'}
         </p>
       </div>
 
@@ -38,7 +38,7 @@ export default function NFCAttendance() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              {language === 'ar' ? 'إجمالي الطلاب' : 'Total Students'}
+              {language === 'ar' ? 'إجمالي الطلاب' : language === 'hi' ? 'कुल छात्र' : 'Total Students'}
             </CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
@@ -50,7 +50,7 @@ export default function NFCAttendance() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              {language === 'ar' ? 'الحضور' : 'Present'}
+              {language === 'ar' ? 'الحضور' : language === 'hi' ? 'उपस्थित' : 'Present'}
             </CardTitle>
             <CheckCircle className="h-4 w-4 text-green-500" />
           </CardHeader>
@@ -65,7 +65,7 @@ export default function NFCAttendance() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              {language === 'ar' ? 'الغياب' : 'Absent'}
+              {language === 'ar' ? 'الغياب' : language === 'hi' ? 'अनुपस्थित' : 'Absent'}
             </CardTitle>
             <XCircle className="h-4 w-4 text-red-500" />
           </CardHeader>
@@ -91,7 +91,7 @@ export default function NFCAttendance() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Clock className="h-5 w-5" />
-              {language === 'ar' ? 'سجل اليوم' : "Today's Log"}
+              {language === 'ar' ? 'سجل اليوم' : language === 'hi' ? 'आज का लॉग' : "Today's Log"}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -99,7 +99,7 @@ export default function NFCAttendance() {
               {scannedStudents.length === 0 ? (
                 <div className="text-center py-12 text-muted-foreground">
                   <Users className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                  <p>{language === 'ar' ? 'لم يتم تسجيل أي حضور بعد' : 'No attendance recorded yet'}</p>
+                  <p>{language === 'ar' ? 'لم يتم تسجيل أي حضور بعد' : language === 'hi' ? 'अभी तक कोई उपस्थिति दर्ज नहीं' : 'No attendance recorded yet'}</p>
                 </div>
               ) : (
                 scannedStudents.map((student, idx) => (
@@ -109,7 +109,7 @@ export default function NFCAttendance() {
                       <div>
                         <div className="font-medium">{student.name}</div>
                         <div className="text-sm text-muted-foreground">
-                          {language === 'ar' ? `الصف: ${student.class}` : `Class: ${student.class}`}
+                          {language === 'ar' ? `الصف: ${student.class}` : language === 'hi' ? `कक्षा: ${student.class}` : `Class: ${student.class}`}
                         </div>
                       </div>
                     </div>

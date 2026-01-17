@@ -159,7 +159,7 @@ export default function BusMap({ busId, studentLocation }: BusMapProps) {
         el.style.boxShadow = '0 2px 6px hsl(var(--foreground) / 0.25)';
         studentMarker.current = new mapboxgl.Marker(el)
           .setLngLat([studentLocation.lng, studentLocation.lat])
-          .setPopup(new mapboxgl.Popup().setText(language === 'ar' ? 'موقع الطالب' : 'Student Location'))
+          .setPopup(new mapboxgl.Popup().setText(language === 'ar' ? 'موقع الطالب' : language === 'hi' ? 'छात्र स्थान' : 'Student Location'))
           .addTo(map.current);
       } else {
         studentMarker.current.setLngLat([studentLocation.lng, studentLocation.lat]);
@@ -189,7 +189,7 @@ export default function BusMap({ busId, studentLocation }: BusMapProps) {
       }
     } catch (error) {
       console.error('Error loading bus location:', error);
-      toast.error(language === 'ar' ? 'فشل تحميل موقع الحافلة' : 'Failed to load bus location');
+      toast.error(language === 'ar' ? 'فشل تحميل موقع الحافلة' : language === 'hi' ? 'बस स्थान लोड करने में विफल' : 'Failed to load bus location');
     }
   };
 
@@ -279,7 +279,7 @@ export default function BusMap({ busId, studentLocation }: BusMapProps) {
 
       busMarker.current = new mapboxgl.Marker({ element: root, anchor: 'center' })
         .setLngLat([location.longitude, location.latitude])
-        .setPopup(new mapboxgl.Popup().setText(language === 'ar' ? 'موقع الحافلة' : 'Bus Location'))
+        .setPopup(new mapboxgl.Popup().setText(language === 'ar' ? 'موقع الحافلة' : language === 'hi' ? 'बस स्थान' : 'Bus Location'))
         .addTo(map.current);
     } else {
       busMarker.current.setLngLat([location.longitude, location.latitude]);
@@ -311,9 +311,13 @@ export default function BusMap({ busId, studentLocation }: BusMapProps) {
             {mapStatus === 'loading'
               ? language === 'ar'
                 ? 'جاري تحميل الخريطة…'
+                : language === 'hi'
+                ? 'नक्शा लोड हो रहा है…'
                 : 'Loading map…'
               : language === 'ar'
                 ? `تعذر تحميل الخريطة: ${mapError || ''}`
+                : language === 'hi'
+                ? `नक्शा अनुपलब्ध: ${mapError || ''}`
                 : `Map unavailable: ${mapError || ''}`}
           </div>
         </div>
@@ -321,9 +325,9 @@ export default function BusMap({ busId, studentLocation }: BusMapProps) {
 
       {busLocation && (
         <div className="absolute top-4 left-4 bg-background/95 backdrop-blur-sm rounded-lg p-3 shadow-lg border">
-          <div className="text-sm font-medium mb-1">{language === 'ar' ? 'آخر تحديث' : 'Last Updated'}</div>
+          <div className="text-sm font-medium mb-1">{language === 'ar' ? 'آخر تحديث' : language === 'hi' ? 'अंतिम अपडेट' : 'Last Updated'}</div>
           <div className="text-xs text-muted-foreground">
-            {new Date().toLocaleTimeString(language === 'ar' ? 'ar-SA' : 'en-US')}
+            {new Date().toLocaleTimeString(language === 'ar' ? 'ar-SA' : language === 'hi' ? 'hi-IN' : 'en-US')}
           </div>
         </div>
       )}

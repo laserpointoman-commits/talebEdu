@@ -73,6 +73,9 @@ export default function AllBusesMap({ buses }: AllBusesMapProps) {
     let onMoveStart: ((e: any) => void) | null = null;
 
     try {
+      // Use language-specific tile URLs where available
+      // For Arabic/Hindi, use standard OSM tiles (they show local names)
+      // In future, we could use custom vector tiles with language switching
       const osmRasterStyle: any = {
         version: 8,
         sources: {
@@ -412,7 +415,7 @@ export default function AllBusesMap({ buses }: AllBusesMapProps) {
     labelWrap.style.pointerEvents = 'none';
 
     const label = document.createElement('div');
-    label.textContent = `${language === 'ar' ? 'حافلة' : 'Bus'} ${bus.bus_number}`;
+    label.textContent = `${language === 'ar' ? 'حافلة' : language === 'hi' ? 'बस' : 'Bus'} ${bus.bus_number}`;
     label.style.background = 'hsl(var(--card))';
     label.style.color = 'hsl(var(--card-foreground))';
     label.style.padding = '5px 8px';
@@ -437,7 +440,7 @@ export default function AllBusesMap({ buses }: AllBusesMapProps) {
     // Add inactive badge
     if (!isActive) {
       const tag = document.createElement('div');
-      tag.textContent = language === 'ar' ? 'متوقفة' : 'Inactive';
+      tag.textContent = language === 'ar' ? 'متوقفة' : language === 'hi' ? 'निष्क्रिय' : 'Inactive';
       tag.style.marginTop = '2px';
       tag.style.padding = '2px 5px';
       tag.style.borderRadius = '4px';
@@ -512,9 +515,13 @@ export default function AllBusesMap({ buses }: AllBusesMapProps) {
             {mapStatus === 'loading'
               ? language === 'ar'
                 ? 'جاري تحميل الخريطة…'
+                : language === 'hi'
+                ? 'नक्शा लोड हो रहा है…'
                 : 'Loading map…'
               : language === 'ar'
                 ? `تعذر تحميل الخريطة: ${mapError || ''}`
+                : language === 'hi'
+                ? `नक्शा अनुपलब्ध: ${mapError || ''}`
                 : `Map unavailable: ${mapError || ''}`}
           </div>
         </div>
@@ -523,13 +530,13 @@ export default function AllBusesMap({ buses }: AllBusesMapProps) {
       {/* Stats overlay */}
       <div className="absolute top-4 left-4 bg-card/95 backdrop-blur-sm rounded-lg p-3 shadow-lg border">
         <div className="text-sm font-medium mb-1">
-          {language === 'ar' ? 'الرحلات النشطة' : 'Active Trips'}
+          {language === 'ar' ? 'الرحلات النشطة' : language === 'hi' ? 'सक्रिय यात्राएं' : 'Active Trips'}
         </div>
         <div className="text-2xl font-bold text-primary">
           {activeBusCount} / {buses.length}
         </div>
         <div className="text-xs text-muted-foreground mt-1">
-          {language === 'ar' ? 'حافلات في الخدمة' : 'Buses in service'}
+          {language === 'ar' ? 'حافلات في الخدمة' : language === 'hi' ? 'सेवा में बसें' : 'Buses in service'}
         </div>
       </div>
 
@@ -538,11 +545,11 @@ export default function AllBusesMap({ buses }: AllBusesMapProps) {
         <div className="flex items-center gap-3 text-xs">
           <div className="flex items-center gap-1.5">
             <div className="w-3 h-3 rounded-full bg-primary" />
-            <span>{language === 'ar' ? 'نشطة' : 'Active'}</span>
+            <span>{language === 'ar' ? 'نشطة' : language === 'hi' ? 'सक्रिय' : 'Active'}</span>
           </div>
           <div className="flex items-center gap-1.5">
             <div className="w-3 h-3 rounded-full bg-red-500" />
-            <span>{language === 'ar' ? 'غير نشطة' : 'Inactive'}</span>
+            <span>{language === 'ar' ? 'غير نشطة' : language === 'hi' ? 'निष्क्रिय' : 'Inactive'}</span>
           </div>
         </div>
       </div>
@@ -557,7 +564,7 @@ export default function AllBusesMap({ buses }: AllBusesMapProps) {
               </div>
               <div className="text-start">
                 <div className="text-xl font-bold">
-                  {language === 'ar' ? 'حافلة' : 'Bus'} {selectedBus?.bus_number}
+                  {language === 'ar' ? 'حافلة' : language === 'hi' ? 'बस' : 'Bus'} {selectedBus?.bus_number}
                 </div>
                 {selectedBus?.model && (
                   <div className="text-sm text-muted-foreground font-normal">
@@ -582,8 +589,8 @@ export default function AllBusesMap({ buses }: AllBusesMapProps) {
                     : 'bg-red-500/10 text-red-500'
                 }`}>
                   {activeBusIds.has(selectedBus.id) 
-                    ? (language === 'ar' ? '🟢 رحلة نشطة' : '🟢 Active Trip')
-                    : (language === 'ar' ? '🔴 لا توجد رحلة' : '🔴 No Active Trip')
+                    ? (language === 'ar' ? '🟢 رحلة نشطة' : language === 'hi' ? '🟢 सक्रिय यात्रा' : '🟢 Active Trip')
+                    : (language === 'ar' ? '🔴 لا توجد رحلة' : language === 'hi' ? '🔴 कोई सक्रिय यात्रा नहीं' : '🔴 No Active Trip')
                   }
                 </div>
               </div>
@@ -593,27 +600,27 @@ export default function AllBusesMap({ buses }: AllBusesMapProps) {
                 <div className="bg-muted/50 rounded-xl p-4">
                   <div className="flex items-center gap-2 text-muted-foreground mb-1">
                     <User className="w-4 h-4" />
-                    <span className="text-xs">{language === 'ar' ? 'السائق' : 'Driver'}</span>
+                    <span className="text-xs">{language === 'ar' ? 'السائق' : language === 'hi' ? 'ड्राइवर' : 'Driver'}</span>
                   </div>
                   <div className="font-semibold text-sm">
-                    {selectedBus.driver_name || (language === 'ar' ? 'غير معين' : 'Not Assigned')}
+                    {selectedBus.driver_name || (language === 'ar' ? 'غير معين' : language === 'hi' ? 'असाइन नहीं' : 'Not Assigned')}
                   </div>
                 </div>
 
                 <div className="bg-muted/50 rounded-xl p-4">
                   <div className="flex items-center gap-2 text-muted-foreground mb-1">
                     <User className="w-4 h-4" />
-                    <span className="text-xs">{language === 'ar' ? 'المشرف' : 'Supervisor'}</span>
+                    <span className="text-xs">{language === 'ar' ? 'المشرف' : language === 'hi' ? 'सुपरवाइज़र' : 'Supervisor'}</span>
                   </div>
                   <div className="font-semibold text-sm">
-                    {selectedBus.supervisor_name || (language === 'ar' ? 'غير معين' : 'Not Assigned')}
+                    {selectedBus.supervisor_name || (language === 'ar' ? 'غير معين' : language === 'hi' ? 'असाइन नहीं' : 'Not Assigned')}
                   </div>
                 </div>
 
                 <div className="bg-muted/50 rounded-xl p-4">
                   <div className="flex items-center gap-2 text-muted-foreground mb-1">
                     <Users className="w-4 h-4" />
-                    <span className="text-xs">{language === 'ar' ? 'الطلاب' : 'Students'}</span>
+                    <span className="text-xs">{language === 'ar' ? 'الطلاب' : language === 'hi' ? 'छात्र' : 'Students'}</span>
                   </div>
                   <div className="font-semibold text-sm">
                     {selectedBus.student_count} / {selectedBus.capacity}
@@ -623,7 +630,7 @@ export default function AllBusesMap({ buses }: AllBusesMapProps) {
                 <div className="bg-muted/50 rounded-xl p-4">
                   <div className="flex items-center gap-2 text-muted-foreground mb-1">
                     <Calendar className="w-4 h-4" />
-                    <span className="text-xs">{language === 'ar' ? 'سنة الصنع' : 'Year'}</span>
+                    <span className="text-xs">{language === 'ar' ? 'سنة الصنع' : language === 'hi' ? 'वर्ष' : 'Year'}</span>
                   </div>
                   <div className="font-semibold text-sm">
                     {selectedBus.year || '-'}
@@ -637,7 +644,7 @@ export default function AllBusesMap({ buses }: AllBusesMapProps) {
                   <div className="flex items-center gap-2 text-primary mb-1">
                     <MapPin className="w-4 h-4" />
                     <span className="text-xs font-medium">
-                      {language === 'ar' ? 'آخر تحديث للموقع' : 'Last Location Update'}
+                      {language === 'ar' ? 'آخر تحديث للموقع' : language === 'hi' ? 'अंतिम स्थान अपडेट' : 'Last Location Update'}
                     </span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
