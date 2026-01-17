@@ -16,6 +16,12 @@ export function OfflineIndicator() {
     // Language provider not available yet, use default
   }
 
+  const getText = (en: string, ar: string, hi: string) => {
+    if (language === 'ar') return ar;
+    if (language === 'hi') return hi;
+    return en;
+  };
+
   if (isOnline && !isSyncing) return null;
 
   return (
@@ -31,10 +37,10 @@ export function OfflineIndicator() {
             <RefreshCw className="h-5 w-5 animate-spin text-blue-600" />
             <div>
               <p className="font-semibold text-sm text-blue-800">
-                {language === 'en' ? 'Syncing...' : 'مزامنة...'}
+                {getText('Syncing...', 'مزامنة...', 'सिंक हो रहा है...')}
               </p>
               <p className="text-xs text-blue-600">
-                {language === 'en' ? 'Uploading changes' : 'تحميل التغييرات'}
+                {getText('Uploading changes', 'تحميل التغييرات', 'परिवर्तन अपलोड हो रहे हैं')}
               </p>
             </div>
           </>
@@ -43,10 +49,10 @@ export function OfflineIndicator() {
             <WifiOff className="h-5 w-5 text-orange-600" />
             <div>
               <p className="font-semibold text-sm text-orange-800">
-                {language === 'en' ? 'Offline Mode' : 'وضع غير متصل'}
+                {getText('Offline Mode', 'وضع غير متصل', 'ऑफ़लाइन मोड')}
               </p>
               <p className="text-xs text-orange-600">
-                {language === 'en' ? 'Changes saved locally' : 'التغييرات محفوظة محليًا'}
+                {getText('Changes saved locally', 'التغييرات محفوظة محليًا', 'परिवर्तन स्थानीय रूप से सहेजे गए')}
               </p>
             </div>
             <Button 

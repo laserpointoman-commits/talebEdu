@@ -21,16 +21,22 @@ export default function WalletTopUp({ onSuccess }: WalletTopUpProps) {
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'bank_transfer'>('card');
   const [loading, setLoading] = useState(false);
 
+  const getText = (en: string, ar: string, hi: string) => {
+    if (language === 'ar') return ar;
+    if (language === 'hi') return hi;
+    return en;
+  };
+
   const quickAmounts = [10, 20, 50, 100, 200, 500];
 
   const handleTopUp = async () => {
     if (!amount || Number(amount) <= 0) {
-      toast.error(language === 'ar' ? 'الرجاء إدخال مبلغ صحيح' : 'Please enter a valid amount');
+      toast.error(getText('Please enter a valid amount', 'الرجاء إدخال مبلغ صحيح', 'कृपया एक वैध राशि दर्ज करें'));
       return;
     }
 
     if (!user) {
-      toast.error(language === 'ar' ? 'يجب تسجيل الدخول أولاً' : 'Please login first');
+      toast.error(getText('Please login first', 'يجب تسجيل الدخول أولاً', 'कृपया पहले लॉगिन करें'));
       return;
     }
 
@@ -77,17 +83,17 @@ export default function WalletTopUp({ onSuccess }: WalletTopUpProps) {
 
       if (transactionError) throw transactionError;
 
-      toast.success(
-        language === 'ar' 
-          ? `تم إضافة ${topUpAmount} ريال عماني بنجاح` 
-          : `Successfully added ${topUpAmount} OMR`
-      );
+      toast.success(getText(
+        `Successfully added ${topUpAmount} OMR`,
+        `تم إضافة ${topUpAmount} ريال عماني بنجاح`,
+        `${topUpAmount} OMR सफलतापूर्वक जोड़ा गया`
+      ));
 
       setAmount('');
       onSuccess?.();
     } catch (error: any) {
       console.error('Top-up error:', error);
-      toast.error(language === 'ar' ? 'فشل شحن المحفظة' : 'Failed to top up wallet');
+      toast.error(getText('Failed to top up wallet', 'فشل شحن المحفظة', 'वॉलेट टॉप अप करने में विफल'));
     } finally {
       setLoading(false);
     }
@@ -98,19 +104,21 @@ export default function WalletTopUp({ onSuccess }: WalletTopUpProps) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Wallet className="h-5 w-5" />
-          {language === 'ar' ? 'شحن المحفظة' : 'Top Up Wallet'}
+          {getText('Top Up Wallet', 'شحن المحفظة', 'वॉलेट टॉप अप करें')}
         </CardTitle>
         <CardDescription>
-          {language === 'ar' 
-            ? 'أضف أموال إلى محفظتك للمدفوعات المدرسية'
-            : 'Add funds to your wallet for school payments'}
+          {getText(
+            'Add funds to your wallet for school payments',
+            'أضف أموال إلى محفظتك للمدفوعات المدرسية',
+            'स्कूल भुगतान के लिए अपने वॉलेट में धनराशि जोड़ें'
+          )}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Quick Amounts */}
         <div>
           <Label className="mb-3 block">
-            {language === 'ar' ? 'مبالغ سريعة' : 'Quick Amounts'}
+            {getText('Quick Amounts', 'مبالغ سريعة', 'त्वरित राशियाँ')}
           </Label>
           <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
             {quickAmounts.map((quickAmount) => (
@@ -129,7 +137,7 @@ export default function WalletTopUp({ onSuccess }: WalletTopUpProps) {
         {/* Custom Amount */}
         <div className="space-y-2">
           <Label htmlFor="amount">
-            {language === 'ar' ? 'المبلغ المخصص' : 'Custom Amount'}
+            {getText('Custom Amount', 'المبلغ المخصص', 'कस्टम राशि')}
           </Label>
           <div className="relative">
             <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -151,20 +159,20 @@ export default function WalletTopUp({ onSuccess }: WalletTopUpProps) {
 
         {/* Payment Method */}
         <div className="space-y-3">
-          <Label>{language === 'ar' ? 'طريقة الدفع' : 'Payment Method'}</Label>
+          <Label>{getText('Payment Method', 'طريقة الدفع', 'भुगतान विधि')}</Label>
           <RadioGroup value={paymentMethod} onValueChange={(value: any) => setPaymentMethod(value)}>
             <div className="flex items-center space-x-2 border rounded-lg p-3 cursor-pointer hover:bg-accent">
               <RadioGroupItem value="card" id="card" />
               <Label htmlFor="card" className="flex items-center gap-2 cursor-pointer flex-1">
                 <CreditCard className="h-4 w-4" />
-                {language === 'ar' ? 'بطاقة ائتمان/خصم' : 'Credit/Debit Card'}
+                {getText('Credit/Debit Card', 'بطاقة ائتمان/خصم', 'क्रेडिट/डेबिट कार्ड')}
               </Label>
             </div>
             <div className="flex items-center space-x-2 border rounded-lg p-3 cursor-pointer hover:bg-accent">
               <RadioGroupItem value="bank_transfer" id="bank_transfer" />
               <Label htmlFor="bank_transfer" className="flex items-center gap-2 cursor-pointer flex-1">
                 <Wallet className="h-4 w-4" />
-                {language === 'ar' ? 'تحويل بنكي' : 'Bank Transfer'}
+                {getText('Bank Transfer', 'تحويل بنكي', 'बैंक ट्रांसफर')}
               </Label>
             </div>
           </RadioGroup>
@@ -180,20 +188,22 @@ export default function WalletTopUp({ onSuccess }: WalletTopUpProps) {
           {loading ? (
             <>
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              {language === 'ar' ? 'جاري المعالجة...' : 'Processing...'}
+              {getText('Processing...', 'جاري المعالجة...', 'प्रक्रिया हो रही है...')}
             </>
           ) : (
             <>
               <Wallet className="h-4 w-4 mr-2" />
-              {language === 'ar' ? 'شحن المحفظة' : 'Top Up Wallet'}
+              {getText('Top Up Wallet', 'شحن المحفظة', 'वॉलेट टॉप अप करें')}
             </>
           )}
         </Button>
 
         <p className="text-xs text-muted-foreground text-center">
-          {language === 'ar' 
-            ? 'سيتم إضافة الأموال إلى محفظتك على الفور'
-            : 'Funds will be added to your wallet immediately'}
+          {getText(
+            'Funds will be added to your wallet immediately',
+            'سيتم إضافة الأموال إلى محفظتك على الفور',
+            'धनराशि तुरंत आपके वॉलेट में जोड़ी जाएगी'
+          )}
         </p>
       </CardContent>
     </Card>

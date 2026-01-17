@@ -70,13 +70,19 @@ export default function BiometricGuard({ children }: { children: React.ReactNode
     }
   };
 
+  const getText = (en: string, ar: string, hi: string) => {
+    if (language === 'ar') return ar;
+    if (language === 'hi') return hi;
+    return en;
+  };
+
   const handleBiometricAuth = async () => {
     try {
       const result = await NativeAuthService.authenticateWithBiometric(language);
       
       if (result) {
         setIsVerified(true);
-        toast.success(language === 'en' ? 'Authentication successful' : 'تم التحقق بنجاح');
+        toast.success(getText('Authentication successful', 'تم التحقق بنجاح', 'प्रमाणीकरण सफल'));
       }
     } catch (error) {
       console.error('Biometric auth error:', error);
@@ -110,12 +116,10 @@ export default function BiometricGuard({ children }: { children: React.ReactNode
               </div>
             </div>
             <CardTitle className="text-2xl">
-              {language === 'en' ? 'Unlock TalebEdu' : 'فتح TalebEdu'}
+              {getText('Unlock TalebEdu', 'فتح TalebEdu', 'TalebEdu अनलॉक करें')}
             </CardTitle>
             <CardDescription>
-              {language === 'en' 
-                ? 'Verify your identity to continue' 
-                : 'تحقق من هويتك للمتابعة'}
+              {getText('Verify your identity to continue', 'تحقق من هويتك للمتابعة', 'जारी रखने के लिए अपनी पहचान सत्यापित करें')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -125,7 +129,7 @@ export default function BiometricGuard({ children }: { children: React.ReactNode
               size="lg"
             >
               <Fingerprint className="h-5 w-5 mr-2" />
-              {language === 'en' ? 'Use Biometric' : 'استخدام البيومترية'}
+              {getText('Use Biometric', 'استخدام البيومترية', 'बायोमेट्रिक का उपयोग करें')}
             </Button>
             
             <Button
@@ -135,7 +139,7 @@ export default function BiometricGuard({ children }: { children: React.ReactNode
               size="lg"
             >
               <ArrowRight className="h-5 w-5 mr-2" />
-              {language === 'en' ? 'Use Password Instead' : 'استخدام كلمة المرور'}
+              {getText('Use Password Instead', 'استخدام كلمة المرور', 'इसके बजाय पासवर्ड का उपयोग करें')}
             </Button>
           </CardContent>
         </Card>
