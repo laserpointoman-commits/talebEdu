@@ -119,20 +119,20 @@ function DashboardLayout({ children }: DashboardLayoutProps) {
         className="fixed left-0 right-0 top-0 z-50 ios-header"
         dir="ltr"
       >
-        <div className="h-16 md:h-20 border-b border-border/40 bg-background/95 backdrop-blur-sm flex items-center justify-between px-3 md:px-6">
+        <div className="h-14 md:h-16 border-b border-white/10 bg-background/70 backdrop-blur-xl flex items-center justify-between px-3 md:px-6">
 
         {/* Left Section - Back/Menu, Home, Language */}
-        <div className="flex items-center gap-2 md:gap-3 w-auto">
+        <div className="flex items-center gap-1.5 md:gap-3 w-auto">
           {/* Back Button - Show on all pages except main dashboard */}
           {!isMainDashboard && (
             <Button
               variant="ghost"
               size="icon"
               onClick={handleBack}
-              className="h-10 w-10 md:h-11 md:w-11"
+              className="h-9 w-9 md:h-10 md:w-10 rounded-xl hover:bg-primary/10"
               aria-label="Go back"
             >
-              <ArrowLeft className="h-6 w-6" />
+              <ArrowLeft className="h-5 w-5" />
             </Button>
           )}
           {/* Desktop Toggle */}
@@ -140,10 +140,10 @@ function DashboardLayout({ children }: DashboardLayoutProps) {
             variant="ghost"
             size="icon"
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="hidden lg:flex h-10 w-10 md:h-11 md:w-11"
+            className="hidden lg:flex h-9 w-9 md:h-10 md:w-10 rounded-xl hover:bg-primary/10"
             aria-label="Toggle sidebar"
           >
-            {isSidebarOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            {isSidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </Button>
 
           {/* Mobile Sidebar */}
@@ -152,15 +152,15 @@ function DashboardLayout({ children }: DashboardLayoutProps) {
               <Button
                 variant="ghost"
                 size="icon"
-                className="lg:hidden h-10 w-10"
+                className="lg:hidden h-9 w-9 rounded-xl hover:bg-primary/10"
                 aria-label="Toggle mobile sidebar"
               >
-                <Menu className="h-6 w-6" />
+                <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
             <SheetContent 
               side={dir === 'rtl' ? 'right' : 'left'} 
-              className="p-0 w-[300px] max-w-[90vw] pt-0"
+              className="p-0 w-[300px] max-w-[90vw] pt-0 bg-background/95 backdrop-blur-xl"
               style={{ paddingTop: 'env(safe-area-inset-top)' }}
             >
               <Sidebar onItemClick={() => setIsMobileSidebarOpen(false)} />
@@ -172,10 +172,10 @@ function DashboardLayout({ children }: DashboardLayoutProps) {
             variant="ghost"
             size="icon"
             onClick={() => navigate('/dashboard')}
-            className="h-10 w-10 md:h-11 md:w-11"
+            className="h-9 w-9 md:h-10 md:w-10 rounded-xl hover:bg-primary/10"
             aria-label="Go to home"
           >
-            <Home className="h-6 w-6" />
+            <Home className="h-5 w-5" />
           </Button>
           
           {/* Language Switcher */}
@@ -183,16 +183,15 @@ function DashboardLayout({ children }: DashboardLayoutProps) {
         </div>
 
         {/* Right Section - Logo and User Menu */}
-        <div className="flex items-center gap-2 md:gap-4 w-auto justify-end">
+        <div className="flex items-center gap-2 md:gap-3 w-auto justify-end">
           {/* App Logo and Name - Always LTR */}
-          <div className="flex items-center justify-center gap-2 md:gap-3" dir="ltr">
+          <div className="flex items-center justify-center gap-1.5 md:gap-2" dir="ltr">
             <div className="relative">
-              <div className="text-4xl md:text-5xl lg:text-6xl font-bold text-primary leading-none">
+              <div className="text-2xl md:text-3xl font-bold bg-gradient-to-br from-primary to-accent bg-clip-text text-transparent leading-none">
                 t
               </div>
-              <div className="absolute -inset-3 bg-primary/20 blur-xl rounded-full opacity-50 hidden md:block" />
             </div>
-            <span className="font-semibold text-xl md:text-2xl lg:text-3xl text-foreground">
+            <span className="font-semibold text-base md:text-lg text-foreground hidden sm:inline">
               talebEdu
             </span>
           </div>
@@ -246,10 +245,10 @@ function DashboardLayout({ children }: DashboardLayoutProps) {
           {/* User Account Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-10 w-10 md:h-11 md:w-11 rounded-full">
-                <Avatar className="h-10 w-10 md:h-11 md:w-11">
-                  <AvatarFallback className="bg-gradient-primary text-white">
-                    <User className="h-6 w-6" />
+              <Button variant="ghost" className="relative h-9 w-9 md:h-10 md:w-10 rounded-xl hover:bg-primary/10">
+                <Avatar className="h-8 w-8 md:h-9 md:w-9 rounded-xl">
+                  <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-white rounded-xl text-sm">
+                    <User className="h-4 w-4" />
                   </AvatarFallback>
                 </Avatar>
               </Button>
@@ -291,7 +290,7 @@ function DashboardLayout({ children }: DashboardLayoutProps) {
       <div 
         className="flex h-screen"
         style={{ 
-          paddingTop: 'calc(4rem + env(safe-area-inset-top, 0px))',
+          paddingTop: 'calc(3.5rem + env(safe-area-inset-top, 0px))',
         }}
       >
         {/* Desktop Sidebar - Wider for better readability */}
