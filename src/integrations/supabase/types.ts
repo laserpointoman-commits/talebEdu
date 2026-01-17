@@ -3401,6 +3401,38 @@ export type Database = {
           },
         ]
       }
+      pinned_chats: {
+        Row: {
+          contact_id: string | null
+          created_at: string
+          group_id: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          contact_id?: string | null
+          created_at?: string
+          group_id?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          contact_id?: string | null
+          created_at?: string
+          group_id?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pinned_chats_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "group_chats"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       post_comments: {
         Row: {
           content: string

@@ -885,23 +885,94 @@ export function useMessenger() {
     };
   }, [user, fetchConversations, markAsDelivered, updatePresence]);
 
-  // Archive chat
-  const archiveChat = useCallback(async (recipientId: string) => {
-    if (!user) return;
+  // Archive chat - persisted in DB
+  const archiveChat = useCallback(async (recipientId: string): Promise<boolean> => {
+    if (!user) return false;
     
     try {
-      await supabase
+      const { error } = await supabase
         .from('archived_chats')
         .upsert({
           user_id: user.id,
           contact_id: recipientId
         }, { onConflict: 'user_id,contact_id' });
       
+      if (error) throw error;
+      
       setConversations(prev => prev.filter(c => c.recipient_id !== recipientId));
       return true;
     } catch (error) {
       console.error('Error archiving chat:', error);
       return false;
+    }
+  }, [user]);
+
+  // Pin/Unpin chat - persisted in DB
+  const pinChat = useCallback(async (contactId: string): Promise<boolean> => {
+    if (!user) return false;
+    
+    try {
+      // Check if already pinned
+      const { data: existing } = await supabase
+        .from('pinned_chats')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('contact_id', contactId)
+        .maybeSingle();
+      
+      if (existing) {
+        // Unpin
+        await supabase.from('pinned_chats').delete().eq('id', existing.id);
+      } else {
+        // Pin
+        await supabase.from('pinned_chats').insert({ user_id: user.id, contact_id: contactId });
+      }
+      return true;
+    } catch (error) {
+      console.error('Error pinning chat:', error);
+      return false;
+    }
+  }, [user]);
+
+  // Fetch pinned chats
+  const fetchPinnedChats = useCallback(async (): Promise<Set<string>> => {
+    if (!user) return new Set();
+    try {
+      const { data } = await supabase
+        .from('pinned_chats')
+        .select('contact_id, group_id')
+        .eq('user_id', user.id);
+      
+      const ids = new Set<string>();
+      data?.forEach(p => {
+        if (p.contact_id) ids.add(p.contact_id);
+        if (p.group_id) ids.add(p.group_id);
+      });
+      return ids;
+    } catch (error) {
+      console.error('Error fetching pinned chats:', error);
+      return new Set();
+    }
+  }, [user]);
+
+  // Fetch archived chats
+  const fetchArchivedChats = useCallback(async (): Promise<Set<string>> => {
+    if (!user) return new Set();
+    try {
+      const { data } = await supabase
+        .from('archived_chats')
+        .select('contact_id, group_id')
+        .eq('user_id', user.id);
+      
+      const ids = new Set<string>();
+      data?.forEach(a => {
+        if (a.contact_id) ids.add(a.contact_id);
+        if (a.group_id) ids.add(a.group_id);
+      });
+      return ids;
+    } catch (error) {
+      console.error('Error fetching archived chats:', error);
+      return new Set();
     }
   }, [user]);
 
@@ -1026,6 +1097,9 @@ export function useMessenger() {
     getCallHistoryForContact,
     toggleChatNotifications,
     blockUser,
-    unblockUser
+    unblockUser,
+    pinChat,
+    fetchPinnedChats,
+    fetchArchivedChats
   };
 }

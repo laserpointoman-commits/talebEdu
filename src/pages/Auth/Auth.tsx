@@ -54,6 +54,9 @@ export default function Auth() {
   const [resetEmail, setResetEmail] = useState('');
 
   useEffect(() => {
+    // Reset NFC service on auth page load (important after logout for iOS)
+    nfcService.reset();
+    
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
