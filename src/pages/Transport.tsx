@@ -197,28 +197,34 @@ export default function Transport() {
   const totalCapacity = buses.reduce((sum, bus) => sum + bus.capacity, 0);
   const totalStudents = buses.reduce((sum, bus) => sum + bus.currentStudents, 0);
 
+  const getText = (en: string, ar: string, hi: string) => {
+    if (language === 'ar') return ar;
+    if (language === 'hi') return hi;
+    return en;
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">{t('dashboard.transport')}</h2>
           <p className="text-muted-foreground">
-            {language === 'en' ? 'Manage school transportation and buses' : 'إدارة النقل المدرسي والحافلات'}
+            {getText('Manage school transportation and buses', 'إدارة النقل المدرسي والحافلات', 'स्कूल परिवहन और बसों का प्रबंधन करें')}
           </p>
         </div>
         {(profile?.role === 'admin' || profile?.role === 'developer') && (
           <div className="flex gap-2 flex-wrap">
             <Button onClick={() => navigate('/dashboard/admin/drivers')}>
               <UserPlus className="h-4 w-4 mr-2" />
-              {language === 'en' ? 'Manage Drivers' : 'إدارة السائقين'}
+              {getText('Manage Drivers', 'إدارة السائقين', 'ड्राइवर प्रबंधन')}
             </Button>
             <Button onClick={() => navigate('/dashboard/admin/buses')}>
               <Bus className="h-4 w-4 mr-2" />
-              {language === 'en' ? 'Manage Buses' : 'إدارة الحافلات'}
+              {getText('Manage Buses', 'إدارة الحافلات', 'बस प्रबंधन')}
             </Button>
             <Button onClick={() => navigate('/dashboard/admin/routes')}>
               <Route className="h-4 w-4 mr-2" />
-              {language === 'en' ? 'Manage Routes' : 'إدارة المسارات'}
+              {getText('Manage Routes', 'إدارة المسارات', 'मार्ग प्रबंधन')}
             </Button>
           </div>
         )}
@@ -229,7 +235,7 @@ export default function Transport() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              {language === 'en' ? 'Total Buses' : 'إجمالي الحافلات'}
+              {getText('Total Buses', 'إجمالي الحافلات', 'कुल बसें')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -239,7 +245,7 @@ export default function Transport() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              {language === 'en' ? 'Active Buses' : 'الحافلات النشطة'}
+              {getText('Active Buses', 'الحافلات النشطة', 'सक्रिय बसें')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -249,7 +255,7 @@ export default function Transport() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              {language === 'en' ? 'Total Capacity' : 'السعة الإجمالية'}
+              {getText('Total Capacity', 'السعة الإجمالية', 'कुल क्षमता')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -259,7 +265,7 @@ export default function Transport() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              {language === 'en' ? 'Current Students' : 'الطلاب الحاليون'}
+              {getText('Current Students', 'الطلاب الحاليون', 'वर्तमान छात्र')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -272,7 +278,7 @@ export default function Transport() {
       {buses.length === 0 ? (
         <Card>
           <CardContent className="pt-6 text-center text-muted-foreground">
-            {language === 'ar' ? 'لا توجد حافلات' : 'No buses available'}
+            {getText('No buses available', 'لا توجد حافلات', 'कोई बस उपलब्ध नहीं')}
           </CardContent>
         </Card>
       ) : (
@@ -291,10 +297,10 @@ export default function Transport() {
                 <Badge className={getStatusColor(bus.status === 'maintenance' ? 'maintenance' : (activeTripBusIds.has(bus.id) ? 'active' : 'inactive'))}>
                   {bus.status !== 'maintenance' && activeTripBusIds.has(bus.id) && <Activity className="h-3 w-3 mr-1" />}
                   {bus.status === 'maintenance'
-                    ? (language === 'ar' ? 'صيانة' : 'maintenance')
+                    ? getText('maintenance', 'صيانة', 'रखरखाव')
                     : (activeTripBusIds.has(bus.id)
-                        ? (language === 'ar' ? 'نشط' : 'active')
-                        : (language === 'ar' ? 'غير نشط' : 'inactive'))}
+                        ? getText('active', 'نشط', 'सक्रिय')
+                        : getText('inactive', 'غير نشط', 'निष्क्रिय'))}
                 </Badge>
               </div>
             </CardHeader>
@@ -319,7 +325,7 @@ export default function Transport() {
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground flex items-center gap-1">
                     <Users className="h-3 w-3" />
-                    {language === 'en' ? 'Students' : 'الطلاب'}
+                    {getText('Students', 'الطلاب', 'छात्र')}
                   </span>
                   <span className="font-medium">
                     {bus.currentStudents}/{bus.capacity}
@@ -328,14 +334,14 @@ export default function Transport() {
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground flex items-center gap-1">
                     <MapPin className="h-3 w-3" />
-                    {language === 'en' ? 'Last Location' : 'آخر موقع'}
+                    {getText('Last Location', 'آخر موقع', 'अंतिम स्थान')}
                   </span>
                   <span className="font-medium text-xs">{bus.lastLocation}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground flex items-center gap-1">
                     <Clock className="h-3 w-3" />
-                    {language === 'en' ? 'Updated' : 'تحديث'}
+                    {getText('Updated', 'تحديث', 'अपडेट किया')}
                   </span>
                   <span className="text-xs">{bus.lastUpdate}</span>
                 </div>
@@ -343,7 +349,7 @@ export default function Transport() {
 
               <div className="pt-2 border-t">
                 <p className="text-xs text-muted-foreground mb-2">
-                  {language === 'en' ? 'Route' : 'المسار'}
+                  {getText('Route', 'المسار', 'मार्ग')}
                 </p>
                 <p className="text-sm font-medium">{bus.routeName}</p>
               </div>
@@ -357,7 +363,7 @@ export default function Transport() {
                     onClick={() => handleEdit(bus)}
                   >
                     <Edit className="h-3 w-3 mr-1" />
-                    {language === 'en' ? 'Edit' : 'تعديل'}
+                    {getText('Edit', 'تعديل', 'संपादित करें')}
                   </Button>
                   <Button
                     size="sm"
@@ -365,7 +371,7 @@ export default function Transport() {
                     className="flex-1"
                     onClick={handleCreateDriverEmail}
                   >
-                    {language === 'en' ? 'Create Email' : 'إنشاء بريد'}
+                    {getText('Create Email', 'إنشاء بريد', 'ईमेल बनाएं')}
                   </Button>
                 </div>
               )}
@@ -380,13 +386,13 @@ export default function Transport() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {language === 'en' ? 'Edit Bus Information' : 'تعديل معلومات الحافلة'}
+              {getText('Edit Bus Information', 'تعديل معلومات الحافلة', 'बस जानकारी संपादित करें')}
             </DialogTitle>
           </DialogHeader>
           {editForm && (
             <div className="grid gap-4 py-4">
               <div>
-                <Label htmlFor="busNumber">{language === 'ar' ? 'رقم الحافلة' : 'Bus Number'}</Label>
+                <Label htmlFor="busNumber">{getText('Bus Number', 'رقم الحافلة', 'बस नंबर')}</Label>
                 <Input
                   id="busNumber"
                   value={editForm.busNumber}
@@ -394,7 +400,7 @@ export default function Transport() {
                 />
               </div>
               <div>
-                <Label htmlFor="driverName">{language === 'ar' ? 'اسم السائق' : 'Driver Name'}</Label>
+                <Label htmlFor="driverName">{getText('Driver Name', 'اسم السائق', 'ड्राइवर का नाम')}</Label>
                 <Input
                   id="driverName"
                   value={editForm.driverName}
@@ -402,7 +408,7 @@ export default function Transport() {
                 />
               </div>
               <div>
-                <Label htmlFor="driverPhone">{language === 'ar' ? 'هاتف السائق' : 'Driver Phone'}</Label>
+                <Label htmlFor="driverPhone">{getText('Driver Phone', 'هاتف السائق', 'ड्राइवर का फोन')}</Label>
                 <Input
                   id="driverPhone"
                   value={editForm.driverPhone}
@@ -410,7 +416,7 @@ export default function Transport() {
                 />
               </div>
               <div>
-                <Label htmlFor="route">{language === 'ar' ? 'المسار' : 'Route'}</Label>
+                <Label htmlFor="route">{getText('Route', 'المسار', 'मार्ग')}</Label>
                 <Input
                   id="route"
                   value={editForm.route}
