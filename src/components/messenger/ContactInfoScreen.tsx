@@ -197,9 +197,10 @@ export function ContactInfoScreen({
         style={{ backgroundColor: colors.bg }}
         dir={dir}
       >
-        {/* Header */}
+        {/* Header - Force LTR for consistent back button placement */}
         <div 
           className="flex items-center gap-3 px-4 py-3 shrink-0"
+          dir="ltr"
           style={{ backgroundColor: colors.headerBg }}
         >
           <Button
