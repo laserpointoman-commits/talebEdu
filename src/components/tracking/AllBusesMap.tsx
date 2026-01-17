@@ -293,29 +293,29 @@ export default function AllBusesMap({ buses }: AllBusesMapProps) {
       container.appendChild(pulse);
     }
 
-    // Bus pin
+    // Bus pin with beautiful icon
     const pin = document.createElement('div');
     pin.className = 'bus-pin';
-    pin.style.width = '44px';
-    pin.style.height = '44px';
+    pin.style.width = '48px';
+    pin.style.height = '48px';
     pin.style.borderRadius = '9999px';
     pin.style.display = 'flex';
     pin.style.alignItems = 'center';
     pin.style.justifyContent = 'center';
     pin.style.border = '3px solid hsl(var(--background))';
-    pin.style.boxShadow = '0 8px 20px hsl(var(--foreground) / 0.14)';
-    pin.style.background = bus.status === 'active' ? 'hsl(var(--primary))' : 'hsl(var(--muted))';
+    pin.style.boxShadow = bus.status === 'active' 
+      ? '0 8px 24px hsl(var(--primary) / 0.35), 0 4px 8px hsl(var(--foreground) / 0.1)' 
+      : '0 6px 16px hsl(var(--foreground) / 0.12)';
+    pin.style.background = bus.status === 'active' 
+      ? 'linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.85))' 
+      : 'hsl(var(--muted))';
     pin.style.color = bus.status === 'active' ? 'hsl(var(--primary-foreground))' : 'hsl(var(--muted-foreground))';
     pin.style.position = 'relative';
     pin.style.zIndex = '2';
+    // More detailed and beautiful school bus icon
     pin.innerHTML = `
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <rect x="3" y="6" width="18" height="13" rx="2"/>
-        <path d="M3 12h18"/>
-        <path d="M8 6V4"/>
-        <path d="M16 6V4"/>
-        <circle cx="7" cy="17" r="1"/>
-        <circle cx="17" cy="17" r="1"/>
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M4 16c0 .88.39 1.67 1 2.22V20c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h8v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1.78c.61-.55 1-1.34 1-2.22V6c0-3.5-3.58-4-8-4s-8 .5-8 4v10zm3.5 1c-.83 0-1.5-.67-1.5-1.5S6.67 14 7.5 14s1.5.67 1.5 1.5S8.33 17 7.5 17zm9 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM18 11H6V6h12v5z"/>
       </svg>
     `;
 
