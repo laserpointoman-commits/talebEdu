@@ -1,6 +1,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+declare const EdgeRuntime: { waitUntil(promise: Promise<unknown>): void };
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -21,6 +23,8 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const startTime = performance.now();
+
   try {
     const body: AttendanceRequest = await req.json();
     const { studentNfcId, studentId, deviceId, location, action, nfcVerified = true, manualEntry = false } = body;
@@ -29,56 +33,39 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    console.log(`Recording attendance: ${action} for ${studentNfcId || studentId} at ${location}`);
-
-    // Find student by NFC ID or student ID
-    let student;
+    // Fast student lookup
+    let student: any = null;
     if (studentNfcId) {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('students')
-        .select('*')
+        .select('id, first_name, last_name, first_name_ar, last_name_ar, parent_id, nfc_id, class')
         .eq('nfc_id', studentNfcId)
         .single();
-      
-      if (error || !data) {
-        console.error('Student not found by NFC ID:', error);
-        return new Response(
-          JSON.stringify({ error: 'Student not found', nfcId: studentNfcId }),
-          { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
       student = data;
     } else if (studentId) {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('students')
-        .select('*')
+        .select('id, first_name, last_name, first_name_ar, last_name_ar, parent_id, nfc_id, class')
         .eq('id', studentId)
         .single();
-      
-      if (error || !data) {
-        console.error('Student not found by ID:', error);
-        return new Response(
-          JSON.stringify({ error: 'Student not found', studentId }),
-          { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
       student = data;
-    } else {
+    }
+
+    if (!student) {
       return new Response(
-        JSON.stringify({ error: 'Either studentNfcId or studentId is required' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ error: 'Student not found', nfcId: studentNfcId, studentId }),
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     const today = new Date().toISOString().split('T')[0];
     const now = new Date();
     const time = now.toTimeString().split(' ')[0];
-
-    // Normalize action to entry/exit format
     const normalizedType = (action === 'check_in' || action === 'entry') ? 'entry' : 'exit';
+    const idempotencyKey = `${student.id}_${today}_${normalizedType}`;
 
-    // Check for duplicate actions (same student, same action, same day)
-    const { data: existingRecord } = await supabase
+    // Check for duplicate
+    const { data: existing } = await supabase
       .from('attendance_records')
       .select('id')
       .eq('student_id', student.id)
@@ -86,23 +73,19 @@ serve(async (req) => {
       .eq('type', normalizedType)
       .single();
 
-    if (existingRecord) {
-      console.log(`Student already has ${normalizedType} record today`);
+    if (existing) {
       return new Response(
         JSON.stringify({ 
           error: `Already recorded ${normalizedType} today`, 
-          student: {
-            id: student.id,
-            name: `${student.first_name} ${student.last_name}`,
-          },
+          student: { id: student.id, name: `${student.first_name} ${student.last_name}` },
           existingRecord: true
         }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Insert attendance record
-    const { data: attendanceRecord, error: attendanceError } = await supabase
+    // Insert with idempotency
+    const { data: record, error: insertError } = await supabase
       .from('attendance_records')
       .insert({
         student_id: student.id,
@@ -114,65 +97,47 @@ serve(async (req) => {
         location: location,
         nfc_verified: nfcVerified,
         manual_entry: manualEntry,
-        recorded_by: deviceId
+        recorded_by: deviceId,
+        idempotency_key: idempotencyKey
       })
       .select()
       .single();
 
-    if (attendanceError) {
-      console.error('Error recording attendance:', attendanceError);
-      return new Response(
-        JSON.stringify({ error: 'Failed to record attendance', details: attendanceError.message }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    if (insertError) {
+      if (insertError.code === '23505') { // Unique violation = duplicate
+        return new Response(
+          JSON.stringify({ error: 'Duplicate request', existingRecord: true }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      throw insertError;
     }
 
-    console.log('Attendance recorded successfully:', attendanceRecord.id);
-
-    // Send notification to parent
     const studentName = `${student.first_name} ${student.last_name}`;
-    const notificationTitle = normalizedType === 'entry' 
-      ? 'Student Checked In' 
-      : 'Student Checked Out';
-    const notificationMessage = normalizedType === 'entry'
-      ? `${studentName} has arrived at school at ${location}`
-      : `${studentName} has left school from ${location}`;
+    const processingTime = Math.round(performance.now() - startTime);
 
-    if (student.parent_id) {
-      try {
-        await supabase.functions.invoke('send-parent-notification', {
-          body: {
-            parentId: student.parent_id,
-            studentId: student.id,
-            type: normalizedType === 'entry' ? 'student_checkin' : 'student_checkout',
-            title: notificationTitle,
-            message: notificationMessage,
-            data: {
-              location: location,
-              action: normalizedType,
-              timestamp: attendanceRecord.created_at,
-            },
-          },
-        });
-        console.log('Parent notification sent');
-      } catch (notifError) {
-        console.error('Error sending notification:', notifError);
-        // Don't fail the request if notification fails
+    // Background tasks
+    EdgeRuntime.waitUntil((async () => {
+      if (student.parent_id) {
+        try {
+          await supabase.functions.invoke('send-parent-notification', {
+            body: {
+              parentId: student.parent_id,
+              studentId: student.id,
+              type: normalizedType === 'entry' ? 'student_checkin' : 'student_checkout',
+              title: normalizedType === 'entry' ? 'Student Checked In' : 'Student Checked Out',
+              message: `${studentName} has ${normalizedType === 'entry' ? 'arrived at' : 'left'} school`,
+              data: { location, action: normalizedType, timestamp: now.toISOString() }
+            }
+          });
+        } catch (e) { console.error('Notification failed:', e); }
       }
-    }
-
-    // Process daily allowance on check-in
-    if (normalizedType === 'entry') {
-      try {
-        await supabase.functions.invoke('process-daily-allowance', {
-          body: { studentId: student.id }
-        });
-        console.log('Daily allowance processed');
-      } catch (allowanceError) {
-        console.error('Error processing allowance:', allowanceError);
-        // Don't fail the request if allowance processing fails
+      if (normalizedType === 'entry') {
+        try {
+          await supabase.functions.invoke('process-daily-allowance', { body: { studentId: student.id } });
+        } catch (e) { console.error('Allowance failed:', e); }
       }
-    }
+    })());
 
     return new Response(
       JSON.stringify({
@@ -184,16 +149,16 @@ serve(async (req) => {
           class: student.class,
           nfc_id: student.nfc_id,
         },
-        attendance: attendanceRecord,
-        action: normalizedType
+        attendance: record,
+        action: normalizedType,
+        processingTimeMs: processingTime
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error: unknown) {
-    console.error('Unexpected error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('Error:', error);
     return new Response(
-      JSON.stringify({ error: 'Internal server error', details: errorMessage }),
+      JSON.stringify({ error: 'Internal server error' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

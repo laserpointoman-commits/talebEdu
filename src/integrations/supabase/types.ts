@@ -142,6 +142,7 @@ export type Database = {
           created_at: string | null
           date: string
           id: string
+          idempotency_key: string | null
           location: string | null
           manual_entry: boolean | null
           manual_entry_by: string | null
@@ -157,6 +158,7 @@ export type Database = {
           created_at?: string | null
           date: string
           id?: string
+          idempotency_key?: string | null
           location?: string | null
           manual_entry?: boolean | null
           manual_entry_by?: string | null
@@ -172,6 +174,7 @@ export type Database = {
           created_at?: string | null
           date?: string
           id?: string
+          idempotency_key?: string | null
           location?: string | null
           manual_entry?: boolean | null
           manual_entry_by?: string | null
@@ -288,6 +291,7 @@ export type Database = {
           bus_id: string | null
           created_at: string | null
           id: string
+          idempotency_key: string | null
           latitude: number | null
           location: string | null
           longitude: number | null
@@ -302,6 +306,7 @@ export type Database = {
           bus_id?: string | null
           created_at?: string | null
           id?: string
+          idempotency_key?: string | null
           latitude?: number | null
           location?: string | null
           longitude?: number | null
@@ -316,6 +321,7 @@ export type Database = {
           bus_id?: string | null
           created_at?: string | null
           id?: string
+          idempotency_key?: string | null
           latitude?: number | null
           location?: string | null
           longitude?: number | null
@@ -2639,6 +2645,68 @@ export type Database = {
           },
         ]
       }
+      notification_queue: {
+        Row: {
+          attempts: number | null
+          created_at: string | null
+          data: Json | null
+          error_message: string | null
+          id: string
+          idempotency_key: string | null
+          last_attempt_at: string | null
+          max_attempts: number | null
+          message: string
+          notification_type: string
+          parent_id: string
+          processed_at: string | null
+          status: string | null
+          student_id: string | null
+          title: string
+        }
+        Insert: {
+          attempts?: number | null
+          created_at?: string | null
+          data?: Json | null
+          error_message?: string | null
+          id?: string
+          idempotency_key?: string | null
+          last_attempt_at?: string | null
+          max_attempts?: number | null
+          message: string
+          notification_type: string
+          parent_id: string
+          processed_at?: string | null
+          status?: string | null
+          student_id?: string | null
+          title: string
+        }
+        Update: {
+          attempts?: number | null
+          created_at?: string | null
+          data?: Json | null
+          error_message?: string | null
+          id?: string
+          idempotency_key?: string | null
+          last_attempt_at?: string | null
+          max_attempts?: number | null
+          message?: string
+          notification_type?: string
+          parent_id?: string
+          processed_at?: string | null
+          status?: string | null
+          student_id?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_queue_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       offline_scans: {
         Row: {
           created_at: string | null
@@ -4953,6 +5021,19 @@ export type Database = {
         Args: { other_student_id: string }
         Returns: string
       }
+      get_student_by_nfc: {
+        Args: { p_nfc_id: string }
+        Returns: {
+          class: string
+          first_name: string
+          first_name_ar: string
+          id: string
+          last_name: string
+          last_name_ar: string
+          nfc_id: string
+          parent_id: string
+        }[]
+      }
       get_user_role: { Args: { user_id: string }; Returns: string }
       has_any_role: {
         Args: { required_roles: string[]; user_id: string }
@@ -5039,6 +5120,54 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      queue_parent_notification: {
+        Args: {
+          p_data?: Json
+          p_message: string
+          p_parent_id: string
+          p_student_id: string
+          p_title: string
+          p_type: string
+        }
+        Returns: string
+      }
+      record_attendance_atomic: {
+        Args: {
+          p_date: string
+          p_device_id: string
+          p_location: string
+          p_manual_entry?: boolean
+          p_nfc_verified?: boolean
+          p_student_id: string
+          p_time: string
+          p_type: string
+        }
+        Returns: {
+          already_exists: boolean
+          attendance_id: string
+          error_message: string
+          success: boolean
+        }[]
+      }
+      record_bus_boarding_atomic: {
+        Args: {
+          p_action: string
+          p_bus_id: string
+          p_latitude?: number
+          p_location: string
+          p_longitude?: number
+          p_manual_entry?: boolean
+          p_manual_entry_by?: string
+          p_nfc_verified?: boolean
+          p_student_id: string
+        }
+        Returns: {
+          already_exists: boolean
+          boarding_id: string
+          error_message: string
+          success: boolean
+        }[]
       }
       reset_test_account_data: {
         Args: { test_user_id: string }
