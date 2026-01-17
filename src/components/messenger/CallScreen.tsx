@@ -125,8 +125,10 @@ export function CallScreen({ isArabic }: CallScreenProps) {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         className="fixed inset-0 z-[9999] flex flex-col"
+        dir="ltr"
         style={{ 
           backgroundColor: isVideoCall ? '#000' : WHATSAPP_COLORS.bg,
+          paddingTop: 'env(safe-area-inset-top, 0px)',
         }}
       >
         {/* Video Streams (for video calls) */}
