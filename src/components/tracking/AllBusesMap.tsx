@@ -506,9 +506,22 @@ export default function AllBusesMap({ buses }: AllBusesMapProps) {
       : '12px solid hsl(0, 72%, 51%)';
     pointer.style.marginTop = '-2px';
     pointer.style.filter = 'drop-shadow(0 2px 4px hsl(var(--foreground) / 0.25))';
+
+    // Precise location dot at the exact GPS coordinate (bottom of marker)
+    const preciseDot = document.createElement('div');
+    preciseDot.style.width = '8px';
+    preciseDot.style.height = '8px';
+    preciseDot.style.borderRadius = '50%';
+    preciseDot.style.background = '#ffffff';
+    preciseDot.style.border = isActive 
+      ? '2px solid hsl(var(--primary))' 
+      : '2px solid hsl(0, 72%, 51%)';
+    preciseDot.style.boxShadow = '0 1px 3px rgba(0,0,0,0.4)';
+    preciseDot.style.marginTop = '-2px';
     
     container.appendChild(pinWrapper);
     container.appendChild(pointer);
+    container.appendChild(preciseDot);
 
     // Add "Inactive" badge inside the label for inactive buses (so it doesn't affect anchor)
     if (!isActive) {
