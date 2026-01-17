@@ -12,25 +12,25 @@ interface GlassCardProps extends Omit<HTMLMotionProps<"div">, "children"> {
 const GlassCard = React.forwardRef<HTMLDivElement, GlassCardProps>(
   ({ className, variant = "default", hover = true, glow = false, children, ...props }, ref) => {
     const variants = {
-      default: "bg-card/60 backdrop-blur-xl border border-white/20 dark:border-white/10",
-      subtle: "bg-card/40 backdrop-blur-md border border-white/10 dark:border-white/5",
-      intense: "bg-card/80 backdrop-blur-2xl border border-white/30 dark:border-white/15",
-      gradient: "bg-gradient-to-br from-card/70 via-card/50 to-card/70 backdrop-blur-xl border border-white/20 dark:border-white/10",
+      default: "bg-card/95 backdrop-blur-xl border border-border/50 shadow-lg",
+      subtle: "bg-card/80 backdrop-blur-md border border-border/30 shadow-md",
+      intense: "bg-card backdrop-blur-2xl border border-border/70 shadow-xl",
+      gradient: "bg-gradient-to-br from-card via-card/95 to-card/90 backdrop-blur-xl border border-border/50 shadow-lg",
     };
 
     return (
       <motion.div
         ref={ref}
         className={cn(
-          "rounded-2xl shadow-lg",
+          "rounded-3xl",
           variants[variant],
-          hover && "transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5",
-          glow && "shadow-glow-sm hover:shadow-glow",
+          hover && "transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 hover:border-primary/30",
+          glow && "shadow-glow hover:shadow-glow-lg",
           className
         )}
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, ease: "easeOut" }}
+        initial={{ opacity: 0, y: 15, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
         {...props}
       >
         {children}

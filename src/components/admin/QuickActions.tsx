@@ -10,14 +10,14 @@ import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 const colorClasses = [
-  'from-blue-500/20 to-blue-600/10 text-blue-600 dark:text-blue-400',
-  'from-emerald-500/20 to-emerald-600/10 text-emerald-600 dark:text-emerald-400',
-  'from-purple-500/20 to-purple-600/10 text-purple-600 dark:text-purple-400',
-  'from-amber-500/20 to-amber-600/10 text-amber-600 dark:text-amber-400',
-  'from-cyan-500/20 to-cyan-600/10 text-cyan-600 dark:text-cyan-400',
-  'from-rose-500/20 to-rose-600/10 text-rose-600 dark:text-rose-400',
-  'from-indigo-500/20 to-indigo-600/10 text-indigo-600 dark:text-indigo-400',
-  'from-teal-500/20 to-teal-600/10 text-teal-600 dark:text-teal-400',
+  'from-blue-500 to-indigo-600 text-white shadow-[0_4px_20px_hsl(220,90%,50%,0.4)]',
+  'from-emerald-500 to-teal-600 text-white shadow-[0_4px_20px_hsl(160,84%,40%,0.4)]',
+  'from-purple-500 to-fuchsia-600 text-white shadow-[0_4px_20px_hsl(280,85%,55%,0.4)]',
+  'from-amber-500 to-orange-600 text-white shadow-[0_4px_20px_hsl(40,90%,50%,0.4)]',
+  'from-cyan-500 to-blue-600 text-white shadow-[0_4px_20px_hsl(190,85%,45%,0.4)]',
+  'from-rose-500 to-pink-600 text-white shadow-[0_4px_20px_hsl(350,80%,55%,0.4)]',
+  'from-indigo-500 to-violet-600 text-white shadow-[0_4px_20px_hsl(250,85%,55%,0.4)]',
+  'from-teal-500 to-emerald-600 text-white shadow-[0_4px_20px_hsl(170,80%,40%,0.4)]',
 ];
 
 const QuickActionButton = memo(({ 
@@ -36,26 +36,34 @@ const QuickActionButton = memo(({
   
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ delay: index * 0.05, duration: 0.2 }}
+      initial={{ opacity: 0, y: 20, scale: 0.9 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ 
+        delay: index * 0.06, 
+        duration: 0.3,
+        type: "spring",
+        stiffness: 200,
+        damping: 15
+      }}
+      whileHover={{ scale: 1.05, y: -4 }}
+      whileTap={{ scale: 0.95 }}
     >
       <Button
         variant="ghost"
         className={cn(
-          "h-auto w-full flex-col gap-2 p-4 rounded-2xl",
-          "bg-gradient-to-br backdrop-blur-sm",
-          "border border-white/20 dark:border-white/10",
-          "hover:scale-105 hover:shadow-lg active:scale-95",
-          "transition-all duration-200",
+          "h-auto w-full flex-col gap-3 p-5 rounded-3xl",
+          "bg-gradient-to-br",
+          "border-0",
+          "hover:brightness-110",
+          "transition-all duration-300",
           colorClass
         )}
         onClick={onClick}
       >
-        <div className="p-3 rounded-xl bg-white/50 dark:bg-white/10 shadow-sm">
-          <Icon className="h-6 w-6" />
+        <div className="p-3.5 rounded-2xl bg-white/25 backdrop-blur-sm">
+          <Icon className="h-7 w-7" />
         </div>
-        <span className="text-xs text-center font-medium text-foreground/80 line-clamp-2">
+        <span className="text-xs text-center font-semibold line-clamp-2 drop-shadow-sm">
           {t(action.title)}
         </span>
       </Button>

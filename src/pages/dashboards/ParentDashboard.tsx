@@ -44,44 +44,50 @@ const ChildCard = memo(({
         <div className="flex items-center gap-4">
           {/* Avatar */}
           <div className="relative">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/30 to-accent/20 flex items-center justify-center shadow-inner">
-              <span className="text-lg font-bold text-primary">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary via-accent to-primary shadow-lg shadow-primary/30 flex items-center justify-center">
+              <span className="text-xl font-bold text-white">
                 {child.first_name?.charAt(0)}{child.last_name?.charAt(0)}
               </span>
             </div>
-            <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-success flex items-center justify-center shadow-sm">
-              <Sparkles className="h-3 w-3 text-white" />
-            </div>
+            <motion.div 
+              className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-gradient-to-br from-success to-emerald-400 flex items-center justify-center shadow-lg shadow-success/40"
+              animate={{ scale: [1, 1.1, 1] }}
+              transition={{ repeat: Infinity, duration: 2 }}
+            >
+              <Sparkles className="h-3.5 w-3.5 text-white" />
+            </motion.div>
           </div>
           
           {/* Info */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <h3 className="font-semibold text-base truncate">
+              <h3 className="font-bold text-base truncate">
                 {language === 'ar' 
                   ? `${child.first_name_ar || child.first_name} ${child.last_name_ar || child.last_name}`
                   : `${child.first_name} ${child.last_name}`}
               </h3>
-              <Badge variant="secondary" className="text-[10px] px-2 py-0.5 rounded-full">
+              <Badge className="text-[10px] px-2.5 py-0.5 rounded-full bg-gradient-to-r from-primary/20 to-accent/20 text-primary border-0 font-semibold">
                 {child.grade}
               </Badge>
             </div>
-            <p className="text-sm text-muted-foreground mt-0.5">
+            <p className="text-sm text-muted-foreground mt-1 font-medium">
               {language === 'ar' ? `الفصل: ${child.class}` : `Class: ${child.class}`}
             </p>
           </div>
           
           {/* Balance & Arrow */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <div className="text-right">
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">
                 {language === 'ar' ? 'الرصيد' : 'Balance'}
               </p>
-              <p className="font-bold text-primary text-lg">
+              <p className="font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent text-xl">
                 {child.wallet_balance || 0}
               </p>
             </div>
-            <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+            <div className="p-2 rounded-xl bg-gradient-to-br from-primary/10 to-accent/10 group-hover:from-primary/20 group-hover:to-accent/20 transition-colors">
+              <ChevronRight className="h-5 w-5 text-primary group-hover:translate-x-0.5 transition-transform" />
+            </div>
           </div>
         </div>
       </GlassCardContent>
@@ -242,38 +248,45 @@ export default function ParentDashboard() {
           variant="gradient" 
           className={cn(
             "relative overflow-hidden",
-            "bg-gradient-to-br from-primary via-primary/90 to-primary/80",
+            "bg-gradient-to-br from-primary via-accent/90 to-primary-dark",
             "text-primary-foreground"
           )}
           glow
         >
-          {/* Decorative elements */}
-          <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-          <div className="absolute bottom-0 left-0 w-32 h-32 bg-accent/20 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2" />
+          {/* Animated decorative elements */}
+          <motion.div 
+            className="absolute top-0 right-0 w-48 h-48 bg-white/15 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"
+            animate={{ scale: [1, 1.2, 1], opacity: [0.15, 0.25, 0.15] }}
+            transition={{ repeat: Infinity, duration: 4 }}
+          />
+          <motion.div 
+            className="absolute bottom-0 left-0 w-40 h-40 bg-white/10 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2"
+            animate={{ scale: [1, 1.3, 1], opacity: [0.1, 0.2, 0.1] }}
+            transition={{ repeat: Infinity, duration: 5, delay: 1 }}
+          />
           
-          <GlassCardContent className="py-6 relative z-10">
+          <GlassCardContent className="py-7 relative z-10">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-white/20 rounded-2xl backdrop-blur-sm">
-                  <Wallet className="h-7 w-7" />
+              <div className="flex items-center gap-5">
+                <div className="p-4 bg-white/20 rounded-2xl backdrop-blur-sm shadow-lg">
+                  <Wallet className="h-8 w-8" />
                 </div>
                 <div>
-                  <p className="text-sm opacity-90 font-medium">
+                  <p className="text-sm opacity-90 font-semibold">
                     {language === 'ar' ? 'إجمالي رصيد المحفظة' : 'Total Wallet Balance'}
                   </p>
-                  <p className="text-4xl font-bold mt-1">
+                  <p className="text-5xl font-extrabold mt-1.5 tracking-tight">
                     {totalBalance.toFixed(2)}
-                    <span className="text-lg font-normal opacity-80 ml-1">
+                    <span className="text-xl font-medium opacity-80 ml-1.5">
                       {language === 'ar' ? 'ر.ع' : 'OMR'}
                     </span>
                   </p>
                 </div>
               </div>
               <Button 
-                variant="secondary" 
                 size="sm"
                 onClick={() => navigate('/dashboard/wallet')}
-                className="gap-2 shadow-lg bg-white/20 hover:bg-white/30 text-white border-0 backdrop-blur-sm"
+                className="gap-2 bg-white/25 hover:bg-white/35 text-white border-0 backdrop-blur-sm shadow-lg hover:shadow-xl font-bold"
               >
                 <TrendingUp className="h-4 w-4" />
                 {language === 'ar' ? 'شحن' : 'Top Up'}
