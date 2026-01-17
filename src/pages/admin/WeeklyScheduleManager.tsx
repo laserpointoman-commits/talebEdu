@@ -1142,9 +1142,9 @@ export default function WeeklyScheduleManager() {
           </DialogHeader>
           {selectedSchedule && (
             <div className="p-4 bg-muted rounded-lg">
-              <p><strong>{language === 'en' ? 'Subject:' : 'المادة:'}</strong> {selectedSchedule.subject}</p>
-              <p><strong>{language === 'en' ? 'Day:' : 'اليوم:'}</strong> {selectedSchedule.day}</p>
-              <p><strong>{language === 'en' ? 'Time:' : 'الوقت:'}</strong> {selectedSchedule.time}</p>
+              <p><strong>{language === 'en' ? 'Subject:' : language === 'hi' ? 'विषय:' : 'المادة:'}</strong> {getSubjectName(selectedSchedule.subject)}</p>
+              <p><strong>{language === 'en' ? 'Day:' : language === 'hi' ? 'दिन:' : 'اليوم:'}</strong> {language === 'en' ? selectedSchedule.day : language === 'hi' ? DAYS_HI[DAYS_EN.indexOf(selectedSchedule.day)] : DAYS_AR[DAYS_EN.indexOf(selectedSchedule.day)]}</p>
+              <p><strong>{language === 'en' ? 'Time:' : language === 'hi' ? 'समय:' : 'الوقت:'}</strong> {selectedSchedule.time}</p>
             </div>
           )}
           <DialogFooter>
