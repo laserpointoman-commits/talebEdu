@@ -37,8 +37,8 @@ export default function ParentSelfSignup() {
     if (!token) {
       toast({
         variant: 'destructive',
-        title: language === 'en' ? 'Invalid Link' : 'رابط غير صالح',
-        description: language === 'en' ? 'Registration token is missing' : 'رمز التسجيل مفقود',
+        title: language === 'en' ? 'Invalid Link' : language === 'hi' ? 'अमान्य लिंक' : 'رابط غير صالح',
+        description: language === 'en' ? 'Registration token is missing' : language === 'hi' ? 'पंजीकरण टोकन गायब है' : 'رمز التسجيل مفقود',
       });
       navigate('/');
       return;
@@ -65,7 +65,7 @@ export default function ParentSelfSignup() {
     } catch (error: any) {
       toast({
         variant: 'destructive',
-        title: language === 'en' ? 'Invalid Token' : 'رمز غير صالح',
+        title: language === 'en' ? 'Invalid Token' : language === 'hi' ? 'अमान्य टोकन' : 'رمز غير صالح',
         description: error.message,
       });
       navigate('/');
@@ -76,21 +76,21 @@ export default function ParentSelfSignup() {
     const newErrors: Record<string, string> = {};
 
     if (!formData.fullName.trim()) {
-      newErrors.fullName = language === 'en' ? 'Full name is required' : 'الاسم الكامل مطلوب';
+      newErrors.fullName = language === 'en' ? 'Full name is required' : language === 'hi' ? 'पूरा नाम आवश्यक है' : 'الاسم الكامل مطلوب';
     }
     if (!formData.email.trim()) {
-      newErrors.email = language === 'en' ? 'Email is required' : 'البريد الإلكتروني مطلوب';
+      newErrors.email = language === 'en' ? 'Email is required' : language === 'hi' ? 'ईमेल आवश्यक है' : 'البريد الإلكتروني مطلوب';
     }
     if (!formData.password) {
-      newErrors.password = language === 'en' ? 'Password is required' : 'كلمة المرور مطلوبة';
+      newErrors.password = language === 'en' ? 'Password is required' : language === 'hi' ? 'पासवर्ड आवश्यक है' : 'كلمة المرور مطلوبة';
     } else if (formData.password.length < 6) {
-      newErrors.password = language === 'en' ? 'Password must be at least 6 characters' : 'كلمة المرور يجب أن تكون 6 أحرف على الأقل';
+      newErrors.password = language === 'en' ? 'Password must be at least 6 characters' : language === 'hi' ? 'पासवर्ड कम से कम 6 अक्षर का होना चाहिए' : 'كلمة المرور يجب أن تكون 6 أحرف على الأقل';
     }
     if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = language === 'en' ? 'Passwords do not match' : 'كلمات المرور غير متطابقة';
+      newErrors.confirmPassword = language === 'en' ? 'Passwords do not match' : language === 'hi' ? 'पासवर्ड मेल नहीं खाते' : 'كلمات المرور غير متطابقة';
     }
     if (!formData.acceptTerms) {
-      newErrors.acceptTerms = language === 'en' ? 'You must accept the terms' : 'يجب عليك قبول الشروط';
+      newErrors.acceptTerms = language === 'en' ? 'You must accept the terms' : language === 'hi' ? 'आपको शर्तें स्वीकार करनी होंगी' : 'يجب عليك قبول الشروط';
     }
 
     setErrors(newErrors);
@@ -122,7 +122,7 @@ export default function ParentSelfSignup() {
     } catch (error: any) {
       toast({
         variant: 'destructive',
-        title: language === 'en' ? 'Signup Failed' : 'فشل التسجيل',
+        title: language === 'en' ? 'Signup Failed' : language === 'hi' ? 'साइनअप विफल' : 'فشل التسجيل',
         description: error.message,
       });
     } finally {
@@ -138,6 +138,7 @@ export default function ParentSelfSignup() {
             <Globe className="w-16 h-16 mx-auto mb-4 text-primary" />
             <CardTitle className="text-2xl">Choose Your Language</CardTitle>
             <CardTitle className="text-2xl" dir="rtl">اختر لغتك</CardTitle>
+            <CardTitle className="text-2xl">अपनी भाषा चुनें</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <Button
@@ -147,7 +148,7 @@ export default function ParentSelfSignup() {
                 setStep('validating');
               }}
             >
-              English
+              🇬🇧 English
             </Button>
             <Button
               className="w-full h-16 text-lg"
@@ -156,7 +157,16 @@ export default function ParentSelfSignup() {
                 setStep('validating');
               }}
             >
-              العربية
+              🇴🇲 العربية
+            </Button>
+            <Button
+              className="w-full h-16 text-lg"
+              onClick={() => {
+                setLanguage('hi');
+                setStep('validating');
+              }}
+            >
+              🇮🇳 हिन्दी
             </Button>
           </CardContent>
         </Card>
@@ -170,7 +180,7 @@ export default function ParentSelfSignup() {
         <div className="text-center">
           <Loader2 className="w-12 h-12 animate-spin mx-auto mb-4 text-primary" />
           <p className="text-muted-foreground">
-            {language === 'en' ? 'Validating registration link...' : 'جاري التحقق من رابط التسجيل...'}
+            {language === 'en' ? 'Validating registration link...' : language === 'hi' ? 'पंजीकरण लिंक सत्यापित हो रहा है...' : 'جاري التحقق من رابط التسجيل...'}
           </p>
         </div>
       </div>
@@ -184,17 +194,19 @@ export default function ParentSelfSignup() {
           <CardHeader className="text-center">
             <CheckCircle2 className="w-16 h-16 mx-auto mb-4 text-green-500" />
             <CardTitle>
-              {language === 'en' ? 'Account Created!' : 'تم إنشاء الحساب!'}
+              {language === 'en' ? 'Account Created!' : language === 'hi' ? 'खाता बनाया गया!' : 'تم إنشاء الحساب!'}
             </CardTitle>
             <CardDescription>
               {language === 'en'
                 ? 'Your account has been created successfully. You can now log in to register your students.'
+                : language === 'hi'
+                ? 'आपका खाता सफलतापूर्वक बनाया गया है। अब आप अपने छात्रों को पंजीकृत करने के लिए लॉग इन कर सकते हैं।'
                 : 'تم إنشاء حسابك بنجاح. يمكنك الآن تسجيل الدخول لتسجيل طلابك.'}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <Button className="w-full" onClick={() => navigate('/auth')}>
-              {language === 'en' ? 'Go to Login' : 'الذهاب لتسجيل الدخول'}
+              {language === 'en' ? 'Go to Login' : language === 'hi' ? 'लॉगिन पर जाएं' : 'الذهاب لتسجيل الدخول'}
             </Button>
           </CardContent>
         </Card>
@@ -207,11 +219,13 @@ export default function ParentSelfSignup() {
       <Card className="w-full max-w-2xl">
         <CardHeader>
           <CardTitle className="text-2xl">
-            {language === 'en' ? 'Create Your Parent Account' : 'إنشاء حساب ولي الأمر'}
+            {language === 'en' ? 'Create Your Parent Account' : language === 'hi' ? 'अपना अभिभावक खाता बनाएं' : 'إنشاء حساب ولي الأمر'}
           </CardTitle>
           <CardDescription>
             {language === 'en'
               ? `You can register up to ${tokenData?.maxStudents || 1} student${(tokenData?.maxStudents || 1) > 1 ? 's' : ''}`
+              : language === 'hi'
+              ? `आप ${tokenData?.maxStudents || 1} छात्र तक पंजीकृत कर सकते हैं`
               : `يمكنك تسجيل حتى ${tokenData?.maxStudents || 1} طالب`}
           </CardDescription>
         </CardHeader>
@@ -220,7 +234,7 @@ export default function ParentSelfSignup() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="fullName">
-                  {language === 'en' ? 'Full Name' : 'الاسم الكامل'} *
+                  {language === 'en' ? 'Full Name' : language === 'hi' ? 'पूरा नाम' : 'الاسم الكامل'} *
                 </Label>
                 <Input
                   id="fullName"
@@ -233,7 +247,7 @@ export default function ParentSelfSignup() {
 
               <div className="space-y-2">
                 <Label htmlFor="fullNameAr">
-                  {language === 'en' ? 'Full Name (Arabic)' : 'الاسم الكامل (عربي)'}
+                  {language === 'en' ? 'Full Name (Arabic)' : language === 'hi' ? 'पूरा नाम (अरबी)' : 'الاسم الكامل (عربي)'}
                 </Label>
                 <Input
                   id="fullNameAr"
@@ -247,7 +261,7 @@ export default function ParentSelfSignup() {
 
             <div className="space-y-2">
               <Label htmlFor="email">
-                {language === 'en' ? 'Email' : 'البريد الإلكتروني'} *
+                {language === 'en' ? 'Email' : language === 'hi' ? 'ईमेल' : 'البريد الإلكتروني'} *
               </Label>
               <Input
                 id="email"
@@ -261,7 +275,7 @@ export default function ParentSelfSignup() {
 
             <div className="space-y-2">
               <Label htmlFor="phone">
-                {language === 'en' ? 'Phone Number' : 'رقم الهاتف'}
+                {language === 'en' ? 'Phone Number' : language === 'hi' ? 'फोन नंबर' : 'رقم الهاتف'}
               </Label>
               <Input
                 id="phone"
@@ -275,7 +289,7 @@ export default function ParentSelfSignup() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="password">
-                  {language === 'en' ? 'Password' : 'كلمة المرور'} *
+                  {language === 'en' ? 'Password' : language === 'hi' ? 'पासवर्ड' : 'كلمة المرور'} *
                 </Label>
                 <Input
                   id="password"
@@ -288,7 +302,7 @@ export default function ParentSelfSignup() {
 
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword">
-                  {language === 'en' ? 'Confirm Password' : 'تأكيد كلمة المرور'} *
+                  {language === 'en' ? 'Confirm Password' : language === 'hi' ? 'पासवर्ड की पुष्टि करें' : 'تأكيد كلمة المرور'} *
                 </Label>
                 <Input
                   id="confirmPassword"
@@ -302,7 +316,7 @@ export default function ParentSelfSignup() {
 
             <div className="space-y-2">
               <Label htmlFor="studentsCount">
-                {language === 'en' ? 'Number of Students' : 'عدد الطلاب'} *
+                {language === 'en' ? 'Number of Students' : language === 'hi' ? 'छात्रों की संख्या' : 'عدد الطلاب'} *
               </Label>
               <Select
                 value={formData.expectedStudentsCount.toString()}
@@ -314,7 +328,7 @@ export default function ParentSelfSignup() {
                 <SelectContent>
                   {Array.from({ length: tokenData?.maxStudents || 10 }, (_, i) => i + 1).map((num) => (
                     <SelectItem key={num} value={num.toString()}>
-                      {num} {language === 'en' ? (num === 1 ? 'Student' : 'Students') : 'طالب'}
+                      {num} {language === 'en' ? (num === 1 ? 'Student' : 'Students') : language === 'hi' ? 'छात्र' : 'طالب'}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -333,6 +347,8 @@ export default function ParentSelfSignup() {
               >
                 {language === 'en'
                   ? 'I accept the terms and conditions'
+                  : language === 'hi'
+                  ? 'मैं नियम और शर्तें स्वीकार करता/करती हूं'
                   : 'أوافق على الشروط والأحكام'}
               </label>
             </div>
@@ -344,7 +360,7 @@ export default function ParentSelfSignup() {
                 onClick={() => navigate('/')}
                 className="flex-1"
               >
-                {language === 'en' ? 'Cancel' : 'إلغاء'}
+                {language === 'en' ? 'Cancel' : language === 'hi' ? 'रद्द करें' : 'إلغاء'}
               </Button>
               <Button
                 onClick={handleSignup}
@@ -352,7 +368,7 @@ export default function ParentSelfSignup() {
                 className="flex-1"
               >
                 {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                {language === 'en' ? 'Create Account' : 'إنشاء الحساب'}
+                {language === 'en' ? 'Create Account' : language === 'hi' ? 'खाता बनाएं' : 'إنشاء الحساب'}
               </Button>
             </div>
           </div>

@@ -30,15 +30,17 @@ export default function EmailConfirmationPending() {
       if (error) throw error;
 
       toast({
-        title: language === 'en' ? 'Email Sent!' : 'تم إرسال البريد!',
+        title: language === 'en' ? 'Email Sent!' : language === 'hi' ? 'ईमेल भेजा गया!' : 'تم إرسال البريد!',
         description: language === 'en' 
           ? 'Confirmation email has been resent. Please check your inbox.'
+          : language === 'hi'
+          ? 'पुष्टिकरण ईमेल फिर से भेजा गया है। कृपया अपना इनबॉक्स जांचें।'
           : 'تم إعادة إرسال بريد التأكيد. يرجى التحقق من صندوق الوارد الخاص بك.',
       });
     } catch (error: any) {
       toast({
         variant: 'destructive',
-        title: language === 'en' ? 'Error' : 'خطأ',
+        title: language === 'en' ? 'Error' : language === 'hi' ? 'त्रुटि' : 'خطأ',
         description: error.message,
       });
     } finally {
@@ -52,11 +54,13 @@ export default function EmailConfirmationPending() {
         <CardHeader className="text-center">
           <Mail className="w-16 h-16 mx-auto mb-4 text-primary animate-pulse" />
           <CardTitle className="text-2xl">
-            {language === 'en' ? 'Check Your Email' : 'تحقق من بريدك الإلكتروني'}
+            {language === 'en' ? 'Check Your Email' : language === 'hi' ? 'अपना ईमेल जांचें' : 'تحقق من بريدك الإلكتروني'}
           </CardTitle>
           <CardDescription className="text-base">
             {language === 'en'
               ? 'We sent a confirmation link to your email address'
+              : language === 'hi'
+              ? 'हमने आपके ईमेल पते पर एक पुष्टिकरण लिंक भेजा है'
               : 'لقد أرسلنا رابط تأكيد إلى عنوان بريدك الإلكتروني'}
           </CardDescription>
         </CardHeader>
@@ -66,11 +70,13 @@ export default function EmailConfirmationPending() {
               <CheckCircle2 className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
               <div className="text-sm">
                 <p className="font-medium mb-1">
-                  {language === 'en' ? 'Step 1: Check your email' : 'الخطوة 1: تحقق من بريدك الإلكتروني'}
+                  {language === 'en' ? 'Step 1: Check your email' : language === 'hi' ? 'चरण 1: अपना ईमेल जांचें' : 'الخطوة 1: تحقق من بريدك الإلكتروني'}
                 </p>
                 <p className="text-muted-foreground">
                   {language === 'en'
                     ? 'Look for an email from TalebEdu in your inbox'
+                    : language === 'hi'
+                    ? 'अपने इनबॉक्स में TalebEdu से ईमेल खोजें'
                     : 'ابحث عن بريد إلكتروني من TalebEdu في صندوق الوارد الخاص بك'}
                 </p>
               </div>
@@ -80,11 +86,13 @@ export default function EmailConfirmationPending() {
               <CheckCircle2 className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
               <div className="text-sm">
                 <p className="font-medium mb-1">
-                  {language === 'en' ? 'Step 2: Click the link' : 'الخطوة 2: انقر على الرابط'}
+                  {language === 'en' ? 'Step 2: Click the link' : language === 'hi' ? 'चरण 2: लिंक पर क्लिक करें' : 'الخطوة 2: انقر على الرابط'}
                 </p>
                 <p className="text-muted-foreground">
                   {language === 'en'
                     ? 'Click the confirmation button in the email to verify your account'
+                    : language === 'hi'
+                    ? 'अपने अकाउंट को सत्यापित करने के लिए ईमेल में पुष्टिकरण बटन पर क्लिक करें'
                     : 'انقر على زر التأكيد في البريد الإلكتروني للتحقق من حسابك'}
                 </p>
               </div>
@@ -94,11 +102,13 @@ export default function EmailConfirmationPending() {
               <CheckCircle2 className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
               <div className="text-sm">
                 <p className="font-medium mb-1">
-                  {language === 'en' ? 'Step 3: Start registering students' : 'الخطوة 3: ابدأ تسجيل الطلاب'}
+                  {language === 'en' ? 'Step 3: Start registering students' : language === 'hi' ? 'चरण 3: छात्रों का पंजीकरण शुरू करें' : 'الخطوة 3: ابدأ تسجيل الطلاب'}
                 </p>
                 <p className="text-muted-foreground">
                   {language === 'en'
                     ? "After confirmation, you'll be able to register your students"
+                    : language === 'hi'
+                    ? 'पुष्टि के बाद, आप अपने छात्रों को पंजीकृत कर सकेंगे'
                     : 'بعد التأكيد، ستتمكن من تسجيل طلابك'}
                 </p>
               </div>
@@ -107,7 +117,7 @@ export default function EmailConfirmationPending() {
 
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground text-center">
-              {language === 'en' ? "Didn't receive the email?" : 'لم تستلم البريد الإلكتروني؟'}
+              {language === 'en' ? "Didn't receive the email?" : language === 'hi' ? 'ईमेल नहीं मिला?' : 'لم تستلم البريد الإلكتروني؟'}
             </p>
             
             <Button
@@ -117,7 +127,7 @@ export default function EmailConfirmationPending() {
               disabled={resending}
             >
               {resending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              {language === 'en' ? 'Resend Confirmation Email' : 'إعادة إرسال بريد التأكيد'}
+              {language === 'en' ? 'Resend Confirmation Email' : language === 'hi' ? 'पुष्टिकरण ईमेल फिर से भेजें' : 'إعادة إرسال بريد التأكيد'}
             </Button>
 
             <Button
@@ -125,13 +135,15 @@ export default function EmailConfirmationPending() {
               className="w-full"
               onClick={() => navigate('/auth')}
             >
-              {language === 'en' ? 'Go to Login' : 'الذهاب لتسجيل الدخول'}
+              {language === 'en' ? 'Go to Login' : language === 'hi' ? 'लॉगिन पर जाएं' : 'الذهاب لتسجيل الدخول'}
             </Button>
           </div>
 
           <div className="text-xs text-center text-muted-foreground pt-4 border-t">
             {language === 'en'
               ? '💡 Tip: Check your spam folder if you don\'t see the email'
+              : language === 'hi'
+              ? '💡 सुझाव: अगर ईमेल नहीं दिखे तो स्पैम फोल्डर जांचें'
               : '💡 نصيحة: تحقق من مجلد البريد العشوائي إذا لم تجد البريد الإلكتروني'}
           </div>
         </CardContent>
