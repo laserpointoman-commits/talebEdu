@@ -89,10 +89,10 @@ All colors MUST be HSL.
     --card-foreground: 240 30% 15%;
     --card-solid: 0 0% 100%;
     
-    /* Glass Effect Variables */
-    --glass-background: 0 0% 100% / 0.85;
-    --glass-border: 240 30% 90% / 0.6;
-    --glass-shadow: 240 50% 60% / 0.12;
+    /* Glass Effect Variables - Subtle */
+    --glass-background: 0 0% 100% / 0.6;
+    --glass-border: 240 20% 85% / 0.4;
+    --glass-shadow: 240 30% 50% / 0.08;
 
     --popover: 0 0% 100%;
     --popover-foreground: 240 30% 15%;
@@ -182,13 +182,13 @@ All colors MUST be HSL.
     --shadow-2xl: 0 32px 64px -12px hsl(240 30% 15% / 0.2);
     --shadow-inner: inset 0 2px 4px 0 hsl(240 30% 15% / 0.06);
     
-    /* Colorful Glow Effects */
-    --shadow-glow: 0 0 24px hsl(220 90% 56% / 0.5), 0 0 48px hsl(280 85% 60% / 0.3);
-    --shadow-glow-sm: 0 0 12px hsl(220 90% 56% / 0.4);
-    --shadow-glow-lg: 0 0 36px hsl(220 90% 56% / 0.6), 0 0 72px hsl(280 85% 60% / 0.4);
-    --shadow-glow-accent: 0 0 24px hsl(280 85% 60% / 0.5), 0 0 48px hsl(320 90% 60% / 0.3);
-    --shadow-glow-success: 0 0 20px hsl(160 84% 39% / 0.5);
-    --shadow-glow-warning: 0 0 20px hsl(45 100% 51% / 0.5);
+    /* Glow Effects - Subtle */
+    --shadow-glow: 0 0 16px hsl(220 90% 56% / 0.25), 0 0 32px hsl(280 85% 60% / 0.15);
+    --shadow-glow-sm: 0 0 8px hsl(220 90% 56% / 0.2);
+    --shadow-glow-lg: 0 0 24px hsl(220 90% 56% / 0.35), 0 0 48px hsl(280 85% 60% / 0.2);
+    --shadow-glow-accent: 0 0 16px hsl(280 85% 60% / 0.25), 0 0 32px hsl(320 90% 60% / 0.15);
+    --shadow-glow-success: 0 0 12px hsl(160 84% 39% / 0.25);
+    --shadow-glow-warning: 0 0 12px hsl(45 100% 51% / 0.25);
     
     /* Glass Morphism */
     --backdrop-blur-sm: blur(8px);
@@ -234,10 +234,10 @@ All colors MUST be HSL.
     --card-foreground: 0 0% 98%;
     --card-solid: 250 30% 12%;
     
-    /* Glass Effect Variables - Dark */
-    --glass-background: 250 30% 15% / 0.85;
-    --glass-border: 250 30% 25% / 0.5;
-    --glass-shadow: 0 0% 0% / 0.5;
+    /* Glass Effect Variables - Dark Subtle */
+    --glass-background: 250 30% 14% / 0.7;
+    --glass-border: 250 25% 30% / 0.35;
+    --glass-shadow: 0 0% 0% / 0.3;
 
     --popover: 250 30% 12%;
     --popover-foreground: 0 0% 98%;
@@ -322,13 +322,13 @@ All colors MUST be HSL.
     --shadow-2xl: 0 32px 64px -12px hsl(0 0% 0% / 0.7);
     --shadow-inner: inset 0 2px 4px 0 hsl(0 0% 0% / 0.3);
     
-    /* Colorful Glow Effects - Dark */
-    --shadow-glow: 0 0 24px hsl(220 100% 65% / 0.6), 0 0 48px hsl(280 100% 70% / 0.4);
-    --shadow-glow-sm: 0 0 12px hsl(220 100% 65% / 0.5);
-    --shadow-glow-lg: 0 0 36px hsl(220 100% 65% / 0.7), 0 0 72px hsl(280 100% 70% / 0.5);
-    --shadow-glow-accent: 0 0 24px hsl(280 100% 70% / 0.6), 0 0 48px hsl(320 100% 70% / 0.4);
-    --shadow-glow-success: 0 0 20px hsl(160 84% 45% / 0.6);
-    --shadow-glow-warning: 0 0 20px hsl(45 100% 55% / 0.6);
+    /* Glow Effects - Dark Subtle */
+    --shadow-glow: 0 0 16px hsl(220 100% 65% / 0.3), 0 0 32px hsl(280 100% 70% / 0.2);
+    --shadow-glow-sm: 0 0 8px hsl(220 100% 65% / 0.25);
+    --shadow-glow-lg: 0 0 24px hsl(220 100% 65% / 0.4), 0 0 48px hsl(280 100% 70% / 0.25);
+    --shadow-glow-accent: 0 0 16px hsl(280 100% 70% / 0.3), 0 0 32px hsl(320 100% 70% / 0.2);
+    --shadow-glow-success: 0 0 12px hsl(160 84% 45% / 0.3);
+    --shadow-glow-warning: 0 0 12px hsl(45 100% 55% / 0.3);
   }
 
   * {
