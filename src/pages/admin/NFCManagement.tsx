@@ -2,21 +2,21 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import NFCWriter from '@/components/admin/NFCWriter';
 import { Tag } from 'lucide-react';
+import { getText } from '@/utils/i18n';
 
 export default function NFCManagement() {
   const { language } = useLanguage();
+  const t = (en: string, ar: string, hi: string) => getText(language, en, ar, hi);
 
   return (
     <div className="space-y-6 p-6">
       <div>
         <h1 className="text-3xl font-bold flex items-center gap-2">
           <Tag className="h-8 w-8" />
-          {language === 'ar' ? 'إدارة NFC' : 'NFC Management'}
+          {t('NFC Management', 'إدارة NFC', 'NFC प्रबंधन')}
         </h1>
         <p className="text-muted-foreground">
-          {language === 'ar' 
-            ? 'برمجة وإدارة بطاقات NFC'
-            : 'Program and manage NFC tags'}
+          {t('Program and manage NFC tags', 'برمجة وإدارة بطاقات NFC', 'NFC टैग प्रोग्राम और प्रबंधित करें')}
         </p>
       </div>
 
@@ -25,35 +25,33 @@ export default function NFCManagement() {
       <Card>
         <CardHeader>
           <CardTitle>
-            {language === 'ar' ? 'إرشادات استخدام NFC' : 'NFC Usage Instructions'}
+            {t('NFC Usage Instructions', 'إرشادات استخدام NFC', 'NFC उपयोग निर्देश')}
           </CardTitle>
           <CardDescription>
-            {language === 'ar' 
-              ? 'كيفية استخدام نظام NFC في المدرسة'
-              : 'How to use the NFC system in school'}
+            {t('How to use the NFC system in school', 'كيفية استخدام نظام NFC في المدرسة', 'स्कूल में NFC सिस्टम का उपयोग कैसे करें')}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="text-sm space-y-2">
             <p className="font-medium">
-              {language === 'ar' ? 'للكتابة:' : 'For Writing:'}
+              {t('For Writing:', 'للكتابة:', 'लिखने के लिए:')}
             </p>
             <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-              <li>{language === 'ar' ? 'افتح تطبيق NFC على جهاز أندرويد' : 'Open NFC app on Android device'}</li>
-              <li>{language === 'ar' ? 'أدخل معلومات المستخدم' : 'Enter user information'}</li>
-              <li>{language === 'ar' ? 'ضع البطاقة بالقرب من الجهاز' : 'Hold tag near device'}</li>
+              <li>{t('Open NFC app on Android device', 'افتح تطبيق NFC على جهاز أندرويد', 'Android डिवाइस पर NFC ऐप खोलें')}</li>
+              <li>{t('Enter user information', 'أدخل معلومات المستخدم', 'उपयोगकर्ता जानकारी दर्ज करें')}</li>
+              <li>{t('Hold tag near device', 'ضع البطاقة بالقرب من الجهاز', 'टैग को डिवाइस के पास रखें')}</li>
             </ul>
           </div>
           
           <div className="text-sm space-y-2">
             <p className="font-medium">
-              {language === 'ar' ? 'للقراءة:' : 'For Reading:'}
+              {t('For Reading:', 'للقراءة:', 'पढ़ने के लिए:')}
             </p>
             <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-              <li>{language === 'ar' ? 'تستخدم عبر جميع نقاط التفتيش' : 'Used across all checkpoints'}</li>
-              <li>{language === 'ar' ? 'الحضور - مدخل المدرسة' : 'Attendance - School entrance'}</li>
-              <li>{language === 'ar' ? 'الحافلة - صعود ونزول' : 'Bus - Boarding/Alighting'}</li>
-              <li>{language === 'ar' ? 'المقصف - الدفع' : 'Canteen - Payment'}</li>
+              <li>{t('Used across all checkpoints', 'تستخدم عبر جميع نقاط التفتيش', 'सभी चेकपॉइंट्स पर उपयोग किया जाता है')}</li>
+              <li>{t('Attendance - School entrance', 'الحضور - مدخل المدرسة', 'उपस्थिति - स्कूल प्रवेश द्वार')}</li>
+              <li>{t('Bus - Boarding/Alighting', 'الحافلة - صعود ونزول', 'बस - चढ़ना/उतरना')}</li>
+              <li>{t('Canteen - Payment', 'المقصف - الدفع', 'कैंटीन - भुगतान')}</li>
             </ul>
           </div>
         </CardContent>

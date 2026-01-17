@@ -537,7 +537,7 @@ export default function Classes() {
           <div className="col-span-full text-center py-12">
             <GraduationCap className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
             <p className="text-muted-foreground">
-              {language === 'en' ? 'No classes found. Create your first class!' : 'لا توجد صفوف. أنشئ صفك الأول!'}
+              {language === 'en' ? 'No classes found. Create your first class!' : language === 'hi' ? 'कोई कक्षा नहीं मिली। अपनी पहली कक्षा बनाएं!' : 'لا توجد صفوف. أنشئ صفك الأول!'}
             </p>
           </div>
         )}
@@ -548,50 +548,50 @@ export default function Classes() {
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {language === 'en' ? 'Create New Class' : 'إنشاء صف جديد'}
+              {language === 'en' ? 'Create New Class' : language === 'hi' ? 'नई कक्षा बनाएं' : 'إنشاء صف جديد'}
             </DialogTitle>
             <DialogDescription>
-              {language === 'en' ? 'Fill in the class details below' : 'أملأ تفاصيل الصف أدناه'}
+              {language === 'en' ? 'Fill in the class details below' : language === 'hi' ? 'नीचे कक्षा विवरण भरें' : 'أملأ تفاصيل الصف أدناه'}
             </DialogDescription>
           </DialogHeader>
           
           <Tabs defaultValue="basic" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="basic">{language === 'en' ? 'Basic Info' : 'معلومات أساسية'}</TabsTrigger>
-              <TabsTrigger value="details">{language === 'en' ? 'Details' : 'التفاصيل'}</TabsTrigger>
+              <TabsTrigger value="basic">{language === 'en' ? 'Basic Info' : language === 'hi' ? 'मूल जानकारी' : 'معلومات أساسية'}</TabsTrigger>
+              <TabsTrigger value="details">{language === 'en' ? 'Details' : language === 'hi' ? 'विवरण' : 'التفاصيل'}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="basic" className="space-y-4 mt-4">
               <div>
-                <Label htmlFor="className">{language === 'en' ? 'Class Name' : 'اسم الصف'} *</Label>
+                <Label htmlFor="className">{language === 'en' ? 'Class Name' : language === 'hi' ? 'कक्षा का नाम' : 'اسم الصف'} *</Label>
                 <Input
                   id="className"
                   value={newClass.name}
                   onChange={(e) => setNewClass({ ...newClass, name: e.target.value })}
-                  placeholder={language === 'en' ? 'e.g., Class 10-A' : 'مثل: الصف 10-أ'}
+                  placeholder={language === 'en' ? 'e.g., Class 10-A' : language === 'hi' ? 'जैसे, कक्षा 10-A' : 'مثل: الصف 10-أ'}
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="grade">{language === 'en' ? 'Grade' : 'الصف'} *</Label>
+                  <Label htmlFor="grade">{language === 'en' ? 'Grade' : language === 'hi' ? 'ग्रेड' : 'الصف'} *</Label>
                   <Select value={newClass.grade} onValueChange={(value) => setNewClass({ ...newClass, grade: value })}>
                     <SelectTrigger>
-                      <SelectValue placeholder={language === 'en' ? 'Select grade' : 'اختر الصف'} />
+                      <SelectValue placeholder={language === 'en' ? 'Select grade' : language === 'hi' ? 'ग्रेड चुनें' : 'اختر الصف'} />
                     </SelectTrigger>
                     <SelectContent>
                       {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((g) => (
                         <SelectItem key={g} value={`Grade ${g}`}>
-                          {language === 'en' ? `Grade ${g}` : `الصف ${g}`}
+                          {language === 'en' ? `Grade ${g}` : language === 'hi' ? `ग्रेड ${g}` : `الصف ${g}`}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
                 <div>
-                  <Label htmlFor="section">{language === 'en' ? 'Section' : 'الشعبة'} *</Label>
+                  <Label htmlFor="section">{language === 'en' ? 'Section' : language === 'hi' ? 'सेक्शन' : 'الشعبة'} *</Label>
                   <Select value={newClass.section} onValueChange={(value) => setNewClass({ ...newClass, section: value })}>
                     <SelectTrigger>
-                      <SelectValue placeholder={language === 'en' ? 'Select section' : 'اختر الشعبة'} />
+                      <SelectValue placeholder={language === 'en' ? 'Select section' : language === 'hi' ? 'सेक्शन चुनें' : 'اختر الشعبة'} />
                     </SelectTrigger>
                     <SelectContent>
                       {['A', 'B', 'C', 'D', 'E', 'F'].map((s) => (
@@ -602,7 +602,7 @@ export default function Classes() {
                 </div>
               </div>
               <div>
-                <Label htmlFor="academic_year">{language === 'en' ? 'Academic Year' : 'العام الدراسي'}</Label>
+                <Label htmlFor="academic_year">{language === 'en' ? 'Academic Year' : language === 'hi' ? 'शैक्षणिक वर्ष' : 'العام الدراسي'}</Label>
                 <Select value={newClass.academic_year} onValueChange={(value) => setNewClass({ ...newClass, academic_year: value })}>
                   <SelectTrigger>
                     <SelectValue />
@@ -619,16 +619,16 @@ export default function Classes() {
             <TabsContent value="details" className="space-y-4 mt-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="room">{language === 'en' ? 'Room Number' : 'رقم الغرفة'}</Label>
+                  <Label htmlFor="room">{language === 'en' ? 'Room Number' : language === 'hi' ? 'कमरा नंबर' : 'رقم الغرفة'}</Label>
                   <Input
                     id="room"
                     value={newClass.room}
                     onChange={(e) => setNewClass({ ...newClass, room: e.target.value })}
-                    placeholder={language === 'en' ? 'e.g., Room 101' : 'مثل: غرفة 101'}
+                    placeholder={language === 'en' ? 'e.g., Room 101' : language === 'hi' ? 'जैसे, कमरा 101' : 'مثل: غرفة 101'}
                   />
                 </div>
                 <div>
-                  <Label htmlFor="capacity">{language === 'en' ? 'Capacity' : 'السعة'}</Label>
+                  <Label htmlFor="capacity">{language === 'en' ? 'Capacity' : language === 'hi' ? 'क्षमता' : 'السعة'}</Label>
                   <Input
                     id="capacity"
                     type="number"
@@ -639,12 +639,12 @@ export default function Classes() {
                 </div>
               </div>
               <div>
-                <Label htmlFor="description">{language === 'en' ? 'Description' : 'الوصف'}</Label>
+                <Label htmlFor="description">{language === 'en' ? 'Description' : language === 'hi' ? 'विवरण' : 'الوصف'}</Label>
                 <Textarea
                   id="description"
                   value={newClass.description}
                   onChange={(e) => setNewClass({ ...newClass, description: e.target.value })}
-                  placeholder={language === 'en' ? 'Optional class description...' : 'وصف اختياري للصف...'}
+                  placeholder={language === 'en' ? 'Optional class description...' : language === 'hi' ? 'वैकल्पिक कक्षा विवरण...' : 'وصف اختياري للصف...'}
                   rows={3}
                 />
               </div>
@@ -659,7 +659,7 @@ export default function Classes() {
               onClick={handleCreateClass}
               disabled={!newClass.name || !newClass.grade || !newClass.section}
             >
-              {language === 'en' ? 'Create Class' : 'إنشاء الصف'}
+              {language === 'en' ? 'Create Class' : language === 'hi' ? 'कक्षा बनाएं' : 'إنشاء الصف'}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -670,11 +670,13 @@ export default function Classes() {
         <DialogContent className="max-w-2xl max-h-[90vh]">
           <DialogHeader>
             <DialogTitle>
-              {language === 'en' ? 'Assign Students to' : 'تعيين الطلاب إلى'} {selectedClass?.name}
+              {language === 'en' ? 'Assign Students to' : language === 'hi' ? 'छात्रों को असाइन करें' : 'تعيين الطلاب إلى'} {selectedClass?.name}
             </DialogTitle>
             <DialogDescription>
               {language === 'en' 
                 ? `Select students to assign to this class. Currently ${selectedStudentIds.length} students selected.`
+                : language === 'hi'
+                ? `इस कक्षा में असाइन करने के लिए छात्र चुनें। वर्तमान में ${selectedStudentIds.length} छात्र चयनित।`
                 : `اختر الطلاب للتعيين في هذا الصف. تم اختيار ${selectedStudentIds.length} طالب حالياً.`
               }
             </DialogDescription>
@@ -683,7 +685,7 @@ export default function Classes() {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
             <Input
-              placeholder={language === 'en' ? 'Search students...' : 'البحث عن طلاب...'}
+              placeholder={language === 'en' ? 'Search students...' : language === 'hi' ? 'छात्र खोजें...' : 'البحث عن طلاب...'}
               value={studentSearchTerm}
               onChange={(e) => setStudentSearchTerm(e.target.value)}
               className="pl-10"
@@ -694,7 +696,7 @@ export default function Classes() {
             {assignedStudents.length > 0 && (
               <div className="mb-4">
                 <h4 className="text-sm font-medium text-primary mb-2">
-                  {language === 'en' ? 'Assigned to this class' : 'معينون في هذا الصف'} ({assignedStudents.length})
+                  {language === 'en' ? 'Assigned to this class' : language === 'hi' ? 'इस कक्षा में असाइन' : 'معينون في هذا الصف'} ({assignedStudents.length})
                 </h4>
                 <div className="space-y-2">
                   {assignedStudents.map((student) => (
@@ -713,7 +715,7 @@ export default function Classes() {
             {unassignedStudents.length > 0 && (
               <div className="mb-4">
                 <h4 className="text-sm font-medium text-muted-foreground mb-2">
-                  {language === 'en' ? 'Available students' : 'الطلاب المتاحون'} ({unassignedStudents.length})
+                  {language === 'en' ? 'Available students' : language === 'hi' ? 'उपलब्ध छात्र' : 'الطلاب المتاحون'} ({unassignedStudents.length})
                 </h4>
                 <div className="space-y-2">
                   {unassignedStudents.map((student) => (
@@ -732,7 +734,7 @@ export default function Classes() {
             {otherClassStudents.length > 0 && (
               <div>
                 <h4 className="text-sm font-medium text-orange-600 mb-2">
-                  {language === 'en' ? 'Assigned to other classes' : 'معينون في صفوف أخرى'} ({otherClassStudents.length})
+                  {language === 'en' ? 'Assigned to other classes' : language === 'hi' ? 'अन्य कक्षाओं में असाइन' : 'معينون في صفوف أخرى'} ({otherClassStudents.length})
                 </h4>
                 <div className="space-y-2">
                   {otherClassStudents.map((student) => (
@@ -755,7 +757,7 @@ export default function Classes() {
               {t('common.cancel')}
             </Button>
             <Button onClick={handleSaveStudentAssignments}>
-              {language === 'en' ? 'Save Assignments' : 'حفظ التعيينات'} ({selectedStudentIds.length})
+              {language === 'en' ? 'Save Assignments' : language === 'hi' ? 'असाइनमेंट सहेजें' : 'حفظ التعيينات'} ({selectedStudentIds.length})
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -767,7 +769,7 @@ export default function Classes() {
           <DialogHeader>
             <DialogTitle>{selectedClass?.name}</DialogTitle>
             <DialogDescription>
-              {selectedClass?.grade} - {language === 'en' ? 'Section' : 'الشعبة'} {selectedClass?.section}
+              {selectedClass?.grade} - {language === 'en' ? 'Section' : language === 'hi' ? 'सेक्शन' : 'الشعبة'} {selectedClass?.section}
             </DialogDescription>
           </DialogHeader>
 
@@ -775,11 +777,11 @@ export default function Classes() {
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="students">
                 <Users className="h-4 w-4 mr-2" />
-                {language === 'en' ? 'Students' : 'الطلاب'} ({selectedClass?.students.length || 0})
+                {language === 'en' ? 'Students' : language === 'hi' ? 'छात्र' : 'الطلاب'} ({selectedClass?.students.length || 0})
               </TabsTrigger>
               <TabsTrigger value="schedule">
                 <Clock className="h-4 w-4 mr-2" />
-                {language === 'en' ? 'Schedule' : 'الجدول'} ({selectedClass?.class_schedules.length || 0})
+                {language === 'en' ? 'Schedule' : language === 'hi' ? 'शेड्यूल' : 'الجدول'} ({selectedClass?.class_schedules.length || 0})
               </TabsTrigger>
             </TabsList>
 
@@ -787,7 +789,7 @@ export default function Classes() {
               <ScrollArea className="h-[400px]">
                 {selectedClass?.students.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
-                    {language === 'en' ? 'No students assigned to this class' : 'لا يوجد طلاب معينون في هذا الصف'}
+                    {language === 'en' ? 'No students assigned to this class' : language === 'hi' ? 'इस कक्षा में कोई छात्र असाइन नहीं' : 'لا يوجد طلاب معينون في هذا الصف'}
                   </div>
                 ) : (
                   <div className="space-y-2">
@@ -819,7 +821,7 @@ export default function Classes() {
               <ScrollArea className="h-[400px]">
                 {selectedClass?.class_schedules.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
-                    {language === 'en' ? 'No schedule entries' : 'لا توجد جداول'}
+                    {language === 'en' ? 'No schedule entries' : language === 'hi' ? 'कोई शेड्यूल प्रविष्टि नहीं' : 'لا توجد جداول'}
                   </div>
                 ) : (
                   <div className="space-y-2">
@@ -860,28 +862,28 @@ export default function Classes() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {language === 'en' ? 'Add Schedule to' : 'إضافة جدول إلى'} {selectedClass?.name}
+              {language === 'en' ? 'Add Schedule to' : language === 'hi' ? 'शेड्यूल जोड़ें' : 'إضافة جدول إلى'} {selectedClass?.name}
             </DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>{language === 'en' ? 'Day' : 'اليوم'}</Label>
+                <Label>{language === 'en' ? 'Day' : language === 'hi' ? 'दिन' : 'اليوم'}</Label>
                 <Select value={newSchedule.day} onValueChange={(value) => setNewSchedule({ ...newSchedule, day: value })}>
                   <SelectTrigger>
-                    <SelectValue placeholder={language === 'en' ? 'Select day' : 'اختر اليوم'} />
+                    <SelectValue placeholder={language === 'en' ? 'Select day' : language === 'hi' ? 'दिन चुनें' : 'اختر اليوم'} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Sunday">{language === 'en' ? 'Sunday' : 'الأحد'}</SelectItem>
-                    <SelectItem value="Monday">{language === 'en' ? 'Monday' : 'الإثنين'}</SelectItem>
-                    <SelectItem value="Tuesday">{language === 'en' ? 'Tuesday' : 'الثلاثاء'}</SelectItem>
-                    <SelectItem value="Wednesday">{language === 'en' ? 'Wednesday' : 'الأربعاء'}</SelectItem>
-                    <SelectItem value="Thursday">{language === 'en' ? 'Thursday' : 'الخميس'}</SelectItem>
+                    <SelectItem value="Sunday">{language === 'en' ? 'Sunday' : language === 'hi' ? 'रविवार' : 'الأحد'}</SelectItem>
+                    <SelectItem value="Monday">{language === 'en' ? 'Monday' : language === 'hi' ? 'सोमवार' : 'الإثنين'}</SelectItem>
+                    <SelectItem value="Tuesday">{language === 'en' ? 'Tuesday' : language === 'hi' ? 'मंगलवार' : 'الثلاثاء'}</SelectItem>
+                    <SelectItem value="Wednesday">{language === 'en' ? 'Wednesday' : language === 'hi' ? 'बुधवार' : 'الأربعاء'}</SelectItem>
+                    <SelectItem value="Thursday">{language === 'en' ? 'Thursday' : language === 'hi' ? 'गुरुवार' : 'الخميس'}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label htmlFor="time">{language === 'en' ? 'Time' : 'الوقت'}</Label>
+                <Label htmlFor="time">{language === 'en' ? 'Time' : language === 'hi' ? 'समय' : 'الوقت'}</Label>
                 <Input
                   id="time"
                   type="time"
@@ -891,20 +893,20 @@ export default function Classes() {
               </div>
             </div>
             <div>
-              <Label htmlFor="subject">{language === 'en' ? 'Subject' : 'المادة'}</Label>
+              <Label htmlFor="subject">{language === 'en' ? 'Subject' : language === 'hi' ? 'विषय' : 'المادة'}</Label>
               <Input
                 id="subject"
                 value={newSchedule.subject}
                 onChange={(e) => setNewSchedule({ ...newSchedule, subject: e.target.value })}
-                placeholder={language === 'en' ? 'e.g., Mathematics' : 'مثل: الرياضيات'}
+                placeholder={language === 'en' ? 'e.g., Mathematics' : language === 'hi' ? 'जैसे, गणित' : 'مثل: الرياضيات'}
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>{language === 'en' ? 'Teacher' : 'المعلم'}</Label>
+                <Label>{language === 'en' ? 'Teacher' : language === 'hi' ? 'शिक्षक' : 'المعلم'}</Label>
                 <Select value={newSchedule.teacher_id} onValueChange={(value) => setNewSchedule({ ...newSchedule, teacher_id: value })}>
                   <SelectTrigger>
-                    <SelectValue placeholder={language === 'en' ? 'Select teacher' : 'اختر معلماً'} />
+                    <SelectValue placeholder={language === 'en' ? 'Select teacher' : language === 'hi' ? 'शिक्षक चुनें' : 'اختر معلماً'} />
                   </SelectTrigger>
                   <SelectContent>
                     {teachers.map((teacher) => (
@@ -916,12 +918,12 @@ export default function Classes() {
                 </Select>
               </div>
               <div>
-                <Label htmlFor="room">{language === 'en' ? 'Room' : 'الغرفة'}</Label>
+                <Label htmlFor="room">{language === 'en' ? 'Room' : language === 'hi' ? 'कमरा' : 'الغرفة'}</Label>
                 <Input
                   id="room"
                   value={newSchedule.room}
                   onChange={(e) => setNewSchedule({ ...newSchedule, room: e.target.value })}
-                  placeholder={selectedClass?.room || (language === 'en' ? 'Room number' : 'رقم الغرفة')}
+                  placeholder={selectedClass?.room || (language === 'en' ? 'Room number' : language === 'hi' ? 'कमरा नंबर' : 'رقم الغرفة')}
                 />
               </div>
             </div>
@@ -934,7 +936,7 @@ export default function Classes() {
               onClick={handleAddSchedule}
               disabled={!newSchedule.day || !newSchedule.time || !newSchedule.subject}
             >
-              {language === 'en' ? 'Add Schedule' : 'إضافة الجدول'}
+              {language === 'en' ? 'Add Schedule' : language === 'hi' ? 'शेड्यूल जोड़ें' : 'إضافة الجدول'}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -984,7 +986,7 @@ function StudentItem({
       </div>
       {warning && (
         <Badge variant="outline" className="text-orange-600 border-orange-300">
-          {language === 'en' ? 'Other class' : 'صف آخر'}
+          {language === 'en' ? 'Other class' : language === 'hi' ? 'अन्य कक्षा' : 'صف آخر'}
         </Badge>
       )}
     </div>

@@ -469,7 +469,7 @@ export default function Reports() {
             </div>
             <div className="flex items-end">
               <Button className="w-full">
-                {language === 'en' ? 'Generate Report' : 'إنشاء تقرير'}
+                {language === 'en' ? 'Generate Report' : language === 'hi' ? 'रिपोर्ट बनाएं' : 'إنشاء تقرير'}
               </Button>
             </div>
           </div>
@@ -480,10 +480,10 @@ export default function Reports() {
       <Tabs defaultValue="all" className="space-y-4" dir={language === 'ar' ? 'rtl' : 'ltr'}>
         <TabsList className={language === 'ar' ? 'flex-row-reverse' : ''}>
           <TabsTrigger value="all">
-            {language === 'en' ? 'All Reports' : 'جميع التقارير'}
+            {language === 'en' ? 'All Reports' : language === 'hi' ? 'सभी रिपोर्ट' : 'جميع التقارير'}
           </TabsTrigger>
           <TabsTrigger value="analytics">
-            {language === 'en' ? 'Analytics' : 'التحليلات'}
+            {language === 'en' ? 'Analytics' : language === 'hi' ? 'विश्लेषिकी' : 'التحليلات'}
           </TabsTrigger>
         </TabsList>
 
@@ -495,7 +495,7 @@ export default function Reports() {
                   {filteredReports.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground">
                       <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                      <p>{language === 'en' ? 'No reports found' : 'لا توجد تقارير'}</p>
+                      <p>{language === 'en' ? 'No reports found' : language === 'hi' ? 'कोई रिपोर्ट नहीं मिली' : 'لا توجد تقارير'}</p>
                     </div>
                   ) : (
                     filteredReports.map(report => (
@@ -546,7 +546,7 @@ export default function Reports() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <PieChart className="h-5 w-5" />
-                  {language === 'en' ? 'Attendance Overview' : 'نظرة عامة على الحضور'}
+                  {language === 'en' ? 'Attendance Overview' : language === 'hi' ? 'उपस्थिति अवलोकन' : 'نظرة عامة على الحضور'}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -554,14 +554,14 @@ export default function Reports() {
                   <div className="text-center">
                     <p className="text-4xl font-bold text-success">{attendanceStats?.rate || 0}%</p>
                     <p className="text-sm text-muted-foreground mt-2">
-                      {language === 'en' ? 'Average Attendance Rate' : 'متوسط معدل الحضور'}
+                      {language === 'en' ? 'Average Attendance Rate' : language === 'hi' ? 'औसत उपस्थिति दर' : 'متوسط معدل الحضور'}
                     </p>
                     <div className="flex gap-4 justify-center mt-4 text-sm">
                       <span className="text-success">
-                        {language === 'en' ? 'Present:' : 'حاضر:'} {attendanceStats?.present || 0}
+                        {language === 'en' ? 'Present:' : language === 'hi' ? 'उपस्थित:' : 'حاضر:'} {attendanceStats?.present || 0}
                       </span>
                       <span className="text-destructive">
-                        {language === 'en' ? 'Absent:' : 'غائب:'} {attendanceStats?.absent || 0}
+                        {language === 'en' ? 'Absent:' : language === 'hi' ? 'अनुपस्थित:' : 'غائب:'} {attendanceStats?.absent || 0}
                       </span>
                     </div>
                   </div>
@@ -573,7 +573,7 @@ export default function Reports() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <BarChart3 className="h-5 w-5" />
-                  {language === 'en' ? 'Financial Summary' : 'الملخص المالي'}
+                  {language === 'en' ? 'Financial Summary' : language === 'hi' ? 'वित्तीय सारांश' : 'الملخص المالي'}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -581,14 +581,14 @@ export default function Reports() {
                   <div className="text-center">
                     <p className="text-4xl font-bold text-primary">{financialStats?.income || 0} OMR</p>
                     <p className="text-sm text-muted-foreground mt-2">
-                      {language === 'en' ? 'Total Revenue This Month' : 'إجمالي الإيرادات هذا الشهر'}
+                      {language === 'en' ? 'Total Revenue This Month' : language === 'hi' ? 'इस महीने कुल राजस्व' : 'إجمالي الإيرادات هذا الشهر'}
                     </p>
                     <div className="flex gap-4 justify-center mt-4 text-sm">
                       <span className="text-success">
-                        {language === 'en' ? 'Income:' : 'الدخل:'} {financialStats?.income || 0}
+                        {language === 'en' ? 'Income:' : language === 'hi' ? 'आय:' : 'الدخل:'} {financialStats?.income || 0}
                       </span>
                       <span className="text-destructive">
-                        {language === 'en' ? 'Expenses:' : 'المصروفات:'} {financialStats?.expense || 0}
+                        {language === 'en' ? 'Expenses:' : language === 'hi' ? 'व्यय:' : 'المصروفات:'} {financialStats?.expense || 0}
                       </span>
                     </div>
                   </div>
