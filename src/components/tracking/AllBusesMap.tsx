@@ -305,11 +305,11 @@ export default function AllBusesMap({ buses }: AllBusesMapProps) {
     pin.style.border = '3px solid hsl(var(--background))';
     pin.style.boxShadow = bus.status === 'active' 
       ? '0 8px 24px hsl(var(--primary) / 0.35), 0 4px 8px hsl(var(--foreground) / 0.1)' 
-      : '0 6px 16px hsl(var(--foreground) / 0.12)';
+      : '0 8px 24px hsla(0, 72%, 51%, 0.35), 0 4px 8px hsl(var(--foreground) / 0.1)';
     pin.style.background = bus.status === 'active' 
       ? 'linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.85))' 
-      : 'hsl(var(--muted))';
-    pin.style.color = bus.status === 'active' ? 'hsl(var(--primary-foreground))' : 'hsl(var(--muted-foreground))';
+      : 'linear-gradient(135deg, hsl(0, 72%, 51%), hsl(0, 72%, 45%))';
+    pin.style.color = '#ffffff';
     pin.style.position = 'relative';
     pin.style.zIndex = '2';
     // More detailed and beautiful school bus icon
@@ -364,7 +364,7 @@ export default function AllBusesMap({ buses }: AllBusesMapProps) {
             <span>{language === 'ar' ? 'نشطة' : 'Active'}</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded-full bg-muted" />
+            <div className="w-3 h-3 rounded-full bg-red-500" />
             <span>{language === 'ar' ? 'غير نشطة' : 'Inactive'}</span>
           </div>
         </div>
