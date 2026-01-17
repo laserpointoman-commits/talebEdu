@@ -452,24 +452,37 @@ export default function AllBusesMap({ buses }: AllBusesMapProps) {
     `;
 
     pinWrapper.appendChild(pin);
+    
+    // Pin pointer/anchor at the bottom - this is the exact GPS location
+    const pointer = document.createElement('div');
+    pointer.style.width = '0';
+    pointer.style.height = '0';
+    pointer.style.borderLeft = '8px solid transparent';
+    pointer.style.borderRight = '8px solid transparent';
+    pointer.style.borderTop = isActive 
+      ? '12px solid hsl(var(--primary))' 
+      : '12px solid hsl(0, 72%, 51%)';
+    pointer.style.marginTop = '-2px';
+    pointer.style.filter = 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))';
+    
     container.appendChild(pinWrapper);
+    container.appendChild(pointer);
 
-    // Add "Inactive" tag below the pin for inactive buses
+    // Add "Inactive" badge inside the label for inactive buses (so it doesn't affect anchor)
     if (!isActive) {
       const inactiveTag = document.createElement('div');
       inactiveTag.className = 'bus-inactive-tag';
       inactiveTag.textContent = language === 'ar' ? 'متوقفة' : 'Inactive';
-      inactiveTag.style.marginTop = '4px';
-      inactiveTag.style.padding = '2px 8px';
+      inactiveTag.style.marginTop = '2px';
+      inactiveTag.style.padding = '2px 6px';
       inactiveTag.style.borderRadius = '4px';
-      inactiveTag.style.fontSize = '10px';
+      inactiveTag.style.fontSize = '9px';
       inactiveTag.style.fontWeight = '600';
       inactiveTag.style.background = 'hsl(0, 72%, 51%)';
       inactiveTag.style.color = '#ffffff';
       inactiveTag.style.textTransform = 'uppercase';
       inactiveTag.style.letterSpacing = '0.5px';
-      inactiveTag.style.boxShadow = '0 2px 4px hsla(0, 72%, 51%, 0.3)';
-      container.appendChild(inactiveTag);
+      labelWrap.appendChild(inactiveTag);
     }
 
     return container;
