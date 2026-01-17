@@ -14,7 +14,7 @@ import { Loader2, CheckCircle2, XCircle, Globe } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import HomeLocationMap from "@/components/features/HomeLocationMap";
 
-type Language = "en" | "ar" | null;
+type Language = "en" | "ar" | "hi" | null;
 
 export default function ParentRegistration() {
   const [searchParams] = useSearchParams();
@@ -61,8 +61,8 @@ export default function ParentRegistration() {
   useEffect(() => {
     if (!token) {
       toast({
-        title: selectedLanguage === "ar" ? "رابط غير صالح" : "Invalid Link",
-        description: selectedLanguage === "ar" ? "لم يتم العثور على رمز التسجيل في الرابط." : "No registration token found in the URL.",
+        title: selectedLanguage === "ar" ? "رابط غير صالح" : selectedLanguage === "hi" ? "अमान्य लिंक" : "Invalid Link",
+        description: selectedLanguage === "ar" ? "لم يتم العثور على رمز التسجيل في الرابط." : selectedLanguage === "hi" ? "URL में कोई पंजीकरण टोकन नहीं मिला।" : "No registration token found in the URL.",
         variant: "destructive",
       });
       setValidating(false);
@@ -94,16 +94,16 @@ export default function ParentRegistration() {
         }));
       } else {
         toast({
-          title: selectedLanguage === "ar" ? "رمز غير صالح" : "Invalid Token",
-          description: data.error || (selectedLanguage === "ar" ? "هذا الرابط غير صالح أو منتهي الصلاحية." : "This registration link is invalid or has expired."),
+          title: selectedLanguage === "ar" ? "رمز غير صالح" : selectedLanguage === "hi" ? "अमान्य टोकन" : "Invalid Token",
+          description: data.error || (selectedLanguage === "ar" ? "هذا الرابط غير صالح أو منتهي الصلاحية." : selectedLanguage === "hi" ? "यह पंजीकरण लिंक अमान्य है या समाप्त हो गई है।" : "This registration link is invalid or has expired."),
           variant: "destructive",
         });
       }
     } catch (error: any) {
       console.error("Token validation error:", error);
       toast({
-        title: selectedLanguage === "ar" ? "خطأ في التحقق" : "Validation Error",
-        description: selectedLanguage === "ar" ? "فشل التحقق من رمز التسجيل." : "Failed to validate registration token.",
+        title: selectedLanguage === "ar" ? "خطأ في التحقق" : selectedLanguage === "hi" ? "सत्यापन त्रुटि" : "Validation Error",
+        description: selectedLanguage === "ar" ? "فشل التحقق من رمز التسجيل." : selectedLanguage === "hi" ? "पंजीकरण टोकन सत्यापित करने में विफल।" : "Failed to validate registration token.",
         variant: "destructive",
       });
     } finally {
@@ -127,8 +127,8 @@ export default function ParentRegistration() {
     
     if (!formData.firstName || !formData.lastName || !formData.dateOfBirth || !formData.gender || !formData.grade) {
       toast({
-        title: selectedLanguage === "ar" ? "معلومات ناقصة" : "Missing Information",
-        description: selectedLanguage === "ar" ? "يرجى ملء جميع الحقول المطلوبة." : "Please fill in all required fields.",
+        title: selectedLanguage === "ar" ? "معلومات ناقصة" : selectedLanguage === "hi" ? "जानकारी अधूरी" : "Missing Information",
+        description: selectedLanguage === "ar" ? "يرجى ملء جميع الحقول المطلوبة." : selectedLanguage === "hi" ? "कृपया सभी आवश्यक फ़ील्ड भरें।" : "Please fill in all required fields.",
         variant: "destructive",
       });
       return;
@@ -149,8 +149,8 @@ export default function ParentRegistration() {
       if (data.success) {
         setSuccess(true);
         toast({
-          title: selectedLanguage === "ar" ? "تم التسجيل بنجاح!" : "Registration Successful!",
-          description: selectedLanguage === "ar" ? "تم تسجيل طفلك بنجاح." : "Your child has been registered successfully.",
+          title: selectedLanguage === "ar" ? "تم التسجيل بنجاح!" : selectedLanguage === "hi" ? "पंजीकरण सफल!" : "Registration Successful!",
+          description: selectedLanguage === "ar" ? "تم تسجيل طفلك بنجاح." : selectedLanguage === "hi" ? "आपका बच्चा सफलतापूर्वक पंजीकृत हो गया है।" : "Your child has been registered successfully.",
         });
         
         setTimeout(() => {
@@ -162,8 +162,8 @@ export default function ParentRegistration() {
     } catch (error: any) {
       console.error("Registration error:", error);
       toast({
-        title: selectedLanguage === "ar" ? "فشل التسجيل" : "Registration Failed",
-        description: error.message || (selectedLanguage === "ar" ? "فشل تسجيل الطالب. يرجى المحاولة مرة أخرى." : "Failed to register student. Please try again."),
+        title: selectedLanguage === "ar" ? "فشل التسجيل" : selectedLanguage === "hi" ? "पंजीकरण विफल" : "Registration Failed",
+        description: error.message || (selectedLanguage === "ar" ? "فشل تسجيل الطالب. يرجى المحاولة مرة أخرى." : selectedLanguage === "hi" ? "छात्र को पंजीकृत करने में विफल। कृपया पुनः प्रयास करें।" : "Failed to register student. Please try again."),
         variant: "destructive",
       });
     } finally {
@@ -180,27 +180,38 @@ export default function ParentRegistration() {
             <div className="flex justify-center mb-4">
               <Globe className="h-16 w-16 text-primary" />
             </div>
-            <CardTitle className="text-center text-2xl">Select Language / اختر اللغة</CardTitle>
+            <CardTitle className="text-center text-2xl">Select Language / اختر اللغة / भाषा चुनें</CardTitle>
             <CardDescription className="text-center">
               Please select your preferred language<br />
-              يرجى اختيار اللغة المفضلة
+              يرجى اختيار اللغة المفضلة<br />
+              कृपया अपनी पसंदीदा भाषा चुनें
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-3">
               <Button
                 size="lg"
                 onClick={() => setSelectedLanguage("en")}
-                className="h-24 text-lg font-semibold"
+                className="h-20 text-base font-semibold flex flex-col gap-1"
               >
-                English
+                <span>🇬🇧</span>
+                <span>English</span>
               </Button>
               <Button
                 size="lg"
                 onClick={() => setSelectedLanguage("ar")}
-                className="h-24 text-lg font-semibold"
+                className="h-20 text-base font-semibold flex flex-col gap-1"
               >
-                العربية
+                <span>🇴🇲</span>
+                <span>العربية</span>
+              </Button>
+              <Button
+                size="lg"
+                onClick={() => setSelectedLanguage("hi")}
+                className="h-20 text-base font-semibold flex flex-col gap-1"
+              >
+                <span>🇮🇳</span>
+                <span>हिन्दी</span>
               </Button>
             </div>
           </CardContent>
@@ -217,7 +228,7 @@ export default function ParentRegistration() {
             <div className="flex flex-col items-center gap-4">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
               <p className="text-muted-foreground">
-                {selectedLanguage === "ar" ? "جاري التحقق من رابط التسجيل..." : "Validating registration link..."}
+                {selectedLanguage === "ar" ? "جاري التحقق من رابط التسجيل..." : selectedLanguage === "hi" ? "पंजीकरण लिंक सत्यापित हो रहा है..." : "Validating registration link..."}
               </p>
             </div>
           </CardContent>
@@ -235,11 +246,13 @@ export default function ParentRegistration() {
               <XCircle className="h-16 w-16 text-destructive" />
             </div>
             <CardTitle className="text-center">
-              {selectedLanguage === "ar" ? "رابط تسجيل غير صالح" : "Invalid Registration Link"}
+              {selectedLanguage === "ar" ? "رابط تسجيل غير صالح" : selectedLanguage === "hi" ? "अमान्य पंजीकरण लिंक" : "Invalid Registration Link"}
             </CardTitle>
             <CardDescription className="text-center">
               {selectedLanguage === "ar" 
                 ? "هذا الرابط غير صالح أو منتهي الصلاحية أو تم استخدامه بالفعل."
+                : selectedLanguage === "hi"
+                ? "यह पंजीकरण लिंक अमान्य है, समाप्त हो गई है, या पहले से ही उपयोग की जा चुकी है।"
                 : "This registration link is invalid, has expired, or has already been used."}
             </CardDescription>
           </CardHeader>
@@ -248,10 +261,12 @@ export default function ParentRegistration() {
               <p>
                 {selectedLanguage === "ar"
                   ? "إذا كنت بحاجة إلى رابط تسجيل جديد، يرجى الاتصال بإدارة المدرسة."
+                  : selectedLanguage === "hi"
+                  ? "यदि आपको नए पंजीकरण लिंक की आवश्यकता है, तो कृपया स्कूल प्रशासन से संपर्क करें।"
                   : "If you need a new registration link, please contact the school administration."}
               </p>
               <Button onClick={() => navigate("/auth")} className="w-full">
-                {selectedLanguage === "ar" ? "الذهاب لتسجيل الدخول" : "Go to Login"}
+                {selectedLanguage === "ar" ? "الذهاب لتسجيل الدخول" : selectedLanguage === "hi" ? "लॉगिन पर जाएं" : "Go to Login"}
               </Button>
             </div>
           </CardContent>
@@ -269,11 +284,13 @@ export default function ParentRegistration() {
               <CheckCircle2 className="h-16 w-16 text-green-500" />
             </div>
             <CardTitle className="text-center">
-              {selectedLanguage === "ar" ? "تم التسجيل بنجاح!" : "Registration Successful!"}
+              {selectedLanguage === "ar" ? "تم التسجيل بنجاح!" : selectedLanguage === "hi" ? "पंजीकरण सफल!" : "Registration Successful!"}
             </CardTitle>
             <CardDescription className="text-center">
               {selectedLanguage === "ar"
                 ? "تم تسجيل طفلك بنجاح. جاري التحويل لصفحة تسجيل الدخول..."
+                : selectedLanguage === "hi"
+                ? "आपका बच्चा सफलतापूर्वक पंजीकृत हो गया है। लॉगिन पेज पर रीडायरेक्ट हो रहा है..."
                 : "Your child has been registered successfully. Redirecting to login..."}
             </CardDescription>
           </CardHeader>
@@ -283,54 +300,54 @@ export default function ParentRegistration() {
   }
 
   const t = {
-    title: selectedLanguage === "ar" ? "تسجيل الطالب" : "Student Registration",
-    welcome: selectedLanguage === "ar" ? `مرحباً، ${parentInfo?.full_name}! يرجى ملء معلومات طفلك أدناه.` : `Welcome, ${parentInfo?.full_name}! Please fill in your child's information below.`,
+    title: selectedLanguage === "ar" ? "تسجيل الطالب" : selectedLanguage === "hi" ? "छात्र पंजीकरण" : "Student Registration",
+    welcome: selectedLanguage === "ar" ? `مرحباً، ${parentInfo?.full_name}! يرجى ملء معلومات طفلك أدناه.` : selectedLanguage === "hi" ? `स्वागत है, ${parentInfo?.full_name}! कृपया अपने बच्चे की जानकारी नीचे भरें।` : `Welcome, ${parentInfo?.full_name}! Please fill in your child's information below.`,
     tabs: {
-      basic: selectedLanguage === "ar" ? "المعلومات الأساسية" : "Basic Info",
-      contact: selectedLanguage === "ar" ? "معلومات الاتصال" : "Contact Info",
-      bus: selectedLanguage === "ar" ? "النقل المدرسي" : "Transportation",
-      medical: selectedLanguage === "ar" ? "المعلومات الطبية" : "Medical Info",
+      basic: selectedLanguage === "ar" ? "المعلومات الأساسية" : selectedLanguage === "hi" ? "बुनियादी जानकारी" : "Basic Info",
+      contact: selectedLanguage === "ar" ? "معلومات الاتصال" : selectedLanguage === "hi" ? "संपर्क जानकारी" : "Contact Info",
+      bus: selectedLanguage === "ar" ? "النقل المدرسي" : selectedLanguage === "hi" ? "परिवहन" : "Transportation",
+      medical: selectedLanguage === "ar" ? "المعلومات الطبية" : selectedLanguage === "hi" ? "चिकित्सा जानकारी" : "Medical Info",
     },
     labels: {
-      firstName: selectedLanguage === "ar" ? "الاسم الأول (انجليزي) *" : "First Name (English) *",
-      lastName: selectedLanguage === "ar" ? "اسم العائلة (انجليزي) *" : "Last Name (English) *",
-      firstNameAr: selectedLanguage === "ar" ? "الاسم الأول (عربي)" : "First Name (Arabic)",
-      lastNameAr: selectedLanguage === "ar" ? "اسم العائلة (عربي)" : "Last Name (Arabic)",
-      enterInEnglish: selectedLanguage === "ar" ? "الرجاء الإدخال بالإنجليزية" : "Please enter in English",
-      enterInArabic: selectedLanguage === "ar" ? "الرجاء الإدخال بالعربية" : "Please enter in Arabic",
-      dateOfBirth: selectedLanguage === "ar" ? "تاريخ الميلاد *" : "Date of Birth *",
-      gender: selectedLanguage === "ar" ? "الجنس *" : "Gender *",
-      male: selectedLanguage === "ar" ? "ذكر" : "Male",
-      female: selectedLanguage === "ar" ? "أنثى" : "Female",
-      nationality: selectedLanguage === "ar" ? "الجنسية" : "Nationality",
-      bloodType: selectedLanguage === "ar" ? "فصيلة الدم" : "Blood Type",
-      grade: selectedLanguage === "ar" ? "الصف *" : "Grade *",
-      class: selectedLanguage === "ar" ? "الفصل" : "Class",
-      nfcId: selectedLanguage === "ar" ? "رقم NFC (إن وجد)" : "NFC ID (if available)",
-      address: selectedLanguage === "ar" ? "العنوان" : "Address",
-      phone: selectedLanguage === "ar" ? "هاتف الطالب" : "Student Phone",
-      parentPhone: selectedLanguage === "ar" ? "هاتف ولي الأمر" : "Parent Phone",
-      emergencyContact: selectedLanguage === "ar" ? "اسم جهة الاتصال الطارئة" : "Emergency Contact Name",
-      emergencyPhone: selectedLanguage === "ar" ? "هاتف الطوارئ" : "Emergency Phone",
-      medicalConditions: selectedLanguage === "ar" ? "الحالات الطبية" : "Medical Conditions",
-      allergies: selectedLanguage === "ar" ? "الحساسية" : "Allergies",
-      homeLocation: selectedLanguage === "ar" ? "موقع المنزل" : "Home Location",
-      homeAddress: selectedLanguage === "ar" ? "عنوان المنزل" : "Home Address",
-      homeAddressDetails: selectedLanguage === "ar" ? "تفاصيل العنوان (رقم المبنى، الشارع، إلخ)" : "Address Details (Building no., Street, etc.)",
-      needsTransportation: selectedLanguage === "ar" ? "يحتاج إلى خدمة النقل" : "Needs Transportation",
+      firstName: selectedLanguage === "ar" ? "الاسم الأول (انجليزي) *" : selectedLanguage === "hi" ? "पहला नाम (अंग्रेजी) *" : "First Name (English) *",
+      lastName: selectedLanguage === "ar" ? "اسم العائلة (انجليزي) *" : selectedLanguage === "hi" ? "अंतिम नाम (अंग्रेजी) *" : "Last Name (English) *",
+      firstNameAr: selectedLanguage === "ar" ? "الاسم الأول (عربي)" : selectedLanguage === "hi" ? "पहला नाम (अरबी)" : "First Name (Arabic)",
+      lastNameAr: selectedLanguage === "ar" ? "اسم العائلة (عربي)" : selectedLanguage === "hi" ? "अंतिम नाम (अरबी)" : "Last Name (Arabic)",
+      enterInEnglish: selectedLanguage === "ar" ? "الرجاء الإدخال بالإنجليزية" : selectedLanguage === "hi" ? "कृपया अंग्रेजी में दर्ज करें" : "Please enter in English",
+      enterInArabic: selectedLanguage === "ar" ? "الرجاء الإدخال بالعربية" : selectedLanguage === "hi" ? "कृपया अरबी में दर्ज करें" : "Please enter in Arabic",
+      dateOfBirth: selectedLanguage === "ar" ? "تاريخ الميلاد *" : selectedLanguage === "hi" ? "जन्म तिथि *" : "Date of Birth *",
+      gender: selectedLanguage === "ar" ? "الجنس *" : selectedLanguage === "hi" ? "लिंग *" : "Gender *",
+      male: selectedLanguage === "ar" ? "ذكر" : selectedLanguage === "hi" ? "पुरुष" : "Male",
+      female: selectedLanguage === "ar" ? "أنثى" : selectedLanguage === "hi" ? "महिला" : "Female",
+      nationality: selectedLanguage === "ar" ? "الجنسية" : selectedLanguage === "hi" ? "राष्ट्रीयता" : "Nationality",
+      bloodType: selectedLanguage === "ar" ? "فصيلة الدم" : selectedLanguage === "hi" ? "रक्त समूह" : "Blood Type",
+      grade: selectedLanguage === "ar" ? "الصف *" : selectedLanguage === "hi" ? "कक्षा *" : "Grade *",
+      class: selectedLanguage === "ar" ? "الفصل" : selectedLanguage === "hi" ? "सेक्शन" : "Class",
+      nfcId: selectedLanguage === "ar" ? "رقم NFC (إن وجد)" : selectedLanguage === "hi" ? "NFC आईडी (यदि उपलब्ध हो)" : "NFC ID (if available)",
+      address: selectedLanguage === "ar" ? "العنوان" : selectedLanguage === "hi" ? "पता" : "Address",
+      phone: selectedLanguage === "ar" ? "هاتف الطالب" : selectedLanguage === "hi" ? "छात्र फोन" : "Student Phone",
+      parentPhone: selectedLanguage === "ar" ? "هاتف ولي الأمر" : selectedLanguage === "hi" ? "अभिभावक फोन" : "Parent Phone",
+      emergencyContact: selectedLanguage === "ar" ? "اسم جهة الاتصال الطارئة" : selectedLanguage === "hi" ? "आपातकालीन संपर्क नाम" : "Emergency Contact Name",
+      emergencyPhone: selectedLanguage === "ar" ? "هاتف الطوارئ" : selectedLanguage === "hi" ? "आपातकालीन फोन" : "Emergency Phone",
+      medicalConditions: selectedLanguage === "ar" ? "الحالات الطبية" : selectedLanguage === "hi" ? "चिकित्सा स्थितियां" : "Medical Conditions",
+      allergies: selectedLanguage === "ar" ? "الحساسية" : selectedLanguage === "hi" ? "एलर्जी" : "Allergies",
+      homeLocation: selectedLanguage === "ar" ? "موقع المنزل" : selectedLanguage === "hi" ? "घर का स्थान" : "Home Location",
+      homeAddress: selectedLanguage === "ar" ? "عنوان المنزل" : selectedLanguage === "hi" ? "घर का पता" : "Home Address",
+      homeAddressDetails: selectedLanguage === "ar" ? "تفاصيل العنوان (رقم المبنى، الشارع، إلخ)" : selectedLanguage === "hi" ? "पता विवरण (भवन संख्या, सड़क, आदि)" : "Address Details (Building no., Street, etc.)",
+      needsTransportation: selectedLanguage === "ar" ? "يحتاج إلى خدمة النقل" : selectedLanguage === "hi" ? "परिवहन की आवश्यकता है" : "Needs Transportation",
     },
     buttons: {
-      cancel: selectedLanguage === "ar" ? "إلغاء" : "Cancel",
-      register: selectedLanguage === "ar" ? "تسجيل الطالب" : "Register Student",
-      registering: selectedLanguage === "ar" ? "جاري التسجيل..." : "Registering...",
+      cancel: selectedLanguage === "ar" ? "إلغاء" : selectedLanguage === "hi" ? "रद्द करें" : "Cancel",
+      register: selectedLanguage === "ar" ? "تسجيل الطالب" : selectedLanguage === "hi" ? "छात्र पंजीकृत करें" : "Register Student",
+      registering: selectedLanguage === "ar" ? "جاري التسجيل..." : selectedLanguage === "hi" ? "पंजीकरण हो रहा है..." : "Registering...",
     },
     placeholders: {
-      selectGender: selectedLanguage === "ar" ? "اختر الجنس" : "Select gender",
-      selectBlood: selectedLanguage === "ar" ? "اختر فصيلة الدم" : "Select blood type",
-      selectGrade: selectedLanguage === "ar" ? "اختر الصف" : "Select grade",
-      selectClass: selectedLanguage === "ar" ? "اختر الفصل" : "Select class",
-      medical: selectedLanguage === "ar" ? "أي حالات طبية يجب أن نكون على علم بها" : "Any medical conditions we should be aware of",
-      allergies: selectedLanguage === "ar" ? "أي حساسية معروفة" : "Any known allergies",
+      selectGender: selectedLanguage === "ar" ? "اختر الجنس" : selectedLanguage === "hi" ? "लिंग चुनें" : "Select gender",
+      selectBlood: selectedLanguage === "ar" ? "اختر فصيلة الدم" : selectedLanguage === "hi" ? "रक्त समूह चुनें" : "Select blood type",
+      selectGrade: selectedLanguage === "ar" ? "اختر الصف" : selectedLanguage === "hi" ? "कक्षा चुनें" : "Select grade",
+      selectClass: selectedLanguage === "ar" ? "اختر الفصل" : selectedLanguage === "hi" ? "सेक्शन चुनें" : "Select class",
+      medical: selectedLanguage === "ar" ? "أي حالات طبية يجب أن نكون على علم بها" : selectedLanguage === "hi" ? "कोई भी चिकित्सा स्थिति जिसके बारे में हमें पता होना चाहिए" : "Any medical conditions we should be aware of",
+      allergies: selectedLanguage === "ar" ? "أي حساسية معروفة" : selectedLanguage === "hi" ? "कोई भी ज्ञात एलर्जी" : "Any known allergies",
     },
   };
 
