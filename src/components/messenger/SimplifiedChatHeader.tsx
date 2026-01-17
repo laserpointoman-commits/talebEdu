@@ -57,8 +57,10 @@ export function SimplifiedChatHeader({
 
   return (
     <div 
-      className="px-2 py-2 flex items-center gap-2 shrink-0"
-      style={{ backgroundColor: colors.headerBg }}
+      className="px-2 py-3 flex items-center gap-2 shrink-0"
+      style={{ 
+        backgroundColor: colors.headerBg,
+      }}
     >
       <Button
         variant="ghost"

@@ -31,6 +31,8 @@ export function MessengerBottomNav({
       className="relative shrink-0 overflow-hidden"
       style={{
         paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+        position: 'relative',
+        zIndex: 50,
       }}
       aria-label={isArabic ? 'تنقل المراسلة' : 'Messenger navigation'}
     >

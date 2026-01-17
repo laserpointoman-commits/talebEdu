@@ -497,7 +497,10 @@ function MessengerContent() {
       exit={{ x: '100%' }}
       transition={{ type: 'tween', duration: 0.2 }}
       className="fixed inset-0 flex flex-col z-[100]"
-      style={{ backgroundColor: colors.bg }}
+      style={{ 
+        backgroundColor: colors.bg,
+        paddingTop: 'env(safe-area-inset-top, 0px)',
+      }}
       dir={dir}
     >
       <SimplifiedChatHeader
@@ -582,11 +585,18 @@ function MessengerContent() {
 
   // Mobile Main View with Swipeable Chat List
   const renderMessengerMain = () => (
-    <div className="fixed inset-0 flex flex-col z-[100]" style={{ backgroundColor: colors.bg }} dir={dir}>
+    <div 
+      className="fixed inset-0 flex flex-col z-[100]" 
+      style={{ 
+        backgroundColor: colors.bg,
+        paddingTop: 'env(safe-area-inset-top, 0px)',
+      }} 
+      dir={dir}
+    >
       {/* Simplified Header - No three-dot menu, no search, no camera buttons */}
       <div 
         className="flex items-center justify-between px-4 py-3 shrink-0"
-        style={{ backgroundColor: colors.headerBg, paddingTop: 'max(env(safe-area-inset-top), 12px)' }}
+        style={{ backgroundColor: colors.headerBg }}
       >
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/10" onClick={handleExitMessenger}>
