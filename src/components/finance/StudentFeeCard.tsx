@@ -11,6 +11,7 @@ import EditFeeDialog from './EditFeeDialog';
 import RecordPaymentDialog from './RecordPaymentDialog';
 import FeeHistoryTimeline from './FeeHistoryTimeline';
 import { wrapBidiText } from '@/utils/bidirectional';
+import { getText } from '@/utils/i18n';
 
 interface StudentFeeCardProps {
   studentFee: any;
@@ -28,15 +29,17 @@ export default function StudentFeeCard({ studentFee, onUpdate }: StudentFeeCardP
   const isOverdue = new Date(studentFee.due_date) < new Date() && balance > 0;
   const daysUntilDue = differenceInDays(new Date(studentFee.due_date), new Date());
 
+  const t = (en: string, ar: string, hi: string) => getText(language, en, ar, hi);
+
   const getStatusBadge = () => {
     if (studentFee.status === 'paid') {
-      return <Badge className="bg-green-500">{language === 'en' ? 'Paid' : 'مدفوع'}</Badge>;
+      return <Badge className="bg-green-500">{t('Paid', 'مدفوع', 'भुगतान किया गया')}</Badge>;
     } else if (studentFee.status === 'overdue') {
-      return <Badge variant="destructive">{language === 'en' ? 'Overdue' : 'متأخر'}</Badge>;
+      return <Badge variant="destructive">{t('Overdue', 'متأخر', 'अतिदेय')}</Badge>;
     } else if (studentFee.status === 'partial') {
-      return <Badge className="bg-yellow-500">{language === 'en' ? 'Partial' : 'جزئي'}</Badge>;
+      return <Badge className="bg-yellow-500">{t('Partial', 'جزئي', 'आंशिक')}</Badge>;
     } else {
-      return <Badge variant="secondary">{language === 'en' ? 'Pending' : 'قيد الانتظار'}</Badge>;
+      return <Badge variant="secondary">{t('Pending', 'قيد الانتظار', 'लंबित')}</Badge>;
     }
   };
 
@@ -56,7 +59,7 @@ export default function StudentFeeCard({ studentFee, onUpdate }: StudentFeeCardP
                 {isRTL ? student?.full_name_ar || student?.full_name : student?.full_name}
               </h3>
               <p className="text-sm text-muted-foreground">
-                {language === 'en' ? 'Grade' : 'الصف'} {student?.class}
+                {t('Grade', 'الصف', 'ग्रेड')} {student?.class}
               </p>
             </div>
             {getStatusBadge()}
@@ -68,39 +71,39 @@ export default function StudentFeeCard({ studentFee, onUpdate }: StudentFeeCardP
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-muted/50 p-3 rounded-lg">
               <p className="text-xs text-muted-foreground mb-1">
-                {language === 'en' ? 'Total Fee' : 'إجمالي الرسوم'}
+                {t('Total Fee', 'إجمالي الرسوم', 'कुल शुल्क')}
               </p>
-              <p className="text-lg font-bold" dir="ltr">{wrapBidiText(studentFee.total_amount)} {language === 'en' ? 'OMR' : 'ر.ع'}</p>
+              <p className="text-lg font-bold" dir="ltr">{wrapBidiText(studentFee.total_amount)} {t('OMR', 'ر.ع', 'OMR')}</p>
             </div>
             <div className="bg-green-500/10 p-3 rounded-lg">
               <p className="text-xs text-muted-foreground mb-1">
-                {language === 'en' ? 'Paid' : 'المدفوع'}
+                {t('Paid', 'المدفوع', 'भुगतान किया गया')}
               </p>
-              <p className="text-lg font-bold text-green-600" dir="ltr">{wrapBidiText(studentFee.paid_amount || 0)} {language === 'en' ? 'OMR' : 'ر.ع'}</p>
+              <p className="text-lg font-bold text-green-600" dir="ltr">{wrapBidiText(studentFee.paid_amount || 0)} {t('OMR', 'ر.ع', 'OMR')}</p>
             </div>
             <div className={`p-3 rounded-lg ${balance > 0 ? 'bg-orange-500/10' : 'bg-green-500/10'}`}>
               <p className="text-xs text-muted-foreground mb-1">
-                {language === 'en' ? 'Balance' : 'المتبقي'}
+                {t('Balance', 'المتبقي', 'बकाया')}
               </p>
               <p className={`text-lg font-bold ${balance > 0 ? 'text-orange-600' : 'text-green-600'}`} dir="ltr">
-                {wrapBidiText(balance)} {language === 'en' ? 'OMR' : 'ر.ع'}
+                {wrapBidiText(balance)} {t('OMR', 'ر.ع', 'OMR')}
               </p>
             </div>
             <div className="bg-muted/50 p-3 rounded-lg">
               <p className="text-xs text-muted-foreground mb-1">
-                {language === 'en' ? 'Due Date' : 'تاريخ الاستحقاق'}
+                {t('Due Date', 'تاريخ الاستحقاق', 'देय तिथि')}
               </p>
               <p className="text-sm font-semibold" dir="ltr">
                 {format(new Date(studentFee.due_date), 'MMM dd, yyyy', { locale: isRTL ? ar : undefined })}
               </p>
               {daysUntilDue >= 0 && balance > 0 && (
                 <p className="text-xs text-muted-foreground" dir="ltr">
-                  {wrapBidiText(daysUntilDue)} {language === 'en' ? 'days left' : 'يوم متبقي'}
+                  {wrapBidiText(daysUntilDue)} {t('days left', 'يوم متبقي', 'दिन शेष')}
                 </p>
               )}
               {isOverdue && (
                 <p className="text-xs text-destructive" dir="ltr">
-                  {wrapBidiText(Math.abs(daysUntilDue))} {language === 'en' ? 'days overdue' : 'يوم متأخر'}
+                  {wrapBidiText(Math.abs(daysUntilDue))} {t('days overdue', 'يوم متأخر', 'दिन अतिदेय')}
                 </p>
               )}
             </div>
@@ -110,10 +113,10 @@ export default function StudentFeeCard({ studentFee, onUpdate }: StudentFeeCardP
           {studentFee.discount_amount > 0 && (
             <div className="bg-blue-500/10 p-3 rounded-lg">
               <p className="text-xs text-muted-foreground mb-1">
-                {language === 'en' ? 'Discount Applied' : 'خصم مطبق'}
+                {t('Discount Applied', 'خصم مطبق', 'छूट लागू')}
               </p>
               <p className="text-sm font-semibold text-blue-600" dir="ltr">
-                {wrapBidiText(studentFee.discount_amount)} {language === 'en' ? 'OMR' : 'ر.ع'}
+                {wrapBidiText(studentFee.discount_amount)} {t('OMR', 'ر.ع', 'OMR')}
               </p>
             </div>
           )}
@@ -122,13 +125,13 @@ export default function StudentFeeCard({ studentFee, onUpdate }: StudentFeeCardP
           {studentFee.installment_plans && studentFee.installment_plans.length > 0 && (
             <div className="bg-purple-500/10 p-3 rounded-lg">
               <p className="text-xs text-muted-foreground mb-1">
-                {language === 'en' ? 'Installment Plan' : 'خطة التقسيط'}
+                {t('Installment Plan', 'خطة التقسيط', 'किस्त योजना')}
               </p>
               <p className="text-sm font-semibold">
-                {studentFee.installment_plans[0].total_installments} {language === 'en' ? 'installments' : 'قسط'} • 
-                {' '}{studentFee.installment_plans[0].frequency === 'monthly' ? (language === 'en' ? 'Monthly' : 'شهري') : 
-                     studentFee.installment_plans[0].frequency === 'quarterly' ? (language === 'en' ? 'Quarterly' : 'ربع سنوي') : 
-                     (language === 'en' ? 'Semi-Annual' : 'نصف سنوي')}
+                {studentFee.installment_plans[0].total_installments} {t('installments', 'قسط', 'किस्तें')} • 
+                {' '}{studentFee.installment_plans[0].frequency === 'monthly' ? t('Monthly', 'شهري', 'मासिक') : 
+                     studentFee.installment_plans[0].frequency === 'quarterly' ? t('Quarterly', 'ربع سنوي', 'त्रैमासिक') : 
+                     t('Semi-Annual', 'نصف سنوي', 'अर्धवार्षिक')}
               </p>
             </div>
           )}
@@ -142,7 +145,7 @@ export default function StudentFeeCard({ studentFee, onUpdate }: StudentFeeCardP
               className="gap-2"
             >
               <Edit className="h-4 w-4" />
-              {language === 'en' ? 'Edit' : 'تعديل'}
+              {t('Edit', 'تعديل', 'संपादित करें')}
             </Button>
             {balance > 0 && (
               <Button
@@ -152,7 +155,7 @@ export default function StudentFeeCard({ studentFee, onUpdate }: StudentFeeCardP
                 className="gap-2"
               >
                 <DollarSign className="h-4 w-4" />
-                {language === 'en' ? 'Record Payment' : 'تسجيل دفعة'}
+                {t('Record Payment', 'تسجيل دفعة', 'भुगतान दर्ज करें')}
               </Button>
             )}
             <Button
@@ -162,7 +165,7 @@ export default function StudentFeeCard({ studentFee, onUpdate }: StudentFeeCardP
               className="gap-2"
             >
               <History className="h-4 w-4" />
-              {language === 'en' ? 'History' : 'السجل'}
+              {t('History', 'السجل', 'इतिहास')}
             </Button>
             {balance > 0 && (
               <Button
@@ -171,7 +174,7 @@ export default function StudentFeeCard({ studentFee, onUpdate }: StudentFeeCardP
                 className="gap-2"
               >
                 <Send className="h-4 w-4" />
-                {language === 'en' ? 'Reminder' : 'تذكير'}
+                {t('Reminder', 'تذكير', 'रिमाइंडर')}
               </Button>
             )}
           </div>

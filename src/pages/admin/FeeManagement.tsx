@@ -9,6 +9,7 @@ import { Loader2, Search, Download } from 'lucide-react';
 import StudentFeeCard from '@/components/finance/StudentFeeCard';
 import { PageHeader } from '@/components/ui/page-header';
 import { wrapBidiText } from '@/utils/bidirectional';
+import { getText } from '@/utils/i18n';
 
 export default function FeeManagement() {
   const { language } = useLanguage();
@@ -19,6 +20,7 @@ export default function FeeManagement() {
   const [gradeFilter, setGradeFilter] = useState('all');
 
   const isRTL = language === 'ar';
+  const t = (en: string, ar: string, hi: string) => getText(language, en, ar, hi);
 
   useEffect(() => {
     loadStudentFees();
@@ -83,8 +85,10 @@ export default function FeeManagement() {
       <PageHeader
         title="Fee Management"
         titleAr="إدارة الرسوم"
+        titleHi="शुल्क प्रबंधन"
         subtitle="Manage student fees, record payments, and track payment history"
         subtitleAr="إدارة رسوم الطلاب وتسجيل المدفوعات وتتبع سجل الدفع"
+        subtitleHi="छात्र शुल्क प्रबंधित करें, भुगतान रिकॉर्ड करें और भुगतान इतिहास ट्रैक करें"
       />
 
       {/* Statistics */}
@@ -92,12 +96,12 @@ export default function FeeManagement() {
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              {language === 'en' ? 'Total Due' : 'إجمالي المستحق'}
+              {t('Total Due', 'إجمالي المستحق', 'कुल बकाया')}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold" dir="ltr">
-              {wrapBidiText(totals.total.toFixed(3))} {language === 'en' ? 'OMR' : 'ر.ع'}
+              {wrapBidiText(totals.total.toFixed(3))} {t('OMR', 'ر.ع', 'OMR')}
             </div>
           </CardContent>
         </Card>
@@ -105,12 +109,12 @@ export default function FeeManagement() {
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              {language === 'en' ? 'Total Collected' : 'إجمالي المحصل'}
+              {t('Total Collected', 'إجمالي المحصل', 'कुल प्राप्त')}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600" dir="ltr">
-              {wrapBidiText(totals.paid.toFixed(3))} {language === 'en' ? 'OMR' : 'ر.ع'}
+              {wrapBidiText(totals.paid.toFixed(3))} {t('OMR', 'ر.ع', 'OMR')}
             </div>
           </CardContent>
         </Card>
@@ -118,12 +122,12 @@ export default function FeeManagement() {
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              {language === 'en' ? 'Overdue' : 'المتأخر'}
+              {t('Overdue', 'المتأخر', 'अतिदेय')}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-600" dir="ltr">
-              {wrapBidiText(totals.overdue.toFixed(3))} {language === 'en' ? 'OMR' : 'ر.ع'}
+              {wrapBidiText(totals.overdue.toFixed(3))} {t('OMR', 'ر.ع', 'OMR')}
             </div>
           </CardContent>
         </Card>
@@ -136,7 +140,7 @@ export default function FeeManagement() {
             <div className="flex-1 relative">
               <Search className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-3 h-4 w-4 text-muted-foreground`} />
               <Input
-                placeholder={language === 'en' ? 'Search by student name or class...' : 'البحث باسم الطالب أو الصف...'}
+                placeholder={t('Search by student name or class...', 'البحث باسم الطالب أو الصف...', 'छात्र का नाम या कक्षा से खोजें...')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className={isRTL ? 'pr-10' : 'pl-10'}
@@ -145,23 +149,23 @@ export default function FeeManagement() {
 
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-full md:w-[180px]">
-                <SelectValue placeholder={language === 'en' ? 'Status' : 'الحالة'} />
+                <SelectValue placeholder={t('Status', 'الحالة', 'स्थिति')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">{language === 'en' ? 'All Status' : 'جميع الحالات'}</SelectItem>
-                <SelectItem value="pending">{language === 'en' ? 'Pending' : 'قيد الانتظار'}</SelectItem>
-                <SelectItem value="partial">{language === 'en' ? 'Partial' : 'جزئي'}</SelectItem>
-                <SelectItem value="paid">{language === 'en' ? 'Paid' : 'مدفوع'}</SelectItem>
-                <SelectItem value="overdue">{language === 'en' ? 'Overdue' : 'متأخر'}</SelectItem>
+                <SelectItem value="all">{t('All Status', 'جميع الحالات', 'सभी स्थिति')}</SelectItem>
+                <SelectItem value="pending">{t('Pending', 'قيد الانتظار', 'लंबित')}</SelectItem>
+                <SelectItem value="partial">{t('Partial', 'جزئي', 'आंशिक')}</SelectItem>
+                <SelectItem value="paid">{t('Paid', 'مدفوع', 'भुगतान किया गया')}</SelectItem>
+                <SelectItem value="overdue">{t('Overdue', 'متأخر', 'अतिदेय')}</SelectItem>
               </SelectContent>
             </Select>
 
             <Select value={gradeFilter} onValueChange={setGradeFilter}>
               <SelectTrigger className="w-full md:w-[180px]">
-                <SelectValue placeholder={language === 'en' ? 'Grade' : 'الصف'} />
+                <SelectValue placeholder={t('Grade', 'الصف', 'ग्रेड')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">{language === 'en' ? 'All Grades' : 'جميع الصفوف'}</SelectItem>
+                <SelectItem value="all">{t('All Grades', 'جميع الصفوف', 'सभी ग्रेड')}</SelectItem>
                 {uniqueGrades.map((grade) => (
                   <SelectItem key={grade} value={grade}>
                     {grade}
@@ -172,7 +176,7 @@ export default function FeeManagement() {
 
             <Button variant="outline" className="gap-2">
               <Download className="h-4 w-4" />
-              {language === 'en' ? 'Export' : 'تصدير'}
+              {t('Export', 'تصدير', 'निर्यात')}
             </Button>
           </div>
         </CardContent>
@@ -186,7 +190,7 @@ export default function FeeManagement() {
       ) : filteredFees.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center text-muted-foreground">
-            {language === 'en' ? 'No student fees found' : 'لا توجد رسوم للطلاب'}
+            {t('No student fees found', 'لا توجد رسوم للطلاب', 'कोई छात्र शुल्क नहीं मिला')}
           </CardContent>
         </Card>
       ) : (
