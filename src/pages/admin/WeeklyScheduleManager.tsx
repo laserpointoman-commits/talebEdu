@@ -71,6 +71,28 @@ const DEFAULT_TIME_SLOTS = [
   '13:00', '13:30', '14:00', '14:15', '14:30'
 ];
 
+// Subject translations mapping
+const SUBJECT_TRANSLATIONS: Record<string, { ar: string; hi: string }> = {
+  'Mathematics': { ar: 'الرياضيات', hi: 'गणित' },
+  'Arabic Language': { ar: 'اللغة العربية', hi: 'अरबी भाषा' },
+  'Arabic': { ar: 'اللغة العربية', hi: 'अरबी भाषा' },
+  'English Language': { ar: 'اللغة الإنجليزية', hi: 'अंग्रेजी भाषा' },
+  'English': { ar: 'اللغة الإنجليزية', hi: 'अंग्रेजी भाषा' },
+  'Science': { ar: 'العلوم', hi: 'विज्ञान' },
+  'Physics': { ar: 'الفيزياء', hi: 'भौतिकी' },
+  'Chemistry': { ar: 'الكيمياء', hi: 'रसायन विज्ञान' },
+  'Biology': { ar: 'الأحياء', hi: 'जीव विज्ञान' },
+  'Islamic Studies': { ar: 'التربية الإسلامية', hi: 'इस्लामी अध्ययन' },
+  'Social Studies': { ar: 'الدراسات الاجتماعية', hi: 'सामाजिक अध्ययन' },
+  'History': { ar: 'التاريخ', hi: 'इतिहास' },
+  'Geography': { ar: 'الجغرافيا', hi: 'भूगोल' },
+  'Physical Education': { ar: 'التربية الرياضية', hi: 'शारीरिक शिक्षा' },
+  'Art': { ar: 'الفنون', hi: 'कला' },
+  'Music': { ar: 'الموسيقى', hi: 'संगीत' },
+  'Computer Science': { ar: 'علوم الحاسوب', hi: 'कंप्यूटर विज्ञान' },
+  'Computer': { ar: 'الحاسوب', hi: 'कंप्यूटर' },
+};
+
 export default function WeeklyScheduleManager() {
   const { profile } = useAuth();
   const { language } = useLanguage();
@@ -427,6 +449,16 @@ export default function WeeklyScheduleManager() {
     return filteredSchedules.filter(s => s.day === day && s.time === time);
   };
 
+  // Translate subject name based on current language
+  const getSubjectName = (subject: string) => {
+    if (language === 'en') return subject;
+    const translation = SUBJECT_TRANSLATIONS[subject];
+    if (translation) {
+      return language === 'ar' ? translation.ar : translation.hi;
+    }
+    return subject; // Return original if no translation found
+  };
+
   // Get unique times from filtered schedules for grid display
   const gridTimeSlots = useMemo(() => {
     const times = [...new Set(filteredSchedules.map(s => s.time))];
@@ -620,7 +652,7 @@ export default function WeeklyScheduleManager() {
                   }
                   return `<td>${daySchedules.map(s => `
                     <div class="schedule-item">
-                      <div class="subject">${s.subject}</div>
+                      <div class="subject">${getSubjectName(s.subject)}</div>
                       <div class="class-name">${s.classes?.name || `${s.classes?.grade}-${s.classes?.section}`}</div>
                       ${s.teachers?.profiles?.full_name ? `<div class="teacher">${language === 'ar' && s.teachers?.profiles?.full_name_ar ? s.teachers.profiles.full_name_ar : s.teachers.profiles.full_name}</div>` : ''}
                       ${s.room ? `<div class="room">${s.room}</div>` : ''}
@@ -888,7 +920,7 @@ export default function WeeklyScheduleManager() {
                                     onClick={() => openEditDialog(schedule)}
                                   >
                                     <div className="font-medium text-primary truncate">
-                                      {schedule.subject}
+                                      {getSubjectName(schedule.subject)}
                                     </div>
                                     <div className="text-muted-foreground truncate">
                                       {schedule.classes?.name || `${schedule.classes?.grade}-${schedule.classes?.section}`}
@@ -978,7 +1010,7 @@ export default function WeeklyScheduleManager() {
                                 <div className="flex-1">
                                   <div className="flex items-center gap-2">
                                     <BookOpen className="h-4 w-4 text-primary" />
-                                    <span className="font-medium">{schedule.subject}</span>
+                                    <span className="font-medium">{getSubjectName(schedule.subject)}</span>
                                     <Badge variant="secondary">
                                       {schedule.classes?.name || `${schedule.classes?.grade}-${schedule.classes?.section}`}
                                     </Badge>
