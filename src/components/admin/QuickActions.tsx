@@ -10,14 +10,14 @@ import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 const colorClasses = [
-  'from-blue-500 to-indigo-600 text-white shadow-md',
-  'from-emerald-500 to-teal-600 text-white shadow-md',
-  'from-purple-500 to-fuchsia-600 text-white shadow-md',
-  'from-amber-500 to-orange-600 text-white shadow-md',
-  'from-cyan-500 to-blue-600 text-white shadow-md',
-  'from-rose-500 to-pink-600 text-white shadow-md',
-  'from-indigo-500 to-violet-600 text-white shadow-md',
-  'from-teal-500 to-emerald-600 text-white shadow-md',
+  'bg-primary text-primary-foreground',
+  'bg-success text-success-foreground',
+  'bg-accent text-accent-foreground',
+  'bg-warning text-warning-foreground',
+  'bg-info text-info-foreground',
+  'bg-destructive text-destructive-foreground',
+  'bg-primary-dark text-primary-foreground',
+  'bg-accent-dark text-accent-foreground',
 ];
 
 const QuickActionButton = memo(({ 
@@ -36,32 +36,28 @@ const QuickActionButton = memo(({
   
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20, scale: 0.9 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
       transition={{ 
-        delay: index * 0.04, 
-        duration: 0.25,
-        type: "spring",
-        stiffness: 300,
-        damping: 20
+        delay: index * 0.03, 
+        duration: 0.2,
       }}
-      whileHover={{ scale: 1.03, y: -2 }}
-      whileTap={{ scale: 0.97 }}
+      whileHover={{ y: -2 }}
+      whileTap={{ scale: 0.98 }}
     >
       <Button
         variant="ghost"
         className={cn(
-          "h-auto w-full flex-col gap-2.5 p-4 rounded-2xl",
-          "bg-gradient-to-br",
-          "border-0",
-          "hover:brightness-105",
+          "h-auto w-full flex-col gap-2 p-4 rounded-lg",
+          "shadow-sm border border-transparent",
+          "hover:shadow-md hover:border-border",
           "transition-all duration-200",
           colorClass
         )}
         onClick={onClick}
       >
-        <div className="p-3 rounded-xl bg-white/20 backdrop-blur-sm">
-          <Icon className="h-6 w-6" />
+        <div className="p-2.5 rounded-lg bg-white/20">
+          <Icon className="h-5 w-5" />
         </div>
         <span className="text-xs text-center font-medium line-clamp-2">
           {t(action.title)}
