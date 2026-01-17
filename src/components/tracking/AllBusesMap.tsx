@@ -273,7 +273,8 @@ export default function AllBusesMap({ buses }: AllBusesMapProps) {
       }
 
       const el = createMarkerElement(bus, isActiveBus);
-      const marker = new mapboxgl.Marker({ element: el, anchor: 'bottom' })
+      // Offset so the center of the small dot is the true GPS coordinate (prevents "drifting" at low zoom)
+      const marker = new mapboxgl.Marker({ element: el, anchor: 'bottom', offset: [0, 6] })
         .setLngLat([location.longitude, location.latitude])
         .addTo(map.current!);
       markers.current.set(bus.id, marker);
@@ -509,14 +510,14 @@ export default function AllBusesMap({ buses }: AllBusesMapProps) {
 
     // Precise location dot at the exact GPS coordinate (bottom of marker)
     const preciseDot = document.createElement('div');
-    preciseDot.style.width = '8px';
-    preciseDot.style.height = '8px';
-    preciseDot.style.borderRadius = '50%';
-    preciseDot.style.background = '#ffffff';
+    preciseDot.style.width = '12px';
+    preciseDot.style.height = '12px';
+    preciseDot.style.borderRadius = '9999px';
+    preciseDot.style.background = 'hsl(var(--background))';
     preciseDot.style.border = isActive 
       ? '2px solid hsl(var(--primary))' 
-      : '2px solid hsl(0, 72%, 51%)';
-    preciseDot.style.boxShadow = '0 1px 3px rgba(0,0,0,0.4)';
+      : '2px solid hsl(var(--destructive))';
+    preciseDot.style.boxShadow = '0 1px 3px hsl(var(--foreground) / 0.35)';
     preciseDot.style.marginTop = '-2px';
     
     container.appendChild(pinWrapper);

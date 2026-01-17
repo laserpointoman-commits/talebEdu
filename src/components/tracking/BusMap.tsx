@@ -197,36 +197,51 @@ export default function BusMap({ busId, studentLocation }: BusMapProps) {
     if (!map.current) return;
 
     if (!busMarker.current) {
-      // Create custom bus marker with bounce animation
-      const el = document.createElement('div');
-      el.className = 'bus-marker';
-      el.style.width = '50px';
-      el.style.height = '50px';
-      el.style.borderRadius = '50%';
-      el.style.backgroundColor = 'hsl(var(--primary))';
-      el.style.border = '4px solid hsl(var(--background))';
-      el.style.boxShadow = '0 6px 18px hsl(var(--primary) / 0.35)';
-      el.style.display = 'flex';
-      el.style.alignItems = 'center';
-      el.style.justifyContent = 'center';
-      el.style.color = 'hsl(var(--primary-foreground))';
-      el.style.animation = 'bounce 1s ease-in-out infinite';
-      el.innerHTML =
-        '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 12h18"/><path d="M8 6V4"/><path d="M16 6V4"/><circle cx="7" cy="17" r="1"/><circle cx="17" cy="17" r="1"/></svg>';
-      // Add bounce animation styles (once)
-      if (!document.getElementById('bus-marker-bounce-style')) {
-        const style = document.createElement('style');
-        style.id = 'bus-marker-bounce-style';
-        style.textContent = `
-          @keyframes bounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-8px); }
-          }
-        `;
-        document.head.appendChild(style);
-      }
+      // Custom pin that shows an exact anchor point (no bouncing/moving)
+      const container = document.createElement('div');
+      container.className = 'bus-marker';
+      container.style.display = 'flex';
+      container.style.flexDirection = 'column';
+      container.style.alignItems = 'center';
 
-      busMarker.current = new mapboxgl.Marker(el)
+      const pin = document.createElement('div');
+      pin.style.width = '44px';
+      pin.style.height = '44px';
+      pin.style.borderRadius = '9999px';
+      pin.style.display = 'flex';
+      pin.style.alignItems = 'center';
+      pin.style.justifyContent = 'center';
+      pin.style.background = 'hsl(var(--primary))';
+      pin.style.color = 'hsl(var(--primary-foreground))';
+      pin.style.border = '3px solid hsl(var(--background))';
+      pin.style.boxShadow = '0 8px 24px hsl(var(--primary) / 0.35), 0 4px 8px hsl(var(--foreground) / 0.1)';
+      pin.innerHTML =
+        '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 12h18"/><path d="M8 6V4"/><path d="M16 6V4"/><circle cx="7" cy="17" r="1"/><circle cx="17" cy="17" r="1"/></svg>';
+
+      const pointer = document.createElement('div');
+      pointer.style.width = '0';
+      pointer.style.height = '0';
+      pointer.style.borderLeft = '8px solid transparent';
+      pointer.style.borderRight = '8px solid transparent';
+      pointer.style.borderTop = '12px solid hsl(var(--primary))';
+      pointer.style.marginTop = '-2px';
+      pointer.style.filter = 'drop-shadow(0 2px 4px hsl(var(--foreground) / 0.25))';
+
+      // Precise dot = exact GPS coordinate (bottom center of marker)
+      const dot = document.createElement('div');
+      dot.style.width = '12px';
+      dot.style.height = '12px';
+      dot.style.borderRadius = '9999px';
+      dot.style.background = 'hsl(var(--background))';
+      dot.style.border = '2px solid hsl(var(--primary))';
+      dot.style.boxShadow = '0 1px 3px hsl(var(--foreground) / 0.35)';
+      dot.style.marginTop = '-2px';
+
+      container.appendChild(pin);
+      container.appendChild(pointer);
+      container.appendChild(dot);
+
+      busMarker.current = new mapboxgl.Marker({ element: container, anchor: 'bottom', offset: [0, 6] })
         .setLngLat([location.longitude, location.latitude])
         .setPopup(new mapboxgl.Popup().setText(language === 'ar' ? 'موقع الحافلة' : 'Bus Location'))
         .addTo(map.current);
