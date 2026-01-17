@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { motion } from 'framer-motion';
+import { cn } from '@/lib/utils';
 import { 
   Scan, 
   GraduationCap, 
@@ -144,52 +146,53 @@ export default function TeacherDashboard() {
       {/* Quick Actions - At the top */}
       <QuickActions />
 
-      {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="hover:shadow-lg transition-shadow">
-          <CardHeader>
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <GraduationCap className="h-4 w-4" />
-              {language === 'ar' ? 'إجمالي الطلاب' : 'Total Students'}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{stats.totalStudents}</div>
-            <p className="text-sm text-muted-foreground">
-              {stats.totalClasses} {language === 'ar' ? 'فصول' : 'classes'}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="hover:shadow-lg transition-shadow">
-          <CardHeader>
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <Clock className="h-4 w-4" />
-              {language === 'ar' ? 'الحضور اليوم' : "Today's Attendance"}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{stats.todayAttendance}</div>
-            <p className="text-sm text-green-500">
-              {stats.attendanceRate}% {language === 'ar' ? 'معدل الحضور' : 'attendance rate'}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="hover:shadow-lg transition-shadow">
-          <CardHeader>
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <FileText className="h-4 w-4" />
-              {language === 'ar' ? 'الامتحانات القادمة' : 'Upcoming Exams'}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{stats.upcomingExams}</div>
-            <p className="text-sm text-muted-foreground">
-              {language === 'ar' ? 'قادمة' : 'scheduled'}
-            </p>
-          </CardContent>
-        </Card>
+      {/* Stats Overview - Floating Icon Design */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {[
+          {
+            title: language === 'ar' ? 'إجمالي الطلاب' : 'Total Students',
+            value: stats.totalStudents,
+            subtitle: `${stats.totalClasses} ${language === 'ar' ? 'فصول' : 'classes'}`,
+            icon: GraduationCap,
+            iconColor: 'text-primary',
+          },
+          {
+            title: language === 'ar' ? 'الحضور اليوم' : "Today's Attendance",
+            value: stats.todayAttendance,
+            subtitle: `${stats.attendanceRate}% ${language === 'ar' ? 'معدل الحضور' : 'attendance rate'}`,
+            subtitleColor: 'text-green-500',
+            icon: Clock,
+            iconColor: 'text-emerald-500',
+          },
+          {
+            title: language === 'ar' ? 'الامتحانات القادمة' : 'Upcoming Exams',
+            value: stats.upcomingExams,
+            subtitle: language === 'ar' ? 'قادمة' : 'scheduled',
+            icon: FileText,
+            iconColor: 'text-amber-500',
+          },
+        ].map((stat, index) => (
+          <motion.div
+            key={stat.title}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.05, duration: 0.2 }}
+            className="bg-card rounded-xl p-4 hover:shadow-lg transition-shadow"
+          >
+            <div className="flex items-start gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-background shadow-lg shadow-foreground/5 flex items-center justify-center shrink-0">
+                <stat.icon className={cn("h-6 w-6", stat.iconColor)} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-muted-foreground">{stat.title}</p>
+                <p className="text-2xl font-bold mt-0.5">{stat.value}</p>
+                <p className={cn("text-xs mt-1", stat.subtitleColor || 'text-muted-foreground')}>
+                  {stat.subtitle}
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        ))}
       </div>
 
       {/* Today's Schedule */}
