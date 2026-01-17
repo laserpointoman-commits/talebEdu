@@ -58,6 +58,7 @@ export function SimplifiedChatHeader({
   return (
     <div 
       className="px-2 py-3 flex items-center gap-2 shrink-0"
+      dir="ltr"
       style={{ 
         backgroundColor: colors.headerBg,
       }}
