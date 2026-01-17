@@ -12,25 +12,25 @@ interface GlassCardProps extends Omit<HTMLMotionProps<"div">, "children"> {
 const GlassCard = React.forwardRef<HTMLDivElement, GlassCardProps>(
   ({ className, variant = "default", hover = true, glow = false, children, ...props }, ref) => {
     const variants = {
-      default: "bg-card/90 backdrop-blur-md border border-border/40 shadow-md",
-      subtle: "bg-card/80 backdrop-blur-sm border border-border/30 shadow-sm",
-      intense: "bg-card/95 backdrop-blur-lg border border-border/50 shadow-lg",
-      gradient: "bg-gradient-to-br from-card/90 via-card/85 to-card/80 backdrop-blur-md border border-border/40 shadow-md",
+      default: "bg-card border border-border shadow-sm",
+      subtle: "bg-card/95 border border-border/80 shadow-sm",
+      intense: "bg-card border border-border shadow-md",
+      gradient: "bg-card border border-border shadow-sm",
     };
 
     return (
       <motion.div
         ref={ref}
         className={cn(
-          "rounded-2xl",
+          "rounded-lg",
           variants[variant],
-          hover && "transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 hover:border-primary/20",
-          glow && "shadow-glow-sm hover:shadow-glow",
+          hover && "transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 hover:border-primary/20",
+          glow && "hover:shadow-glow-sm",
           className
         )}
-        initial={{ opacity: 0, y: 15, scale: 0.98 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.25, ease: "easeOut" }}
         {...props}
       >
         {children}
@@ -46,7 +46,7 @@ const GlassCardHeader = React.forwardRef<HTMLDivElement, GlassCardHeaderProps>(
   ({ className, ...props }, ref) => (
     <div
       ref={ref}
-      className={cn("flex flex-col space-y-1.5 p-5", className)}
+      className={cn("flex flex-col space-y-1.5 p-4", className)}
       {...props}
     />
   )
@@ -70,7 +70,7 @@ interface GlassCardContentProps extends React.HTMLAttributes<HTMLDivElement> {}
 
 const GlassCardContent = React.forwardRef<HTMLDivElement, GlassCardContentProps>(
   ({ className, ...props }, ref) => (
-    <div ref={ref} className={cn("p-5 pt-0", className)} {...props} />
+    <div ref={ref} className={cn("p-4 pt-0", className)} {...props} />
   )
 );
 GlassCardContent.displayName = "GlassCardContent";

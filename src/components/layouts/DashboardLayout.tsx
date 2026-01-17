@@ -119,7 +119,7 @@ function DashboardLayout({ children }: DashboardLayoutProps) {
         className="fixed left-0 right-0 top-0 z-50 ios-header"
         dir="ltr"
       >
-        <div className="h-14 md:h-16 border-b border-white/10 bg-background/70 backdrop-blur-xl flex items-center justify-between px-3 md:px-6">
+        <div className="h-14 md:h-16 border-b border-border bg-card shadow-sm flex items-center justify-between px-3 md:px-6">
 
         {/* Left Section - Back/Menu, Home, Language */}
         <div className="flex items-center gap-1.5 md:gap-3 w-auto">
@@ -128,7 +128,7 @@ function DashboardLayout({ children }: DashboardLayoutProps) {
             variant="ghost"
             size="icon"
             onClick={handleBack}
-            className="h-9 w-9 md:h-10 md:w-10 rounded-xl hover:bg-primary/10"
+            className="h-9 w-9 md:h-10 md:w-10 rounded-lg hover:bg-secondary"
             aria-label="Go back"
           >
             <ArrowLeft className="h-5 w-5" />
@@ -138,7 +138,7 @@ function DashboardLayout({ children }: DashboardLayoutProps) {
             variant="ghost"
             size="icon"
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="hidden lg:flex h-9 w-9 md:h-10 md:w-10 rounded-xl hover:bg-primary/10"
+            className="hidden lg:flex h-9 w-9 md:h-10 md:w-10 rounded-lg hover:bg-secondary"
             aria-label="Toggle sidebar"
           >
             {isSidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -150,7 +150,7 @@ function DashboardLayout({ children }: DashboardLayoutProps) {
               <Button
                 variant="ghost"
                 size="icon"
-                className="lg:hidden h-9 w-9 rounded-xl hover:bg-primary/10"
+                className="lg:hidden h-9 w-9 rounded-lg hover:bg-secondary"
                 aria-label="Toggle mobile sidebar"
               >
                 <Menu className="h-5 w-5" />
@@ -158,7 +158,7 @@ function DashboardLayout({ children }: DashboardLayoutProps) {
             </SheetTrigger>
             <SheetContent 
               side={dir === 'rtl' ? 'right' : 'left'} 
-              className="p-0 w-[300px] max-w-[90vw] pt-0 bg-background/95 backdrop-blur-xl"
+              className="p-0 w-[300px] max-w-[90vw] pt-0 bg-card border-border"
               style={{ paddingTop: 'env(safe-area-inset-top)' }}
             >
               <Sidebar onItemClick={() => setIsMobileSidebarOpen(false)} />
@@ -170,7 +170,7 @@ function DashboardLayout({ children }: DashboardLayoutProps) {
             variant="ghost"
             size="icon"
             onClick={() => navigate('/dashboard')}
-            className="h-9 w-9 md:h-10 md:w-10 rounded-xl hover:bg-primary/10"
+            className="h-9 w-9 md:h-10 md:w-10 rounded-lg hover:bg-secondary"
             aria-label="Go to home"
           >
             <Home className="h-5 w-5" />
@@ -183,9 +183,9 @@ function DashboardLayout({ children }: DashboardLayoutProps) {
         {/* Right Section - Logo and User Menu */}
         <div className="flex items-center gap-2 md:gap-3 w-auto justify-end">
           {/* App Logo and Name - Always LTR */}
-          <div className="flex items-center justify-center gap-1.5 md:gap-2" dir="ltr">
+          <div className="flex items-center justify-center gap-2 md:gap-2.5" dir="ltr">
             <div className="relative">
-              <div className="text-2xl md:text-3xl font-bold bg-gradient-to-br from-primary to-accent bg-clip-text text-transparent leading-none">
+              <div className="text-xl md:text-2xl font-bold text-primary leading-none">
                 t
               </div>
             </div>
@@ -243,9 +243,9 @@ function DashboardLayout({ children }: DashboardLayoutProps) {
           {/* User Account Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-9 w-9 md:h-10 md:w-10 rounded-xl hover:bg-primary/10">
-                <Avatar className="h-8 w-8 md:h-9 md:w-9 rounded-xl">
-                  <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-white rounded-xl text-sm">
+              <Button variant="ghost" className="relative h-9 w-9 md:h-10 md:w-10 rounded-lg hover:bg-secondary">
+                <Avatar className="h-8 w-8 md:h-9 md:w-9 rounded-lg">
+                  <AvatarFallback className="bg-primary text-primary-foreground rounded-lg text-sm font-medium">
                     <User className="h-4 w-4" />
                   </AvatarFallback>
                 </Avatar>

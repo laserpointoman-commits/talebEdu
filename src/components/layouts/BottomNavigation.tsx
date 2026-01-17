@@ -115,8 +115,8 @@ export default function BottomNavigation() {
       style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
       dir="ltr"
     >
-      {/* Glass background */}
-      <div className="absolute inset-0 bg-background/60 backdrop-blur-2xl border-t border-white/20 dark:border-white/10" />
+      {/* Clean background */}
+      <div className="absolute inset-0 bg-card border-t border-border shadow-lg" />
       
       {/* Navigation container */}
       <nav className="relative flex items-center justify-around px-1 py-1.5">
@@ -140,24 +140,23 @@ export default function BottomNavigation() {
                   {/* Elevated home button */}
                   <motion.div
                     className={cn(
-                      "relative -mt-6 flex items-center justify-center w-14 h-14 rounded-full shadow-lg transition-all duration-300",
+                      "relative -mt-5 flex items-center justify-center w-13 h-13 rounded-xl shadow-md transition-all duration-200",
                       active 
-                        ? "bg-gradient-to-br from-primary to-primary/80 shadow-primary/30" 
-                        : "bg-gradient-to-br from-primary/90 to-primary/70 shadow-primary/20"
+                        ? "bg-primary shadow-primary/20" 
+                        : "bg-primary/90"
                     )}
-                    whileHover={{ scale: 1.05 }}
-                    animate={active ? { boxShadow: '0 0 20px rgba(var(--primary), 0.4)' } : {}}
+                    whileHover={{ scale: 1.02 }}
                   >
                     <Icon 
-                      className="h-7 w-7 text-primary-foreground" 
-                      strokeWidth={2.5}
+                      className="h-6 w-6 text-primary-foreground" 
+                      strokeWidth={2}
                     />
                   </motion.div>
                   
                   {/* Label */}
                   <span
                     className={cn(
-                      "text-[10px] mt-1 font-semibold transition-colors duration-200",
+                      "text-[10px] mt-1 font-medium transition-colors duration-200",
                       active 
                         ? "text-primary" 
                         : "text-muted-foreground"
@@ -184,15 +183,15 @@ export default function BottomNavigation() {
                 {active && (
                   <motion.div
                     layoutId="activeTab"
-                    className="absolute -top-1 w-8 h-1 bg-primary rounded-full"
-                    transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                    className="absolute -top-0.5 w-6 h-0.5 bg-primary rounded-full"
+                    transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                   />
                 )}
                 
                 {/* Icon container */}
                 <div
                   className={cn(
-                    "flex items-center justify-center w-10 h-10 rounded-2xl transition-all duration-200",
+                    "flex items-center justify-center w-9 h-9 rounded-lg transition-all duration-200",
                     active 
                       ? "bg-primary/10" 
                       : "bg-transparent"
