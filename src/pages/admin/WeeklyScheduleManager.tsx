@@ -26,7 +26,8 @@ import {
   Filter,
   Download,
   RefreshCw,
-  AlertTriangle
+  AlertTriangle,
+  Printer
 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
@@ -460,6 +461,195 @@ export default function WeeklyScheduleManager() {
     });
   };
 
+  const printSchedule = () => {
+    const selectedClassName = selectedClass === 'all' 
+      ? (language === 'en' ? 'All Classes' : language === 'hi' ? 'सभी कक्षाएं' : 'جميع الصفوف')
+      : classes.find(c => c.id === selectedClass)?.name || '';
+    
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      toast({
+        title: language === 'en' ? 'Error' : language === 'hi' ? 'त्रुटि' : 'خطأ',
+        description: language === 'en' ? 'Please allow popups' : language === 'hi' ? 'कृपया पॉपअप की अनुमति दें' : 'يرجى السماح بالنوافذ المنبثقة',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const getDayName = (day: string) => {
+      const index = DAYS_EN.indexOf(day);
+      return language === 'ar' ? DAYS_AR[index] : language === 'hi' ? DAYS_HI[index] : day;
+    };
+
+    const printContent = `
+      <!DOCTYPE html>
+      <html dir="${language === 'ar' ? 'rtl' : 'ltr'}">
+      <head>
+        <meta charset="UTF-8">
+        <title>${language === 'en' ? 'Weekly Schedule' : language === 'hi' ? 'साप्ताहिक शेड्यूल' : 'الجدول الأسبوعي'} - ${selectedClassName}</title>
+        <style>
+          @page {
+            size: A4 landscape;
+            margin: 10mm;
+          }
+          * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+          }
+          body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 9px;
+            line-height: 1.3;
+            color: #1a1a1a;
+            background: white;
+            direction: ${language === 'ar' ? 'rtl' : 'ltr'};
+          }
+          .header {
+            text-align: center;
+            margin-bottom: 12px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #3b82f6;
+          }
+          .header h1 {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1e40af;
+            margin-bottom: 4px;
+          }
+          .header .subtitle {
+            font-size: 12px;
+            color: #6b7280;
+          }
+          .header .date {
+            font-size: 10px;
+            color: #9ca3af;
+            margin-top: 4px;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+          }
+          th, td {
+            border: 1px solid #d1d5db;
+            padding: 4px 3px;
+            text-align: center;
+            vertical-align: top;
+          }
+          th {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+            font-weight: 600;
+            font-size: 10px;
+            padding: 8px 4px;
+          }
+          th:first-child {
+            width: 60px;
+          }
+          .time-cell {
+            background: #f8fafc;
+            font-weight: 600;
+            font-size: 8px;
+            color: #475569;
+          }
+          .schedule-item {
+            background: #eff6ff;
+            border-radius: 4px;
+            padding: 3px;
+            margin: 1px;
+            text-align: ${language === 'ar' ? 'right' : 'left'};
+          }
+          .schedule-item .subject {
+            font-weight: 600;
+            color: #1e40af;
+            font-size: 8px;
+            margin-bottom: 1px;
+          }
+          .schedule-item .class-name {
+            font-size: 7px;
+            color: #3b82f6;
+            margin-bottom: 1px;
+          }
+          .schedule-item .teacher {
+            font-size: 7px;
+            color: #6b7280;
+          }
+          .schedule-item .room {
+            font-size: 6px;
+            color: #9ca3af;
+          }
+          .empty-cell {
+            background: #fafafa;
+          }
+          .footer {
+            margin-top: 12px;
+            text-align: center;
+            font-size: 8px;
+            color: #9ca3af;
+            padding-top: 8px;
+            border-top: 1px solid #e5e7eb;
+          }
+          @media print {
+            body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>${language === 'en' ? 'Weekly Class Schedule' : language === 'hi' ? 'साप्ताहिक कक्षा शेड्यूल' : 'الجدول الأسبوعي للحصص'}</h1>
+          <div class="subtitle">${selectedClassName}</div>
+          <div class="date">${new Date().toLocaleDateString(language === 'ar' ? 'ar-SA' : language === 'hi' ? 'hi-IN' : 'en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</div>
+        </div>
+        
+        <table>
+          <thead>
+            <tr>
+              <th>${language === 'en' ? 'Time' : language === 'hi' ? 'समय' : 'الوقت'}</th>
+              ${WORK_DAYS.map(day => `<th>${getDayName(day)}</th>`).join('')}
+            </tr>
+          </thead>
+          <tbody>
+            ${gridTimeSlots.map(time => `
+              <tr>
+                <td class="time-cell">${time}</td>
+                ${WORK_DAYS.map(day => {
+                  const daySchedules = getSchedulesByDayAndTime(day, time);
+                  if (daySchedules.length === 0) {
+                    return '<td class="empty-cell"></td>';
+                  }
+                  return `<td>${daySchedules.map(s => `
+                    <div class="schedule-item">
+                      <div class="subject">${s.subject}</div>
+                      <div class="class-name">${s.classes?.name || `${s.classes?.grade}-${s.classes?.section}`}</div>
+                      ${s.teachers?.profiles?.full_name ? `<div class="teacher">${language === 'ar' && s.teachers?.profiles?.full_name_ar ? s.teachers.profiles.full_name_ar : s.teachers.profiles.full_name}</div>` : ''}
+                      ${s.room ? `<div class="room">${s.room}</div>` : ''}
+                    </div>
+                  `).join('')}</td>`;
+                }).join('')}
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+        
+        <div class="footer">
+          ${language === 'en' ? 'Generated by talebEdu School Management System' : language === 'hi' ? 'talebEdu स्कूल मैनेजमेंट सिस्टम द्वारा जनरेट' : 'تم إنشاؤه بواسطة نظام إدارة المدرسة talebEdu'}
+        </div>
+
+        <script>
+          window.onload = function() {
+            window.print();
+            window.onafterprint = function() { window.close(); };
+          };
+        </script>
+      </body>
+      </html>
+    `;
+
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+  };
+
   if (effectiveRole !== 'admin' && effectiveRole !== 'developer') {
     return (
       <div className="flex items-center justify-center h-[50vh]">
@@ -630,6 +820,10 @@ export default function WeeklyScheduleManager() {
           <Button variant="outline" size="sm" onClick={exportSchedule}>
             <Download className="h-4 w-4 mr-2" />
             {language === 'en' ? 'Export' : language === 'hi' ? 'निर्यात' : 'تصدير'}
+          </Button>
+          <Button variant="outline" size="sm" onClick={printSchedule}>
+            <Printer className="h-4 w-4 mr-2" />
+            {language === 'en' ? 'Print A4' : language === 'hi' ? 'A4 प्रिंट' : 'طباعة A4'}
           </Button>
           <Button onClick={() => setIsAddDialogOpen(true)}>
             <Plus className="h-4 w-4 mr-2" />
