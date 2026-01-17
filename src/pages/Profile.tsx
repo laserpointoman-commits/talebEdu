@@ -159,26 +159,32 @@ const Profile = () => {
 
   const roleInfo = getRoleSpecificInfo();
 
+  const getText = (en: string, ar: string, hi: string) => {
+    if (language === 'ar') return ar;
+    if (language === 'hi') return hi;
+    return en;
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">
-          {language === 'ar' ? 'الملف الشخصي' : 'My Profile'}
+          {getText('My Profile', 'الملف الشخصي', 'मेरी प्रोफ़ाइल')}
         </h1>
         {!isEditing ? (
           <Button onClick={() => setIsEditing(true)} className="gap-2">
             <Edit className="h-4 w-4" />
-            {language === 'ar' ? 'تعديل' : 'Edit Profile'}
+            {getText('Edit Profile', 'تعديل', 'प्रोफ़ाइल संपादित करें')}
           </Button>
         ) : (
           <div className="flex gap-2">
             <Button onClick={handleSave} variant="default" className="gap-2">
               <Save className="h-4 w-4" />
-              {language === 'ar' ? 'حفظ' : 'Save'}
+              {getText('Save', 'حفظ', 'सहेजें')}
             </Button>
             <Button onClick={handleCancel} variant="outline" className="gap-2">
               <X className="h-4 w-4" />
-              {language === 'ar' ? 'إلغاء' : 'Cancel'}
+              {getText('Cancel', 'إلغاء', 'रद्द करें')}
             </Button>
           </div>
         )}
@@ -217,13 +223,13 @@ const Profile = () => {
               <Tabs defaultValue="personal" className="w-full" dir={language === 'ar' ? 'rtl' : 'ltr'}>
                 <TabsList className={`grid w-full grid-cols-3 ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
                   <TabsTrigger value="personal">
-                    {language === 'ar' ? 'معلومات شخصية' : 'Personal Info'}
+                    {getText('Personal Info', 'معلومات شخصية', 'व्यक्तिगत जानकारी')}
                   </TabsTrigger>
                   <TabsTrigger value="role">
-                    {language === 'ar' ? 'معلومات الدور' : 'Role Info'}
+                    {getText('Role Info', 'معلومات الدور', 'भूमिका जानकारी')}
                   </TabsTrigger>
                   <TabsTrigger value="security">
-                    {language === 'ar' ? 'الأمان' : 'Security'}
+                    {getText('Security', 'الأمان', 'सुरक्षा')}
                   </TabsTrigger>
                 </TabsList>
 
@@ -231,7 +237,7 @@ const Profile = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="name">
-                        {language === 'ar' ? 'الاسم' : 'Name'}
+                        {getText('Name', 'الاسم', 'नाम')}
                       </Label>
                       <Input
                         id="name"
@@ -242,7 +248,7 @@ const Profile = () => {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="nameAr">
-                        {language === 'ar' ? 'الاسم بالعربية' : 'Name in Arabic'}
+                        {getText('Name in Arabic', 'الاسم بالعربية', 'अरबी में नाम')}
                       </Label>
                       <Input
                         id="nameAr"
@@ -254,7 +260,7 @@ const Profile = () => {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="email">
-                        {language === 'ar' ? 'البريد الإلكتروني' : 'Email'}
+                        {getText('Email', 'البريد الإلكتروني', 'ईमेल')}
                       </Label>
                       <Input
                         id="email"
@@ -266,7 +272,7 @@ const Profile = () => {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="phone">
-                        {language === 'ar' ? 'رقم الهاتف' : 'Phone'}
+                        {getText('Phone', 'رقم الهاتف', 'फ़ोन')}
                       </Label>
                       <Input
                         id="phone"
@@ -278,7 +284,7 @@ const Profile = () => {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="dob">
-                        {language === 'ar' ? 'تاريخ الميلاد' : 'Date of Birth'}
+                        {getText('Date of Birth', 'تاريخ الميلاد', 'जन्म तिथि')}
                       </Label>
                       <Input
                         id="dob"
@@ -290,7 +296,7 @@ const Profile = () => {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="address">
-                        {language === 'ar' ? 'العنوان' : 'Address'}
+                        {getText('Address', 'العنوان', 'पता')}
                       </Label>
                       <Input
                         id="address"
@@ -307,19 +313,19 @@ const Profile = () => {
                     {profile?.role === 'teacher' && (
                       <>
                         <div className="space-y-2">
-                          <Label>{language === 'ar' ? 'رقم الموظف' : 'Employee ID'}</Label>
+                          <Label>{getText('Employee ID', 'رقم الموظف', 'कर्मचारी आईडी')}</Label>
                           <Input value={roleInfo.employeeId} disabled />
                         </div>
                         <div className="space-y-2">
-                          <Label>{language === 'ar' ? 'القسم' : 'Department'}</Label>
+                          <Label>{getText('Department', 'القسم', 'विभाग')}</Label>
                           <Input value={roleInfo.department} disabled />
                         </div>
                         <div className="space-y-2">
-                          <Label>{language === 'ar' ? 'المواد' : 'Subjects'}</Label>
+                          <Label>{getText('Subjects', 'المواد', 'विषय')}</Label>
                           <Input value={roleInfo.subjects?.join(', ')} disabled />
                         </div>
                         <div className="space-y-2">
-                          <Label>{language === 'ar' ? 'الفصول' : 'Classes'}</Label>
+                          <Label>{getText('Classes', 'الفصول', 'कक्षाएं')}</Label>
                           <Input value={roleInfo.classes?.join(', ')} disabled />
                         </div>
                       </>
@@ -328,19 +334,19 @@ const Profile = () => {
                     {profile?.role === 'student' && (
                       <>
                         <div className="space-y-2">
-                          <Label>{language === 'ar' ? 'رقم الطالب' : 'Student ID'}</Label>
+                          <Label>{getText('Student ID', 'رقم الطالب', 'छात्र आईडी')}</Label>
                           <Input value={roleInfo.studentId} disabled />
                         </div>
                         <div className="space-y-2">
-                          <Label>{language === 'ar' ? 'الفصل' : 'Class'}</Label>
+                          <Label>{getText('Class', 'الفصل', 'कक्षा')}</Label>
                           <Input value={roleInfo.class} disabled />
                         </div>
                         <div className="space-y-2">
-                          <Label>{language === 'ar' ? 'رقم الجلوس' : 'Roll Number'}</Label>
+                          <Label>{getText('Roll Number', 'رقم الجلوس', 'रोल नंबर')}</Label>
                           <Input value={roleInfo.rollNumber} disabled type="number" />
                         </div>
                         <div className="space-y-2">
-                          <Label>{language === 'ar' ? 'ولي الأمر' : 'Parent Name'}</Label>
+                          <Label>{getText('Parent Name', 'ولي الأمر', 'अभिभावक का नाम')}</Label>
                           <Input value={roleInfo.parentName} disabled />
                         </div>
                       </>
@@ -349,18 +355,18 @@ const Profile = () => {
                     {profile?.role === 'parent' && (
                       <>
                         <div className="space-y-2 md:col-span-2">
-                          <Label>{language === 'ar' ? 'الأطفال' : 'Children'}</Label>
+                          <Label>{getText('Children', 'الأطفال', 'बच्चे')}</Label>
                           {roleInfo.children?.map((child, index) => (
                             <div key={index} className="p-3 border rounded-lg bg-muted/30">
                               <p className="font-medium">{child.name}</p>
                               <p className="text-sm text-muted-foreground">
-                                <span className="number-display">{language === 'en' ? 'Class' : 'الفصل'}: {child.class} | {language === 'en' ? 'ID' : 'المعرف'}: {child.studentId}</span>
+                                <span className="number-display">{getText('Class', 'الفصل', 'कक्षा')}: {child.class} | {getText('ID', 'المعرف', 'आईडी')}: {child.studentId}</span>
                               </p>
                             </div>
                           ))}
                         </div>
                         <div className="space-y-2">
-                          <Label>{language === 'ar' ? 'رقم الطوارئ' : 'Emergency Contact'}</Label>
+                          <Label>{getText('Emergency Contact', 'رقم الطوارئ', 'आपातकालीन संपर्क')}</Label>
                           <Input value={roleInfo.emergencyContact} disabled type="tel" />
                         </div>
                       </>
@@ -369,19 +375,19 @@ const Profile = () => {
                     {profile?.role === 'driver' && (
                       <>
                         <div className="space-y-2">
-                          <Label>{language === 'ar' ? 'رقم الحافلة' : 'Bus Number'}</Label>
+                          <Label>{getText('Bus Number', 'رقم الحافلة', 'बस नंबर')}</Label>
                           <Input value={roleInfo.busNumber} disabled />
                         </div>
                         <div className="space-y-2">
-                          <Label>{language === 'ar' ? 'المسار' : 'Route'}</Label>
+                          <Label>{getText('Route', 'المسار', 'मार्ग')}</Label>
                           <Input value={roleInfo.route} disabled />
                         </div>
                         <div className="space-y-2">
-                          <Label>{language === 'ar' ? 'رقم الرخصة' : 'License Number'}</Label>
+                          <Label>{getText('License Number', 'رقم الرخصة', 'लाइसेंस नंबर')}</Label>
                           <Input value={roleInfo.licenseNumber} disabled />
                         </div>
                         <div className="space-y-2">
-                          <Label>{language === 'ar' ? 'عدد الطلاب' : 'Students Count'}</Label>
+                          <Label>{getText('Students Count', 'عدد الطلاب', 'छात्रों की संख्या')}</Label>
                           <Input value={roleInfo.studentsCount} disabled type="number" />
                         </div>
                       </>
@@ -393,14 +399,14 @@ const Profile = () => {
                   <div className="flex items-center gap-2 mb-4">
                     <Shield className="h-5 w-5 text-primary" />
                     <h3 className="text-lg font-semibold">
-                      {language === 'ar' ? 'إعدادات الأمان' : 'Security Settings'}
+                      {getText('Security Settings', 'إعدادات الأمان', 'सुरक्षा सेटिंग्स')}
                     </h3>
                   </div>
                   
                   <div className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="current-password">
-                        {language === 'ar' ? 'كلمة المرور الحالية' : 'Current Password'}
+                        {getText('Current Password', 'كلمة المرور الحالية', 'वर्तमान पासवर्ड')}
                       </Label>
                       <div className="relative">
                         <Input
@@ -408,7 +414,7 @@ const Profile = () => {
                           type={showPasswords.current ? "text" : "password"}
                           value={passwords.current}
                           onChange={(e) => setPasswords({ ...passwords, current: e.target.value })}
-                          placeholder={language === 'ar' ? 'أدخل كلمة المرور الحالية' : 'Enter current password'}
+                          placeholder={getText('Enter current password', 'أدخل كلمة المرور الحالية', 'वर्तमान पासवर्ड दर्ज करें')}
                           className="pr-12"
                         />
                         <Button
@@ -425,7 +431,7 @@ const Profile = () => {
                     
                     <div className="space-y-2">
                       <Label htmlFor="new-password">
-                        {language === 'ar' ? 'كلمة المرور الجديدة' : 'New Password'}
+                        {getText('New Password', 'كلمة المرور الجديدة', 'नया पासवर्ड')}
                       </Label>
                       <div className="relative">
                         <Input
@@ -433,7 +439,7 @@ const Profile = () => {
                           type={showPasswords.new ? "text" : "password"}
                           value={passwords.new}
                           onChange={(e) => setPasswords({ ...passwords, new: e.target.value })}
-                          placeholder={language === 'ar' ? 'أدخل كلمة المرور الجديدة' : 'Enter new password'}
+                          placeholder={getText('Enter new password', 'أدخل كلمة المرور الجديدة', 'नया पासवर्ड दर्ज करें')}
                           className="pr-12"
                         />
                         <Button
@@ -450,7 +456,7 @@ const Profile = () => {
                     
                     <div className="space-y-2">
                       <Label htmlFor="confirm-password">
-                        {language === 'ar' ? 'تأكيد كلمة المرور' : 'Confirm Password'}
+                        {getText('Confirm Password', 'تأكيد كلمة المرور', 'पासवर्ड की पुष्टि करें')}
                       </Label>
                       <div className="relative">
                         <Input
@@ -458,7 +464,7 @@ const Profile = () => {
                           type={showPasswords.confirm ? "text" : "password"}
                           value={passwords.confirm}
                           onChange={(e) => setPasswords({ ...passwords, confirm: e.target.value })}
-                          placeholder={language === 'ar' ? 'أكد كلمة المرور الجديدة' : 'Confirm new password'}
+                          placeholder={getText('Confirm new password', 'أكد كلمة المرور الجديدة', 'नए पासवर्ड की पुष्टि करें')}
                           className="pr-12"
                         />
                         <Button
@@ -475,7 +481,7 @@ const Profile = () => {
                     
                     <Button onClick={handleChangePassword} className="w-full gap-2">
                       <Key className="h-4 w-4" />
-                      {language === 'ar' ? 'تغيير كلمة المرور' : 'Change Password'}
+                      {getText('Change Password', 'تغيير كلمة المرور', 'पासवर्ड बदलें')}
                     </Button>
                   </div>
 
@@ -485,18 +491,18 @@ const Profile = () => {
                       <div className="flex items-center gap-2 mb-4">
                         <CreditCard className="h-5 w-5 text-primary" />
                         <h3 className="text-lg font-semibold">
-                          {language === 'ar' ? 'رمز PIN للبطاقة' : 'NFC Card PIN'}
+                          {getText('NFC Card PIN', 'رمز PIN للبطاقة', 'NFC कार्ड पिन')}
                         </h3>
                       </div>
                       <p className="text-sm text-muted-foreground">
                         {hasPinSet 
-                          ? (language === 'ar' ? 'لديك رمز PIN مُعد. يمكنك تغييره أدناه.' : 'You have a PIN set. You can change it below.')
-                          : (language === 'ar' ? 'أنشئ رمز PIN للدخول السريع ببطاقة NFC' : 'Create a PIN for quick NFC card login')
+                          ? getText('You have a PIN set. You can change it below.', 'لديك رمز PIN مُعد. يمكنك تغييره أدناه.', 'आपके पास पिन सेट है। आप इसे नीचे बदल सकते हैं।')
+                          : getText('Create a PIN for quick NFC card login', 'أنشئ رمز PIN للدخول السريع ببطاقة NFC', 'त्वरित NFC कार्ड लॉगिन के लिए पिन बनाएं')
                         }
                       </p>
                       <div className="flex flex-col items-center space-y-4">
                         <div className="space-y-2 w-full">
-                          <Label>{language === 'ar' ? 'رمز PIN جديد' : 'New PIN'}</Label>
+                          <Label>{getText('New PIN', 'رمز PIN جديد', 'नया पिन')}</Label>
                           <div className="flex justify-center">
                             <InputOTP maxLength={4} value={nfcPin} onChange={setNfcPin}>
                               <InputOTPGroup>
@@ -509,7 +515,7 @@ const Profile = () => {
                           </div>
                         </div>
                         <div className="space-y-2 w-full">
-                          <Label>{language === 'ar' ? 'تأكيد رمز PIN' : 'Confirm PIN'}</Label>
+                          <Label>{getText('Confirm PIN', 'تأكيد رمز PIN', 'पिन की पुष्टि करें')}</Label>
                           <div className="flex justify-center">
                             <InputOTP maxLength={4} value={confirmNfcPin} onChange={setConfirmNfcPin}>
                               <InputOTPGroup>
@@ -526,7 +532,7 @@ const Profile = () => {
                           disabled={nfcPin.length !== 4 || confirmNfcPin.length !== 4 || pinLoading}
                           onClick={async () => {
                             if (nfcPin !== confirmNfcPin) {
-                              toast({ title: language === 'ar' ? 'الرمزان غير متطابقين' : 'PINs do not match', variant: 'destructive' });
+                              toast({ title: getText('PINs do not match', 'الرمزان غير متطابقين', 'पिन मेल नहीं खाते'), variant: 'destructive' });
                               return;
                             }
                             setPinLoading(true);
@@ -535,7 +541,7 @@ const Profile = () => {
                                 body: { pin: nfcPin, email: user?.email }
                               });
                               if (error || !data.success) throw new Error(data?.error || 'Failed');
-                              toast({ title: language === 'ar' ? 'تم حفظ رمز PIN' : 'PIN saved successfully' });
+                              toast({ title: getText('PIN saved successfully', 'تم حفظ رمز PIN', 'पिन सफलतापूर्वक सहेजा गया') });
                               setNfcPin('');
                               setConfirmNfcPin('');
                               setHasPinSet(true);
@@ -548,10 +554,10 @@ const Profile = () => {
                         >
                           <CreditCard className="h-4 w-4" />
                           {pinLoading 
-                            ? (language === 'ar' ? 'جاري الحفظ...' : 'Saving...')
+                            ? getText('Saving...', 'جاري الحفظ...', 'सहेज रहा है...')
                             : hasPinSet 
-                              ? (language === 'ar' ? 'تغيير رمز PIN' : 'Change PIN')
-                              : (language === 'ar' ? 'إنشاء رمز PIN' : 'Create PIN')
+                              ? getText('Change PIN', 'تغيير رمز PIN', 'पिन बदलें')
+                              : getText('Create PIN', 'إنشاء رمز PIN', 'पिन बनाएं')
                           }
                         </Button>
                       </div>
