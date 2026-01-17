@@ -236,21 +236,22 @@ export default function AllBusesMap({ buses }: AllBusesMapProps) {
   };
 
   const createMarkerElement = (bus: BusInfo) => {
+    const isActive = bus.status === 'active';
+    
     const container = document.createElement('div');
     container.className = 'bus-pin-container';
     container.style.position = 'relative';
     container.style.display = 'flex';
     container.style.flexDirection = 'column';
     container.style.alignItems = 'center';
-    container.style.width = '44px';
-    container.style.height = '44px';
 
     // Label (always visible above pin)
     const labelWrap = document.createElement('div');
     labelWrap.style.position = 'absolute';
     labelWrap.style.left = '50%';
-    labelWrap.style.top = '-42px';
+    labelWrap.style.bottom = '100%';
     labelWrap.style.transform = 'translateX(-50%)';
+    labelWrap.style.marginBottom = '8px';
     labelWrap.style.zIndex = '10';
     labelWrap.style.pointerEvents = 'none';
     labelWrap.style.display = 'flex';
@@ -283,48 +284,24 @@ export default function AllBusesMap({ buses }: AllBusesMapProps) {
     labelWrap.appendChild(arrow);
     container.appendChild(labelWrap);
 
-    // Bus pin with beautiful icon - create first so pulse can be positioned relative to it
-    const pin = document.createElement('div');
-    pin.className = 'bus-pin';
-    pin.style.width = '48px';
-    pin.style.height = '48px';
-    pin.style.borderRadius = '9999px';
-    pin.style.display = 'flex';
-    pin.style.alignItems = 'center';
-    pin.style.justifyContent = 'center';
-    pin.style.border = '3px solid hsl(var(--background))';
-    pin.style.boxShadow = bus.status === 'active' 
-      ? '0 8px 24px hsl(var(--primary) / 0.35), 0 4px 8px hsl(var(--foreground) / 0.1)' 
-      : '0 8px 24px hsla(0, 72%, 51%, 0.35), 0 4px 8px hsl(var(--foreground) / 0.1)';
-    pin.style.background = bus.status === 'active' 
-      ? 'linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.85))' 
-      : 'linear-gradient(135deg, hsl(0, 72%, 51%), hsl(0, 72%, 45%))';
-    pin.style.color = '#ffffff';
-    pin.style.position = 'relative';
-    pin.style.zIndex = '2';
-    pin.innerHTML = `
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M4 16c0 .88.39 1.67 1 2.22V20c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h8v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1.78c.61-.55 1-1.34 1-2.22V6c0-3.5-3.58-4-8-4s-8 .5-8 4v10zm3.5 1c-.83 0-1.5-.67-1.5-1.5S6.67 14 7.5 14s1.5.67 1.5 1.5S8.33 17 7.5 17zm9 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM18 11H6V6h12v5z"/>
-      </svg>
-    `;
-
-    // Create a wrapper for pin and pulse to center them together
+    // Create a wrapper for pin and pulse - fixed size for proper centering
     const pinWrapper = document.createElement('div');
     pinWrapper.style.position = 'relative';
+    pinWrapper.style.width = '56px';
+    pinWrapper.style.height = '56px';
     pinWrapper.style.display = 'flex';
     pinWrapper.style.alignItems = 'center';
     pinWrapper.style.justifyContent = 'center';
 
-    // Pulse effect for active buses - centered behind the pin
-    if (bus.status === 'active') {
+    // Pulse effect for active buses - absolutely centered
+    if (isActive) {
       const pulse = document.createElement('div');
       pulse.className = 'bus-pin-pulse';
       pulse.style.position = 'absolute';
-      pulse.style.left = '50%';
-      pulse.style.top = '50%';
-      pulse.style.transform = 'translate(-50%, -50%)';
-      pulse.style.width = '56px';
-      pulse.style.height = '56px';
+      pulse.style.left = '0';
+      pulse.style.top = '0';
+      pulse.style.right = '0';
+      pulse.style.bottom = '0';
       pulse.style.borderRadius = '9999px';
       pulse.style.background = 'hsl(var(--primary) / 0.4)';
       pulse.style.animation = 'busPinPulse 2s ease-out infinite';
@@ -332,8 +309,52 @@ export default function AllBusesMap({ buses }: AllBusesMapProps) {
       pinWrapper.appendChild(pulse);
     }
 
+    // Bus pin with beautiful icon
+    const pin = document.createElement('div');
+    pin.className = 'bus-pin';
+    pin.style.width = '44px';
+    pin.style.height = '44px';
+    pin.style.borderRadius = '9999px';
+    pin.style.display = 'flex';
+    pin.style.alignItems = 'center';
+    pin.style.justifyContent = 'center';
+    pin.style.border = '3px solid hsl(var(--background))';
+    pin.style.boxShadow = isActive 
+      ? '0 8px 24px hsl(var(--primary) / 0.35), 0 4px 8px hsl(var(--foreground) / 0.1)' 
+      : '0 8px 24px hsla(0, 72%, 51%, 0.35), 0 4px 8px hsl(var(--foreground) / 0.1)';
+    pin.style.background = isActive 
+      ? 'linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.85))' 
+      : 'linear-gradient(135deg, hsl(0, 72%, 51%), hsl(0, 72%, 45%))';
+    pin.style.color = '#ffffff';
+    pin.style.position = 'relative';
+    pin.style.zIndex = '2';
+    pin.innerHTML = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M4 16c0 .88.39 1.67 1 2.22V20c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h8v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1.78c.61-.55 1-1.34 1-2.22V6c0-3.5-3.58-4-8-4s-8 .5-8 4v10zm3.5 1c-.83 0-1.5-.67-1.5-1.5S6.67 14 7.5 14s1.5.67 1.5 1.5S8.33 17 7.5 17zm9 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM18 11H6V6h12v5z"/>
+      </svg>
+    `;
+
     pinWrapper.appendChild(pin);
     container.appendChild(pinWrapper);
+
+    // Add "Inactive" tag below the pin for inactive buses
+    if (!isActive) {
+      const inactiveTag = document.createElement('div');
+      inactiveTag.className = 'bus-inactive-tag';
+      inactiveTag.textContent = language === 'ar' ? 'متوقفة' : 'Inactive';
+      inactiveTag.style.marginTop = '4px';
+      inactiveTag.style.padding = '2px 8px';
+      inactiveTag.style.borderRadius = '4px';
+      inactiveTag.style.fontSize = '10px';
+      inactiveTag.style.fontWeight = '600';
+      inactiveTag.style.background = 'hsl(0, 72%, 51%)';
+      inactiveTag.style.color = '#ffffff';
+      inactiveTag.style.textTransform = 'uppercase';
+      inactiveTag.style.letterSpacing = '0.5px';
+      inactiveTag.style.boxShadow = '0 2px 4px hsla(0, 72%, 51%, 0.3)';
+      container.appendChild(inactiveTag);
+    }
+
     return container;
   };
 
