@@ -8,6 +8,7 @@ import { MapPin, Bus, Clock, AlertCircle, Navigation } from 'lucide-react';
 import { motion } from 'framer-motion';
 import LogoLoader from "@/components/LogoLoader";
 import BusMap from "@/components/tracking/BusMap";
+import AllBusesMap from "@/components/tracking/AllBusesMap";
 import BoardingHistory from "@/components/tracking/BoardingHistory";
 import BusInfoItem from "@/components/tracking/BusInfoItem";
 
@@ -92,63 +93,79 @@ export default function BusTracking() {
         </p>
       </div>
 
-      {/* Admin/Driver/Developer View - All Buses */}
+      {/* Admin/Driver/Developer View - All Buses on One Map */}
       {isAdminView && (
         <>
           {buses.length > 0 ? (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {buses.map((bus) => (
-                <motion.div
-                  key={bus.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                >
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center justify-between">
-                        <span className="flex items-center gap-2">
-                          <Bus className="h-5 w-5 text-primary" />
-                          {language === 'ar' ? 'الحافلة' : 'Bus'} {bus.bus_number}
-                        </span>
-                        <Badge 
-                          variant={bus.status === 'active' ? 'default' : 'secondary'}
-                          className="capitalize"
-                        >
-                          {bus.status || 'inactive'}
-                        </Badge>
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="h-48 rounded-lg overflow-hidden">
-                        <BusMap busId={bus.id} />
-                      </div>
-                      <div className="space-y-2">
-                        <BusInfoItem
-                          icon={<Bus className="h-4 w-4" />}
-                          label={language === 'ar' ? 'الموديل' : 'Model'}
-                          value={bus.model || 'N/A'}
-                        />
-                        <BusInfoItem
-                          icon={<MapPin className="h-4 w-4" />}
-                          label={language === 'ar' ? 'المسار' : 'Route'}
-                          value={
-                            bus.bus_routes?.[0]
-                              ? (language === 'ar' 
-                                  ? bus.bus_routes[0].route_name_ar 
-                                  : bus.bus_routes[0].route_name)
-                              : (language === 'ar' ? 'غير محدد' : 'Not assigned')
-                          }
-                        />
-                        <BusInfoItem
-                          icon={<Clock className="h-4 w-4" />}
-                          label={language === 'ar' ? 'السعة' : 'Capacity'}
-                          value={`${bus.capacity} ${language === 'ar' ? 'مقعد' : 'seats'}`}
-                        />
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
+            <div className="space-y-6">
+              {/* Single map showing all buses */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Navigation className="h-5 w-5 text-primary" />
+                    {language === 'ar' ? 'خريطة جميع الحافلات' : 'All Buses Map'}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <AllBusesMap buses={buses.map(b => ({ id: b.id, bus_number: b.bus_number, status: b.status }))} />
+                </CardContent>
+              </Card>
+
+              {/* Bus details grid */}
+              <div>
+                <h2 className="text-lg font-semibold mb-4">
+                  {language === 'ar' ? 'تفاصيل الحافلات' : 'Bus Details'}
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {buses.map((bus) => (
+                    <motion.div
+                      key={bus.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                    >
+                      <Card className="h-full">
+                        <CardHeader className="pb-3">
+                          <CardTitle className="flex items-center justify-between text-base">
+                            <span className="flex items-center gap-2">
+                              <Bus className="h-4 w-4 text-primary" />
+                              {language === 'ar' ? 'حافلة' : 'Bus'} {bus.bus_number}
+                            </span>
+                            <Badge 
+                              variant={bus.status === 'active' ? 'default' : 'secondary'}
+                              className="capitalize text-xs"
+                            >
+                              {bus.status || 'inactive'}
+                            </Badge>
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-2 pt-0">
+                          <BusInfoItem
+                            icon={<Bus className="h-4 w-4" />}
+                            label={language === 'ar' ? 'الموديل' : 'Model'}
+                            value={bus.model || 'N/A'}
+                          />
+                          <BusInfoItem
+                            icon={<MapPin className="h-4 w-4" />}
+                            label={language === 'ar' ? 'المسار' : 'Route'}
+                            value={
+                              bus.bus_routes?.[0]
+                                ? (language === 'ar' 
+                                    ? bus.bus_routes[0].route_name_ar 
+                                    : bus.bus_routes[0].route_name)
+                                : (language === 'ar' ? 'غير محدد' : 'Not assigned')
+                            }
+                          />
+                          <BusInfoItem
+                            icon={<Clock className="h-4 w-4" />}
+                            label={language === 'ar' ? 'السعة' : 'Capacity'}
+                            value={`${bus.capacity} ${language === 'ar' ? 'مقعد' : 'seats'}`}
+                          />
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
             </div>
           ) : (
             <Card>
