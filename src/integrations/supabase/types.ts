@@ -4940,6 +4940,14 @@ export type Database = {
         }
         Returns: undefined
       }
+      is_group_admin: {
+        Args: { p_group_id: string; p_user_id?: string }
+        Returns: boolean
+      }
+      is_group_member: {
+        Args: { p_group_id: string; p_user_id?: string }
+        Returns: boolean
+      }
       is_test_account: { Args: { user_email: string }; Returns: boolean }
       process_fee_payment: {
         Args: {
