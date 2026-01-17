@@ -212,34 +212,50 @@ export default function AllBusesMap({ buses }: AllBusesMapProps) {
 
     const bounds = new mapboxgl.LngLatBounds();
     let hasValidLocations = false;
-    
-    // Default location (Oman center) for buses without location data
-    const defaultLocation = { latitude: 23.588, longitude: 58.4059 };
 
-    buses.forEach((bus, index) => {
+    // Remove markers for buses that are no longer in the list
+    const currentBusIds = new Set(buses.map(b => b.id));
+    markers.current.forEach((marker, busId) => {
+      if (!currentBusIds.has(busId)) {
+        marker.remove();
+        markers.current.delete(busId);
+      }
+    });
+
+    buses.forEach((bus) => {
       const location = busLocations.get(bus.id);
-      
-      // Use actual location if available, otherwise use offset default location
-      const displayLocation = location || {
-        latitude: defaultLocation.latitude + (index * 0.008),
-        longitude: defaultLocation.longitude + (index * 0.008),
-      };
-      
+
+      // If we don't have a real location, don't place it on the map (prevents the diagonal "fake" line)
+      if (!location || !Number.isFinite(location.latitude) || !Number.isFinite(location.longitude)) {
+        const existing = markers.current.get(bus.id);
+        if (existing) {
+          existing.remove();
+          markers.current.delete(bus.id);
+        }
+        return;
+      }
+
       hasValidLocations = true;
-      bounds.extend([displayLocation.longitude, displayLocation.latitude]);
-      
+      bounds.extend([location.longitude, location.latitude]);
+
       const isActiveBus = activeBusIds.has(bus.id);
-      
-      // Remove existing marker to recreate with correct status
-      if (markers.current.has(bus.id)) {
-        markers.current.get(bus.id)?.remove();
+
+      // If marker exists, update position; only recreate if active/inactive state changed
+      const existing = markers.current.get(bus.id);
+      if (existing) {
+        const el = existing.getElement() as HTMLElement | null;
+        const prevActive = el?.dataset?.active === 'true';
+        existing.setLngLat([location.longitude, location.latitude]);
+
+        if (prevActive === isActiveBus) return;
+
+        existing.remove();
         markers.current.delete(bus.id);
       }
-      
-      // Create marker with active trip status
+
       const el = createMarkerElement(bus, isActiveBus);
       const marker = new mapboxgl.Marker({ element: el, anchor: 'bottom' })
-        .setLngLat([displayLocation.longitude, displayLocation.latitude])
+        .setLngLat([location.longitude, location.latitude])
         .addTo(map.current!);
       markers.current.set(bus.id, marker);
     });
@@ -356,6 +372,8 @@ export default function AllBusesMap({ buses }: AllBusesMapProps) {
     const isActive = hasLiveLocation;
     const container = document.createElement('div');
     container.className = 'bus-pin-container';
+    container.dataset.busId = bus.id;
+    container.dataset.active = isActive ? 'true' : 'false';
     container.style.position = 'relative';
     container.style.display = 'flex';
     container.style.flexDirection = 'column';
@@ -468,7 +486,7 @@ export default function AllBusesMap({ buses }: AllBusesMapProps) {
       ? '12px solid hsl(var(--primary))' 
       : '12px solid hsl(0, 72%, 51%)';
     pointer.style.marginTop = '-2px';
-    pointer.style.filter = 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))';
+    pointer.style.filter = 'drop-shadow(0 2px 4px hsl(var(--foreground) / 0.25))';
     
     container.appendChild(pinWrapper);
     container.appendChild(pointer);
