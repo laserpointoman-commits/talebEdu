@@ -9,7 +9,7 @@ interface HomeLocationMapProps {
   onLocationSelect: (lat: number, lng: number) => void;
   initialLat?: number;
   initialLng?: number;
-  language?: 'en' | 'ar';
+  language?: 'en' | 'ar' | 'hi';
 }
 
 export default function HomeLocationMap({
@@ -27,11 +27,17 @@ export default function HomeLocationMap({
   });
   const { toast } = useToast();
 
+  const getTranslation = (en: string, ar: string, hi: string) => {
+    if (language === 'ar') return ar;
+    if (language === 'hi') return hi;
+    return en;
+  };
+
   const t = {
-    getCurrentLocation: language === 'ar' ? 'استخدام الموقع الحالي' : 'Use Current Location',
-    selectLocation: language === 'ar' ? 'انقر على الخريطة لتحديد الموقع' : 'Click on map to select location',
-    locationError: language === 'ar' ? 'تعذر الحصول على الموقع' : 'Unable to get location',
-    locationSuccess: language === 'ar' ? 'تم تحديد الموقع' : 'Location set',
+    getCurrentLocation: getTranslation('Use Current Location', 'استخدام الموقع الحالي', 'वर्तमान स्थान का उपयोग करें'),
+    selectLocation: getTranslation('Click on map to select location', 'انقر على الخريطة لتحديد الموقع', 'स्थान चुनने के लिए मानचित्र पर क्लिक करें'),
+    locationError: getTranslation('Unable to get location', 'تعذر الحصول على الموقع', 'स्थान प्राप्त करने में असमर्थ'),
+    locationSuccess: getTranslation('Location set', 'تم تحديد الموقع', 'स्थान सेट किया गया'),
   };
 
   useEffect(() => {
