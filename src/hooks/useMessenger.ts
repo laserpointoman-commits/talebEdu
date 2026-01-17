@@ -713,29 +713,63 @@ export function useMessenger() {
     }
   }, [user]);
 
-  // Subscribe to real-time updates
+  // Subscribe to real-time updates with optimized performance
   useEffect(() => {
     if (!user) return;
+
+    // Debounce conversation fetches to avoid hammering the API
+    let fetchTimeout: NodeJS.Timeout | null = null;
+    const debouncedFetchConversations = () => {
+      if (fetchTimeout) clearTimeout(fetchTimeout);
+      fetchTimeout = setTimeout(() => {
+        fetchConversations();
+      }, 300);
+    };
 
     const messagesChannel = supabase
       .channel('messenger-messages')
       .on(
         'postgres_changes',
         {
-          event: '*',
+          event: 'INSERT',
           schema: 'public',
           table: 'direct_messages',
           filter: `recipient_id=eq.${user.id}`
         },
         (payload) => {
-          if (payload.eventType === 'INSERT') {
-            markAsDelivered(payload.new.sender_id);
-            fetchConversations();
-          } else if (payload.eventType === 'UPDATE') {
-            setMessages(prev => prev.map(m => 
-              m.id === payload.new.id ? { ...m, ...payload.new } : m
-            ));
-          }
+          const newMessage = payload.new as any;
+          
+          // Optimistically add the message to the current view
+          setMessages(prev => {
+            // Avoid duplicates
+            if (prev.some(m => m.id === newMessage.id)) return prev;
+            return [...prev, {
+              ...newMessage,
+              attachments: [],
+              reactions: [],
+              reply_to: null
+            }];
+          });
+          
+          // Mark as delivered immediately
+          markAsDelivered(newMessage.sender_id);
+          
+          // Update conversations list
+          debouncedFetchConversations();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'direct_messages',
+          filter: `recipient_id=eq.${user.id}`
+        },
+        (payload) => {
+          setMessages(prev => prev.map(m => 
+            m.id === payload.new.id ? { ...m, ...payload.new } : m
+          ));
         }
       )
       .on(
@@ -747,9 +781,10 @@ export function useMessenger() {
           filter: `sender_id=eq.${user.id}`
         },
         (payload) => {
+          // Update read/delivered status instantly (WhatsApp blue ticks)
           setMessages(prev => prev.map(m => 
             m.id === payload.new.id 
-              ? { ...m, is_read: payload.new.is_read, is_delivered: payload.new.is_delivered }
+              ? { ...m, is_read: payload.new.is_read, is_delivered: payload.new.is_delivered, read_at: payload.new.read_at, delivered_at: payload.new.delivered_at }
               : m
           ));
         }
@@ -793,13 +828,33 @@ export function useMessenger() {
       .on(
         'postgres_changes',
         {
-          event: '*',
+          event: 'INSERT',
           schema: 'public',
           table: 'message_reactions'
         },
-        () => {
-          // Refetch messages to get updated reactions
-          // This is a simple approach; in production, you'd update specifically
+        (payload) => {
+          const reaction = payload.new as any;
+          setMessages(prev => prev.map(m => 
+            m.id === reaction.message_id 
+              ? { ...m, reactions: [...(m.reactions || []), reaction] }
+              : m
+          ));
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'message_reactions'
+        },
+        (payload) => {
+          const reaction = payload.old as any;
+          setMessages(prev => prev.map(m => 
+            m.id === reaction.message_id 
+              ? { ...m, reactions: (m.reactions || []).filter(r => r.id !== reaction.id) }
+              : m
+          ));
         }
       )
       .subscribe();
@@ -820,6 +875,7 @@ export function useMessenger() {
     window.addEventListener('beforeunload', handleBeforeUnload);
 
     return () => {
+      if (fetchTimeout) clearTimeout(fetchTimeout);
       supabase.removeChannel(messagesChannel);
       supabase.removeChannel(presenceChannel);
       supabase.removeChannel(reactionsChannel);

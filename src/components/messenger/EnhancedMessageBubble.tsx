@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, memo } from 'react';
 import { Check, CheckCheck, Clock, Reply, Forward, Trash2, Copy, Smile, MoreVertical, FileText, Download, Star } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -6,6 +6,7 @@ import { QUICK_REACTIONS, STAR_COLOR, TASK_STATUS_COLORS } from './MessengerThem
 import { Message } from '@/hooks/useMessenger';
 import { Button } from '@/components/ui/button';
 import { VoiceMessageBubble } from './VoiceMessageBubble';
+import { motion } from 'framer-motion';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -262,7 +263,7 @@ export function EnhancedMessageBubble({
         </div>
       )}
 
-      <div 
+      <motion.div 
         className={cn("flex mb-1 group relative", isOwnMessage ? "justify-end" : "justify-start")}
         onMouseEnter={() => setShowActions(true)}
         onMouseLeave={() => !dropdownOpen && setShowActions(false)}
@@ -270,6 +271,10 @@ export function EnhancedMessageBubble({
         onTouchEnd={handleTouchEnd}
         onTouchCancel={handleTouchEnd}
         onContextMenu={handleContextMenu}
+        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.15, ease: 'easeOut' }}
+        layout
       >
         <div className="max-w-[75%] relative">
           {/* Starred indicator */}
@@ -591,7 +596,7 @@ export function EnhancedMessageBubble({
             </div>
           )}
         </div>
-      </div>
+      </motion.div>
     </>
   );
 }

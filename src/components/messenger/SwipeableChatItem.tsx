@@ -1,7 +1,8 @@
-import { useState, useRef } from 'react';
-import { motion, useMotionValue, PanInfo } from 'framer-motion';
+import { useState, useRef, useCallback } from 'react';
+import { motion, useMotionValue, PanInfo, useAnimation } from 'framer-motion';
 import { Archive, Pin, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Haptics, ImpactStyle } from '@capacitor/haptics';
 
 interface SwipeableChatItemProps {
   children: React.ReactNode;
@@ -24,87 +25,140 @@ export function SwipeableChatItem({
 }: SwipeableChatItemProps) {
   const [isRevealed, setIsRevealed] = useState<'left' | 'right' | null>(null);
   const x = useMotionValue(0);
+  const controls = useAnimation();
   const containerRef = useRef<HTMLDivElement>(null);
   
   const leftActions = isArabic ? ['delete', 'archive'] : ['pin', 'archive'];
   const rightActions = isArabic ? ['pin'] : ['delete'];
   
-  const SWIPE_THRESHOLD = 80;
+  const SWIPE_THRESHOLD = 60;
   const ACTION_WIDTH = 70;
 
-  const handleDragEnd = (_: any, info: PanInfo) => {
+  const haptic = useCallback(async () => {
+    try {
+      await Haptics.impact({ style: ImpactStyle.Light });
+    } catch {
+      // Haptics not available
+    }
+  }, []);
+
+  const handleDragEnd = useCallback(async (_: any, info: PanInfo) => {
     const offset = info.offset.x;
+    const velocity = info.velocity.x;
     
-    if (Math.abs(offset) > SWIPE_THRESHOLD) {
-      if (offset > 0) {
+    // Use velocity for more natural feel
+    const shouldReveal = Math.abs(offset) > SWIPE_THRESHOLD || Math.abs(velocity) > 500;
+    
+    if (shouldReveal) {
+      await haptic();
+      if (offset > 0 || velocity > 500) {
         setIsRevealed('left');
-        x.set(leftActions.length * ACTION_WIDTH);
+        await controls.start({ x: leftActions.length * ACTION_WIDTH }, { type: 'spring', stiffness: 500, damping: 30 });
       } else {
         setIsRevealed('right');
-        x.set(-rightActions.length * ACTION_WIDTH);
+        await controls.start({ x: -rightActions.length * ACTION_WIDTH }, { type: 'spring', stiffness: 500, damping: 30 });
       }
     } else {
       setIsRevealed(null);
-      x.set(0);
+      await controls.start({ x: 0 }, { type: 'spring', stiffness: 500, damping: 30 });
     }
-  };
+  }, [controls, haptic, leftActions.length, rightActions.length]);
 
-  const handleActionClick = (action: string) => {
+  const handleActionClick = useCallback(async (action: string) => {
+    await haptic();
     setIsRevealed(null);
-    x.set(0);
+    await controls.start({ x: 0 }, { type: 'spring', stiffness: 500, damping: 30 });
     
-    switch (action) {
-      case 'delete': onDelete?.(); break;
-      case 'archive': onArchive?.(); break;
-      case 'pin': if (canPin) onPin?.(); break;
-    }
-  };
+    // Small delay for visual feedback
+    setTimeout(() => {
+      switch (action) {
+        case 'delete': onDelete?.(); break;
+        case 'archive': onArchive?.(); break;
+        case 'pin': if (canPin) onPin?.(); break;
+      }
+    }, 100);
+  }, [controls, haptic, canPin, onDelete, onArchive, onPin]);
 
-  const closeSwipe = () => {
+  const closeSwipe = useCallback(async () => {
     setIsRevealed(null);
-    x.set(0);
-  };
+    await controls.start({ x: 0 }, { type: 'spring', stiffness: 500, damping: 30 });
+  }, [controls]);
 
   return (
-    <div ref={containerRef} className="relative overflow-hidden" onClick={isRevealed ? closeSwipe : undefined}>
+    <div ref={containerRef} className="relative overflow-hidden touch-pan-y" onClick={isRevealed ? closeSwipe : undefined}>
       {/* Left Actions */}
       <div className="absolute inset-y-0 left-0 flex">
         {!isArabic && canPin && (
-          <button onClick={() => handleActionClick('pin')} className={cn("w-[70px] flex flex-col items-center justify-center gap-1 text-white text-xs font-medium", isPinned ? "bg-primary" : "bg-yellow-500")}>
+          <motion.button 
+            onClick={() => handleActionClick('pin')} 
+            className={cn(
+              "w-[70px] flex flex-col items-center justify-center gap-1 text-white text-xs font-medium active:opacity-80",
+              isPinned ? "bg-primary" : "bg-yellow-500"
+            )}
+            whileTap={{ scale: 0.95 }}
+          >
             <Pin className="h-5 w-5" />
             {isPinned ? 'Unpin' : 'Pin'}
-          </button>
+          </motion.button>
         )}
-        <button onClick={() => handleActionClick('archive')} className="w-[70px] flex flex-col items-center justify-center gap-1 bg-slate-500 text-white text-xs font-medium">
+        <motion.button 
+          onClick={() => handleActionClick('archive')} 
+          className="w-[70px] flex flex-col items-center justify-center gap-1 bg-slate-500 text-white text-xs font-medium active:opacity-80"
+          whileTap={{ scale: 0.95 }}
+        >
           <Archive className="h-5 w-5" />
           {isArabic ? 'أرشفة' : 'Archive'}
-        </button>
+        </motion.button>
         {isArabic && (
-          <button onClick={() => handleActionClick('delete')} className="w-[70px] flex flex-col items-center justify-center gap-1 bg-red-500 text-white text-xs font-medium">
+          <motion.button 
+            onClick={() => handleActionClick('delete')} 
+            className="w-[70px] flex flex-col items-center justify-center gap-1 bg-red-500 text-white text-xs font-medium active:opacity-80"
+            whileTap={{ scale: 0.95 }}
+          >
             <Trash2 className="h-5 w-5" />
             حذف
-          </button>
+          </motion.button>
         )}
       </div>
 
       {/* Right Actions */}
       <div className="absolute inset-y-0 right-0 flex">
         {isArabic && canPin && (
-          <button onClick={() => handleActionClick('pin')} className={cn("w-[70px] flex flex-col items-center justify-center gap-1 text-white text-xs font-medium", isPinned ? "bg-primary" : "bg-yellow-500")}>
+          <motion.button 
+            onClick={() => handleActionClick('pin')} 
+            className={cn(
+              "w-[70px] flex flex-col items-center justify-center gap-1 text-white text-xs font-medium active:opacity-80",
+              isPinned ? "bg-primary" : "bg-yellow-500"
+            )}
+            whileTap={{ scale: 0.95 }}
+          >
             <Pin className="h-5 w-5" />
             {isPinned ? 'إلغاء' : 'تثبيت'}
-          </button>
+          </motion.button>
         )}
         {!isArabic && (
-          <button onClick={() => handleActionClick('delete')} className="w-[70px] flex flex-col items-center justify-center gap-1 bg-red-500 text-white text-xs font-medium">
+          <motion.button 
+            onClick={() => handleActionClick('delete')} 
+            className="w-[70px] flex flex-col items-center justify-center gap-1 bg-red-500 text-white text-xs font-medium active:opacity-80"
+            whileTap={{ scale: 0.95 }}
+          >
             <Trash2 className="h-5 w-5" />
             Delete
-          </button>
+          </motion.button>
         )}
       </div>
 
       {/* Swipeable Content */}
-      <motion.div drag="x" dragConstraints={{ left: -140, right: 140 }} dragElastic={0.1} onDragEnd={handleDragEnd} style={{ x }} className="relative bg-inherit z-10">
+      <motion.div 
+        drag="x" 
+        dragConstraints={{ left: -140, right: 140 }} 
+        dragElastic={0.1}
+        dragMomentum={false}
+        onDragEnd={handleDragEnd} 
+        animate={controls}
+        style={{ x }} 
+        className="relative bg-inherit z-10 will-change-transform"
+      >
         {children}
       </motion.div>
     </div>
