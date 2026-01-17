@@ -10,7 +10,7 @@ import {
 
 const languages = [
   { code: 'en', label: 'English', nativeLabel: 'English', flag: '🇬🇧' },
-  { code: 'ar', label: 'Arabic', nativeLabel: 'العربية', flag: '🇸🇦' },
+  { code: 'ar', label: 'Arabic', nativeLabel: 'العربية', flag: '🇴🇲' },
   { code: 'hi', label: 'Hindi', nativeLabel: 'हिन्दी', flag: '🇮🇳' },
 ] as const;
 
