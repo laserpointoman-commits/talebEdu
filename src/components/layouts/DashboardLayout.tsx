@@ -120,8 +120,8 @@ function DashboardLayout({ children }: DashboardLayoutProps) {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Top Bar - iOS Safe Area Aware - Always LTR */}
+    <div className="min-h-screen bg-background flex flex-col">
+      {/* Top Bar - iOS Safe Area Aware - Always LTR - Fixed */}
       <header 
         className="fixed left-0 right-0 top-0 z-50 ios-header"
         dir="ltr"
@@ -291,16 +291,19 @@ function DashboardLayout({ children }: DashboardLayoutProps) {
         </div>
       </header>
 
-      {/* Main layout - iOS Safe Area Aware */}
+      {/* Spacer for fixed header */}
       <div 
-        className="flex h-screen"
+        className="shrink-0"
         style={{ 
-          paddingTop: 'calc(3.5rem + env(safe-area-inset-top, 0px))',
+          height: 'calc(3.5rem + env(safe-area-inset-top, 0px))',
         }}
-      >
+      />
+
+      {/* Main layout */}
+      <div className="flex flex-1 overflow-hidden">
         {/* Desktop Sidebar - Wider for better readability */}
         <div className={cn(
-          "hidden lg:block transition-all duration-300 overflow-hidden",
+          "hidden lg:block transition-all duration-300 shrink-0 overflow-hidden",
           isSidebarOpen ? "w-72" : "w-0"
         )}>
           <div className="h-full overflow-y-auto">
@@ -308,27 +311,26 @@ function DashboardLayout({ children }: DashboardLayoutProps) {
           </div>
         </div>
         
-        <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Main Content - iOS Safe Area Aware with proper bottom padding for nav */}
-          <main 
-            className="flex-1 overflow-y-auto bg-muted/10"
-            style={{
-              paddingBottom: isMobile ? 'calc(6.5rem + env(safe-area-inset-bottom, 0px))' : 'env(safe-area-inset-bottom, 0px)'
-            }}
-          >
-            <div className={cn(
-              "flex flex-col min-h-full",
-              isMobile ? "px-3 py-4" : "px-6 py-6"
-            )}>
-              <div className="flex-1">
-                {children}
-              </div>
-              <Footer />
+        {/* Main Content */}
+        <main 
+          className="flex-1 overflow-y-auto bg-muted/10"
+          style={{
+            paddingBottom: isMobile ? 'calc(5rem + env(safe-area-inset-bottom, 0px))' : '0'
+          }}
+        >
+          <div className={cn(
+            "flex flex-col min-h-full",
+            isMobile ? "px-3 py-4" : "px-6 py-6"
+          )}>
+            <div className="flex-1">
+              {children}
             </div>
-          </main>
-        </div>
+            <Footer />
+          </div>
+        </main>
       </div>
-      {/* Bottom Navigation for Mobile */}
+
+      {/* Bottom Navigation for Mobile - Fixed */}
       {showBottomNav && <BottomNavigation />}
     </div>
   );
