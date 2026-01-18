@@ -27,6 +27,7 @@ import {
   ArrowLeft,
   Receipt,
   CreditCard,
+  Activity,
 } from 'lucide-react';
 
 interface NavItem {
@@ -173,6 +174,12 @@ const navItems: NavItem[] = [
     title: 'dashboard.nfcManagement',
     href: '/dashboard/admin/nfc',
     icon: Code,
+    roles: ['admin', 'developer'],
+  },
+  {
+    title: 'dashboard.systemHealth',
+    href: '/dashboard/admin/system-health',
+    icon: Activity,
     roles: ['admin', 'developer'],
   },
   {
