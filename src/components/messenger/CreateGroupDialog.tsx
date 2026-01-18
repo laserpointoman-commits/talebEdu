@@ -176,8 +176,9 @@ export function CreateGroupDialog({
       }}
     >
       <DialogContent 
-        className="max-w-md p-0 border-0 overflow-hidden"
+        className="max-w-md p-0 border-0 overflow-hidden z-[9999]"
         style={{ backgroundColor: WHATSAPP_COLORS.bg }}
+        onPointerDownOutside={(e) => e.preventDefault()}
       >
         <DialogHeader 
           className="p-4 border-b"
