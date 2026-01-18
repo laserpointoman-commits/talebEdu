@@ -7,7 +7,7 @@ import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Conversation, CallLog } from '@/hooks/useMessenger';
+import { Conversation, CallLog, GroupChat } from '@/hooks/useMessenger';
 import { callService } from '@/services/callService';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -34,7 +34,8 @@ import {
 } from 'lucide-react';
 
 interface ContactInfoScreenProps {
-  conversation: Conversation;
+  conversation?: Conversation | null;
+  group?: GroupChat | null;
   messages: any[];
   callLogs: CallLog[];
   starredMessageIds: Set<string>;
@@ -49,6 +50,7 @@ interface ContactInfoScreenProps {
 
 export function ContactInfoScreen({
   conversation,
+  group,
   messages,
   callLogs,
   starredMessageIds,
@@ -60,6 +62,11 @@ export function ContactInfoScreen({
   colors,
   currentUserId
 }: ContactInfoScreenProps) {
+  // Determine if we're showing a group or a contact
+  const isGroup = !!group;
+  const displayName = isGroup ? group.name : conversation?.recipient_name || '';
+  const displayImage = isGroup ? group.image_url : conversation?.recipient_image;
+  const contactId = isGroup ? group.id : conversation?.recipient_id || '';
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [isFavorite, setIsFavorite] = useState(false);
   const [isBlocked, setIsBlocked] = useState(false);
@@ -71,10 +78,10 @@ export function ContactInfoScreen({
   const t = (en: string, ar: string) => isArabic ? ar : en;
   const dir = isArabic ? 'rtl' : 'ltr';
 
-  // Filter call logs for this contact
-  const contactCallLogs = callLogs.filter(call => 
-    call.caller_id === conversation.recipient_id || 
-    call.recipient_id === conversation.recipient_id
+  // Filter call logs for this contact (not applicable for groups)
+  const contactCallLogs = isGroup ? [] : callLogs.filter(call => 
+    call.caller_id === contactId || 
+    call.recipient_id === contactId
   );
 
   // Extract media from messages
@@ -99,20 +106,21 @@ export function ContactInfoScreen({
   // Starred messages from this chat
   const starredMessages = messages.filter(msg => starredMessageIds.has(msg.id));
 
-  // Check if contact is a favorite
+  // Check if contact is a favorite (not applicable for groups)
   useEffect(() => {
+    if (isGroup) return;
     const checkFavorite = async () => {
-      if (!currentUserId) return;
+      if (!currentUserId || !contactId) return;
       const { data } = await supabase
         .from('favorite_contacts')
         .select('id')
         .eq('user_id', currentUserId)
-        .eq('contact_id', conversation.recipient_id)
+        .eq('contact_id', contactId)
         .maybeSingle();
       setIsFavorite(!!data);
     };
     checkFavorite();
-  }, [currentUserId, conversation.recipient_id]);
+  }, [currentUserId, contactId, isGroup]);
 
   const handleToggleNotifications = () => {
     setNotificationsEnabled(!notificationsEnabled);
@@ -124,7 +132,7 @@ export function ContactInfoScreen({
   };
 
   const handleToggleFavorite = async () => {
-    if (!currentUserId) return;
+    if (!currentUserId || isGroup) return;
     setLoadingFavorite(true);
     
     try {
@@ -133,7 +141,7 @@ export function ContactInfoScreen({
           .from('favorite_contacts')
           .delete()
           .eq('user_id', currentUserId)
-          .eq('contact_id', conversation.recipient_id);
+          .eq('contact_id', contactId);
         setIsFavorite(false);
         toast.success(t('Removed from favorites', 'تم الإزالة من المفضلة'));
       } else {
@@ -141,7 +149,7 @@ export function ContactInfoScreen({
           .from('favorite_contacts')
           .insert({
             user_id: currentUserId,
-            contact_id: conversation.recipient_id
+            contact_id: contactId
           });
         setIsFavorite(true);
         toast.success(t('Added to favorites', 'تمت الإضافة إلى المفضلة'));
@@ -157,7 +165,7 @@ export function ContactInfoScreen({
   const handleBlockUser = async () => {
     setIsBlocked(true);
     setShowBlockConfirm(false);
-    toast.success(t(`${conversation.recipient_name} has been blocked`, `تم حظر ${conversation.recipient_name}`));
+    toast.success(t(`${displayName} has been blocked`, `تم حظر ${displayName}`));
     // In production, this would call an API to block the user
   };
 
@@ -212,7 +220,7 @@ export function ContactInfoScreen({
             <ArrowLeft className="h-5 w-5" style={{ color: colors.textPrimary }} />
           </Button>
           <h1 className="text-lg font-semibold" style={{ color: colors.textPrimary }}>
-            {t('Contact Info', 'معلومات جهة الاتصال')}
+            {isGroup ? t('Group Info', 'معلومات المجموعة') : t('Contact Info', 'معلومات جهة الاتصال')}
           </h1>
         </div>
 
@@ -224,23 +232,25 @@ export function ContactInfoScreen({
           >
             <Avatar 
               className="h-32 w-32 mb-4 cursor-pointer"
-              onClick={() => conversation.recipient_image && setSelectedImage(conversation.recipient_image)}
+              onClick={() => displayImage && setSelectedImage(displayImage)}
             >
-              <AvatarImage src={conversation.recipient_image || undefined} />
+              <AvatarImage src={displayImage || undefined} />
               <AvatarFallback 
                 className="text-4xl font-bold"
                 style={{ backgroundColor: colors.accent }}
               >
-                {conversation.recipient_name?.charAt(0) || '?'}
+                {isGroup ? <Users className="h-12 w-12 text-white" /> : (displayName?.charAt(0) || '?')}
               </AvatarFallback>
             </Avatar>
             <h2 className="text-2xl font-bold mb-1" style={{ color: colors.textPrimary }}>
-              {conversation.recipient_name}
+              {displayName}
             </h2>
             <p className="text-sm" style={{ color: colors.textSecondary }}>
-              {conversation.is_online 
-                ? t('Online', 'متصل') 
-                : t('last seen recently', 'شوهد مؤخراً')}
+              {isGroup 
+                ? `${group.members?.length || 0} ${t('participants', 'مشارك')}`
+                : (conversation?.is_online 
+                    ? t('Online', 'متصل') 
+                    : t('last seen recently', 'شوهد مؤخراً'))}
             </p>
 
             {/* Call Buttons */}
@@ -519,43 +529,86 @@ export function ContactInfoScreen({
             />
           </div>
 
-          {/* Add to Favorites */}
-          <div 
-            className="mt-2 px-4 py-3 flex items-center justify-between cursor-pointer hover:bg-white/5"
-            style={{ backgroundColor: colors.bgSecondary }}
-            onClick={handleToggleFavorite}
-          >
-            <div className="flex items-center gap-3">
-              <Heart 
-                className="h-5 w-5" 
-                style={{ color: isFavorite ? '#ef4444' : colors.textMuted }}
-                fill={isFavorite ? '#ef4444' : 'none'}
-              />
-              <span style={{ color: colors.textPrimary }}>
-                {isFavorite 
-                  ? t('Remove from Favorites', 'إزالة من المفضلة')
-                  : t('Add to Favorites', 'إضافة إلى المفضلة')}
+          {/* Add to Favorites - only show for contacts, not groups */}
+          {!isGroup && (
+            <div 
+              className="mt-2 px-4 py-3 flex items-center justify-between cursor-pointer hover:bg-white/5"
+              style={{ backgroundColor: colors.bgSecondary }}
+              onClick={handleToggleFavorite}
+            >
+              <div className="flex items-center gap-3">
+                <Heart 
+                  className="h-5 w-5" 
+                  style={{ color: isFavorite ? '#ef4444' : colors.textMuted }}
+                  fill={isFavorite ? '#ef4444' : 'none'}
+                />
+                <span style={{ color: colors.textPrimary }}>
+                  {isFavorite 
+                    ? t('Remove from Favorites', 'إزالة من المفضلة')
+                    : t('Add to Favorites', 'إضافة إلى المفضلة')}
+                </span>
+              </div>
+              {loadingFavorite && (
+                <div className="h-4 w-4 border-2 border-t-transparent rounded-full animate-spin" 
+                     style={{ borderColor: colors.accent }} />
+              )}
+            </div>
+          )}
+
+          {/* Block User - only show for contacts, not groups */}
+          {!isGroup && (
+            <div 
+              className="mt-2 mb-6 px-4 py-3 flex items-center gap-3 cursor-pointer hover:bg-white/5"
+              style={{ backgroundColor: colors.bgSecondary }}
+              onClick={() => !isBlocked && setShowBlockConfirm(true)}
+            >
+              <Ban className="h-5 w-5 text-red-500" />
+              <span className="text-red-500">
+                {isBlocked 
+                  ? t(`${displayName} is blocked`, `${displayName} محظور`)
+                  : t(`Block ${displayName}`, `حظر ${displayName}`)}
               </span>
             </div>
-            {loadingFavorite && (
-              <div className="h-4 w-4 border-2 border-t-transparent rounded-full animate-spin" 
-                   style={{ borderColor: colors.accent }} />
-            )}
-          </div>
+          )}
 
-          {/* Block User */}
-          <div 
-            className="mt-2 mb-6 px-4 py-3 flex items-center gap-3 cursor-pointer hover:bg-white/5"
-            style={{ backgroundColor: colors.bgSecondary }}
-            onClick={() => !isBlocked && setShowBlockConfirm(true)}
-          >
-            <Ban className="h-5 w-5 text-red-500" />
-            <span className="text-red-500">
-              {isBlocked 
-                ? t(`${conversation.recipient_name} is blocked`, `${conversation.recipient_name} محظور`)
-                : t(`Block ${conversation.recipient_name}`, `حظر ${conversation.recipient_name}`)}
-            </span>
-          </div>
+          {/* Group Members Section - only show for groups */}
+          {isGroup && group.members && group.members.length > 0 && (
+            <div className="mt-2 mb-6" style={{ backgroundColor: colors.bgSecondary }}>
+              <div 
+                className="px-4 py-3"
+                style={{ borderBottom: `1px solid ${colors.divider}` }}
+              >
+                <span className="font-medium" style={{ color: colors.textPrimary }}>
+                  {t('Participants', 'المشاركون')} ({group.members.length})
+                </span>
+              </div>
+              <div className="divide-y" style={{ borderColor: colors.divider }}>
+                {group.members.map((member) => (
+                  <div 
+                    key={member.user_id}
+                    className="flex items-center gap-3 px-4 py-3"
+                  >
+                    <Avatar className="h-10 w-10">
+                      <AvatarImage src={member.profile_image || undefined} />
+                      <AvatarFallback style={{ backgroundColor: colors.accent }}>
+                        {member.full_name?.charAt(0) || '?'}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate" style={{ color: colors.textPrimary }}>
+                        {member.full_name || t('Unknown', 'غير معروف')}
+                      </p>
+                      {member.role === 'admin' && (
+                        <p className="text-xs" style={{ color: colors.accent }}>
+                          {t('Admin', 'مشرف')}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </ScrollArea>
 
         {/* Block Confirmation Dialog */}
@@ -566,7 +619,7 @@ export function ContactInfoScreen({
           >
             <DialogHeader>
               <DialogTitle style={{ color: colors.textPrimary }}>
-                {t(`Block ${conversation.recipient_name}?`, `حظر ${conversation.recipient_name}؟`)}
+                {t(`Block ${displayName}?`, `حظر ${displayName}؟`)}
               </DialogTitle>
               <DialogDescription style={{ color: colors.textSecondary }}>
                 {t(
