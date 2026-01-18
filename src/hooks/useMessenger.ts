@@ -677,27 +677,20 @@ export function useMessenger() {
       console.error('Cannot create group: user not authenticated');
       return null;
     }
-    
+
     try {
-      console.log('Creating group:', { name, description, memberIds, imageUrl });
-      
       const { data: groupData, error: groupError } = await supabase
         .from('group_chats')
         .insert({
           name,
           description,
           created_by: user.id,
-          image_url: imageUrl || null
+          image_url: imageUrl || null,
         })
         .select()
         .single();
 
-      if (groupError) {
-        console.error('Error creating group_chats record:', groupError);
-        throw groupError;
-      }
-      
-      console.log('Group created:', groupData);
+      if (groupError) throw groupError;
 
       // Add creator as admin
       const { error: creatorError } = await supabase
@@ -705,42 +698,36 @@ export function useMessenger() {
         .insert({
           group_id: groupData.id,
           user_id: user.id,
-          role: 'admin'
+          role: 'admin',
         });
-      
-      if (creatorError) {
-        console.error('Error adding creator as admin:', creatorError);
-        throw creatorError;
-      }
+
+      if (creatorError) throw creatorError;
 
       // Add other members in batch
       if (memberIds.length > 0) {
-        const memberInserts = memberIds.map(memberId => ({
+        const memberInserts = memberIds.map((memberId) => ({
           group_id: groupData.id,
           user_id: memberId,
-          role: 'member'
+          role: 'member',
         }));
-        
+
         const { error: membersError } = await supabase
           .from('group_members')
           .insert(memberInserts);
-        
-        if (membersError) {
-          console.error('Error adding members:', membersError);
-        }
+
+        if (membersError) throw membersError;
       }
 
-      console.log('All members added, fetching groups...');
       await fetchGroups();
-      
+
       return {
         ...groupData,
         members: [],
-        unread_count: 0
+        unread_count: 0,
       } as GroupChat;
     } catch (error) {
       console.error('Error creating group:', error);
-      return null;
+      throw error;
     }
   }, [user, fetchGroups]);
 
