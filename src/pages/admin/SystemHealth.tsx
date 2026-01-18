@@ -92,7 +92,7 @@ export default function SystemHealth() {
         .order("created_at", { ascending: false })
         .limit(50);
       if (error) throw error;
-      return data as AuditLog[];
+      return (data as unknown) as AuditLog[];
     },
   });
 
@@ -106,7 +106,7 @@ export default function SystemHealth() {
         .order("created_at", { ascending: false })
         .limit(50);
       if (error) throw error;
-      return data as ErrorLog[];
+      return (data as unknown) as ErrorLog[];
     },
   });
 
