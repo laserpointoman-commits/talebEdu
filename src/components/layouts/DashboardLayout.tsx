@@ -190,13 +190,13 @@ function DashboardLayout({ children }: DashboardLayoutProps) {
         {/* Right Section - Logo and User Menu */}
         <div className="flex items-center gap-2 md:gap-3 w-auto justify-end">
           {/* App Logo and Name - Always LTR */}
-          <div className="flex items-center justify-center gap-1.5 md:gap-2.5" dir="ltr">
+          <div className="flex items-center justify-center gap-2 md:gap-3" dir="ltr">
             <div className="relative">
-              <div className="text-xl md:text-2xl font-bold text-primary leading-none">
+              <div className="text-2xl md:text-3xl font-bold text-primary leading-none">
                 t
               </div>
             </div>
-            <span className="font-semibold text-sm md:text-lg text-foreground">
+            <span className="font-bold text-lg md:text-xl text-foreground">
               talebEdu
             </span>
           </div>
