@@ -1407,6 +1407,48 @@ export type Database = {
           },
         ]
       }
+      error_logs: {
+        Row: {
+          created_at: string | null
+          error_message: string
+          error_type: string
+          function_name: string | null
+          id: string
+          metadata: Json | null
+          resolved: boolean | null
+          resolved_at: string | null
+          resolved_by: string | null
+          stack_trace: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          error_message: string
+          error_type: string
+          function_name?: string | null
+          id?: string
+          metadata?: Json | null
+          resolved?: boolean | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          stack_trace?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          error_message?: string
+          error_type?: string
+          function_name?: string | null
+          id?: string
+          metadata?: Json | null
+          resolved?: boolean | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          stack_trace?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       exams: {
         Row: {
           class_id: string | null
@@ -4984,6 +5026,24 @@ export type Database = {
         }
         Relationships: []
       }
+      system_health_dashboard: {
+        Row: {
+          active_parents: number | null
+          active_students: number | null
+          active_teachers: number | null
+          admin_wallet_balance: number | null
+          errors_last_hour: number | null
+          failed_notifications: number | null
+          last_checked: string | null
+          pending_notifications: number | null
+          today_attendance: number | null
+          today_bus_logs: number | null
+          today_transactions: number | null
+          total_wallet_balance: number | null
+          unresolved_errors_24h: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       accept_friend_request: { Args: { request_id: string }; Returns: boolean }
@@ -5049,6 +5109,10 @@ export type Database = {
       create_auth_user: {
         Args: { p_email: string; p_metadata?: Json; p_password: string }
         Returns: string
+      }
+      gdpr_delete_student_data: {
+        Args: { p_deleted_by: string; p_student_id: string }
+        Returns: Json
       }
       generate_employee_id: {
         Args: { p_position: Database["public"]["Enums"]["employee_position"] }
@@ -5117,6 +5181,17 @@ export type Database = {
         Returns: boolean
       }
       is_test_account: { Args: { user_email: string }; Returns: boolean }
+      log_error: {
+        Args: {
+          p_error_message: string
+          p_error_type: string
+          p_function_name?: string
+          p_metadata?: Json
+          p_stack_trace?: string
+          p_user_id?: string
+        }
+        Returns: string
+      }
       process_fee_payment: {
         Args: {
           p_amount: number
