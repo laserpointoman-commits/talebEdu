@@ -287,10 +287,13 @@ export function CreateGroupDialog({
               </div>
             </div>
 
-            {/* Selected members - horizontal scroll, max height limited */}
+            {/* Selected members - horizontal scroll */}
             {selectedMembers.length > 0 && (
-              <ScrollArea className="shrink-0 max-h-20 border-b" style={{ borderColor: WHATSAPP_COLORS.divider }}>
-                <div className="px-3 py-2 flex flex-nowrap gap-2">
+              <div 
+                className="shrink-0 border-b overflow-x-auto overflow-y-hidden"
+                style={{ borderColor: WHATSAPP_COLORS.divider }}
+              >
+                <div className="px-3 py-2 flex flex-nowrap gap-2 w-max">
                   {selectedMembers.map(member => (
                     <div 
                       key={member.id}
@@ -316,7 +319,7 @@ export function CreateGroupDialog({
                     </div>
                   ))}
                 </div>
-              </ScrollArea>
+              </div>
             )}
 
             {/* Contacts list */}
