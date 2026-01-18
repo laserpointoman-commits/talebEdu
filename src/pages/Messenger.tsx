@@ -285,6 +285,17 @@ function MessengerContent() {
         selectedConversation.recipient_image || null,
         'voice'
       );
+    } else if (selectedGroup) {
+      // Group voice call - start call with the group (uses first member or group channel)
+      toast.info(isArabic ? 'مكالمة جماعية صوتية' : 'Starting group voice call');
+      // For group calls, we can broadcast to all members
+      // Using group id as the call target
+      callService.startCall(
+        selectedGroup.id,
+        selectedGroup.name || 'Group Call',
+        selectedGroup.image_url || null,
+        'voice'
+      );
     }
   };
 
@@ -294,6 +305,15 @@ function MessengerContent() {
         selectedConversation.recipient_id,
         selectedConversation.recipient_name || 'Unknown',
         selectedConversation.recipient_image || null,
+        'video'
+      );
+    } else if (selectedGroup) {
+      // Group video call
+      toast.info(isArabic ? 'مكالمة جماعية مرئية' : 'Starting group video call');
+      callService.startCall(
+        selectedGroup.id,
+        selectedGroup.name || 'Group Call',
+        selectedGroup.image_url || null,
         'video'
       );
     }
