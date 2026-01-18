@@ -54,6 +54,7 @@ const translations = {
     'dashboard.payroll': 'Payroll',
     'dashboard.userManagement': 'User Management',
     'dashboard.nfcManagement': 'NFC Management',
+    'dashboard.systemHealth': 'System Health',
     
     // Parent Dashboard
     'parent.welcome': 'Welcome',
@@ -533,6 +534,7 @@ const translations = {
     'dashboard.payroll': 'الرواتب',
     'dashboard.userManagement': 'إدارة المستخدمين',
     'dashboard.nfcManagement': 'إدارة NFC',
+    'dashboard.systemHealth': 'صحة النظام',
     
     // Parent Dashboard
     'parent.welcome': 'مرحباً',
@@ -1017,6 +1019,7 @@ const translations = {
     'dashboard.payroll': 'वेतन',
     'dashboard.userManagement': 'उपयोगकर्ता प्रबंधन',
     'dashboard.nfcManagement': 'NFC प्रबंधन',
+    'dashboard.systemHealth': 'सिस्टम स्वास्थ्य',
     
     // Parent Dashboard
     'parent.welcome': 'स्वागत है',
