@@ -48,11 +48,13 @@ export function CreateGroupDialog({
       setLoadingContacts(true);
       try {
         // Get current user role
-        const { data: currentProfile } = await supabase
+        const { data: currentProfile, error: currentProfileError } = await supabase
           .from('profiles')
           .select('role')
           .eq('id', user.id)
-          .single();
+          .maybeSingle();
+
+        if (currentProfileError) throw currentProfileError;
 
         const currentRole = currentProfile?.role;
 
@@ -61,29 +63,7 @@ export function CreateGroupDialog({
 
         if (currentRole === 'admin') {
           // Admin can see all profiles
-          const { data } = await supabase
-            .from('profiles')
-            .select('id, full_name, profile_image, role')
-            .neq('id', user.id)
-            .not('role', 'in', '(device,school_gate)')
-            .order('full_name')
-            .limit(50);
-          
-          contacts = (data || []) as UserSearchResult[];
-        } else if (currentRole === 'teacher') {
-          // Teacher can see admins, other teachers
-          const { data } = await supabase
-            .from('profiles')
-            .select('id, full_name, profile_image, role')
-            .neq('id', user.id)
-            .in('role', ['admin', 'teacher', 'parent'])
-            .order('full_name')
-            .limit(50);
-          
-          contacts = (data || []) as UserSearchResult[];
-        } else {
-          // Default for other roles
-          const { data } = await supabase
+          const { data, error } = await supabase
             .from('profiles')
             .select('id, full_name, profile_image, role')
             .neq('id', user.id)
@@ -91,6 +71,31 @@ export function CreateGroupDialog({
             .order('full_name')
             .limit(50);
 
+          if (error) throw error;
+          contacts = (data || []) as UserSearchResult[];
+        } else if (currentRole === 'teacher') {
+          // Teacher: show admins + teachers by default (parents are discovered via search)
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('id, full_name, profile_image, role')
+            .neq('id', user.id)
+            .in('role', ['admin', 'teacher'])
+            .order('full_name')
+            .limit(50);
+
+          if (error) throw error;
+          contacts = (data || []) as UserSearchResult[];
+        } else {
+          // Default for other roles
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('id, full_name, profile_image, role')
+            .neq('id', user.id)
+            .not('role', 'in', '(device,school_gate)')
+            .order('full_name')
+            .limit(50);
+
+          if (error) throw error;
           contacts = (data || []) as UserSearchResult[];
         }
 
@@ -162,7 +167,12 @@ export function CreateGroupDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
+    <Dialog
+      open={open}
+      onOpenChange={(isOpen) => {
+        if (!isOpen) handleClose();
+      }}
+    >
       <DialogContent 
         className="max-w-md p-0 border-0 overflow-hidden"
         style={{ backgroundColor: WHATSAPP_COLORS.bg }}
@@ -196,11 +206,11 @@ export function CreateGroupDialog({
                     <Avatar className="h-6 w-6">
                       <AvatarImage src={member.profile_image || undefined} />
                       <AvatarFallback style={{ backgroundColor: WHATSAPP_COLORS.accent, fontSize: '10px' }}>
-                        {member.full_name.charAt(0)}
+                        {(member.full_name?.charAt(0) || '?').toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                     <span className="text-sm" style={{ color: WHATSAPP_COLORS.textPrimary }}>
-                      {member.full_name}
+                      {member.full_name || 'Unknown'}
                     </span>
                     <button 
                       className="ml-1 hover:opacity-80"

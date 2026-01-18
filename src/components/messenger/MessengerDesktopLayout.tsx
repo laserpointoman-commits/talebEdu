@@ -241,7 +241,7 @@ export function MessengerDesktopLayout({
               placeholder={t('Search or start new chat', 'ابحث أو ابدأ محادثة جديدة')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 border-0 rounded-lg h-9"
+              className="pl-10 pr-12 border-0 rounded-lg h-9"
               style={{ backgroundColor: colors.inputBg, color: colors.textPrimary }}
             />
             <Button 
