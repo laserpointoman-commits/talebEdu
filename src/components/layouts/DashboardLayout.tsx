@@ -291,11 +291,11 @@ function DashboardLayout({ children }: DashboardLayoutProps) {
         </div>
       </header>
 
-      {/* Spacer for fixed header */}
+      {/* Spacer for fixed header - matches h-14 on mobile, h-16 on desktop */}
       <div 
-        className="shrink-0"
+        className="shrink-0 h-14 md:h-16"
         style={{ 
-          height: 'calc(3.5rem + env(safe-area-inset-top, 0px))',
+          marginTop: 'env(safe-area-inset-top, 0px)',
         }}
       />
 
