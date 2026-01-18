@@ -233,8 +233,12 @@ export default function StudentWalletControl() {
   return (
     <div className="min-h-screen bg-background">
       <PageHeader />
-      
-      <div className="space-y-6 p-4 max-w-4xl mx-auto pb-24" style={{ paddingTop: 'calc(4.5rem + env(safe-area-inset-top))' }}>
+      <div className="h-12" style={{ marginTop: 'env(safe-area-inset-top, 0px)' }} />
+
+      <div
+        className="space-y-6 p-4 max-w-4xl mx-auto"
+        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1rem)' }}
+      >
         {/* Header */}
         <div className="flex items-center gap-4">
           <div className="flex-1">
