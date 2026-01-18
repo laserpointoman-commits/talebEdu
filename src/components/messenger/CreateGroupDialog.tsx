@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,8 @@ import { Search, Check, ArrowRight, Camera, X, Users } from 'lucide-react';
 import { WHATSAPP_COLORS } from './WhatsAppTheme';
 import { UserSearchResult } from '@/hooks/useMessenger';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface CreateGroupDialogProps {
   open: boolean;
@@ -25,15 +27,83 @@ export function CreateGroupDialog({
   searchUsers,
   isArabic = false
 }: CreateGroupDialogProps) {
+  const { user } = useAuth();
   const [step, setStep] = useState<'members' | 'details'>('members');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<UserSearchResult[]>([]);
+  const [initialContacts, setInitialContacts] = useState<UserSearchResult[]>([]);
   const [selectedMembers, setSelectedMembers] = useState<UserSearchResult[]>([]);
   const [groupName, setGroupName] = useState('');
   const [groupDescription, setGroupDescription] = useState('');
   const [searching, setSearching] = useState(false);
+  const [loadingContacts, setLoadingContacts] = useState(false);
 
   const t = (en: string, ar: string) => isArabic ? ar : en;
+
+  // Load initial contacts when dialog opens
+  useEffect(() => {
+    const loadInitialContacts = async () => {
+      if (!open || !user) return;
+      
+      setLoadingContacts(true);
+      try {
+        // Get current user role
+        const { data: currentProfile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single();
+
+        const currentRole = currentProfile?.role;
+
+        // Fetch contacts based on role
+        let contacts: UserSearchResult[] = [];
+
+        if (currentRole === 'admin') {
+          // Admin can see all profiles
+          const { data } = await supabase
+            .from('profiles')
+            .select('id, full_name, profile_image, role')
+            .neq('id', user.id)
+            .not('role', 'in', '(device,school_gate)')
+            .order('full_name')
+            .limit(50);
+          
+          contacts = (data || []) as UserSearchResult[];
+        } else if (currentRole === 'teacher') {
+          // Teacher can see admins, other teachers
+          const { data } = await supabase
+            .from('profiles')
+            .select('id, full_name, profile_image, role')
+            .neq('id', user.id)
+            .in('role', ['admin', 'teacher', 'parent'])
+            .order('full_name')
+            .limit(50);
+          
+          contacts = (data || []) as UserSearchResult[];
+        } else {
+          // Default for other roles
+          const { data } = await supabase
+            .from('profiles')
+            .select('id, full_name, profile_image, role')
+            .neq('id', user.id)
+            .not('role', 'in', '(device,school_gate)')
+            .order('full_name')
+            .limit(50);
+
+          contacts = (data || []) as UserSearchResult[];
+        }
+
+        setInitialContacts(contacts);
+      } catch (error) {
+        console.error('Error loading contacts:', error);
+      } finally {
+        setLoadingContacts(false);
+      }
+    };
+
+    loadInitialContacts();
+  }, [open, user]);
 
   const handleSearch = async (query: string) => {
     setSearchQuery(query);
@@ -48,13 +118,19 @@ export function CreateGroupDialog({
     setSearching(false);
   };
 
-  const toggleMember = (user: UserSearchResult) => {
+  // Get contacts to display - search results if searching, otherwise initial contacts
+  const displayedContacts = searchQuery.trim().length >= 2 
+    ? searchResults 
+    : initialContacts.filter(c => !selectedMembers.some(m => m.id === c.id));
+
+  const toggleMember = (contact: UserSearchResult) => {
     setSelectedMembers(prev =>
-      prev.some(m => m.id === user.id)
-        ? prev.filter(m => m.id !== user.id)
-        : [...prev, user]
+      prev.some(m => m.id === contact.id)
+        ? prev.filter(m => m.id !== contact.id)
+        : [...prev, contact]
     );
-    setSearchResults(prev => prev.filter(r => r.id !== user.id));
+    // Remove from search results if present
+    setSearchResults(prev => prev.filter(r => r.id !== contact.id));
   };
 
   const removeMember = (userId: string) => {
@@ -81,6 +157,7 @@ export function CreateGroupDialog({
     setSelectedMembers([]);
     setGroupName('');
     setGroupDescription('');
+    setInitialContacts([]);
     onClose();
   };
 
@@ -156,44 +233,44 @@ export function CreateGroupDialog({
               </div>
             </div>
 
-            {/* Search results */}
+            {/* Contacts list */}
             <ScrollArea className="h-64">
               <div className="p-2">
-                {searching ? (
+                {(searching || loadingContacts) ? (
                   <div className="flex items-center justify-center py-8">
                     <div 
                       className="animate-spin rounded-full h-6 w-6 border-b-2"
                       style={{ borderColor: WHATSAPP_COLORS.accent }}
                     />
                   </div>
-                ) : searchResults.length > 0 ? (
-                  searchResults.map(user => (
+                ) : displayedContacts.length > 0 ? (
+                  displayedContacts.map(contact => (
                     <button
-                      key={user.id}
-                      onClick={() => toggleMember(user)}
+                      key={contact.id}
+                      onClick={() => toggleMember(contact)}
                       className="w-full flex items-center gap-3 px-3 py-2 hover:opacity-80 rounded-lg"
                     >
                       <Avatar className="h-10 w-10">
-                        <AvatarImage src={user.profile_image || undefined} />
+                        <AvatarImage src={contact.profile_image || undefined} />
                         <AvatarFallback style={{ backgroundColor: WHATSAPP_COLORS.accent }}>
-                          {user.full_name.charAt(0).toUpperCase()}
+                          {contact.full_name.charAt(0).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex-1 text-left">
-                        <p style={{ color: WHATSAPP_COLORS.textPrimary }}>{user.full_name}</p>
+                        <p style={{ color: WHATSAPP_COLORS.textPrimary }}>{contact.full_name}</p>
                         <p className="text-xs capitalize" style={{ color: WHATSAPP_COLORS.textMuted }}>
-                          {user.role}
+                          {contact.role}
                         </p>
                       </div>
                     </button>
                   ))
-                ) : searchQuery.length > 0 ? (
+                ) : searchQuery.length >= 2 ? (
                   <p className="text-center py-8" style={{ color: WHATSAPP_COLORS.textMuted }}>
                     {t('No contacts found', 'لم يتم العثور على جهات اتصال')}
                   </p>
                 ) : (
                   <p className="text-center py-8" style={{ color: WHATSAPP_COLORS.textMuted }}>
-                    {t('Search for contacts to add', 'ابحث عن جهات اتصال لإضافتها')}
+                    {t('No contacts available', 'لا توجد جهات اتصال متاحة')}
                   </p>
                 )}
               </div>
