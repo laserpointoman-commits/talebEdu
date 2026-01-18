@@ -58,7 +58,7 @@ export function SimplifiedChatHeader({
 
   return (
     <motion.div 
-      className="px-2 py-3 flex items-center gap-2 shrink-0"
+      className="px-2 py-2 flex items-center gap-2 shrink-0"
       dir="ltr"
       style={{ 
         backgroundColor: colors.headerBg,
@@ -70,15 +70,15 @@ export function SimplifiedChatHeader({
       <Button
         variant="ghost"
         size="icon"
-        className="h-10 w-10 hover:bg-white/10 relative active:scale-95 transition-transform"
+        className="h-8 w-8 hover:bg-white/10 relative active:scale-95 transition-transform"
         style={{ color: colors.textPrimary }}
         onClick={onBack}
       >
-        <ArrowLeft className="h-5 w-5" />
+        <ArrowLeft className="h-4 w-4" />
         <AnimatePresence>
           {unreadCount > 0 && (
             <motion.span 
-              className="absolute -top-1 -left-1 text-xs font-bold min-w-[18px] h-[18px] flex items-center justify-center rounded-full"
+              className="absolute -top-1 -left-1 text-[10px] font-bold min-w-[16px] h-[16px] flex items-center justify-center rounded-full"
               style={{ backgroundColor: colors.unreadBadge, color: 'white' }}
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
@@ -97,12 +97,12 @@ export function SimplifiedChatHeader({
         className="cursor-pointer"
       >
         <Avatar 
-          className="h-10 w-10 border-2" 
+          className="h-9 w-9 border-2" 
           style={{ borderColor: colors.divider }}
         >
           <AvatarImage src={image || undefined} />
           <AvatarFallback style={{ backgroundColor: colors.accent, color: 'white' }}>
-            {group ? <Users className="h-5 w-5" /> : name.charAt(0).toUpperCase()}
+            {group ? <Users className="h-4 w-4" /> : name.charAt(0).toUpperCase()}
           </AvatarFallback>
         </Avatar>
       </motion.div>
@@ -112,7 +112,7 @@ export function SimplifiedChatHeader({
         onClick={onViewContact}
       >
         <h2 
-          className="font-semibold text-base truncate" 
+          className="font-semibold text-sm truncate" 
           style={{ color: colors.textPrimary }}
         >
           {name}
@@ -120,7 +120,7 @@ export function SimplifiedChatHeader({
         <AnimatePresence mode="wait">
           <motion.p 
             key={isTyping ? 'typing' : isOnline ? 'online' : 'offline'}
-            className="text-xs truncate"
+            className="text-[11px] truncate"
             style={{ 
               color: isTyping ? colors.accent : (isOnline ? colors.accentLight : colors.textSecondary)
             }}
@@ -140,22 +140,22 @@ export function SimplifiedChatHeader({
           <Button 
             variant="ghost" 
             size="icon" 
-            className="h-10 w-10 hover:bg-white/10" 
+            className="h-8 w-8 hover:bg-white/10" 
             style={{ color: colors.textPrimary }}
             onClick={onVideoCall}
           >
-            <Video className="h-5 w-5" />
+            <Video className="h-4 w-4" />
           </Button>
         </motion.div>
         <motion.div whileTap={{ scale: 0.9 }}>
           <Button 
             variant="ghost" 
             size="icon" 
-            className="h-10 w-10 hover:bg-white/10" 
+            className="h-8 w-8 hover:bg-white/10" 
             style={{ color: colors.textPrimary }}
             onClick={onVoiceCall}
           >
-            <Phone className="h-5 w-5" />
+            <Phone className="h-4 w-4" />
           </Button>
         </motion.div>
       </div>

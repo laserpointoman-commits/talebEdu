@@ -121,7 +121,7 @@ export function ChatInput({
 
   if (isRecording) {
     return (
-      <div className="px-2 py-2" style={{ backgroundColor: colors.bg }}>
+      <div className="px-2 py-1.5" style={{ backgroundColor: colors.bg }}>
         <VoiceRecorder
           onSend={handleVoiceSend}
           onCancel={() => setIsRecording(false)}
@@ -224,21 +224,21 @@ export function ChatInput({
       )}
 
       {/* Input bar */}
-      <div className="px-2 py-2 flex items-center gap-2">
+      <div className="px-2 py-1.5 flex items-center gap-1.5">
         {/* Attachment button - Opens bottom sheet */}
         <Button
           variant="ghost"
           size="icon"
-          className="h-10 w-10 rounded-full hover:bg-white/10"
+          className="h-9 w-9 rounded-full hover:bg-white/10"
           style={{ color: colors.textSecondary }}
           onClick={() => setShowAttachmentSheet(true)}
         >
-          <Plus className="h-6 w-6" />
+          <Plus className="h-5 w-5" />
         </Button>
         
         {/* Message input */}
         <div 
-          className="flex-1 flex items-center gap-2 rounded-full px-4 py-2"
+          className="flex-1 flex items-center gap-1.5 rounded-full px-3 py-1.5"
           style={{ backgroundColor: colors.inputBg }}
         >
           <Input
@@ -260,7 +260,7 @@ export function ChatInput({
             style={{ color: colors.textSecondary }}
             onClick={() => setShowEmojiPicker(!showEmojiPicker)}
           >
-            <Smile className="h-5 w-5" />
+            <Smile className="h-4 w-4" />
           </Button>
         </div>
         
@@ -268,34 +268,34 @@ export function ChatInput({
         <Button
           variant="ghost"
           size="icon"
-          className="h-10 w-10 rounded-full hover:bg-white/10"
+          className="h-9 w-9 rounded-full hover:bg-white/10"
           style={{ color: colors.textSecondary }}
           onClick={() => cameraInputRef.current?.click()}
         >
-          <Camera className="h-6 w-6" />
+          <Camera className="h-5 w-5" />
         </Button>
         
         {/* Send or Mic button */}
         {message.trim() || selectedFiles.length > 0 ? (
           <Button
             size="icon"
-            className="h-10 w-10 rounded-full"
+            className="h-9 w-9 rounded-full"
             style={{ backgroundColor: colors.accent }}
             onClick={handleSend}
           >
-            <Send className="h-5 w-5 text-white" />
+            <Send className="h-4 w-4 text-white" />
           </Button>
         ) : (
           <Button
             size="icon"
-            className="h-10 w-10 rounded-full hover:bg-white/10"
+            className="h-9 w-9 rounded-full hover:bg-white/10"
             style={{ color: colors.textSecondary }}
             onClick={() => {
               void haptic(ImpactStyle.Medium);
               setIsRecording(true);
             }}
           >
-            <Mic className="h-6 w-6" />
+            <Mic className="h-5 w-5" />
           </Button>
         )}
         

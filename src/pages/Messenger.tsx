@@ -703,14 +703,14 @@ function MessengerContent() {
       >
         {/* Header Content */}
         <div 
-          className="flex items-center justify-between px-4 py-3"
+          className="flex items-center justify-between px-3 py-2"
           dir="ltr"
         >
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/10" onClick={handleExitMessenger}>
-              <ArrowLeft className="h-5 w-5" style={{ color: colors.textPrimary }} />
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full hover:bg-white/10" onClick={handleExitMessenger}>
+              <ArrowLeft className="h-4 w-4" style={{ color: colors.textPrimary }} />
             </Button>
-            <h1 className="text-xl font-bold" style={{ color: colors.textPrimary }}>
+            <h1 className="text-base font-bold" style={{ color: colors.textPrimary }}>
               {activeTab === 'chats' ? (isArabic ? 'المحادثات' : 'Chats') :
                activeTab === 'groups' ? (isArabic ? 'المجموعات' : 'Groups') :
                activeTab === 'calls' ? (isArabic ? 'المكالمات' : 'Calls') :
@@ -735,14 +735,14 @@ function MessengerContent() {
 
         {/* Search Bar */}
         {(activeTab === 'chats' || activeTab === 'groups') && (
-          <div className="px-4 py-2" style={{ backgroundColor: colors.bgSecondary }}>
+          <div className="px-3 py-1.5" style={{ backgroundColor: colors.bgSecondary }}>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: colors.textMuted }} />
               <Input
                 placeholder={isArabic ? 'ابحث أو ابدأ محادثة جديدة' : 'Search or start new chat'}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 border-0 rounded-xl h-10"
+                className="pl-10 border-0 rounded-xl h-9 text-sm"
                 style={{ backgroundColor: colors.inputBg, color: colors.textPrimary }}
               />
             </div>
@@ -756,9 +756,9 @@ function MessengerContent() {
         className="absolute left-0 right-0 overflow-y-auto overscroll-none"
         style={{
           top: (activeTab === 'chats' || activeTab === 'groups')
-            ? 'calc(env(safe-area-inset-top, 0px) + 120px)'
-            : 'calc(env(safe-area-inset-top, 0px) + 64px)',
-          bottom: 'calc(env(safe-area-inset-bottom, 0px) + 70px)',
+            ? 'calc(env(safe-area-inset-top, 0px) + 100px)'
+            : 'calc(env(safe-area-inset-top, 0px) + 52px)',
+          bottom: 'calc(env(safe-area-inset-bottom, 0px) + 64px)',
           WebkitOverflowScrolling: 'touch',
           touchAction: 'pan-y',
         }}
