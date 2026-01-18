@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { MoreVertical, CheckCheck, CheckSquare, Square, X } from 'lucide-react';
+import { MoreVertical, CheckCheck, CheckSquare, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -34,13 +33,12 @@ export function ChatListMenu({
   isArabic = false,
   colors
 }: ChatListMenuProps) {
-  const [isOpen, setIsOpen] = useState(false);
   const t = (en: string, ar: string) => isArabic ? ar : en;
 
   if (isSelectMode) {
     return (
       <div className="flex items-center gap-2">
-        <span 
+        <span
           className="text-sm font-medium"
           style={{ color: colors.textPrimary }}
         >
@@ -59,26 +57,23 @@ export function ChatListMenu({
   }
 
   return (
-    <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
+    <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button 
-          variant="ghost" 
-          size="icon" 
+        <Button
+          variant="ghost"
+          size="icon"
           className="h-9 w-9 hover:bg-white/10 rounded-full"
         >
           <MoreVertical className="h-5 w-5" style={{ color: colors.textSecondary }} />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent 
+      <DropdownMenuContent
         align="end"
-        className="min-w-[200px] border-0 shadow-xl"
+        className="z-[9999] min-w-[200px] border-0 shadow-xl"
         style={{ backgroundColor: colors.bgTertiary }}
       >
-        <DropdownMenuItem 
-          onClick={() => {
-            setIsOpen(false);
-            onSelectChats();
-          }}
+        <DropdownMenuItem
+          onClick={onSelectChats}
           className="flex items-center gap-3 py-3 cursor-pointer hover:bg-white/5"
           style={{ color: colors.textPrimary }}
         >
@@ -86,11 +81,8 @@ export function ChatListMenu({
           {t('Select chats', 'تحديد المحادثات')}
         </DropdownMenuItem>
         <DropdownMenuSeparator style={{ backgroundColor: colors.divider }} />
-        <DropdownMenuItem 
-          onClick={() => {
-            setIsOpen(false);
-            onMarkAllRead();
-          }}
+        <DropdownMenuItem
+          onClick={onMarkAllRead}
           className="flex items-center gap-3 py-3 cursor-pointer hover:bg-white/5"
           style={{ color: colors.textPrimary }}
         >
@@ -101,3 +93,4 @@ export function ChatListMenu({
     </DropdownMenu>
   );
 }
+
