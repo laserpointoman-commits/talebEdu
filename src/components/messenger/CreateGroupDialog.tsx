@@ -134,6 +134,10 @@ export function CreateGroupDialog({
 
   const handleNext = () => {
     if (selectedMembers.length > 0) {
+      // Prevent the "Create" button from staying disabled due to an empty name.
+      if (!groupName.trim()) {
+        setGroupName(t('New group', 'مجموعة جديدة'));
+      }
       setStep('details');
     }
   };
@@ -429,6 +433,7 @@ export function CreateGroupDialog({
                 {/* Group name */}
                 <div>
                   <Input
+                    autoFocus
                     placeholder={t('Group name', 'اسم المجموعة')}
                     value={groupName}
                     onChange={(e) => setGroupName(e.target.value)}
