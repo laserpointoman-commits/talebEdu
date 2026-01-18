@@ -1,4 +1,4 @@
-import { ReactNode, useState } from 'react';
+import { ReactNode, useRef, useState } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -21,6 +21,7 @@ import Sidebar from './Sidebar';
 import BottomNavigation from './BottomNavigation';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
+import { usePreventIOSScrollBounce } from '@/hooks/use-ios-scroll-bounce';
 import Footer from './Footer';
 
 interface DashboardLayoutProps {
@@ -35,8 +36,9 @@ function DashboardLayout({ children }: DashboardLayoutProps) {
   const isMobile = useIsMobile();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
-  
-  // Check if we're on the Messenger page (full-screen experience on mobile)
+
+  const mainScrollRef = useRef<HTMLElement | null>(null);
+  usePreventIOSScrollBounce(mainScrollRef);
   const isMessengerPage = location.pathname === '/dashboard/messages';
   const isFullScreenMobile = isMobile && isMessengerPage;
   
@@ -311,10 +313,12 @@ function DashboardLayout({ children }: DashboardLayoutProps) {
         
         {/* Main Content */}
         <main 
+          ref={mainScrollRef}
           className="flex-1 overflow-y-auto overscroll-none bg-muted/10"
           style={{
             paddingBottom: isMobile ? 'calc(5rem + env(safe-area-inset-bottom, 0px))' : '0',
             WebkitOverflowScrolling: 'touch',
+            touchAction: 'pan-y',
           }}
         >
           <div className={cn(
