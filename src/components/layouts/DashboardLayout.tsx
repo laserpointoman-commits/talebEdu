@@ -1,4 +1,4 @@
-import { ReactNode, useState, useEffect, useRef } from 'react';
+import { ReactNode, useState } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -53,7 +53,7 @@ function DashboardLayout({ children }: DashboardLayoutProps) {
   
   // If kiosk mode or full-screen mobile messenger, render without layout wrapper
   if (isKioskMode || isFullScreenMobile) {
-    return <div className="min-h-screen bg-background">{children}</div>;
+    return <div className="min-h-screen min-h-[100dvh] bg-background overflow-hidden">{children}</div>;
   }
   
   // Helper for trilingual text
@@ -112,15 +112,13 @@ function DashboardLayout({ children }: DashboardLayoutProps) {
 
 
 
-  // Check if we're on the main dashboard (no back button needed)
-  const isMainDashboard = location.pathname === '/dashboard';
 
   const handleBack = () => {
     navigate(-1);
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="h-screen h-[100dvh] min-h-screen min-h-[100dvh] bg-background flex flex-col overflow-hidden">
       {/* Top Bar - iOS Safe Area Aware - Always LTR - Fixed */}
       <header 
         className="fixed left-0 right-0 top-0 z-50 ios-header"
@@ -313,9 +311,10 @@ function DashboardLayout({ children }: DashboardLayoutProps) {
         
         {/* Main Content */}
         <main 
-          className="flex-1 overflow-y-auto bg-muted/10"
+          className="flex-1 overflow-y-auto overscroll-none bg-muted/10"
           style={{
-            paddingBottom: isMobile ? 'calc(5rem + env(safe-area-inset-bottom, 0px))' : '0'
+            paddingBottom: isMobile ? 'calc(5rem + env(safe-area-inset-bottom, 0px))' : '0',
+            WebkitOverflowScrolling: 'touch',
           }}
         >
           <div className={cn(
