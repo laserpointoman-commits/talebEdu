@@ -40,6 +40,7 @@ interface MessengerDesktopLayoutProps {
   conversations: Conversation[];
   groups: GroupChat[];
   messages: any[];
+  groupMessages?: any[];
   callLogs: any[];
   selectedConversation: Conversation | null;
   selectedGroup: GroupChat | null;
@@ -75,6 +76,7 @@ export function MessengerDesktopLayout({
   conversations,
   groups,
   messages,
+  groupMessages = [],
   callLogs,
   selectedConversation,
   selectedGroup,
@@ -544,7 +546,7 @@ export function MessengerDesktopLayout({
               }}
             >
               <div className="max-w-4xl mx-auto space-y-1">
-                {Object.entries(groupMessagesByDate(messages)).map(([date, dateMessages]) => (
+                {Object.entries(groupMessagesByDate(selectedGroup ? groupMessages : messages)).map(([date, dateMessages]) => (
                   <div key={date}>
                     <div className="flex justify-center my-4">
                       <span 

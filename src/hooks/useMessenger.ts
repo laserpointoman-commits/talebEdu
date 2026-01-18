@@ -65,6 +65,24 @@ export interface GroupChat {
   unread_count: number;
 }
 
+export interface GroupMessage {
+  id: string;
+  group_id: string;
+  sender_id: string;
+  content: string | null;
+  created_at: string;
+  message_type: string;
+  voice_duration: number | null;
+  reply_to_id: string | null;
+  forwarded_from_id: string | null;
+  deleted_for_everyone: boolean;
+  sender_name?: string;
+  sender_image?: string;
+  attachments?: MessageAttachment[];
+  reactions?: MessageReaction[];
+  reply_to?: GroupMessage | null;
+}
+
 export interface GroupMember {
   id: string;
   user_id: string;
@@ -101,10 +119,12 @@ export function useMessenger() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [groups, setGroups] = useState<GroupChat[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [groupMessages, setGroupMessages] = useState<GroupMessage[]>([]);
   const [callLogs, setCallLogs] = useState<CallLog[]>([]);
   const [loading, setLoading] = useState(false);
   const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set());
   const [typingUsers, setTypingUsers] = useState<Map<string, string>>(new Map());
+  const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Fetch conversations
@@ -731,7 +751,253 @@ export function useMessenger() {
     }
   }, [user, fetchGroups]);
 
-  // Fetch call logs
+  // Fetch group messages
+  const fetchGroupMessages = useCallback(async (groupId: string) => {
+    if (!user) return;
+    
+    setActiveGroupId(groupId);
+    
+    try {
+      const { data, error } = await supabase
+        .from('group_messages')
+        .select(`
+          *,
+          group_message_attachments (id, file_name, file_url, file_type, file_size),
+          group_message_reactions (id, user_id, emoji)
+        `)
+        .eq('group_id', groupId)
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+
+      // Filter deleted messages
+      const filteredData = data?.filter(msg => !msg.deleted_for_everyone) || [];
+
+      // Get sender profiles
+      const senderIds = [...new Set(filteredData.map(m => m.sender_id))];
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, full_name, profile_image')
+        .in('id', senderIds);
+
+      const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
+
+      // Fetch replies
+      const replyIds = filteredData.filter(m => m.reply_to_id).map(m => m.reply_to_id);
+      let replyMap = new Map<string, GroupMessage>();
+      
+      if (replyIds.length > 0) {
+        const { data: replies } = await supabase
+          .from('group_messages')
+          .select('*')
+          .in('id', replyIds);
+        
+        replies?.forEach(r => replyMap.set(r.id, r as any));
+      }
+
+      const formattedMessages: GroupMessage[] = filteredData.map(msg => ({
+        ...msg,
+        sender_name: profileMap.get(msg.sender_id)?.full_name || 'Unknown',
+        sender_image: profileMap.get(msg.sender_id)?.profile_image || null,
+        attachments: msg.group_message_attachments || [],
+        reactions: msg.group_message_reactions || [],
+        reply_to: msg.reply_to_id ? replyMap.get(msg.reply_to_id) : null
+      }));
+
+      setGroupMessages(formattedMessages);
+
+      // Mark as read
+      await supabase
+        .from('group_message_read_status')
+        .upsert({
+          message_id: filteredData[filteredData.length - 1]?.id,
+          user_id: user.id,
+          read_at: new Date().toISOString()
+        }, { onConflict: 'message_id,user_id' });
+
+    } catch (error) {
+      console.error('Error fetching group messages:', error);
+    }
+  }, [user]);
+
+  // Send group message
+  const sendGroupMessage = useCallback(async (
+    groupId: string,
+    content: string,
+    files: File[] = [],
+    replyToId?: string,
+    forwardedFromId?: string,
+    messageType: string = 'text',
+    voiceDuration?: number
+  ): Promise<GroupMessage | null> => {
+    if (!user) return null;
+    
+    try {
+      const messageContent = messageType === 'voice' 
+        ? `🎤 Voice message (${voiceDuration || 0}s)` 
+        : (content || '');
+      
+      const { data: messageData, error: messageError } = await supabase
+        .from('group_messages')
+        .insert({
+          group_id: groupId,
+          sender_id: user.id,
+          content: messageContent,
+          reply_to_id: replyToId || null,
+          forwarded_from_id: forwardedFromId || null,
+          message_type: messageType,
+          voice_duration: voiceDuration || null
+        })
+        .select()
+        .single();
+
+      if (messageError) throw messageError;
+
+      // Get sender profile
+      const { data: senderProfile } = await supabase
+        .from('profiles')
+        .select('full_name, profile_image')
+        .eq('id', user.id)
+        .single();
+
+      // Optimistically append the message
+      const optimisticMessage: GroupMessage = {
+        ...messageData,
+        sender_name: senderProfile?.full_name || 'You',
+        sender_image: senderProfile?.profile_image || null,
+        attachments: [],
+        reactions: [],
+        reply_to: null
+      };
+
+      setGroupMessages(prev => [...prev, optimisticMessage]);
+
+      // Upload attachments
+      const uploadedAttachments: MessageAttachment[] = [];
+      
+      for (const file of files) {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${groupId}/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('message-attachments')
+          .upload(fileName, file);
+
+        if (!uploadError) {
+          const { data: signedData } = await supabase.storage
+            .from('message-attachments')
+            .createSignedUrl(fileName, 3600);
+          
+          const fileUrl = signedData?.signedUrl || '';
+
+          const { data: attachmentData } = await supabase
+            .from('group_message_attachments')
+            .insert({
+              message_id: messageData.id,
+              file_name: fileName,
+              file_url: fileUrl,
+              file_type: file.type,
+              file_size: file.size
+            })
+            .select()
+            .single();
+
+          if (attachmentData) {
+            uploadedAttachments.push(attachmentData);
+          }
+        }
+      }
+
+      if (uploadedAttachments.length > 0) {
+        setGroupMessages(prev =>
+          prev.map(m => m.id === messageData.id ? { ...m, attachments: uploadedAttachments } : m)
+        );
+      }
+
+      // Update group's last message
+      await supabase
+        .from('group_chats')
+        .update({ updated_at: new Date().toISOString() })
+        .eq('id', groupId);
+
+      return {
+        ...messageData,
+        sender_name: senderProfile?.full_name || 'You',
+        sender_image: senderProfile?.profile_image || null,
+        attachments: uploadedAttachments,
+        reactions: [],
+        reply_to: null
+      };
+    } catch (error) {
+      console.error('Error sending group message:', error);
+      return null;
+    }
+  }, [user]);
+
+  // Delete group message
+  const deleteGroupMessage = useCallback(async (messageId: string, forEveryone: boolean = false) => {
+    if (!user) return;
+    
+    setGroupMessages(prev => prev.filter(m => m.id !== messageId));
+    
+    try {
+      if (forEveryone) {
+        await supabase
+          .from('group_messages')
+          .update({ 
+            deleted_for_everyone: true, 
+            deleted_at: new Date().toISOString(),
+            content: ''
+          })
+          .eq('id', messageId)
+          .eq('sender_id', user.id);
+      }
+    } catch (error) {
+      console.error('Error deleting group message:', error);
+    }
+  }, [user]);
+
+  // Add reaction to group message
+  const addGroupReaction = useCallback(async (messageId: string, emoji: string) => {
+    if (!user) return;
+    
+    const { data, error } = await supabase
+      .from('group_message_reactions')
+      .upsert({
+        message_id: messageId,
+        user_id: user.id,
+        emoji
+      }, { onConflict: 'message_id,user_id' })
+      .select()
+      .single();
+
+    if (!error && data) {
+      setGroupMessages(prev => prev.map(m => 
+        m.id === messageId 
+          ? { ...m, reactions: [...(m.reactions?.filter(r => r.user_id !== user.id) || []), data] }
+          : m
+      ));
+    }
+  }, [user]);
+
+  // Remove reaction from group message
+  const removeGroupReaction = useCallback(async (messageId: string) => {
+    if (!user) return;
+    
+    await supabase
+      .from('group_message_reactions')
+      .delete()
+      .eq('message_id', messageId)
+      .eq('user_id', user.id);
+
+    setGroupMessages(prev => prev.map(m => 
+      m.id === messageId 
+        ? { ...m, reactions: m.reactions?.filter(r => r.user_id !== user.id) }
+        : m
+    ));
+  }, [user]);
+
+
   const fetchCallLogs = useCallback(async () => {
     if (!user) return;
     
@@ -932,6 +1198,102 @@ export function useMessenger() {
       )
       .subscribe();
 
+    // Group messages realtime channel
+    const groupMessagesChannel = supabase
+      .channel('messenger-group-messages')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'group_messages'
+        },
+        async (payload) => {
+          const newMessage = payload.new as any;
+          
+          // Only add if we're viewing this group
+          if (activeGroupId && newMessage.group_id === activeGroupId && newMessage.sender_id !== user.id) {
+            // Get sender profile
+            const { data: senderProfile } = await supabase
+              .from('profiles')
+              .select('full_name, profile_image')
+              .eq('id', newMessage.sender_id)
+              .single();
+            
+            setGroupMessages(prev => {
+              if (prev.some(m => m.id === newMessage.id)) return prev;
+              return [...prev, {
+                ...newMessage,
+                sender_name: senderProfile?.full_name || 'Unknown',
+                sender_image: senderProfile?.profile_image || null,
+                attachments: [],
+                reactions: [],
+                reply_to: null
+              }];
+            });
+          }
+          
+          // Refresh groups list for updated last message
+          fetchGroups();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'group_messages'
+        },
+        (payload) => {
+          const updated = payload.new as any;
+          if (updated.deleted_for_everyone) {
+            setGroupMessages(prev => prev.filter(m => m.id !== updated.id));
+            return;
+          }
+          setGroupMessages(prev => prev.map(m => 
+            m.id === updated.id ? { ...m, ...updated } : m
+          ));
+        }
+      )
+      .subscribe();
+
+    // Group reactions realtime channel
+    const groupReactionsChannel = supabase
+      .channel('messenger-group-reactions')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'group_message_reactions'
+        },
+        (payload) => {
+          const reaction = payload.new as any;
+          setGroupMessages(prev => prev.map(m => 
+            m.id === reaction.message_id 
+              ? { ...m, reactions: [...(m.reactions || []), reaction] }
+              : m
+          ));
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'group_message_reactions'
+        },
+        (payload) => {
+          const reaction = payload.old as any;
+          setGroupMessages(prev => prev.map(m => 
+            m.id === reaction.message_id 
+              ? { ...m, reactions: (m.reactions || []).filter(r => r.id !== reaction.id) }
+              : m
+          ));
+        }
+      )
+      .subscribe();
+
     // Set online status
     updatePresence(true);
 
@@ -952,11 +1314,13 @@ export function useMessenger() {
       supabase.removeChannel(messagesChannel);
       supabase.removeChannel(presenceChannel);
       supabase.removeChannel(reactionsChannel);
+      supabase.removeChannel(groupMessagesChannel);
+      supabase.removeChannel(groupReactionsChannel);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('beforeunload', handleBeforeUnload);
       updatePresence(false);
     };
-  }, [user, fetchConversations, markAsDelivered, updatePresence]);
+  }, [user, fetchConversations, markAsDelivered, updatePresence, activeGroupId, fetchGroups]);
 
   // Archive chat - persisted in DB
   const archiveChat = useCallback(async (recipientId: string): Promise<boolean> => {
@@ -1145,6 +1509,7 @@ export function useMessenger() {
     conversations,
     groups,
     messages,
+    groupMessages,
     callLogs,
     loading,
     typingUsers,
@@ -1161,6 +1526,12 @@ export function useMessenger() {
     searchUsers,
     fetchGroups,
     createGroup,
+    fetchGroupMessages,
+    sendGroupMessage,
+    deleteGroupMessage,
+    addGroupReaction,
+    removeGroupReaction,
+    setGroupMessages,
     fetchCallLogs,
     setMessages,
     archiveChat,
