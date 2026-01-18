@@ -1184,7 +1184,7 @@ export type Database = {
       }
       direct_messages: {
         Row: {
-          content: string
+          content: string | null
           created_at: string
           deleted_at: string | null
           deleted_for_everyone: boolean | null
@@ -1205,7 +1205,7 @@ export type Database = {
           voice_duration: number | null
         }
         Insert: {
-          content: string
+          content?: string | null
           created_at?: string
           deleted_at?: string | null
           deleted_for_everyone?: boolean | null
@@ -1226,7 +1226,7 @@ export type Database = {
           voice_duration?: number | null
         }
         Update: {
-          content?: string
+          content?: string | null
           created_at?: string
           deleted_at?: string | null
           deleted_for_everyone?: boolean | null

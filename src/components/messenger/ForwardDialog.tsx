@@ -71,10 +71,10 @@ export function ForwardDialog({
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent 
-        className="max-w-md p-0 border-0 overflow-hidden z-[250]"
+        className="max-w-md p-0 border-0 overflow-hidden"
         style={{ backgroundColor: colors.bg }}
       >
-        <DialogHeader 
+        <DialogHeader
           className="p-4 border-b"
           style={{ borderColor: colors.divider, backgroundColor: colors.headerBg }}
         >
