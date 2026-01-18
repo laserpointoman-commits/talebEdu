@@ -61,53 +61,11 @@ export function DesktopChatItem({
   formatTime
 }: DesktopChatItemProps) {
   const [showHoverActions, setShowHoverActions] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const t = (en: string, ar: string) => isArabic ? ar : en;
 
   const contextMenuContent = (
     <>
-      {canPin && (
-        <ContextMenuItem
-          onClick={() => onPin?.(conversation.recipient_id)}
-          className="flex items-center gap-2"
-          style={{ color: colors.textPrimary }}
-        >
-          <Pin className="h-4 w-4" style={{ color: colors.swipePin }} />
-          {isPinned ? t('Unpin', 'إلغاء التثبيت') : t('Pin', 'تثبيت')}
-        </ContextMenuItem>
-      )}
-      <ContextMenuItem
-        onClick={() => onArchive?.(conversation.recipient_id)}
-        className="flex items-center gap-2"
-        style={{ color: colors.textPrimary }}
-      >
-        <Archive className="h-4 w-4" style={{ color: colors.swipeArchive }} />
-        {t('Archive', 'أرشفة')}
-      </ContextMenuItem>
-      <ContextMenuSeparator style={{ backgroundColor: colors.divider }} />
-      <ContextMenuItem
-        onClick={() => onDelete?.(conversation.recipient_id)}
-        className="flex items-center gap-2"
-        style={{ color: colors.swipeDelete }}
-      >
-        <Trash2 className="h-4 w-4" />
-        {t('Delete chat', 'حذف المحادثة')}
-      </ContextMenuItem>
-    </>
-  );
-
-  return (
-    <ContextMenu>
-      <ContextMenuTrigger asChild>
-        <div
-          className={cn(
-            "flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors hover:bg-white/5 relative",
-            isSelected && "bg-white/10"
-          )}
-          style={{ borderBottom: `1px solid ${colors.divider}` }}
-          onClick={onClick}
-          onMouseEnter={() => setShowHoverActions(true)}
-          onMouseLeave={() => setShowHoverActions(false)}
-        >
           {/* Pin indicator */}
           {isPinned && (
             <div className="absolute top-2 right-2">
@@ -165,14 +123,15 @@ export function DesktopChatItem({
           </div>
 
           {/* Hover actions dropdown */}
-          {showHoverActions && (
+          {(showHoverActions || menuOpen) && (
             <div className="absolute right-3 top-1/2 -translate-y-1/2 z-10">
-              <DropdownMenu>
+              <DropdownMenu onOpenChange={setMenuOpen}>
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="ghost"
                     size="icon"
                     className="h-8 w-8 rounded-full hover:bg-white/10"
+                    onPointerDown={(e) => e.stopPropagation()}
                     onClick={(e) => e.stopPropagation()}
                   >
                     <MoreVertical className="h-4 w-4" style={{ color: colors.textSecondary }} />
@@ -180,7 +139,9 @@ export function DesktopChatItem({
                 </DropdownMenuTrigger>
                 <DropdownMenuContent
                   align="end"
+                  className="z-[9999]"
                   style={{ backgroundColor: colors.bgTertiary, border: `1px solid ${colors.divider}` }}
+                  onCloseAutoFocus={(e) => e.preventDefault()}
                 >
                   {canPin && (
                     <DropdownMenuItem

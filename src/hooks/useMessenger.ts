@@ -117,14 +117,19 @@ export function useMessenger() {
         .from('direct_messages')
         .select('*')
         .or(`sender_id.eq.${user.id},recipient_id.eq.${user.id}`)
-        .eq('is_deleted_for_sender', false)
-        .eq('is_deleted_for_recipient', false)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
+      const visibleMessages = (messagesData || []).filter((msg: any) => {
+        if (msg.deleted_for_everyone) return true;
+        if (msg.sender_id === user.id && msg.is_deleted_for_sender) return false;
+        if (msg.recipient_id === user.id && msg.is_deleted_for_recipient) return false;
+        return true;
+      });
+
       const userIds = new Set<string>();
-      messagesData?.forEach(msg => {
+      visibleMessages.forEach(msg => {
         if (msg.sender_id !== user.id) userIds.add(msg.sender_id);
         if (msg.recipient_id !== user.id) userIds.add(msg.recipient_id);
       });
@@ -146,12 +151,12 @@ export function useMessenger() {
       presenceData?.forEach(p => presenceMap.set(p.user_id, p));
 
       const conversationMap = new Map<string, Conversation>();
-      messagesData?.forEach(msg => {
+      visibleMessages.forEach(msg => {
         const isRecipient = msg.recipient_id === user.id;
         const otherUserId = isRecipient ? msg.sender_id : msg.recipient_id;
         const otherUser = profileMap.get(otherUserId);
         const presence = presenceMap.get(otherUserId);
-        
+
         if (otherUser && !conversationMap.has(otherUserId)) {
           conversationMap.set(otherUserId, {
             id: otherUserId,
@@ -167,7 +172,7 @@ export function useMessenger() {
             is_typing: presence?.typing_to === user.id
           });
         }
-        
+
         if (isRecipient && !msg.is_read && conversationMap.has(otherUserId)) {
           const conv = conversationMap.get(otherUserId)!;
           conv.unread_count++;
