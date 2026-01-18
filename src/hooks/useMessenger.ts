@@ -409,6 +409,9 @@ export function useMessenger() {
   const deleteMessage = useCallback(async (messageId: string, forEveryone: boolean = false) => {
     if (!user) return;
     
+    // Find the message BEFORE optimistic removal
+    const messageToDelete = messages.find(m => m.id === messageId);
+    
     // Optimistically remove from UI first
     setMessages(prev => prev.filter(m => m.id !== messageId));
     
@@ -426,11 +429,16 @@ export function useMessenger() {
         
         if (error) {
           console.error('Error deleting message for everyone:', error);
+          // Restore the message on error
+          if (messageToDelete) {
+            setMessages(prev => [...prev, messageToDelete].sort((a, b) => 
+              new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+            ));
+          }
         }
       } else {
-        const message = messages.find(m => m.id === messageId);
-        if (message) {
-          const field = message.sender_id === user.id ? 'is_deleted_for_sender' : 'is_deleted_for_recipient';
+        if (messageToDelete) {
+          const field = messageToDelete.sender_id === user.id ? 'is_deleted_for_sender' : 'is_deleted_for_recipient';
           const { error } = await supabase
             .from('direct_messages')
             .update({ [field]: true })
@@ -438,11 +446,21 @@ export function useMessenger() {
           
           if (error) {
             console.error('Error deleting message:', error);
+            // Restore the message on error
+            setMessages(prev => [...prev, messageToDelete].sort((a, b) => 
+              new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+            ));
           }
         }
       }
     } catch (error) {
       console.error('Error in deleteMessage:', error);
+      // Restore the message on error
+      if (messageToDelete) {
+        setMessages(prev => [...prev, messageToDelete].sort((a, b) => 
+          new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        ));
+      }
     }
   }, [user, messages]);
 
@@ -938,11 +956,15 @@ export function useMessenger() {
   const deleteGroupMessage = useCallback(async (messageId: string, forEveryone: boolean = false) => {
     if (!user) return;
     
+    // Find the message BEFORE optimistic removal
+    const messageToDelete = groupMessages.find(m => m.id === messageId);
+    
+    // Optimistically remove from UI first
     setGroupMessages(prev => prev.filter(m => m.id !== messageId));
     
     try {
       if (forEveryone) {
-        await supabase
+        const { error } = await supabase
           .from('group_messages')
           .update({ 
             deleted_for_everyone: true, 
@@ -951,11 +973,27 @@ export function useMessenger() {
           })
           .eq('id', messageId)
           .eq('sender_id', user.id);
+        
+        if (error) {
+          console.error('Error deleting group message:', error);
+          // Restore the message on error
+          if (messageToDelete) {
+            setGroupMessages(prev => [...prev, messageToDelete].sort((a, b) => 
+              new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+            ));
+          }
+        }
       }
     } catch (error) {
       console.error('Error deleting group message:', error);
+      // Restore the message on error
+      if (messageToDelete) {
+        setGroupMessages(prev => [...prev, messageToDelete].sort((a, b) => 
+          new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        ));
+      }
     }
-  }, [user]);
+  }, [user, groupMessages]);
 
   // Add reaction to group message
   const addGroupReaction = useCallback(async (messageId: string, emoji: string) => {
@@ -1065,6 +1103,11 @@ export function useMessenger() {
         },
         (payload) => {
           const newMessage = payload.new as any;
+          
+          // Skip if already deleted
+          if (newMessage.deleted_for_everyone || newMessage.is_deleted_for_recipient) {
+            return;
+          }
           
           // Optimistically add the message to the current view
           setMessages(prev => {
@@ -1210,6 +1253,11 @@ export function useMessenger() {
         },
         async (payload) => {
           const newMessage = payload.new as any;
+          
+          // Skip if already deleted
+          if (newMessage.deleted_for_everyone) {
+            return;
+          }
           
           // Only add if we're viewing this group
           if (activeGroupId && newMessage.group_id === activeGroupId && newMessage.sender_id !== user.id) {
