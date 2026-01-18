@@ -267,40 +267,7 @@ export function CreateGroupDialog({
 
         {step === 'members' ? (
           <div className="flex flex-col flex-1 min-h-0">
-            {/* Selected members */}
-            {selectedMembers.length > 0 && (
-              <div 
-                className="px-3 py-2 flex flex-wrap gap-2 border-b shrink-0"
-                style={{ borderColor: WHATSAPP_COLORS.divider }}
-              >
-                {selectedMembers.map(member => (
-                  <div 
-                    key={member.id}
-                    className="flex items-center gap-1 px-2 py-1 rounded-full"
-                    style={{ backgroundColor: WHATSAPP_COLORS.bgTertiary }}
-                  >
-                    <Avatar className="h-6 w-6">
-                      <AvatarImage src={member.profile_image || undefined} />
-                      <AvatarFallback style={{ backgroundColor: WHATSAPP_COLORS.accent, fontSize: '10px' }}>
-                        {(member.full_name?.charAt(0) || '?').toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span className="text-sm" style={{ color: WHATSAPP_COLORS.textPrimary }}>
-                      {member.full_name || 'Unknown'}
-                    </span>
-                    <button 
-                      className="ml-1 hover:opacity-80"
-                      onClick={() => removeMember(member.id)}
-                      type="button"
-                    >
-                      <X className="h-4 w-4" style={{ color: WHATSAPP_COLORS.textMuted }} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Search */}
+            {/* Search - always at top */}
             <div className="p-3 border-b shrink-0" style={{ borderColor: WHATSAPP_COLORS.divider }}>
               <div className="relative">
                 <Search 
@@ -319,6 +286,38 @@ export function CreateGroupDialog({
                 />
               </div>
             </div>
+
+            {/* Selected members - horizontal scroll, max height limited */}
+            {selectedMembers.length > 0 && (
+              <ScrollArea className="shrink-0 max-h-20 border-b" style={{ borderColor: WHATSAPP_COLORS.divider }}>
+                <div className="px-3 py-2 flex flex-nowrap gap-2">
+                  {selectedMembers.map(member => (
+                    <div 
+                      key={member.id}
+                      className="flex items-center gap-1 px-2 py-1 rounded-full shrink-0"
+                      style={{ backgroundColor: WHATSAPP_COLORS.bgTertiary }}
+                    >
+                      <Avatar className="h-6 w-6">
+                        <AvatarImage src={member.profile_image || undefined} />
+                        <AvatarFallback style={{ backgroundColor: WHATSAPP_COLORS.accent, fontSize: '10px' }}>
+                          {(member.full_name?.charAt(0) || '?').toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="text-sm whitespace-nowrap" style={{ color: WHATSAPP_COLORS.textPrimary }}>
+                        {member.full_name || 'Unknown'}
+                      </span>
+                      <button 
+                        className="ml-1 hover:opacity-80"
+                        onClick={() => removeMember(member.id)}
+                        type="button"
+                      >
+                        <X className="h-4 w-4" style={{ color: WHATSAPP_COLORS.textMuted }} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+            )}
 
             {/* Contacts list */}
             <ScrollArea className="flex-1 min-h-0">
