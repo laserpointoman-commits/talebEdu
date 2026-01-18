@@ -567,34 +567,45 @@ function MessengerContent() {
       animate={{ x: 0 }}
       exit={{ x: '100%' }}
       transition={{ type: 'tween', duration: 0.2 }}
-      className="fixed inset-0 flex flex-col z-[100]"
+      className="fixed inset-0 z-[100] overflow-hidden"
       style={{ 
         backgroundColor: colors.bg,
-        paddingTop: 'env(safe-area-inset-top, 0px)',
       }}
       dir={dir}
     >
-      <SimplifiedChatHeader
-        conversation={selectedConversation}
-        group={selectedGroup}
-        onBack={handleBackFromChat}
-        onVoiceCall={handleVoiceCall}
-        onVideoCall={handleVideoCall}
-        onViewContact={() => setShowContactInfo(true)}
-        isArabic={isArabic}
-        colors={colors}
-      />
-
-      <ScrollArea 
-        className="flex-1 px-3 py-2"
+      {/* Fixed Header with iOS safe area */}
+      <div 
+        className="fixed top-0 left-0 right-0 z-[110] shrink-0"
         style={{ 
+          backgroundColor: colors.headerBg,
+          paddingTop: 'env(safe-area-inset-top, 0px)',
+        }}
+      >
+        <SimplifiedChatHeader
+          conversation={selectedConversation}
+          group={selectedGroup}
+          onBack={handleBackFromChat}
+          onVoiceCall={handleVoiceCall}
+          onVideoCall={handleVideoCall}
+          onViewContact={() => setShowContactInfo(true)}
+          isArabic={isArabic}
+          colors={colors}
+        />
+      </div>
+
+      {/* Messages Container - scrollable area between fixed header and footer */}
+      <div 
+        className="absolute left-0 right-0 overflow-y-auto overscroll-contain"
+        style={{ 
+          top: 'calc(env(safe-area-inset-top, 0px) + 64px)',
+          bottom: 'calc(env(safe-area-inset-bottom, 0px) + 60px)',
           backgroundColor: colors.chatBg,
           backgroundImage: isDark 
             ? 'url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%239C92AC\' fill-opacity=\'0.03\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")'
             : 'url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%239C92AC\' fill-opacity=\'0.05\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")'
         }}
       >
-        <div className="max-w-3xl mx-auto space-y-1">
+        <div className="px-3 py-2 max-w-3xl mx-auto space-y-1">
           {Object.entries(groupMessagesByDate(selectedGroup ? groupMessages : messages)).map(([date, dateMessages]) => (
             <div key={date}>
               <div className="flex justify-center my-3">
@@ -625,16 +636,25 @@ function MessengerContent() {
           ))}
           <div ref={messagesEndRef} />
         </div>
-      </ScrollArea>
+      </div>
 
-      <ChatInput
-        onSend={handleSendMessage}
-        onVoiceSend={handleVoiceSend}
-        onTyping={(typing) => setTyping(selectedConversation?.recipient_id || '', typing)}
-        replyingTo={replyTo}
-        onCancelReply={() => setReplyTo(null)}
-        isArabic={isArabic}
-      />
+      {/* Fixed Input at bottom */}
+      <div 
+        className="fixed bottom-0 left-0 right-0 z-[110]"
+        style={{ 
+          paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+          backgroundColor: colors.bg,
+        }}
+      >
+        <ChatInput
+          onSend={handleSendMessage}
+          onVoiceSend={handleVoiceSend}
+          onTyping={(typing) => setTyping(selectedConversation?.recipient_id || '', typing)}
+          replyingTo={replyTo}
+          onCancelReply={() => setReplyTo(null)}
+          isArabic={isArabic}
+        />
+      </div>
 
       {/* Contact Info Screen */}
       {showContactInfo && (selectedConversation || selectedGroup) && (
@@ -658,66 +678,81 @@ function MessengerContent() {
   // Mobile Main View with Swipeable Chat List
   const renderMessengerMain = () => (
     <div 
-      className="fixed inset-0 flex flex-col z-[100]" 
+      className="fixed inset-0 z-[100] overflow-hidden" 
       style={{ 
         backgroundColor: colors.bg,
-        paddingTop: 'env(safe-area-inset-top, 0px)',
       }} 
       dir={dir}
     >
-      {/* Simplified Header - Force LTR for consistent back button placement */}
+      {/* Fixed Header with iOS safe area */}
       <div 
-        className="flex items-center justify-between px-4 py-3 shrink-0"
-        dir="ltr"
-        style={{ backgroundColor: colors.headerBg }}
+        className="fixed top-0 left-0 right-0 z-[110]"
+        style={{ 
+          paddingTop: 'env(safe-area-inset-top, 0px)',
+          backgroundColor: colors.headerBg,
+        }}
       >
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/10" onClick={handleExitMessenger}>
-            <ArrowLeft className="h-5 w-5" style={{ color: colors.textPrimary }} />
-          </Button>
-          <h1 className="text-xl font-bold" style={{ color: colors.textPrimary }}>
-            {activeTab === 'chats' ? (isArabic ? 'المحادثات' : 'Chats') :
-             activeTab === 'groups' ? (isArabic ? 'المجموعات' : 'Groups') :
-             activeTab === 'calls' ? (isArabic ? 'المكالمات' : 'Calls') :
-             activeTab === 'contacts' ? (isArabic ? 'جهات الاتصال' : 'Contacts') :
-             (isArabic ? 'الإعدادات' : 'Settings')}
-          </h1>
+        {/* Header Content */}
+        <div 
+          className="flex items-center justify-between px-4 py-3"
+          dir="ltr"
+        >
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/10" onClick={handleExitMessenger}>
+              <ArrowLeft className="h-5 w-5" style={{ color: colors.textPrimary }} />
+            </Button>
+            <h1 className="text-xl font-bold" style={{ color: colors.textPrimary }}>
+              {activeTab === 'chats' ? (isArabic ? 'المحادثات' : 'Chats') :
+               activeTab === 'groups' ? (isArabic ? 'المجموعات' : 'Groups') :
+               activeTab === 'calls' ? (isArabic ? 'المكالمات' : 'Calls') :
+               activeTab === 'contacts' ? (isArabic ? 'جهات الاتصال' : 'Contacts') :
+               (isArabic ? 'الإعدادات' : 'Settings')}
+            </h1>
+          </div>
+          
+          {/* Three-dot menu with Select chats and Mark all as read */}
+          {(activeTab === 'chats' || activeTab === 'groups') && (
+            <ChatListMenu
+              onSelectChats={() => setIsSelectMode(true)}
+              onMarkAllRead={handleMarkAllRead}
+              isSelectMode={isSelectMode}
+              onCancelSelect={() => { setIsSelectMode(false); setSelectedChats(new Set()); }}
+              selectedCount={selectedChats.size}
+              isArabic={isArabic}
+              colors={colors}
+            />
+          )}
         </div>
-        
-        {/* Three-dot menu with Select chats and Mark all as read */}
+
+        {/* Search Bar */}
         {(activeTab === 'chats' || activeTab === 'groups') && (
-          <ChatListMenu
-            onSelectChats={() => setIsSelectMode(true)}
-            onMarkAllRead={handleMarkAllRead}
-            isSelectMode={isSelectMode}
-            onCancelSelect={() => { setIsSelectMode(false); setSelectedChats(new Set()); }}
-            selectedCount={selectedChats.size}
-            isArabic={isArabic}
-            colors={colors}
-          />
+          <div className="px-4 py-2" style={{ backgroundColor: colors.bgSecondary }}>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: colors.textMuted }} />
+              <Input
+                placeholder={isArabic ? 'ابحث أو ابدأ محادثة جديدة' : 'Search or start new chat'}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 border-0 rounded-xl h-10"
+                style={{ backgroundColor: colors.inputBg, color: colors.textPrimary }}
+              />
+            </div>
+          </div>
         )}
       </div>
 
-      {/* Search Bar */}
-      {(activeTab === 'chats' || activeTab === 'groups') && (
-        <div className="px-4 py-2 shrink-0" style={{ backgroundColor: colors.bgSecondary }}>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: colors.textMuted }} />
-            <Input
-              placeholder={isArabic ? 'ابحث أو ابدأ محادثة جديدة' : 'Search or start new chat'}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 border-0 rounded-xl h-10"
-              style={{ backgroundColor: colors.inputBg, color: colors.textPrimary }}
-            />
-          </div>
-        </div>
-      )}
-
-      {/* Tab Content */}
-      <div className="flex-1 overflow-hidden">
+      {/* Scrollable Content Area */}
+      <div 
+        className="absolute left-0 right-0 overflow-y-auto overscroll-contain"
+        style={{ 
+          top: (activeTab === 'chats' || activeTab === 'groups') 
+            ? 'calc(env(safe-area-inset-top, 0px) + 120px)' 
+            : 'calc(env(safe-area-inset-top, 0px) + 64px)',
+          bottom: 'calc(env(safe-area-inset-bottom, 0px) + 70px)',
+        }}
+      >
         {activeTab === 'chats' && (
-          <ScrollArea className="h-full">
+          <>
             {/* Archived section */}
             <div 
               className="flex items-center gap-4 px-4 py-3 cursor-pointer transition-colors hover:bg-white/5"
@@ -849,11 +884,11 @@ function MessengerContent() {
                 </p>
               </div>
             )}
-          </ScrollArea>
+          </>
         )}
 
         {activeTab === 'groups' && (
-          <ScrollArea className="h-full">
+          <>
             {filteredGroups.map((group) => (
               <SwipeableChatItem
                 key={group.id}
@@ -887,7 +922,7 @@ function MessengerContent() {
                 </div>
               </SwipeableChatItem>
             ))}
-          </ScrollArea>
+          </>
         )}
 
         {activeTab === 'calls' && (
