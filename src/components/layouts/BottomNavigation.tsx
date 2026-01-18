@@ -120,18 +120,23 @@ export default function BottomNavigation() {
 
   return (
     <div 
-      className="fixed bottom-0 left-0 right-0 z-50 lg:hidden"
+      className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-card"
       style={{ 
-        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
         touchAction: 'none',
       }}
       dir="ltr"
     >
-      {/* Clean background */}
-      <div className="absolute inset-0 bg-card border-t border-border shadow-lg" />
+      {/* Clean background that extends through safe area */}
+      <div 
+        className="absolute inset-0 bg-card border-t border-border shadow-lg"
+        style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+      />
       
       {/* Navigation container */}
-      <nav className="relative flex items-center justify-around px-1 py-1.5">
+      <nav 
+        className="relative flex items-center justify-around px-1 py-1.5"
+        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 0.375rem)' }}
+      >
         {navItems.map((item, index) => {
           const active = isActive(item.href);
           const Icon = item.icon;
