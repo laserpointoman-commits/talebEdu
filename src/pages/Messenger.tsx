@@ -498,6 +498,22 @@ function MessengerContent() {
         />
 
         <CallScreen isArabic={isArabic} />
+
+        {/* Contact Info Screen for Desktop/Tablet */}
+        {showContactInfo && selectedConversation && (
+          <ContactInfoScreen
+            conversation={selectedConversation}
+            messages={messages}
+            callLogs={callLogs}
+            starredMessageIds={starredMessages}
+            onClose={() => setShowContactInfo(false)}
+            onVoiceCall={handleVoiceCall}
+            onVideoCall={handleVideoCall}
+            isArabic={isArabic}
+            colors={colors}
+            currentUserId={user?.id}
+          />
+        )}
       </>
     );
   }
