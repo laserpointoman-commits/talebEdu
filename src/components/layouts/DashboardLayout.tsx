@@ -119,9 +119,9 @@ function DashboardLayout({ children }: DashboardLayoutProps) {
 
   return (
     <div className="h-screen h-[100dvh] min-h-screen min-h-[100dvh] bg-background flex flex-col overflow-hidden">
-      {/* Top Bar - iOS Safe Area Aware - Always LTR - Fixed */}
+      {/* Top Bar - iOS Safe Area Aware - Always LTR - Fixed with solid background */}
       <header 
-        className="fixed left-0 right-0 top-0 z-50 ios-header"
+        className="fixed left-0 right-0 top-0 z-50 bg-card ios-header"
         dir="ltr"
       >
         <div className="h-14 md:h-16 border-b border-border bg-card shadow-sm flex items-center justify-between px-3 md:px-6">
