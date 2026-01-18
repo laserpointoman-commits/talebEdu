@@ -27,6 +27,10 @@ body {
   -moz-osx-font-smoothing: grayscale;
   overscroll-behavior: none;
   -webkit-overflow-scrolling: touch;
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
 }
 
 /* Native iOS Button Feel */
@@ -63,7 +67,7 @@ input, textarea {
   --safe-area-inset-left: env(safe-area-inset-left);
 }
 
-/* Prevent overscroll bounce on iOS */
+/* Prevent overscroll bounce on iOS - applied on the scroll container */
 body {
   overscroll-behavior: none;
   -webkit-overflow-scrolling: touch;
