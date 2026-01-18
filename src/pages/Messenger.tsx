@@ -575,7 +575,7 @@ function MessengerContent() {
         }}
       >
         <div className="max-w-3xl mx-auto space-y-1">
-          {Object.entries(groupMessagesByDate(messages)).map(([date, dateMessages]) => (
+          {Object.entries(groupMessagesByDate(selectedGroup ? groupMessages : messages)).map(([date, dateMessages]) => (
             <div key={date}>
               <div className="flex justify-center my-3">
                 <span 
@@ -592,9 +592,9 @@ function MessengerContent() {
                   isOwnMessage={msg.sender_id === user?.id}
                   onReply={(m) => setReplyTo(m)}
                   onForward={(m) => setForwardMessage(m)}
-                  onDelete={(msgId, forEveryone) => deleteMessage(msgId, forEveryone)}
-                  onReact={(msgId, emoji) => addReaction(msgId, emoji)}
-                  onRemoveReaction={(msgId) => removeReaction(msgId)}
+                  onDelete={(msgId, forEveryone) => selectedGroup ? deleteGroupMessage(msgId, forEveryone) : deleteMessage(msgId, forEveryone)}
+                  onReact={(msgId, emoji) => selectedGroup ? addGroupReaction(msgId, emoji) : addReaction(msgId, emoji)}
+                  onRemoveReaction={(msgId) => selectedGroup ? removeGroupReaction(msgId) : removeReaction(msgId)}
                   onStar={(msgId) => handleStarMessage(msgId)}
                   isStarred={starredMessages.has(msg.id)}
                   isArabic={isArabic}
@@ -617,10 +617,11 @@ function MessengerContent() {
       />
 
       {/* Contact Info Screen */}
-      {showContactInfo && selectedConversation && (
+      {showContactInfo && (selectedConversation || selectedGroup) && (
         <ContactInfoScreen
           conversation={selectedConversation}
-          messages={messages}
+          group={selectedGroup}
+          messages={selectedGroup ? groupMessages : messages}
           callLogs={callLogs}
           starredMessageIds={starredMessages}
           onClose={() => setShowContactInfo(false)}
