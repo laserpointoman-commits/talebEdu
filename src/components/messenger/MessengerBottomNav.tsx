@@ -27,16 +27,19 @@ export function MessengerBottomNav({
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 shrink-0 z-[110]"
+      className="fixed bottom-0 left-0 right-0 shrink-0 z-[110] bg-[#0a1014]"
       style={{
         touchAction: 'none',
       }}
       aria-label={isArabic ? 'تنقل المراسلة' : 'Messenger navigation'}
     >
-      {/* Dark messenger background - includes safe area */}
+      {/* Dark messenger background - extends through safe area */}
       <div 
         className="absolute inset-0 bg-gradient-to-t from-[#0a1014] via-[#0f1a20]/95 to-[#0f1a20]/85 backdrop-blur-xl"
-        style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+        style={{ 
+          bottom: 'calc(-1 * env(safe-area-inset-bottom, 0px))',
+          paddingBottom: 'env(safe-area-inset-bottom, 0px)' 
+        }}
       />
 
       {/* Top border glow */}
@@ -52,13 +55,13 @@ export function MessengerBottomNav({
         style={{ width: '20%' }}
       >
         <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-16 h-16 rounded-full bg-primary/10 blur-xl" />
+          <div className="w-14 h-14 rounded-full bg-primary/10 blur-xl" />
         </div>
       </motion.div>
 
       <div 
-        className="relative flex items-stretch justify-around py-2"
-        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 0.5rem)' }}
+        className="relative flex items-stretch justify-around py-1.5"
+        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 0.375rem)' }}
       >
         {tabs.map(({ id, icon: Icon, label, badge }) => {
           const isActive = activeTab === id;
@@ -67,7 +70,7 @@ export function MessengerBottomNav({
             <motion.button
               key={id}
               className={cn(
-                'flex-1 flex flex-col items-center justify-center py-2 relative',
+                'flex-1 flex flex-col items-center justify-center py-1.5 relative',
                 'transition-colors duration-200'
               )}
               onClick={() => onTabChange(id)}
@@ -90,7 +93,7 @@ export function MessengerBottomNav({
 
                 <Icon
                   className={cn(
-                    'h-6 w-6 relative z-10 transition-all duration-200',
+                    'h-5 w-5 relative z-10 transition-all duration-200',
                     isActive ? 'text-primary' : 'text-muted-foreground'
                   )}
                   strokeWidth={isActive ? 2.5 : 2}
@@ -116,7 +119,7 @@ export function MessengerBottomNav({
               {/* Label */}
               <motion.span
                 className={cn(
-                  'text-xs font-medium mt-1.5 transition-colors duration-200',
+                  'text-[10px] font-medium mt-1 transition-colors duration-200',
                   isActive ? 'text-primary' : 'text-muted-foreground'
                 )}
                 animate={{ opacity: isActive ? 1 : 0.8 }}
