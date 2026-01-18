@@ -126,7 +126,7 @@ function DashboardLayout({ children }: DashboardLayoutProps) {
         className="fixed left-0 right-0 top-0 z-50 bg-card ios-header"
         dir="ltr"
       >
-        <div className="h-14 md:h-16 border-b border-border bg-card shadow-sm flex items-center justify-between px-3 md:px-6">
+        <div className="h-12 md:h-14 border-b border-border bg-card shadow-sm flex items-center justify-between px-2 md:px-6">
 
         {/* Left Section - Back/Menu, Home, Language */}
         <div className="flex items-center gap-1.5 md:gap-3 w-auto">
@@ -135,20 +135,20 @@ function DashboardLayout({ children }: DashboardLayoutProps) {
             variant="ghost"
             size="icon"
             onClick={handleBack}
-            className="h-9 w-9 md:h-10 md:w-10 rounded-lg hover:bg-secondary"
+            className="h-8 w-8 md:h-9 md:w-9 rounded-lg hover:bg-secondary"
             aria-label="Go back"
           >
-            <ArrowLeft className="h-5 w-5" />
+            <ArrowLeft className="h-4 w-4 md:h-5 md:w-5" />
           </Button>
           {/* Desktop Toggle */}
           <Button
             variant="ghost"
             size="icon"
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="hidden lg:flex h-9 w-9 md:h-10 md:w-10 rounded-lg hover:bg-secondary"
+            className="hidden lg:flex h-8 w-8 md:h-9 md:w-9 rounded-lg hover:bg-secondary"
             aria-label="Toggle sidebar"
           >
-            {isSidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            {isSidebarOpen ? <X className="h-4 w-4 md:h-5 md:w-5" /> : <Menu className="h-4 w-4 md:h-5 md:w-5" />}
           </Button>
 
           {/* Mobile Sidebar */}
@@ -157,10 +157,10 @@ function DashboardLayout({ children }: DashboardLayoutProps) {
               <Button
                 variant="ghost"
                 size="icon"
-                className="lg:hidden h-9 w-9 rounded-lg hover:bg-secondary"
+                className="lg:hidden h-8 w-8 rounded-lg hover:bg-secondary"
                 aria-label="Toggle mobile sidebar"
               >
-                <Menu className="h-5 w-5" />
+                <Menu className="h-4 w-4" />
               </Button>
             </SheetTrigger>
             <SheetContent 
@@ -177,10 +177,10 @@ function DashboardLayout({ children }: DashboardLayoutProps) {
             variant="ghost"
             size="icon"
             onClick={() => navigate('/dashboard')}
-            className="h-9 w-9 md:h-10 md:w-10 rounded-lg hover:bg-secondary"
+            className="h-8 w-8 md:h-9 md:w-9 rounded-lg hover:bg-secondary"
             aria-label="Go to home"
           >
-            <Home className="h-5 w-5" />
+            <Home className="h-4 w-4 md:h-5 md:w-5" />
           </Button>
           
           {/* Language Switcher */}
@@ -190,13 +190,13 @@ function DashboardLayout({ children }: DashboardLayoutProps) {
         {/* Right Section - Logo and User Menu */}
         <div className="flex items-center gap-2 md:gap-3 w-auto justify-end">
           {/* App Logo and Name - Always LTR */}
-          <div className="flex items-center justify-center gap-2 md:gap-3" dir="ltr">
+          <div className="flex items-center justify-center gap-1.5 md:gap-2" dir="ltr">
             <div className="relative">
-              <div className="text-3xl md:text-4xl font-bold text-primary leading-none">
+              <div className="text-2xl md:text-3xl font-bold text-primary leading-none">
                 t
               </div>
             </div>
-            <span className="font-bold text-lg md:text-xl text-foreground">
+            <span className="font-bold text-base md:text-lg text-foreground">
               talebEdu
             </span>
           </div>
@@ -250,10 +250,10 @@ function DashboardLayout({ children }: DashboardLayoutProps) {
           {/* User Account Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-9 w-9 md:h-10 md:w-10 rounded-lg hover:bg-secondary">
-                <Avatar className="h-8 w-8 md:h-9 md:w-9 rounded-lg">
+              <Button variant="ghost" className="relative h-8 w-8 md:h-9 md:w-9 rounded-lg hover:bg-secondary">
+                <Avatar className="h-7 w-7 md:h-8 md:w-8 rounded-lg">
                   <AvatarFallback className="bg-primary text-primary-foreground rounded-lg text-sm font-medium">
-                    <User className="h-4 w-4" />
+                    <User className="h-3.5 w-3.5 md:h-4 md:w-4" />
                   </AvatarFallback>
                 </Avatar>
               </Button>
@@ -291,9 +291,9 @@ function DashboardLayout({ children }: DashboardLayoutProps) {
         </div>
       </header>
 
-      {/* Spacer for fixed header - matches h-14 on mobile, h-16 on desktop */}
+      {/* Spacer for fixed header - matches h-12 on mobile, h-14 on desktop */}
       <div 
-        className="shrink-0 h-14 md:h-16"
+        className="shrink-0 h-12 md:h-14"
         style={{ 
           marginTop: 'env(safe-area-inset-top, 0px)',
         }}

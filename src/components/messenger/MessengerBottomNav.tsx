@@ -29,13 +29,15 @@ export function MessengerBottomNav({
     <nav
       className="fixed bottom-0 left-0 right-0 shrink-0 z-[110]"
       style={{
-        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
         touchAction: 'none',
       }}
       aria-label={isArabic ? 'تنقل المراسلة' : 'Messenger navigation'}
     >
-      {/* Dark messenger background */}
-      <div className="absolute inset-0 bg-gradient-to-t from-[#0a1014] via-[#0f1a20]/95 to-[#0f1a20]/85 backdrop-blur-xl" />
+      {/* Dark messenger background - includes safe area */}
+      <div 
+        className="absolute inset-0 bg-gradient-to-t from-[#0a1014] via-[#0f1a20]/95 to-[#0f1a20]/85 backdrop-blur-xl"
+        style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+      />
 
       {/* Top border glow */}
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
@@ -54,7 +56,10 @@ export function MessengerBottomNav({
         </div>
       </motion.div>
 
-      <div className="relative flex items-stretch justify-around py-1.5">
+      <div 
+        className="relative flex items-stretch justify-around py-2"
+        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 0.5rem)' }}
+      >
         {tabs.map(({ id, icon: Icon, label, badge }) => {
           const isActive = activeTab === id;
 
@@ -85,10 +90,10 @@ export function MessengerBottomNav({
 
                 <Icon
                   className={cn(
-                    'h-[22px] w-[22px] relative z-10 transition-all duration-200',
+                    'h-6 w-6 relative z-10 transition-all duration-200',
                     isActive ? 'text-primary' : 'text-muted-foreground'
                   )}
-                  strokeWidth={isActive ? 2.5 : 1.8}
+                  strokeWidth={isActive ? 2.5 : 2}
                 />
 
                 {/* Badge */}
@@ -111,10 +116,10 @@ export function MessengerBottomNav({
               {/* Label */}
               <motion.span
                 className={cn(
-                  'text-[10px] font-medium mt-1 transition-colors duration-200',
+                  'text-xs font-medium mt-1.5 transition-colors duration-200',
                   isActive ? 'text-primary' : 'text-muted-foreground'
                 )}
-                animate={{ opacity: isActive ? 1 : 0.7 }}
+                animate={{ opacity: isActive ? 1 : 0.8 }}
               >
                 {label}
               </motion.span>
