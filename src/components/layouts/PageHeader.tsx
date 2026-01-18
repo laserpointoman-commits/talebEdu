@@ -15,10 +15,10 @@ export default function PageHeader({ title, showHome = true }: PageHeaderProps) 
 
   return (
     <header 
-      className="fixed left-0 right-0 top-0 z-50 ios-header"
+      className="fixed left-0 right-0 top-0 z-50 bg-card ios-header"
       dir="ltr"
     >
-      <div className="h-14 border-b border-white/10 bg-background/70 backdrop-blur-xl flex items-center justify-between px-3"
+      <div className="h-14 border-b border-border bg-card shadow-sm flex items-center justify-between px-3"
         style={{ paddingTop: 'env(safe-area-inset-top)' }}
       >
         {/* Left - Back & Home */}

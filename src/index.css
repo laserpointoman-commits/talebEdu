@@ -49,9 +49,10 @@ input, textarea {
   -webkit-user-select: none;
 }
 
-/* iOS Native Header Styles */
+/* iOS Native Header Styles - Solid background behind status bar */
 .ios-header {
   padding-top: max(env(safe-area-inset-top), 0px);
+  background-color: hsl(var(--card));
 }
 
 /* iOS Safe Area Support */
