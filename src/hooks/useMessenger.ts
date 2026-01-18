@@ -199,8 +199,18 @@ export function useMessenger() {
 
       if (error) throw error;
 
+      // Filter out deleted messages on client side
+      const filteredData = data?.filter(msg => {
+        // Skip messages deleted for everyone
+        if (msg.deleted_for_everyone) return false;
+        // Skip messages deleted for current user
+        if (msg.sender_id === user.id && msg.is_deleted_for_sender) return false;
+        if (msg.recipient_id === user.id && msg.is_deleted_for_recipient) return false;
+        return true;
+      }) || [];
+
       // Fetch reply messages
-      const replyIds = data?.filter(m => m.reply_to_id).map(m => m.reply_to_id) || [];
+      const replyIds = filteredData.filter(m => m.reply_to_id).map(m => m.reply_to_id) || [];
       let replyMap = new Map<string, Message>();
       
       if (replyIds.length > 0) {
@@ -212,14 +222,14 @@ export function useMessenger() {
         replies?.forEach(r => replyMap.set(r.id, r as any));
       }
 
-      const formattedMessages = data?.map(msg => ({
+      const formattedMessages = filteredData.map(msg => ({
         ...msg,
         attachments: msg.message_attachments || [],
         reactions: msg.message_reactions || [],
         reply_to: msg.reply_to_id ? replyMap.get(msg.reply_to_id) : null
       })) as Message[];
 
-      setMessages(formattedMessages || []);
+      setMessages(formattedMessages);
     } catch (error) {
       console.error('Error fetching messages:', error);
     }
@@ -472,26 +482,34 @@ export function useMessenger() {
   }, [user]);
 
   // Search users - for admin show all accounts, for teachers show relevant contacts
+  // When query is empty, return initial contacts list
   const searchUsers = useCallback(async (query: string): Promise<UserSearchResult[]> => {
-    if (!user || !query.trim()) return [];
+    if (!user) return [];
     
     // Get current user role
     const { data: currentProfile } = await supabase
       .from('profiles')
       .select('role')
       .eq('id', user.id)
-      .single();
+      .maybeSingle();
 
     const currentRole = currentProfile?.role;
 
     // Admin can see ALL registered accounts
     if (currentRole === 'admin') {
-      const { data, error } = await supabase
+      const baseQuery = supabase
         .from('profiles')
         .select('id, full_name, profile_image, role')
-        .ilike('full_name', `%${query}%`)
         .neq('id', user.id)
+        .neq('role', 'bus_attendance')
+        .neq('role', 'school_attendance')
+        .order('full_name')
         .limit(50);
+
+      // Apply search filter if query provided
+      const { data, error } = query.trim() 
+        ? await baseQuery.ilike('full_name', `%${query}%`)
+        : await baseQuery;
       
       return error ? [] : (data as UserSearchResult[]);
     }
@@ -503,7 +521,7 @@ export function useMessenger() {
         .from('teachers')
         .select('id')
         .eq('profile_id', user.id)
-        .single();
+        .maybeSingle();
 
       // Get classes assigned to this teacher
       const { data: assignedClasses } = await supabase
@@ -524,23 +542,31 @@ export function useMessenger() {
       const parentIds = [...new Set(studentsInClasses?.map(s => s.parent_id).filter(Boolean) || [])];
 
       // Get admins, teachers, and relevant parents
-      const { data: adminsAndTeachers } = await supabase
+      const adminsQuery = supabase
         .from('profiles')
         .select('id, full_name, profile_image, role')
-        .ilike('full_name', `%${query}%`)
         .neq('id', user.id)
         .in('role', ['admin', 'teacher'])
+        .order('full_name')
         .limit(30);
+
+      const { data: adminsAndTeachers } = query.trim()
+        ? await adminsQuery.ilike('full_name', `%${query}%`)
+        : await adminsQuery;
 
       // Get parents whose kids are in teacher's classes
       let relevantParents: UserSearchResult[] = [];
       if (parentIds.length > 0) {
-        const { data: parentsData } = await supabase
+        const parentsQuery = supabase
           .from('profiles')
           .select('id, full_name, profile_image, role')
-          .ilike('full_name', `%${query}%`)
           .in('id', parentIds)
+          .order('full_name')
           .limit(20);
+
+        const { data: parentsData } = query.trim()
+          ? await parentsQuery.ilike('full_name', `%${query}%`)
+          : await parentsQuery;
         
         relevantParents = (parentsData || []) as UserSearchResult[];
       }
@@ -554,14 +580,19 @@ export function useMessenger() {
       return uniqueResults.slice(0, 50) as UserSearchResult[];
     }
 
-    // Default for other roles: filter out device-linked roles
-    const { data, error } = await supabase
+    // Default for other roles
+    const baseQuery = supabase
       .from('profiles')
       .select('id, full_name, profile_image, role')
-      .ilike('full_name', `%${query}%`)
       .neq('id', user.id)
-      .not('role', 'in', '(device,school_gate)')
+      .neq('role', 'bus_attendance')
+      .neq('role', 'school_attendance')
+      .order('full_name')
       .limit(50);
+
+    const { data, error } = query.trim()
+      ? await baseQuery.ilike('full_name', `%${query}%`)
+      : await baseQuery;
 
     return error ? [] : (data as UserSearchResult[]);
   }, [user]);

@@ -331,35 +331,9 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen w-full relative overflow-hidden">
-      {/* Animated Background */}
-      <div className="fixed inset-0 bg-gradient-to-br from-primary/5 via-background to-secondary/5">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/20 via-transparent to-transparent" />
-        <motion.div
-          animate={{
-            scale: [1, 1.2, 1],
-            rotate: [0, 90, 0],
-          }}
-          transition={{
-            duration: 20,
-            repeat: Infinity,
-            ease: "linear"
-          }}
-          className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl"
-        />
-        <motion.div
-          animate={{
-            scale: [1.2, 1, 1.2],
-            rotate: [90, 0, 90],
-          }}
-          transition={{
-            duration: 15,
-            repeat: Infinity,
-            ease: "linear"
-          }}
-          className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-secondary/10 rounded-full blur-3xl"
-        />
-      </div>
+    <div className="min-h-screen w-full relative overflow-hidden bg-background">
+      {/* Simple Background */}
+      <div className="fixed inset-0 bg-gradient-to-br from-primary/5 via-background to-secondary/5" />
 
       {/* Top Actions - About Button & Language Switcher */}
       <div className="fixed top-6 right-6 z-50 flex items-center gap-3">
@@ -367,7 +341,7 @@ export default function Auth() {
           variant="outline"
           size="sm"
           onClick={() => navigate('/presentation-sales')}
-          className="gap-2 backdrop-blur-sm bg-background/80 hover:bg-background/90 border-border/50 hover:border-primary/50 transition-colors"
+          className="gap-2 bg-card hover:bg-secondary border-border transition-colors"
         >
           <Globe className="h-4 w-4" />
           {language === 'en' ? 'About' : 'حول'}
@@ -376,7 +350,7 @@ export default function Auth() {
           variant="outline"
           size="sm"
           onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}
-          className="gap-2 backdrop-blur-sm bg-background/80 hover:bg-background/90 border-border/50"
+          className="gap-2 bg-card hover:bg-secondary border-border"
         >
           <Globe className="h-4 w-4" />
           {language === 'en' ? 'العربية' : 'English'}
@@ -399,21 +373,11 @@ export default function Auth() {
             className="flex flex-col items-center mb-8"
           >
             <div className="relative mb-4">
-              <motion.div
-                animate={{
-                  boxShadow: [
-                    "0 0 20px rgba(0, 127, 255, 0.3)",
-                    "0 0 40px rgba(0, 127, 255, 0.5)",
-                    "0 0 20px rgba(0, 127, 255, 0.3)",
-                  ],
-                }}
-                transition={{ duration: 2, repeat: Infinity }}
-                className="p-4 rounded-2xl bg-gradient-to-br from-primary to-primary/80"
-              >
+              <div className="p-4 rounded-2xl bg-primary shadow-lg">
                 <GraduationCap className="h-12 w-12 text-white" />
-              </motion.div>
+              </div>
             </div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+            <h1 className="text-3xl font-bold text-primary">
               talebEdu
             </h1>
             <p className="text-muted-foreground mt-2">
@@ -422,7 +386,7 @@ export default function Auth() {
           </motion.div>
 
           {/* Sign In Card */}
-          <Card className="backdrop-blur-xl bg-background/80 border-border/50 shadow-2xl">
+          <Card className="bg-card border-border shadow-xl">
             <CardHeader className="space-y-1 text-center">
               <CardTitle className="text-2xl font-bold">
                 {language === 'en' ? 'Welcome Back' : 'مرحباً بعودتك'}
