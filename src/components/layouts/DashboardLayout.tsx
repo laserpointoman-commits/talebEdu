@@ -192,7 +192,7 @@ function DashboardLayout({ children }: DashboardLayoutProps) {
           {/* App Logo and Name - Always LTR */}
           <div className="flex items-center justify-center gap-2 md:gap-3" dir="ltr">
             <div className="relative">
-              <div className="text-2xl md:text-3xl font-bold text-primary leading-none">
+              <div className="text-3xl md:text-4xl font-bold text-primary leading-none">
                 t
               </div>
             </div>
