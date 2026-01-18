@@ -476,7 +476,8 @@ function MessengerContent() {
           open={showCreateGroup}
           onClose={() => setShowCreateGroup(false)}
           onCreate={async (name, description, memberIds, imageUrl) => {
-            await createGroup(name, description, memberIds, imageUrl);
+            const created = await createGroup(name, description, memberIds, imageUrl);
+            if (!created) throw new Error('Group creation failed');
             setShowCreateGroup(false);
           }}
           searchUsers={searchUsers}
@@ -946,7 +947,7 @@ function MessengerContent() {
         </DialogContent>
       </Dialog>
 
-      <CreateGroupDialog open={showCreateGroup} onClose={() => setShowCreateGroup(false)} onCreate={async (name, description, memberIds, imageUrl) => { await createGroup(name, description, memberIds, imageUrl); setShowCreateGroup(false); }} searchUsers={searchUsers} isArabic={isArabic} />
+      <CreateGroupDialog open={showCreateGroup} onClose={() => setShowCreateGroup(false)} onCreate={async (name, description, memberIds, imageUrl) => { const created = await createGroup(name, description, memberIds, imageUrl); if (!created) throw new Error('Group creation failed'); setShowCreateGroup(false); }} searchUsers={searchUsers} isArabic={isArabic} />
       <ForwardDialog open={!!forwardMessage} onClose={() => setForwardMessage(null)} onForward={() => setForwardMessage(null)} conversations={conversations} groups={groups} messagePreview={forwardMessage?.content || ''} isArabic={isArabic} />
       <CallScreen isArabic={isArabic} />
     </>
