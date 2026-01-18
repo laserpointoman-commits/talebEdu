@@ -412,12 +412,34 @@ export function useMessenger() {
     // Find the message BEFORE optimistic removal
     const messageToDelete = messages.find(m => m.id === messageId);
     
+    if (!messageToDelete) {
+      console.error('Message not found:', messageId);
+      return;
+    }
+    
     // Optimistically remove from UI first
     setMessages(prev => prev.filter(m => m.id !== messageId));
     
+    const restoreMessage = () => {
+      setMessages(prev => {
+        // Check if already exists to avoid duplicates
+        if (prev.some(m => m.id === messageId)) return prev;
+        return [...prev, messageToDelete].sort((a, b) => 
+          new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        );
+      });
+    };
+    
     try {
       if (forEveryone) {
-        const { error } = await supabase
+        // Only the sender can delete for everyone
+        if (messageToDelete.sender_id !== user.id) {
+          console.error('Cannot delete message for everyone - not the sender');
+          restoreMessage();
+          return;
+        }
+        
+        const { data, error } = await supabase
           .from('direct_messages')
           .update({ 
             deleted_for_everyone: true, 
@@ -425,42 +447,49 @@ export function useMessenger() {
             content: '' // Use empty string instead of null to avoid NOT NULL constraint
           })
           .eq('id', messageId)
-          .eq('sender_id', user.id);
+          .eq('sender_id', user.id)
+          .select();
         
         if (error) {
           console.error('Error deleting message for everyone:', error);
-          // Restore the message on error
-          if (messageToDelete) {
-            setMessages(prev => [...prev, messageToDelete].sort((a, b) => 
-              new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-            ));
-          }
+          restoreMessage();
+          return;
         }
+        
+        // Check if update actually affected any rows
+        if (!data || data.length === 0) {
+          console.error('No rows updated - message may not exist or you are not the sender');
+          restoreMessage();
+          return;
+        }
+        
+        console.log('Message deleted for everyone successfully:', messageId);
       } else {
-        if (messageToDelete) {
-          const field = messageToDelete.sender_id === user.id ? 'is_deleted_for_sender' : 'is_deleted_for_recipient';
-          const { error } = await supabase
-            .from('direct_messages')
-            .update({ [field]: true })
-            .eq('id', messageId);
-          
-          if (error) {
-            console.error('Error deleting message:', error);
-            // Restore the message on error
-            setMessages(prev => [...prev, messageToDelete].sort((a, b) => 
-              new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-            ));
-          }
+        const field = messageToDelete.sender_id === user.id ? 'is_deleted_for_sender' : 'is_deleted_for_recipient';
+        const { data, error } = await supabase
+          .from('direct_messages')
+          .update({ [field]: true })
+          .eq('id', messageId)
+          .select();
+        
+        if (error) {
+          console.error('Error deleting message:', error);
+          restoreMessage();
+          return;
         }
+        
+        // Check if update actually affected any rows
+        if (!data || data.length === 0) {
+          console.error('No rows updated for delete');
+          restoreMessage();
+          return;
+        }
+        
+        console.log('Message deleted successfully:', messageId);
       }
     } catch (error) {
       console.error('Error in deleteMessage:', error);
-      // Restore the message on error
-      if (messageToDelete) {
-        setMessages(prev => [...prev, messageToDelete].sort((a, b) => 
-          new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-        ));
-      }
+      restoreMessage();
     }
   }, [user, messages]);
 
@@ -959,12 +988,34 @@ export function useMessenger() {
     // Find the message BEFORE optimistic removal
     const messageToDelete = groupMessages.find(m => m.id === messageId);
     
+    if (!messageToDelete) {
+      console.error('Group message not found:', messageId);
+      return;
+    }
+    
     // Optimistically remove from UI first
     setGroupMessages(prev => prev.filter(m => m.id !== messageId));
     
+    const restoreMessage = () => {
+      setGroupMessages(prev => {
+        // Check if already exists to avoid duplicates
+        if (prev.some(m => m.id === messageId)) return prev;
+        return [...prev, messageToDelete].sort((a, b) => 
+          new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        );
+      });
+    };
+    
     try {
       if (forEveryone) {
-        const { error } = await supabase
+        // Only the sender can delete for everyone
+        if (messageToDelete.sender_id !== user.id) {
+          console.error('Cannot delete group message for everyone - not the sender');
+          restoreMessage();
+          return;
+        }
+        
+        const { data, error } = await supabase
           .from('group_messages')
           .update({ 
             deleted_for_everyone: true, 
@@ -972,26 +1023,27 @@ export function useMessenger() {
             content: ''
           })
           .eq('id', messageId)
-          .eq('sender_id', user.id);
+          .eq('sender_id', user.id)
+          .select();
         
         if (error) {
           console.error('Error deleting group message:', error);
-          // Restore the message on error
-          if (messageToDelete) {
-            setGroupMessages(prev => [...prev, messageToDelete].sort((a, b) => 
-              new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-            ));
-          }
+          restoreMessage();
+          return;
         }
+        
+        // Check if update actually affected any rows
+        if (!data || data.length === 0) {
+          console.error('No rows updated for group message delete');
+          restoreMessage();
+          return;
+        }
+        
+        console.log('Group message deleted for everyone successfully:', messageId);
       }
     } catch (error) {
       console.error('Error deleting group message:', error);
-      // Restore the message on error
-      if (messageToDelete) {
-        setGroupMessages(prev => [...prev, messageToDelete].sort((a, b) => 
-          new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-        ));
-      }
+      restoreMessage();
     }
   }, [user, groupMessages]);
 
