@@ -670,7 +670,8 @@ export function useMessenger() {
   const createGroup = useCallback(async (
     name: string, 
     description: string, 
-    memberIds: string[]
+    memberIds: string[],
+    imageUrl?: string
   ): Promise<GroupChat | null> => {
     if (!user) {
       console.error('Cannot create group: user not authenticated');
@@ -678,14 +679,15 @@ export function useMessenger() {
     }
     
     try {
-      console.log('Creating group:', { name, description, memberIds });
+      console.log('Creating group:', { name, description, memberIds, imageUrl });
       
       const { data: groupData, error: groupError } = await supabase
         .from('group_chats')
         .insert({
           name,
           description,
-          created_by: user.id
+          created_by: user.id,
+          image_url: imageUrl || null
         })
         .select()
         .single();
@@ -711,18 +713,20 @@ export function useMessenger() {
         throw creatorError;
       }
 
-      // Add other members
-      for (const memberId of memberIds) {
-        const { error: memberError } = await supabase
-          .from('group_members')
-          .insert({
-            group_id: groupData.id,
-            user_id: memberId,
-            role: 'member'
-          });
+      // Add other members in batch
+      if (memberIds.length > 0) {
+        const memberInserts = memberIds.map(memberId => ({
+          group_id: groupData.id,
+          user_id: memberId,
+          role: 'member'
+        }));
         
-        if (memberError) {
-          console.error('Error adding member:', memberId, memberError);
+        const { error: membersError } = await supabase
+          .from('group_members')
+          .insert(memberInserts);
+        
+        if (membersError) {
+          console.error('Error adding members:', membersError);
         }
       }
 
