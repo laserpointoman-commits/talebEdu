@@ -226,8 +226,12 @@ export default function StudentDetails() {
   return (
     <div className="min-h-screen bg-background">
       <PageHeader />
-      
-      <div className="space-y-6 p-4 pt-20" style={{ paddingTop: 'calc(4.5rem + env(safe-area-inset-top))' }}>
+      <div className="h-12" style={{ marginTop: 'env(safe-area-inset-top, 0px)' }} />
+
+      <div
+        className="space-y-6 p-4"
+        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1rem)' }}
+      >
         {/* Student Name Header */}
         <div className="flex items-center gap-4">
           <div className="flex-1">
