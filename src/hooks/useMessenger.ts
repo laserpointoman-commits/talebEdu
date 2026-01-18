@@ -803,8 +803,14 @@ export function useMessenger() {
           filter: `recipient_id=eq.${user.id}`
         },
         (payload) => {
+          const updated = payload.new as any;
+          // Filter out deleted messages
+          if (updated.deleted_for_everyone || updated.is_deleted_for_recipient) {
+            setMessages(prev => prev.filter(m => m.id !== updated.id));
+            return;
+          }
           setMessages(prev => prev.map(m => 
-            m.id === payload.new.id ? { ...m, ...payload.new } : m
+            m.id === updated.id ? { ...m, ...updated } : m
           ));
         }
       )
@@ -817,10 +823,16 @@ export function useMessenger() {
           filter: `sender_id=eq.${user.id}`
         },
         (payload) => {
+          const updated = payload.new as any;
+          // Filter out deleted messages for sender
+          if (updated.deleted_for_everyone || updated.is_deleted_for_sender) {
+            setMessages(prev => prev.filter(m => m.id !== updated.id));
+            return;
+          }
           // Update read/delivered status instantly (WhatsApp blue ticks)
           setMessages(prev => prev.map(m => 
-            m.id === payload.new.id 
-              ? { ...m, is_read: payload.new.is_read, is_delivered: payload.new.is_delivered, read_at: payload.new.read_at, delivered_at: payload.new.delivered_at }
+            m.id === updated.id 
+              ? { ...m, is_read: updated.is_read, is_delivered: updated.is_delivered, read_at: updated.read_at, delivered_at: updated.delivered_at }
               : m
           ));
         }
