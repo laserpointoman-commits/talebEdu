@@ -67,7 +67,8 @@ export function CreateGroupDialog({
             .from('profiles')
             .select('id, full_name, profile_image, role')
             .neq('id', user.id)
-            .not('role', 'in', '(device,school_gate)')
+            .neq('role', 'device')
+            .neq('role', 'school_gate')
             .order('full_name')
             .limit(50);
 
@@ -91,7 +92,8 @@ export function CreateGroupDialog({
             .from('profiles')
             .select('id, full_name, profile_image, role')
             .neq('id', user.id)
-            .not('role', 'in', '(device,school_gate)')
+            .neq('role', 'device')
+            .neq('role', 'school_gate')
             .order('full_name')
             .limit(50);
 
@@ -263,11 +265,11 @@ export function CreateGroupDialog({
                       <Avatar className="h-10 w-10">
                         <AvatarImage src={contact.profile_image || undefined} />
                         <AvatarFallback style={{ backgroundColor: WHATSAPP_COLORS.accent }}>
-                          {contact.full_name.charAt(0).toUpperCase()}
+                          {((contact.full_name?.charAt(0) || '?').toUpperCase())}
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex-1 text-left">
-                        <p style={{ color: WHATSAPP_COLORS.textPrimary }}>{contact.full_name}</p>
+                        <p style={{ color: WHATSAPP_COLORS.textPrimary }}>{contact.full_name || t('Unknown', 'غير معروف')}</p>
                         <p className="text-xs capitalize" style={{ color: WHATSAPP_COLORS.textMuted }}>
                           {contact.role}
                         </p>
