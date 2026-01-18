@@ -137,7 +137,6 @@ export function ChatInput({
       className="shrink-0"
       style={{ 
         backgroundColor: colors.bg,
-        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
       }}
     >
       {/* Reply preview */}

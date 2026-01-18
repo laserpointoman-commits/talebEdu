@@ -30,16 +30,13 @@ export function MessengerBottomNav({
       className="fixed bottom-0 left-0 right-0 shrink-0 z-[110] bg-[#0a1014]"
       style={{
         touchAction: 'none',
+        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
       }}
       aria-label={isArabic ? 'تنقل المراسلة' : 'Messenger navigation'}
     >
-      {/* Dark messenger background - extends through safe area */}
+      {/* Dark messenger background */}
       <div 
         className="absolute inset-0 bg-gradient-to-t from-[#0a1014] via-[#0f1a20]/95 to-[#0f1a20]/85 backdrop-blur-xl"
-        style={{ 
-          bottom: 'calc(-1 * env(safe-area-inset-bottom, 0px))',
-          paddingBottom: 'env(safe-area-inset-bottom, 0px)' 
-        }}
       />
 
       {/* Top border glow */}
@@ -59,10 +56,7 @@ export function MessengerBottomNav({
         </div>
       </motion.div>
 
-      <div 
-        className="relative flex items-stretch justify-around py-1.5"
-        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 0.375rem)' }}
-      >
+      <div className="relative flex items-stretch justify-around py-1">
         {tabs.map(({ id, icon: Icon, label, badge }) => {
           const isActive = activeTab === id;
 
@@ -70,7 +64,7 @@ export function MessengerBottomNav({
             <motion.button
               key={id}
               className={cn(
-                'flex-1 flex flex-col items-center justify-center py-1.5 relative',
+                'flex-1 flex flex-col items-center justify-center py-1 relative',
                 'transition-colors duration-200'
               )}
               onClick={() => onTabChange(id)}
@@ -119,7 +113,7 @@ export function MessengerBottomNav({
               {/* Label */}
               <motion.span
                 className={cn(
-                  'text-[10px] font-medium mt-1 transition-colors duration-200',
+                  'text-[10px] font-medium mt-0.5 transition-colors duration-200',
                   isActive ? 'text-primary' : 'text-muted-foreground'
                 )}
                 animate={{ opacity: isActive ? 1 : 0.8 }}
