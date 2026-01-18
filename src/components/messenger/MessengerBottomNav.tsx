@@ -28,11 +28,9 @@ export function MessengerBottomNav({
 
   return (
     <nav
-      className="relative shrink-0 overflow-hidden"
+      className="fixed bottom-0 left-0 right-0 shrink-0 overflow-hidden z-[110]"
       style={{
         paddingBottom: 'env(safe-area-inset-bottom, 0px)',
-        position: 'relative',
-        zIndex: 50,
       }}
       aria-label={isArabic ? 'تنقل المراسلة' : 'Messenger navigation'}
     >
