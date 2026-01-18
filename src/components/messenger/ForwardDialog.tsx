@@ -71,11 +71,12 @@ export function ForwardDialog({
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent 
-        className="max-w-md p-0 border-0 overflow-hidden"
+        className="max-w-md p-0 border-0 flex flex-col max-h-[85vh]"
         style={{ backgroundColor: colors.bg }}
       >
-        <DialogHeader
-          className="p-4 border-b"
+        {/* Fixed Header */}
+        <DialogHeader 
+          className="p-4 border-b shrink-0"
           style={{ borderColor: colors.divider, backgroundColor: colors.headerBg }}
         >
           <DialogTitle style={{ color: colors.textPrimary }}>
@@ -83,8 +84,8 @@ export function ForwardDialog({
           </DialogTitle>
         </DialogHeader>
 
-        {/* Search */}
-        <div className="p-3 border-b" style={{ borderColor: colors.divider }}>
+        {/* Search - Fixed */}
+        <div className="p-3 border-b shrink-0" style={{ borderColor: colors.divider }}>
           <div className="relative">
             <Search 
               className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" 
@@ -103,10 +104,10 @@ export function ForwardDialog({
           </div>
         </div>
 
-        {/* Selected chips */}
+        {/* Selected chips - Fixed, scrollable if too many */}
         {selectedIds.length > 0 && (
           <div 
-            className="px-3 py-2 flex flex-wrap gap-2 border-b"
+            className="px-3 py-2 flex flex-wrap gap-2 border-b shrink-0 max-h-24 overflow-y-auto"
             style={{ borderColor: colors.divider }}
           >
             {selectedIds.map(id => {
@@ -133,9 +134,9 @@ export function ForwardDialog({
           </div>
         )}
 
-        {/* Message preview */}
+        {/* Message preview - Fixed */}
         <div 
-          className="mx-3 mt-3 p-2 rounded-lg border-l-4"
+          className="mx-3 mt-3 p-2 rounded-lg border-l-4 shrink-0"
           style={{ 
             backgroundColor: colors.bgTertiary,
             borderLeftColor: colors.accent
@@ -146,8 +147,8 @@ export function ForwardDialog({
           </p>
         </div>
 
-        {/* Contacts list */}
-        <ScrollArea className="h-64">
+        {/* Contacts list - Scrollable, takes remaining space */}
+        <ScrollArea className="flex-1 min-h-0">
           <div className="p-2">
             {/* Groups */}
             {filteredGroups.length > 0 && (
@@ -235,9 +236,12 @@ export function ForwardDialog({
           </div>
         </ScrollArea>
 
-        {/* Forward button */}
+        {/* Forward button - Fixed at bottom, always visible when contacts selected */}
         {selectedIds.length > 0 && (
-          <div className="p-3 flex justify-end">
+          <div 
+            className="p-3 flex justify-end border-t shrink-0"
+            style={{ borderColor: colors.divider, backgroundColor: colors.bg }}
+          >
             <Button
               className="rounded-full px-6"
               style={{ backgroundColor: colors.accent }}
