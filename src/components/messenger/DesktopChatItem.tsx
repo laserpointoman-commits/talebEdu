@@ -66,6 +66,51 @@ export function DesktopChatItem({
 
   const contextMenuContent = (
     <>
+      {canPin && (
+        <ContextMenuItem
+          onClick={() => onPin?.(conversation.recipient_id)}
+          className="flex items-center gap-2"
+          style={{ color: colors.textPrimary }}
+        >
+          <Pin className="h-4 w-4" style={{ color: colors.swipePin }} />
+          {isPinned ? t('Unpin', 'إلغاء التثبيت') : t('Pin', 'تثبيت')}
+        </ContextMenuItem>
+      )}
+      <ContextMenuItem
+        onClick={() => onArchive?.(conversation.recipient_id)}
+        className="flex items-center gap-2"
+        style={{ color: colors.textPrimary }}
+      >
+        <Archive className="h-4 w-4" style={{ color: colors.swipeArchive }} />
+        {t('Archive', 'أرشفة')}
+      </ContextMenuItem>
+      <ContextMenuSeparator style={{ backgroundColor: colors.divider }} />
+      <ContextMenuItem
+        onClick={() => onDelete?.(conversation.recipient_id)}
+        className="flex items-center gap-2"
+        style={{ color: colors.swipeDelete }}
+      >
+        <Trash2 className="h-4 w-4" />
+        {t('Delete chat', 'حذف المحادثة')}
+      </ContextMenuItem>
+    </>
+  );
+
+  return (
+    <ContextMenu>
+      <ContextMenuTrigger asChild>
+        <div
+          className={cn(
+            "flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors hover:bg-white/5 relative",
+            isSelected && "bg-white/10"
+          )}
+          style={{ borderBottom: `1px solid ${colors.divider}` }}
+          onClick={onClick}
+          onMouseEnter={() => setShowHoverActions(true)}
+          onMouseLeave={() => {
+            if (!menuOpen) setShowHoverActions(false);
+          }}
+        >
           {/* Pin indicator */}
           {isPinned && (
             <div className="absolute top-2 right-2">
