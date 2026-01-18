@@ -55,7 +55,7 @@ function DashboardLayout({ children }: DashboardLayoutProps) {
   
   // If kiosk mode or full-screen mobile messenger, render without layout wrapper
   if (isKioskMode || isFullScreenMobile) {
-    return <div className="min-h-screen min-h-[100dvh] bg-background overflow-hidden">{children}</div>;
+    return <div className="fixed inset-0 bg-background overflow-hidden">{children}</div>;
   }
   
   // Helper for trilingual text
@@ -120,7 +120,7 @@ function DashboardLayout({ children }: DashboardLayoutProps) {
   };
 
   return (
-    <div className="h-screen h-[100dvh] min-h-screen min-h-[100dvh] bg-background flex flex-col overflow-hidden">
+    <div className="fixed inset-0 bg-background flex flex-col overflow-hidden">
       {/* Top Bar - iOS Safe Area Aware - Always LTR - Fixed with solid background */}
       <header 
         className="fixed left-0 right-0 top-0 z-50 bg-card ios-header"

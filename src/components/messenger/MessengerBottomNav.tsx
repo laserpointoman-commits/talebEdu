@@ -25,12 +25,12 @@ export function MessengerBottomNav({
     { id: 'settings' as const, icon: Settings, label: isArabic ? 'الإعدادات' : 'Settings' },
   ];
 
-
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 shrink-0 overflow-hidden z-[110]"
+      className="fixed bottom-0 left-0 right-0 shrink-0 z-[110]"
       style={{
         paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+        touchAction: 'none',
       }}
       aria-label={isArabic ? 'تنقل المراسلة' : 'Messenger navigation'}
     >
