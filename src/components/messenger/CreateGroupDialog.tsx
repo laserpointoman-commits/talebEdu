@@ -323,7 +323,7 @@ export function CreateGroupDialog({
             )}
 
             {/* Contacts list */}
-            <ScrollArea className="flex-1 min-h-0">
+            <div className="flex-1 min-h-0 overflow-y-auto">
               <div className="p-2">
                 {(searching || loadingContacts) ? (
                   <div className="flex items-center justify-center py-8">
@@ -367,7 +367,7 @@ export function CreateGroupDialog({
                   </p>
                 )}
               </div>
-            </ScrollArea>
+            </div>
 
             {/* Bottom navigation - LTR fixed */}
             <div 
