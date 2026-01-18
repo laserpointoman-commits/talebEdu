@@ -389,28 +389,41 @@ export function useMessenger() {
   const deleteMessage = useCallback(async (messageId: string, forEveryone: boolean = false) => {
     if (!user) return;
     
-    if (forEveryone) {
-      await supabase
-        .from('direct_messages')
-        .update({ 
-          deleted_for_everyone: true, 
-          deleted_at: new Date().toISOString(),
-          content: null
-        })
-        .eq('id', messageId)
-        .eq('sender_id', user.id);
-    } else {
-      const message = messages.find(m => m.id === messageId);
-      if (message) {
-        const field = message.sender_id === user.id ? 'is_deleted_for_sender' : 'is_deleted_for_recipient';
-        await supabase
-          .from('direct_messages')
-          .update({ [field]: true })
-          .eq('id', messageId);
-      }
-    }
-
+    // Optimistically remove from UI first
     setMessages(prev => prev.filter(m => m.id !== messageId));
+    
+    try {
+      if (forEveryone) {
+        const { error } = await supabase
+          .from('direct_messages')
+          .update({ 
+            deleted_for_everyone: true, 
+            deleted_at: new Date().toISOString(),
+            content: '' // Use empty string instead of null to avoid NOT NULL constraint
+          })
+          .eq('id', messageId)
+          .eq('sender_id', user.id);
+        
+        if (error) {
+          console.error('Error deleting message for everyone:', error);
+        }
+      } else {
+        const message = messages.find(m => m.id === messageId);
+        if (message) {
+          const field = message.sender_id === user.id ? 'is_deleted_for_sender' : 'is_deleted_for_recipient';
+          const { error } = await supabase
+            .from('direct_messages')
+            .update({ [field]: true })
+            .eq('id', messageId);
+          
+          if (error) {
+            console.error('Error deleting message:', error);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error in deleteMessage:', error);
+    }
   }, [user, messages]);
 
   // Add reaction
@@ -659,9 +672,14 @@ export function useMessenger() {
     description: string, 
     memberIds: string[]
   ): Promise<GroupChat | null> => {
-    if (!user) return null;
+    if (!user) {
+      console.error('Cannot create group: user not authenticated');
+      return null;
+    }
     
     try {
+      console.log('Creating group:', { name, description, memberIds });
+      
       const { data: groupData, error: groupError } = await supabase
         .from('group_chats')
         .insert({
@@ -672,29 +690,45 @@ export function useMessenger() {
         .select()
         .single();
 
-      if (groupError) throw groupError;
+      if (groupError) {
+        console.error('Error creating group_chats record:', groupError);
+        throw groupError;
+      }
+      
+      console.log('Group created:', groupData);
 
       // Add creator as admin
-      await supabase
+      const { error: creatorError } = await supabase
         .from('group_members')
         .insert({
           group_id: groupData.id,
           user_id: user.id,
           role: 'admin'
         });
+      
+      if (creatorError) {
+        console.error('Error adding creator as admin:', creatorError);
+        throw creatorError;
+      }
 
       // Add other members
       for (const memberId of memberIds) {
-        await supabase
+        const { error: memberError } = await supabase
           .from('group_members')
           .insert({
             group_id: groupData.id,
             user_id: memberId,
             role: 'member'
           });
+        
+        if (memberError) {
+          console.error('Error adding member:', memberId, memberError);
+        }
       }
 
+      console.log('All members added, fetching groups...');
       await fetchGroups();
+      
       return {
         ...groupData,
         members: [],
