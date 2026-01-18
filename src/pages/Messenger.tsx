@@ -386,6 +386,7 @@ function MessengerContent() {
           onArchiveChat={handleArchiveChat}
           onPinChat={handlePinChat}
           onMarkAllRead={handleMarkAllRead}
+          onContactInfoClick={() => setShowContactInfo(true)}
           pinnedChats={pinnedChats}
           canPin={canPin}
           isArabic={isArabic}

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { CallLog, UserSearchResult } from '@/hooks/useMessenger';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -23,9 +23,29 @@ export function MessengerCalls({ callLogs, isArabic, searchUsers, currentUserId 
   const [callType, setCallType] = useState<'voice' | 'video'>('voice');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<UserSearchResult[]>([]);
+  const [initialContacts, setInitialContacts] = useState<UserSearchResult[]>([]);
   const [searching, setSearching] = useState(false);
+  const [loadingContacts, setLoadingContacts] = useState(false);
 
   const t = (en: string, ar: string) => isArabic ? ar : en;
+
+  // Load contacts when dialog opens
+  useEffect(() => {
+    const loadContacts = async () => {
+      if (!showNewCallDialog || !searchUsers) return;
+      setLoadingContacts(true);
+      try {
+        // Load all contacts with empty query to get initial list
+        const results = await searchUsers('');
+        setInitialContacts(results);
+      } catch (error) {
+        console.error('Error loading contacts:', error);
+      } finally {
+        setLoadingContacts(false);
+      }
+    };
+    loadContacts();
+  }, [showNewCallDialog, searchUsers]);
 
   const handleSearch = async (query: string) => {
     setSearchQuery(query);
@@ -38,6 +58,11 @@ export function MessengerCalls({ callLogs, isArabic, searchUsers, currentUserId 
     setSearchResults(results);
     setSearching(false);
   };
+
+  // Get displayed contacts - search results if searching, otherwise initial contacts
+  const displayedContacts = searchQuery.trim().length >= 2 
+    ? searchResults 
+    : initialContacts;
 
   const startCall = async (user: UserSearchResult, type: 'voice' | 'video') => {
     try {
@@ -270,15 +295,15 @@ export function MessengerCalls({ callLogs, isArabic, searchUsers, currentUserId 
             </div>
           </div>
 
-          {/* Search results */}
+          {/* Contacts list */}
           <ScrollArea className="h-80">
             <div className="p-2">
-              {searching ? (
+              {(searching || loadingContacts) ? (
                 <div className="flex items-center justify-center py-8">
                   <Loader2 className="h-6 w-6 animate-spin" style={{ color: WHATSAPP_COLORS.accent }} />
                 </div>
-              ) : searchResults.length > 0 ? (
-                searchResults.map(user => (
+              ) : displayedContacts.length > 0 ? (
+                displayedContacts.map(user => (
                   <div
                     key={user.id}
                     className="flex items-center gap-3 px-3 py-3 hover:bg-white/5 rounded-lg cursor-pointer active:bg-white/10"
@@ -287,12 +312,12 @@ export function MessengerCalls({ callLogs, isArabic, searchUsers, currentUserId 
                     <Avatar className="h-12 w-12">
                       <AvatarImage src={user.profile_image || undefined} />
                       <AvatarFallback style={{ backgroundColor: WHATSAPP_COLORS.accent }}>
-                        {user.full_name.charAt(0).toUpperCase()}
+                        {(user.full_name?.charAt(0) || '?').toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
                       <p className="font-medium" style={{ color: WHATSAPP_COLORS.textPrimary }}>
-                        {user.full_name}
+                        {user.full_name || t('Unknown', 'غير معروف')}
                       </p>
                       <p className="text-xs capitalize" style={{ color: WHATSAPP_COLORS.textMuted }}>
                         {user.role}
@@ -307,17 +332,14 @@ export function MessengerCalls({ callLogs, isArabic, searchUsers, currentUserId 
                     </Button>
                   </div>
                 ))
-              ) : searchQuery.length > 0 ? (
+              ) : searchQuery.length >= 2 ? (
                 <p className="text-center py-8" style={{ color: WHATSAPP_COLORS.textMuted }}>
                   {t('No contacts found', 'لم يتم العثور على جهات اتصال')}
                 </p>
               ) : (
-                <div className="flex flex-col items-center justify-center py-12">
-                  <Users className="h-12 w-12 mb-3" style={{ color: WHATSAPP_COLORS.textMuted }} />
-                  <p className="text-center" style={{ color: WHATSAPP_COLORS.textMuted }}>
-                    {t('Search for contacts to call', 'ابحث عن جهات اتصال للاتصال بها')}
-                  </p>
-                </div>
+                <p className="text-center py-8" style={{ color: WHATSAPP_COLORS.textMuted }}>
+                  {t('No contacts available', 'لا توجد جهات اتصال متاحة')}
+                </p>
               )}
             </div>
           </ScrollArea>

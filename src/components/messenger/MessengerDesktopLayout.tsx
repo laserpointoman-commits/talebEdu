@@ -60,6 +60,7 @@ interface MessengerDesktopLayoutProps {
   onArchiveChat?: (convId: string) => void;
   onPinChat?: (convId: string) => void;
   onMarkAllRead?: () => void;
+  onContactInfoClick?: () => void;
   pinnedChats?: Set<string>;
   canPin?: boolean;
   isArabic?: boolean;
@@ -94,6 +95,7 @@ export function MessengerDesktopLayout({
   onArchiveChat,
   onPinChat,
   onMarkAllRead,
+  onContactInfoClick,
   pinnedChats = new Set(),
   canPin = false,
   isArabic,
@@ -458,7 +460,10 @@ export function MessengerDesktopLayout({
               className="flex items-center justify-between px-4 py-2 shrink-0 border-b"
               style={{ backgroundColor: colors.headerBg, borderColor: colors.divider }}
             >
-              <div className="flex items-center gap-3">
+              <div 
+                className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
+                onClick={onContactInfoClick}
+              >
                 <div className="relative">
                   <Avatar className="h-10 w-10">
                     <AvatarImage src={chatImage || undefined} />
