@@ -119,24 +119,19 @@ export default function BottomNavigation() {
   };
 
   return (
-    <div 
+    <div
       className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-card"
-      style={{ 
+      style={{
         touchAction: 'none',
+        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
       }}
       dir="ltr"
     >
-      {/* Clean background that extends through safe area */}
-      <div 
-        className="absolute inset-0 bg-card border-t border-border shadow-lg"
-        style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
-      />
-      
+      {/* Clean background */}
+      <div className="absolute inset-0 bg-card border-t border-border shadow-lg" />
+
       {/* Navigation container */}
-      <nav 
-        className="relative flex items-center justify-around px-1 py-1.5"
-        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 0.375rem)' }}
-      >
+      <nav className="relative flex items-center justify-around px-1 h-14">
         {navItems.map((item, index) => {
           const active = isActive(item.href);
           const Icon = item.icon;
@@ -191,7 +186,7 @@ export default function BottomNavigation() {
               className="flex-1 flex justify-center"
             >
               <motion.div
-                className="relative flex flex-col items-center justify-center min-w-[56px] py-1.5"
+                className="relative flex flex-col items-center justify-center min-w-[56px] py-0.5"
                 whileTap={{ scale: 0.9 }}
               >
                 {/* Active indicator pill */}

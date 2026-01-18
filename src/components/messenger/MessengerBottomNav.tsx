@@ -35,7 +35,7 @@ export function MessengerBottomNav({
       aria-label={isArabic ? 'تنقل المراسلة' : 'Messenger navigation'}
     >
       {/* Dark messenger background */}
-      <div 
+      <div
         className="absolute inset-0 bg-gradient-to-t from-[#0a1014] via-[#0f1a20]/95 to-[#0f1a20]/85 backdrop-blur-xl"
       />
 
@@ -56,7 +56,7 @@ export function MessengerBottomNav({
         </div>
       </motion.div>
 
-      <div className="relative flex items-stretch justify-around py-1">
+      <div className="relative flex items-stretch justify-around h-14">
         {tabs.map(({ id, icon: Icon, label, badge }) => {
           const isActive = activeTab === id;
 
@@ -64,7 +64,7 @@ export function MessengerBottomNav({
             <motion.button
               key={id}
               className={cn(
-                'flex-1 flex flex-col items-center justify-center py-1 relative',
+                'flex-1 flex flex-col items-center justify-center relative',
                 'transition-colors duration-200'
               )}
               onClick={() => onTabChange(id)}

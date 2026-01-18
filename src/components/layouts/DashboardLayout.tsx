@@ -316,7 +316,9 @@ function DashboardLayout({ children }: DashboardLayoutProps) {
           ref={mainScrollRef}
           className="flex-1 overflow-y-auto overscroll-none bg-muted/10"
           style={{
-            paddingBottom: isMobile ? 'calc(5rem + env(safe-area-inset-bottom, 0px))' : '0',
+            paddingBottom: showBottomNav
+              ? 'calc(3.5rem + env(safe-area-inset-bottom, 0px))'
+              : '0',
             WebkitOverflowScrolling: 'touch',
             touchAction: 'pan-y',
           }}

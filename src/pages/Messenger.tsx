@@ -758,7 +758,7 @@ function MessengerContent() {
           top: (activeTab === 'chats' || activeTab === 'groups')
             ? 'calc(env(safe-area-inset-top, 0px) + 100px)'
             : 'calc(env(safe-area-inset-top, 0px) + 52px)',
-          bottom: 'calc(env(safe-area-inset-bottom, 0px) + 64px)',
+          bottom: 'calc(env(safe-area-inset-bottom, 0px) + 56px)',
           WebkitOverflowScrolling: 'touch',
           touchAction: 'pan-y',
         }}
