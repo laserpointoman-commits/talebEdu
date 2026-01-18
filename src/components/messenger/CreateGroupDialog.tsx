@@ -62,13 +62,13 @@ export function CreateGroupDialog({
         let contacts: UserSearchResult[] = [];
 
         if (currentRole === 'admin') {
-          // Admin can see all profiles
+          // Admin can see all profiles (exclude non-messaging roles)
           const { data, error } = await supabase
             .from('profiles')
             .select('id, full_name, profile_image, role')
             .neq('id', user.id)
-            .neq('role', 'device')
-            .neq('role', 'school_gate')
+            .neq('role', 'bus_attendance')
+            .neq('role', 'school_attendance')
             .order('full_name')
             .limit(50);
 
@@ -87,13 +87,13 @@ export function CreateGroupDialog({
           if (error) throw error;
           contacts = (data || []) as UserSearchResult[];
         } else {
-          // Default for other roles
+          // Default for other roles - exclude device-type roles
           const { data, error } = await supabase
             .from('profiles')
             .select('id, full_name, profile_image, role')
             .neq('id', user.id)
-            .neq('role', 'device')
-            .neq('role', 'school_gate')
+            .neq('role', 'bus_attendance')
+            .neq('role', 'school_attendance')
             .order('full_name')
             .limit(50);
 
