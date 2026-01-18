@@ -110,7 +110,7 @@ export function MessengerDesktopLayout({
   const { isDark } = useMessengerTheme();
   const colors = getMessengerColors(isDark);
   
-  const dir = isArabic ? 'rtl' : 'ltr';
+  // Force LTR layout for consistent UI, text direction handled separately
   const t = (en: string, ar: string) => isArabic ? ar : en;
 
   // Scroll to bottom on new messages
@@ -163,7 +163,7 @@ export function MessengerDesktopLayout({
     <div 
       className="fixed inset-0 flex z-[100]" 
       style={{ backgroundColor: colors.bg }}
-      dir={dir}
+      dir="ltr"
     >
       {/* Left Sidebar */}
       <div 
