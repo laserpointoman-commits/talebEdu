@@ -18,8 +18,7 @@ import { z } from 'zod';
 import StudentRegistration from '@/components/features/StudentRegistration';
 import { supabase } from '@/integrations/supabase/client';
 import { nfcService } from '@/services/nfcService';
-
-// Removed mock students - using StudentsContext instead
+import { StudentCard } from '@/components/students/StudentCard';
 
 export default function Students() {
   const { user, profile } = useAuth();
@@ -442,94 +441,23 @@ export default function Students() {
 
       {/* Show students grid only if not a teacher or if a class is selected */}
       {(profile?.role !== 'teacher' || selectedClass) && (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {mappedStudents.map((student) => (
-          <Card key={student.id} className="hover:shadow-lg transition-shadow relative">
-            {user?.role === 'admin' && (
-              <div className="absolute top-2 left-2 z-10">
-                <Checkbox
-                  checked={selectedStudents.includes(student.id)}
-                  onCheckedChange={() => toggleStudentSelection(student.id)}
-                />
-              </div>
-            )}
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Avatar className="h-12 w-12">
-                    <AvatarImage src={student.profileImage} />
-                    <AvatarFallback>{student.name.charAt(0)}</AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <CardTitle className="text-base">
-                      {language === 'en' ? student.name : student.nameAr}
-                    </CardTitle>
-                    <div className="flex items-center gap-2 mt-1">
-                      {student.classId ? (
-                        <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium bg-primary/10 text-primary rounded-full">
-                          {student.class}
-                        </span>
-                      ) : (
-                        <span className="text-sm text-muted-foreground">{student.grade || (language === 'en' ? 'No class' : language === 'hi' ? 'कोई कक्षा नहीं' : 'لا يوجد صف')}</span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                {canEdit && (
-                  <div className="flex gap-1">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => handleEdit(student)}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => handleDelete(student)}
-                      className="text-destructive hover:text-destructive"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">NFC ID:</span>
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium">{student.nfcId}</span>
-                    {student.nfcId && canEdit && (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-7 w-7 p-0"
-                        onClick={() => handleWriteNFC(student)}
-                        disabled={writingNfc === student.id}
-                      >
-                        <Nfc className={`h-4 w-4 ${writingNfc === student.id ? 'animate-pulse' : ''}`} />
-                      </Button>
-                    )}
-                  </div>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">{t('common.status')}:</span>
-                  <span className="text-success font-medium">{t('common.active')}</span>
-                </div>
-              </div>
-              <Button
-                className="w-full mt-4"
-                variant="outline"
-                onClick={() => handleViewProfile(student)}
-              >
-                {language === 'en' ? 'View Full Profile' : language === 'hi' ? 'पूरी प्रोफाइल देखें' : 'عرض الملف الكامل'}
-              </Button>
-            </CardContent>
-          </Card>
-        ))}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {mappedStudents.map((student) => (
+            <StudentCard
+              key={student.id}
+              student={student}
+              language={language}
+              isSelected={selectedStudents.includes(student.id)}
+              isAdmin={user?.role === 'admin' || profile?.role === 'admin'}
+              canEdit={canEdit}
+              writingNfc={writingNfc === student.id}
+              onSelect={() => toggleStudentSelection(student.id)}
+              onEdit={() => handleEdit(student)}
+              onDelete={() => handleDelete(student)}
+              onWriteNfc={() => handleWriteNFC(student)}
+              onViewProfile={() => handleViewProfile(student)}
+            />
+          ))}
         </div>
       )}
 
