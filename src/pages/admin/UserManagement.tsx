@@ -1591,7 +1591,7 @@ export default function UserManagement() {
 
       {/* Create User Dialog */}
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] p-0 flex flex-col relative overflow-hidden">
+        <DialogContent className="max-w-2xl p-0 overflow-hidden">
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-green-400 via-emerald-500 to-green-600 rounded-t-lg z-10" />
           <DialogHeader className="flex-shrink-0 px-6 pt-6 pb-4">
             <DialogTitle className="flex items-center gap-3 text-xl">
