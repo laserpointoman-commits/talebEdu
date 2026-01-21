@@ -485,28 +485,37 @@ export default function Classes() {
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {filteredClasses.map((classInfo) => (
-          <Card key={classInfo.id} className="hover:shadow-lg transition-shadow">
+          <Card key={classInfo.id} className="relative overflow-hidden border-0 shadow-lg rounded-2xl hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-cyan-500 via-blue-500 to-cyan-600" />
             <CardHeader className="pb-3">
               <div className="flex justify-between items-start">
-                <div>
-                  <CardTitle className="text-lg">{classInfo.name}</CardTitle>
-                  <CardDescription>
-                    {classInfo.academic_year || '2024-2025'}
-                  </CardDescription>
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-cyan-400/20 to-blue-500/20 flex items-center justify-center">
+                    <BookOpen className="h-5 w-5 text-blue-500" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg">{classInfo.name}</CardTitle>
+                    <CardDescription>
+                      {classInfo.academic_year || '2024-2025'}
+                    </CardDescription>
+                  </div>
                 </div>
-                <Badge variant={classInfo.students.length > 0 ? 'default' : 'secondary'}>
+                <Badge 
+                  variant={classInfo.students.length > 0 ? 'default' : 'secondary'}
+                  className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+                >
                   {classInfo.students.length} / {classInfo.capacity || 30}
                 </Badge>
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-2 text-sm">
-                <div className="flex items-center gap-2">
-                  <GraduationCap className="h-4 w-4 text-muted-foreground" />
+                <div className="flex items-center gap-2 p-2 rounded-lg bg-cyan-50/50 dark:bg-cyan-900/10">
+                  <GraduationCap className="h-4 w-4 text-cyan-500" />
                   <span>{language === 'en' ? 'Grade' : language === 'hi' ? 'ग्रेड' : 'الصف'}: {classInfo.grade}</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <BookOpen className="h-4 w-4 text-muted-foreground" />
+                <div className="flex items-center gap-2 p-2 rounded-lg bg-blue-50/50 dark:bg-blue-900/10">
+                  <BookOpen className="h-4 w-4 text-blue-500" />
                   <span>{language === 'en' ? 'Section' : language === 'hi' ? 'सेक्शन' : 'الشعبة'}: {classInfo.section}</span>
                 </div>
                 {classInfo.room && (
@@ -522,8 +531,8 @@ export default function Classes() {
               </div>
 
               {classInfo.teachers?.profiles?.full_name && (
-                <div className="flex items-center gap-2 p-2 bg-muted rounded-md">
-                  <User className="h-4 w-4 text-primary" />
+                <div className="flex items-center gap-2 p-2 bg-gradient-to-r from-cyan-50 to-blue-50 dark:from-cyan-900/10 dark:to-blue-900/10 rounded-lg">
+                  <User className="h-4 w-4 text-blue-500" />
                   <span className="text-sm font-medium">{classInfo.teachers.profiles.full_name}</span>
                 </div>
               )}

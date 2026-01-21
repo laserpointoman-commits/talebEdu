@@ -93,14 +93,22 @@ export default function BusTracking() {
 
   return (
     <div className="space-y-6 p-4 md:p-6">
-      <div>
-        <h1 className="text-3xl font-bold flex items-center gap-2">
-          <Bus className="h-8 w-8 text-primary" />
-          {t('Live Bus Tracking', 'تتبع الحافلة المباشر', 'लाइव बस ट्रैकिंग')}
-        </h1>
-        <p className="text-muted-foreground">
-          {t('Track bus location and student activity in real-time', 'تتبع موقع الحافلة ونشاط الطلاب مباشرة', 'वास्तविक समय में बस की स्थिति और छात्र गतिविधि ट्रैक करें')}
-        </p>
+      {/* Modern Header */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-teal-500 via-cyan-500 to-teal-600 p-6 text-white shadow-xl">
+        <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent" />
+        <div className="relative z-10 flex items-center gap-4">
+          <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm">
+            <Bus className="h-7 w-7 text-white" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold">
+              {t('Live Bus Tracking', 'تتبع الحافلة المباشر', 'लाइव बस ट्रैकिंग')}
+            </h1>
+            <p className="text-teal-100 text-sm">
+              {t('Track bus location and student activity in real-time', 'تتبع موقع الحافلة ونشاط الطلاب مباشرة', 'वास्तविक समय में बस की स्थिति और छात्र गतिविधि ट्रैक करें')}
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Admin/Driver/Developer View - All Buses on One Map */}
@@ -109,10 +117,13 @@ export default function BusTracking() {
           {buses.length > 0 ? (
             <div className="space-y-6">
               {/* Single map showing all buses */}
-              <Card>
+              <Card className="relative overflow-hidden border-0 shadow-lg rounded-2xl">
+                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-teal-500 via-cyan-500 to-teal-600" />
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Navigation className="h-5 w-5 text-primary" />
+                    <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-teal-400/20 to-cyan-500/20 flex items-center justify-center">
+                      <Navigation className="h-4 w-4 text-teal-500" />
+                    </div>
                     {t('All Buses Map', 'خريطة جميع الحافلات', 'सभी बसों का नक्शा')}
                   </CardTitle>
                 </CardHeader>
@@ -133,20 +144,25 @@ export default function BusTracking() {
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                     >
-                      <Card className="h-full">
+                      <Card className="relative overflow-hidden border-0 shadow-lg rounded-2xl h-full hover:shadow-xl transition-all duration-300">
+                        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-teal-500 via-cyan-500 to-teal-600" />
                         <CardHeader className="pb-3">
                           <CardTitle className="flex items-center justify-between text-base">
                             <span className="flex items-center gap-2">
-                              <Bus className="h-4 w-4 text-primary" />
+                              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-teal-400/20 to-cyan-500/20 flex items-center justify-center">
+                                <Bus className="h-4 w-4 text-teal-500" />
+                              </div>
                               {t('Bus', 'حافلة', 'बस')} {bus.bus_number}
                             </span>
                             <Badge 
                               variant={activeTripBusIds.has(bus.id) ? 'default' : 'secondary'}
-                              className="capitalize text-xs"
+                              className={activeTripBusIds.has(bus.id) 
+                                ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" 
+                                : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"}
                             >
                               {activeTripBusIds.has(bus.id)
-                                ? t('🟢 Active Trip', '🟢 رحلة نشطة', '🟢 सक्रिय यात्रा')
-                                : t('🔴 No Active Trip', '🔴 لا توجد رحلة', '🔴 कोई सक्रिय यात्रा नहीं')}
+                                ? t('🟢 Active', '🟢 نشطة', '🟢 सक्रिय')
+                                : t('🔴 Inactive', '🔴 غير نشطة', '🔴 निष्क्रिय')}
                             </Badge>
                           </CardTitle>
                         </CardHeader>
