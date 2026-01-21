@@ -1,17 +1,32 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export function useActiveBusTrips(busIds: string[]) {
   const [activeBusIds, setActiveBusIds] = useState<Set<string>>(new Set());
 
-  const stableBusIds = useMemo(() => {
-    // Keep a stable, de-duped list so effects don't thrash
-    return Array.from(new Set(busIds.filter(Boolean)));
+  // Create a stable key from the sorted bus IDs to prevent infinite loops
+  const busIdsKey = useMemo(() => {
+    const filtered = busIds.filter(Boolean);
+    const sorted = [...new Set(filtered)].sort();
+    return sorted.join(',');
   }, [busIds]);
 
+  const stableBusIds = useMemo(() => {
+    if (!busIdsKey) return [];
+    return busIdsKey.split(',').filter(Boolean);
+  }, [busIdsKey]);
+
+  // Track previous key to avoid unnecessary state updates
+  const prevKeyRef = useRef(busIdsKey);
+
   useEffect(() => {
+    // Only reset when the key actually changes
+    if (prevKeyRef.current !== busIdsKey) {
+      prevKeyRef.current = busIdsKey;
+    }
+
     if (stableBusIds.length === 0) {
-      setActiveBusIds(new Set());
+      setActiveBusIds((prev) => (prev.size === 0 ? prev : new Set()));
       return;
     }
 
@@ -20,7 +35,7 @@ export function useActiveBusTrips(busIds: string[]) {
     const load = async () => {
       // Only consider trips from TODAY as active
       const today = new Date().toISOString().split("T")[0];
-      
+
       const { data, error } = await supabase
         .from("bus_trips")
         .select("bus_id")
@@ -36,13 +51,19 @@ export function useActiveBusTrips(busIds: string[]) {
       }
 
       const next = new Set((data || []).map((r) => r.bus_id as string));
-      setActiveBusIds(next);
+      setActiveBusIds((prev) => {
+        // Avoid unnecessary re-renders if the set is the same
+        if (prev.size === next.size && [...prev].every((id) => next.has(id))) {
+          return prev;
+        }
+        return next;
+      });
     };
 
     load();
 
     const channel = supabase
-      .channel("active-bus-trips")
+      .channel(`active-bus-trips-${busIdsKey.slice(0, 20)}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "bus_trips" },
@@ -56,7 +77,7 @@ export function useActiveBusTrips(busIds: string[]) {
       cancelled = true;
       supabase.removeChannel(channel);
     };
-  }, [stableBusIds]);
+  }, [busIdsKey, stableBusIds]);
 
   return { activeBusIds };
 }
