@@ -8,16 +8,15 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Label } from '@/components/ui/label';
-import { PageHeader } from '@/components/ui/page-header';
-import { CheckCircle2, XCircle, Clock, Bus, School, Calendar as CalendarIcon, Download, Search } from 'lucide-react';
+import { CheckCircle2, XCircle, Clock, Bus, School, Calendar as CalendarIcon, Download, Search, Users, UserCheck, UserX } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { motion } from 'framer-motion';
 
 interface AttendanceRecord {
   id: string;
@@ -66,7 +65,6 @@ export default function Attendance() {
     location: '',
   });
 
-  // Support developer role testing
   const effectiveRole = profile?.role === 'developer'
     ? (sessionStorage.getItem('developerViewRole') as any) || 'developer'
     : profile?.role;
@@ -186,9 +184,9 @@ export default function Attendance() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'present': return 'bg-green-100 text-green-800';
-      case 'absent': return 'bg-red-100 text-red-800';
-      case 'late': return 'bg-yellow-100 text-yellow-800';
+      case 'present': return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
+      case 'absent': return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400';
+      case 'late': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -221,6 +219,11 @@ export default function Attendance() {
     });
   };
 
+  // Calculate stats
+  const presentCount = filteredRecords.filter(r => r.status === 'present').length;
+  const absentCount = filteredRecords.filter(r => r.status === 'absent').length;
+  const lateCount = filteredRecords.filter(r => r.status === 'late').length;
+
   if (effectiveRole !== 'admin' && effectiveRole !== 'teacher' && effectiveRole !== 'developer') {
     return (
       <div className="flex items-center justify-center h-[50vh]">
@@ -237,28 +240,107 @@ export default function Attendance() {
 
   return (
     <div className="space-y-6 p-4 md:p-6" dir={language === 'ar' ? 'rtl' : 'ltr'}>
-      <PageHeader
-        title="Attendance"
-        titleAr="الحضور"
-        titleHi="उपस्थिति"
-        subtitle="Track and manage student attendance"
-        subtitleAr="تتبع وإدارة حضور الطلاب"
-        subtitleHi="छात्र उपस्थिति ट्रैक और प्रबंधित करें"
-        actions={
+      {/* Modern Header */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-sky-500 via-primary to-sky-600 p-6 text-white shadow-lg">
+        <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent" />
+        <div className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-3">
+              <div className="p-2 bg-white/20 rounded-xl backdrop-blur-sm">
+                <UserCheck className="h-6 w-6" />
+              </div>
+              {getText('Attendance', 'الحضور', 'उपस्थिति')}
+            </h1>
+            <p className="text-white/80 mt-1">
+              {getText('Track and manage student attendance', 'تتبع وإدارة حضور الطلاب', 'छात्र उपस्थिति ट्रैक और प्रबंधित करें')}
+            </p>
+          </div>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={handleExportReport} size="sm">
+            <Button variant="secondary" onClick={handleExportReport} size="sm" className="bg-white/20 hover:bg-white/30 text-white border-0">
               <Download className="h-4 w-4 mr-2" />
               {getText('Export', 'تصدير', 'निर्यात')}
             </Button>
-            <Button onClick={() => setIsMarkAttendanceOpen(true)} size="sm">
-              {getText('Mark', 'تسجيل', 'चिह्नित करें')}
+            <Button onClick={() => setIsMarkAttendanceOpen(true)} size="sm" className="bg-white text-primary hover:bg-white/90">
+              {getText('Mark Attendance', 'تسجيل الحضور', 'उपस्थिति दर्ज करें')}
             </Button>
           </div>
-        }
-      />
+        </div>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+          <Card className="relative overflow-hidden border-0 shadow-lg rounded-2xl">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary to-sky-500" />
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">{getText('Total', 'الإجمالي', 'कुल')}</p>
+                  <p className="text-2xl font-bold">{filteredRecords.length}</p>
+                </div>
+                <div className="p-3 rounded-xl bg-gradient-to-br from-primary/10 to-sky-500/10">
+                  <Users className="h-6 w-6 text-primary" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+          <Card className="relative overflow-hidden border-0 shadow-lg rounded-2xl">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-green-400 to-green-600" />
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">{getText('Present', 'حاضر', 'उपस्थित')}</p>
+                  <p className="text-2xl font-bold text-green-600">{presentCount}</p>
+                </div>
+                <div className="p-3 rounded-xl bg-gradient-to-br from-green-500/10 to-green-600/10">
+                  <CheckCircle2 className="h-6 w-6 text-green-500" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+          <Card className="relative overflow-hidden border-0 shadow-lg rounded-2xl">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-red-400 to-red-600" />
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">{getText('Absent', 'غائب', 'अनुपस्थित')}</p>
+                  <p className="text-2xl font-bold text-red-600">{absentCount}</p>
+                </div>
+                <div className="p-3 rounded-xl bg-gradient-to-br from-red-500/10 to-red-600/10">
+                  <XCircle className="h-6 w-6 text-red-500" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
+          <Card className="relative overflow-hidden border-0 shadow-lg rounded-2xl">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-yellow-400 to-yellow-600" />
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">{getText('Late', 'متأخر', 'देर से')}</p>
+                  <p className="text-2xl font-bold text-yellow-600">{lateCount}</p>
+                </div>
+                <div className="p-3 rounded-xl bg-gradient-to-br from-yellow-500/10 to-yellow-600/10">
+                  <Clock className="h-6 w-6 text-yellow-500" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
 
       {/* Filters */}
-      <Card>
+      <Card className="border-0 shadow-lg rounded-2xl overflow-hidden">
+        <div className="h-1 bg-gradient-to-r from-primary via-sky-500 to-primary" />
         <CardContent className="pt-6">
           <div className="grid gap-4 md:grid-cols-6">
             <div className="space-y-2">
@@ -287,7 +369,7 @@ export default function Attendance() {
                 </PopoverContent>
               </Popover>
             </div>
-            <div className="space-y-2">
+            <div className="space-y-2 md:col-span-2">
               <Label>{getText('Search', 'البحث', 'खोजें')}</Label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
@@ -331,27 +413,45 @@ export default function Attendance() {
       </Card>
 
       {/* Attendance Records */}
-      <Card>
+      <Card className="border-0 shadow-lg rounded-2xl overflow-hidden">
+        <div className="h-1 bg-gradient-to-r from-sky-400 via-primary to-sky-600" />
         <CardHeader>
-          <CardTitle>{getText('Attendance Records', 'سجلات الحضور', 'उपस्थिति रिकॉर्ड')}</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <CalendarIcon className="h-5 w-5 text-primary" />
+            {getText('Attendance Records', 'سجلات الحضور', 'उपस्थिति रिकॉर्ड')}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
             {filteredRecords.length === 0 ? (
-              <div className="text-center py-8">
+              <div className="text-center py-12">
+                <div className="p-4 rounded-full bg-muted/50 w-fit mx-auto mb-4">
+                  <Users className="h-8 w-8 text-muted-foreground" />
+                </div>
                 <p className="text-muted-foreground">
                   {getText('No attendance records found for this date', 'لا توجد سجلات حضور لهذا التاريخ', 'इस तारीख के लिए कोई उपस्थिति रिकॉर्ड नहीं मिला')}
                 </p>
               </div>
             ) : (
-              filteredRecords.map((record) => (
-                <div key={record.id} className="flex items-center justify-between p-4 border rounded-lg">
+              filteredRecords.map((record, index) => (
+                <motion.div
+                  key={record.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  className="flex items-center justify-between p-4 bg-muted/30 rounded-xl hover:bg-muted/50 transition-all"
+                >
                   <div className="flex items-center gap-4">
-                    <div className="p-2 rounded-full bg-muted">
+                    <div className={cn(
+                      "p-3 rounded-xl",
+                      record.type === 'school' 
+                        ? 'bg-gradient-to-br from-primary/10 to-sky-500/10' 
+                        : 'bg-gradient-to-br from-orange-500/10 to-amber-500/10'
+                    )}>
                       {record.type === 'school' ? (
-                        <School className="h-4 w-4" />
+                        <School className="h-5 w-5 text-primary" />
                       ) : (
-                        <Bus className="h-4 w-4" />
+                        <Bus className="h-5 w-5 text-orange-500" />
                       )}
                     </div>
                     <div>
@@ -372,11 +472,11 @@ export default function Attendance() {
                        record.status === 'absent' ? getText('Absent', 'غائب', 'अनुपस्थित') :
                        getText('Late', 'متأخر', 'देर से')}
                     </Badge>
-                    <Badge variant="outline">
+                    <Badge variant="outline" className="capitalize">
                       {record.type === 'school' ? getText('School', 'المدرسة', 'स्कूल') : getText('Bus', 'الحافلة', 'बस')}
                     </Badge>
                   </div>
-                </div>
+                </motion.div>
               ))
             )}
           </div>
@@ -385,9 +485,10 @@ export default function Attendance() {
 
       {/* Mark Attendance Dialog */}
       <Dialog open={isMarkAttendanceOpen} onOpenChange={setIsMarkAttendanceOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <UserCheck className="h-5 w-5 text-primary" />
               {getText('Mark Attendance', 'تسجيل الحضور', 'उपस्थिति दर्ज करें')}
             </DialogTitle>
           </DialogHeader>
@@ -438,31 +539,29 @@ export default function Attendance() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="time">{getText('Time', 'الوقت', 'समय')}</Label>
+                <Label>{getText('Time', 'الوقت', 'समय')}</Label>
                 <Input
-                  id="time"
                   type="time"
                   value={newAttendance.time}
                   onChange={(e) => setNewAttendance({ ...newAttendance, time: e.target.value })}
                 />
               </div>
               <div>
-                <Label htmlFor="location">{getText('Location (Optional)', 'الموقع (اختياري)', 'स्थान (वैकल्पिक)')}</Label>
+                <Label>{getText('Location', 'الموقع', 'स्थान')}</Label>
                 <Input
-                  id="location"
+                  placeholder={getText('e.g., Main Gate', 'مثال: البوابة الرئيسية', 'जैसे, मुख्य द्वार')}
                   value={newAttendance.location}
                   onChange={(e) => setNewAttendance({ ...newAttendance, location: e.target.value })}
-                  placeholder={language === 'en' ? 'e.g., Main Entrance' : 'مثل: المدخل الرئيسي'}
                 />
               </div>
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsMarkAttendanceOpen(false)}>
-              {t('common.cancel')}
+              {getText('Cancel', 'إلغاء', 'रद्द करें')}
             </Button>
-            <Button onClick={handleMarkAttendance}>
-              {language === 'en' ? 'Mark Attendance' : 'تسجيل الحضور'}
+            <Button onClick={handleMarkAttendance} className="bg-gradient-to-r from-primary to-sky-500 hover:from-primary/90 hover:to-sky-500/90">
+              {getText('Save', 'حفظ', 'सहेजें')}
             </Button>
           </DialogFooter>
         </DialogContent>
