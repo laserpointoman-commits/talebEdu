@@ -54,7 +54,7 @@ export default function BusTracking() {
       } else if (effectiveRole === 'parent') {
         const { data, error } = await supabase
           .from('students')
-          .select('*')
+          .select('*, buses:bus_id(*)')
           .eq('parent_id', user.id);
 
         if (error) throw error;
@@ -62,7 +62,7 @@ export default function BusTracking() {
       } else if (effectiveRole === 'student') {
         const { data, error } = await supabase
           .from('students')
-          .select('id')
+          .select('id, bus_id')
           .eq('profile_id', user.id)
           .single();
 
@@ -228,7 +228,7 @@ export default function BusTracking() {
                   </CardHeader>
                 </Card>
 
-                {child.bus_route_id ? (
+                {child.bus_id ? (
                   <>
                     <Card>
                       <CardHeader>
@@ -239,7 +239,7 @@ export default function BusTracking() {
                       </CardHeader>
                       <CardContent>
                         <BusMap 
-                          busId={child.bus_route_id}
+                          busId={child.bus_id}
                           studentLocation={child.home_latitude && child.home_longitude ? {
                             lat: child.home_latitude,
                             lng: child.home_longitude
@@ -249,7 +249,7 @@ export default function BusTracking() {
                     </Card>
 
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                      <BoardingHistory studentId={child.id} busId={child.bus_route_id} />
+                      <BoardingHistory studentId={child.id} busId={child.bus_id} />
                       
                       <Card>
                         <CardHeader>
@@ -262,7 +262,7 @@ export default function BusTracking() {
                           <BusInfoItem
                             icon={<Bus className="h-4 w-4" />}
                             label={t('Bus Number', 'رقم الحافلة', 'बस नंबर')}
-                            value={child.bus_route_id}
+                            value={child.buses?.bus_number || child.bus_id}
                           />
                           <BusInfoItem
                             icon={<MapPin className="h-4 w-4" />}
@@ -319,7 +319,7 @@ export default function BusTracking() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <BusMap busId={studentData.bus_route_id || ''} />
+              <BusMap busId={studentData.bus_id || ''} />
             </CardContent>
           </Card>
 
