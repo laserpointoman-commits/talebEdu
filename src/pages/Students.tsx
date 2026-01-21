@@ -19,6 +19,7 @@ import StudentRegistration from '@/components/features/StudentRegistration';
 import { supabase } from '@/integrations/supabase/client';
 import { nfcService } from '@/services/nfcService';
 import { StudentCard } from '@/components/students/StudentCard';
+import { StudentProfileDialog } from '@/components/students/StudentProfileDialog';
 
 export default function Students() {
   const { user, profile } = useAuth();
@@ -472,102 +473,26 @@ export default function Students() {
       />
 
       {/* Profile Dialog */}
-      <Dialog open={isProfileDialogOpen} onOpenChange={setIsProfileDialogOpen}>
-        <DialogContent className="max-w-3xl">
-          <DialogHeader>
-            <DialogTitle>
-              {language === 'en' ? 'Student Profile' : language === 'hi' ? 'छात्र प्रोफाइल' : 'ملف الطالب'}
-            </DialogTitle>
-          </DialogHeader>
-          {selectedStudent && (
-            <div className="space-y-6">
-              <div className="flex items-center gap-6">
-                <Avatar className="h-24 w-24">
-                  <AvatarImage src={selectedStudent.profileImage} />
-                  <AvatarFallback>{selectedStudent.name.charAt(0)}</AvatarFallback>
-                </Avatar>
-                <div>
-                  <h3 className="text-2xl font-bold">
-                    {language === 'en' ? selectedStudent.name : selectedStudent.nameAr}
-                  </h3>
-                  <p className="text-muted-foreground number-display">{selectedStudent.email}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {t('parent.grade')}: <span className="number-display">{selectedStudent.grade}</span> | {t('common.class')}: <span className="number-display">{selectedStudent.class}</span>
-                  </p>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-muted-foreground">{t('common.nfcId')}</Label>
-                  <div className="flex items-center gap-2">
-                    <p className="font-medium number-display">{selectedStudent.nfcId || (language === 'en' ? 'Not assigned' : language === 'hi' ? 'नियुक्त नहीं' : 'لم يتم تعيين')}</p>
-                    {selectedStudent.nfcId && canEdit && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleWriteNFC(selectedStudent)}
-                        disabled={writingNfc === selectedStudent.id}
-                      >
-                        <Nfc className={`h-4 w-4 mr-2 ${writingNfc === selectedStudent.id ? 'animate-pulse' : ''}`} />
-                        {language === 'en' ? 'Write NFC' : language === 'hi' ? 'NFC लिखें' : 'كتابة NFC'}
-                      </Button>
-                    )}
-                  </div>
-                </div>
-                <div>
-                  <Label className="text-muted-foreground">{t('common.barcode')}</Label>
-                  <p className="font-medium number-display">{selectedStudent.barcode || (language === 'en' ? 'Not assigned' : language === 'hi' ? 'नियुक्त नहीं' : 'لم يتم تعيين')}</p>
-                </div>
-                <div>
-                  <Label className="text-muted-foreground">{t('common.phone')}</Label>
-                  <p className="font-medium number-display">{selectedStudent.phone || '-'}</p>
-                </div>
-                <div>
-                  <Label className="text-muted-foreground">{t('common.parentPhone')}</Label>
-                  <p className="font-medium number-display">{selectedStudent.parentPhone || '-'}</p>
-                </div>
-                <div>
-                  <Label className="text-muted-foreground">{t('common.dateOfBirth')}</Label>
-                  <p className="font-medium number-display">{selectedStudent.dateOfBirth || '-'}</p>
-                </div>
-                <div>
-                  <Label className="text-muted-foreground">{t('common.bloodGroup')}</Label>
-                  <p className="font-medium">{selectedStudent.bloodGroup || '-'}</p>
-                </div>
-                <div>
-                  <Label className="text-muted-foreground">{language === 'en' ? 'Nationality' : language === 'hi' ? 'राष्ट्रीयता' : 'الجنسية'}</Label>
-                  <p className="font-medium">{selectedStudent.nationality || '-'}</p>
-                </div>
-                <div>
-                  <Label className="text-muted-foreground">{language === 'en' ? 'Gender' : language === 'hi' ? 'लिंग' : 'الجنس'}</Label>
-                  <p className="font-medium">{selectedStudent.gender || '-'}</p>
-                </div>
-                <div className="col-span-2">
-                  <Label className="text-muted-foreground">{t('common.address')}</Label>
-                  <p className="font-medium">{selectedStudent.address || '-'}</p>
-                </div>
-                <div>
-                  <Label className="text-muted-foreground">{language === 'en' ? 'Emergency Contact' : language === 'hi' ? 'आपातकालीन संपर्क' : 'جهة الاتصال الطارئة'}</Label>
-                  <p className="font-medium">{selectedStudent.emergencyContactName || '-'}</p>
-                </div>
-                <div>
-                  <Label className="text-muted-foreground">{language === 'en' ? 'Emergency Phone' : language === 'hi' ? 'आपातकालीन फोन' : 'هاتف الطوارئ'}</Label>
-                  <p className="font-medium number-display">{selectedStudent.emergencyContact || '-'}</p>
-                </div>
-                <div className="col-span-2">
-                  <Label className="text-muted-foreground">{language === 'en' ? 'Medical Conditions' : language === 'hi' ? 'चिकित्सा स्थितियाँ' : 'الحالة الطبية'}</Label>
-                  <p className="font-medium">{selectedStudent.medicalConditions || '-'}</p>
-                </div>
-                <div className="col-span-2">
-                  <Label className="text-muted-foreground">{t('common.allergies')}</Label>
-                  <p className="font-medium">{selectedStudent.allergies || '-'}</p>
-                </div>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      <StudentProfileDialog
+        student={selectedStudent}
+        open={isProfileDialogOpen}
+        onOpenChange={setIsProfileDialogOpen}
+        language={language}
+        canEdit={canEdit}
+        writingNfc={writingNfc === selectedStudent?.id}
+        onWriteNfc={() => selectedStudent && handleWriteNFC(selectedStudent)}
+        onEdit={() => {
+          if (selectedStudent) {
+            const fullStudent = students.find(s => s.id === selectedStudent.id);
+            if (fullStudent) {
+              setEditingStudent(fullStudent);
+              setIsProfileDialogOpen(false);
+              setIsRegistrationOpen(true);
+            }
+          }
+        }}
+        t={t}
+      />
 
       {/* NFC Reading Dialog */}
       <Dialog open={isNfcDialogOpen} onOpenChange={setIsNfcDialogOpen}>
