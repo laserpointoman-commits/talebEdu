@@ -1,8 +1,8 @@
-import { motion } from 'framer-motion';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { 
   Nfc, 
   GraduationCap, 
@@ -78,13 +78,11 @@ export function StudentProfileDialog({
     label, 
     value, 
     iconColor = "text-primary",
-    action 
   }: { 
     icon: React.ElementType; 
     label: string; 
     value: string; 
     iconColor?: string;
-    action?: React.ReactNode;
   }) => (
     <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/30 border border-border/50">
       <div className={cn("h-10 w-10 rounded-lg flex items-center justify-center bg-card shadow-sm", iconColor)}>
@@ -94,13 +92,22 @@ export function StudentProfileDialog({
         <p className="text-xs text-muted-foreground uppercase tracking-wide">{label}</p>
         <p className="text-sm font-medium text-foreground truncate number-display">{value || '—'}</p>
       </div>
-      {action}
     </div>
   );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl p-0 overflow-hidden bg-card border-0 shadow-2xl">
+      <DialogContent className="max-w-2xl max-h-[90vh] p-0 overflow-y-auto bg-card border-0 shadow-2xl">
+        {/* Hidden title for accessibility */}
+        <VisuallyHidden>
+          <DialogTitle>
+            {language === 'en' ? 'Student Profile' : language === 'hi' ? 'छात्र प्रोफाइल' : 'ملف الطالب'} - {displayName}
+          </DialogTitle>
+          <DialogDescription>
+            {language === 'en' ? 'View student details and information' : language === 'hi' ? 'छात्र विवरण और जानकारी देखें' : 'عرض تفاصيل ومعلومات الطالب'}
+          </DialogDescription>
+        </VisuallyHidden>
+        
         {/* Header with gradient */}
         <div className="relative">
           {/* Gradient background */}
@@ -109,7 +116,7 @@ export function StudentProfileDialog({
           {/* Close button */}
           <button
             onClick={() => onOpenChange(false)}
-            className="absolute top-3 right-3 h-8 w-8 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors"
+            className="absolute top-3 right-3 h-8 w-8 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors z-10"
           >
             <X className="h-4 w-4 text-white" />
           </button>
@@ -136,7 +143,7 @@ export function StudentProfileDialog({
             <Button
               size="sm"
               variant="secondary"
-              className="absolute -bottom-5 right-6 shadow-lg"
+              className="absolute -bottom-5 right-6 shadow-lg z-10"
               onClick={onEdit}
             >
               <Edit className="h-4 w-4 mr-2" />
@@ -164,7 +171,7 @@ export function StudentProfileDialog({
           
           {/* NFC and Barcode Section */}
           <div className="p-4 rounded-2xl bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border border-amber-200/50 dark:border-amber-700/30">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between flex-wrap gap-3">
               <div className="flex items-center gap-4">
                 <div className="relative">
                   <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-lg">
