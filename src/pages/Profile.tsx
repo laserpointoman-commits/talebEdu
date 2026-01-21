@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { User, Mail, Phone, MapPin, Calendar, Edit, Save, X, Camera, Shield, Key, Eye, EyeOff, CreditCard } from 'lucide-react';
@@ -167,38 +168,51 @@ const Profile = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">
-          {getText('My Profile', 'الملف الشخصي', 'मेरी प्रोफ़ाइल')}
-        </h1>
-        {!isEditing ? (
-          <Button onClick={() => setIsEditing(true)} className="gap-2">
-            <Edit className="h-4 w-4" />
-            {getText('Edit Profile', 'تعديل', 'प्रोफ़ाइल संपादित करें')}
-          </Button>
-        ) : (
-          <div className="flex gap-2">
-            <Button onClick={handleSave} variant="default" className="gap-2">
-              <Save className="h-4 w-4" />
-              {getText('Save', 'حفظ', 'सहेजें')}
-            </Button>
-            <Button onClick={handleCancel} variant="outline" className="gap-2">
-              <X className="h-4 w-4" />
-              {getText('Cancel', 'إلغاء', 'रद्द करें')}
-            </Button>
+      {/* Modern Header */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-violet-500 via-purple-500 to-violet-600 p-6 text-white shadow-xl">
+        <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent" />
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm">
+              <User className="h-7 w-7 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold">
+                {getText('My Profile', 'الملف الشخصي', 'मेरी प्रोफ़ाइल')}
+              </h1>
+              <p className="text-violet-100 text-sm">{profile?.full_name || user?.email}</p>
+            </div>
           </div>
-        )}
+          {!isEditing ? (
+            <Button onClick={() => setIsEditing(true)} className="gap-2 bg-white/20 hover:bg-white/30 text-white border-0">
+              <Edit className="h-4 w-4" />
+              {getText('Edit Profile', 'تعديل', 'प्रोफ़ाइल संपादित करें')}
+            </Button>
+          ) : (
+            <div className="flex gap-2">
+              <Button onClick={handleSave} className="gap-2 bg-white/20 hover:bg-white/30 text-white border-0">
+                <Save className="h-4 w-4" />
+                {getText('Save', 'حفظ', 'सहेजें')}
+              </Button>
+              <Button onClick={handleCancel} variant="outline" className="gap-2 bg-white/10 hover:bg-white/20 text-white border-white/30">
+                <X className="h-4 w-4" />
+                {getText('Cancel', 'إلغاء', 'रद्द करें')}
+              </Button>
+            </div>
+          )}
+        </div>
       </div>
 
-      <Card>
+      <Card className="relative overflow-hidden border-0 shadow-lg rounded-2xl">
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-violet-500 via-purple-500 to-violet-600" />
         <CardContent className="pt-6">
           <div className="flex flex-col lg:flex-row gap-8">
             {/* Profile Image Section */}
             <div className="flex flex-col items-center space-y-4">
               <div className="relative">
-                <Avatar className="h-32 w-32">
+                <Avatar className="h-32 w-32 ring-4 ring-violet-100 dark:ring-violet-900/30">
                   <AvatarImage src={undefined} />
-                  <AvatarFallback className="bg-gradient-primary text-white text-3xl">
+                  <AvatarFallback className="bg-gradient-to-br from-violet-500 to-purple-600 text-white text-3xl">
                     {profile?.full_name?.charAt(0) || 'U'}
                   </AvatarFallback>
                 </Avatar>
@@ -206,7 +220,7 @@ const Profile = () => {
                   <Button
                     size="icon"
                     variant="secondary"
-                    className="absolute bottom-0 right-0 rounded-full h-10 w-10"
+                    className="absolute bottom-0 right-0 rounded-full h-10 w-10 bg-violet-500 hover:bg-violet-600 text-white"
                   >
                     <Camera className="h-5 w-5" />
                   </Button>
@@ -214,7 +228,7 @@ const Profile = () => {
               </div>
               <div className="text-center">
                 <h3 className="font-semibold text-lg">{profile?.full_name || user?.email}</h3>
-                <p className="text-sm text-muted-foreground capitalize">{profile?.role}</p>
+                <Badge className="capitalize bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400">{profile?.role}</Badge>
               </div>
             </div>
 

@@ -92,27 +92,42 @@ export default function Exams() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">{t('dashboard.examSchedule')}</h2>
-          <p className="text-muted-foreground">
-            {language === 'en' ? 'View upcoming exam schedules' : language === 'hi' ? 'आगामी परीक्षा कार्यक्रम देखें' : 'عرض جداول الامتحانات القادمة'}
-          </p>
+      {/* Modern Header */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-amber-400 via-orange-500 to-amber-500 p-6 text-white shadow-xl">
+        <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent" />
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm">
+              <Calendar className="h-7 w-7 text-white" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold">{t('dashboard.examSchedule')}</h2>
+              <p className="text-amber-100 text-sm">
+                {language === 'en' ? 'View upcoming exam schedules' : language === 'hi' ? 'आगामी परीक्षा कार्यक्रम देखें' : 'عرض جداول الامتحانات القادمة'}
+              </p>
+            </div>
+          </div>
+          <Button onClick={downloadExamSchedule} className="gap-2 bg-white/20 hover:bg-white/30 text-white border-0">
+            <Download className="h-4 w-4" />
+            {language === 'en' ? 'Download Schedule' : language === 'hi' ? 'शेड्यूल डाउनलोड करें' : 'تنزيل الجدول'}
+          </Button>
         </div>
-        <Button onClick={downloadExamSchedule} variant="outline">
-          <Download className="h-4 w-4 mr-2" />
-          {language === 'en' ? 'Download Schedule' : language === 'hi' ? 'शेड्यूल डाउनलोड करें' : 'تنزيل الجدول'}
-        </Button>
       </div>
 
       <div className="grid gap-4">
         {upcomingExams.map((exam) => (
-          <Card key={exam.id}>
+          <Card key={exam.id} className="relative overflow-hidden border-0 shadow-lg rounded-2xl hover:shadow-xl transition-all duration-300">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-400 via-orange-500 to-amber-500" />
             <CardHeader>
               <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-lg">{exam.subject}</CardTitle>
-                  <Badge className="mt-1" variant="outline">{exam.examType}</Badge>
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-amber-400/20 to-orange-500/20 flex items-center justify-center">
+                    <FileText className="h-5 w-5 text-orange-500" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg">{exam.subject}</CardTitle>
+                    <Badge className="mt-1 bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400" variant="outline">{exam.examType}</Badge>
+                  </div>
                 </div>
                 <div className="text-right">
                   <p className="text-sm font-medium">{exam.date}</p>
