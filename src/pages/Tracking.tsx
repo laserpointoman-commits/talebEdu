@@ -417,60 +417,69 @@ export default function Tracking() {
   // Driver view
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-start">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-            <Navigation className="h-8 w-8" />
-            {getText('Route Tracking', 'تتبع المسار', 'मार्ग ट्रैकिंग')}
-          </h2>
-          <p className="text-muted-foreground mt-1">
-            {language === 'ar' ? currentRoute.nameAr : currentRoute.name}
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <NfcReader driverMode={true} />
-          {currentRoute.status === 'not-started' && (
-            <Button onClick={handleStartRoute} className="gap-2">
-              <Play className="h-4 w-4" />
-              {getText('Start Route', 'بدء المسار', 'मार्ग शुरू करें')}
-            </Button>
-          )}
-          {currentRoute.status === 'in-progress' && (
-            <>
-              <Button onClick={handlePauseRoute} variant="outline" className="gap-2">
-                <Pause className="h-4 w-4" />
-                {getText('Pause', 'إيقاف مؤقت', 'रोकें')}
+      {/* Modern Header */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 p-6 text-white shadow-xl">
+        <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent" />
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm">
+              <Navigation className="h-7 w-7 text-white" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold">
+                {getText('Route Tracking', 'تتبع المسار', 'मार्ग ट्रैकिंग')}
+              </h2>
+              <p className="text-emerald-100 text-sm">
+                {language === 'ar' ? currentRoute.nameAr : currentRoute.name}
+              </p>
+            </div>
+          </div>
+          <div className="flex gap-2 flex-wrap">
+            <NfcReader driverMode={true} />
+            {currentRoute.status === 'not-started' && (
+              <Button onClick={handleStartRoute} className="gap-2 bg-white/20 hover:bg-white/30 text-white border-0">
+                <Play className="h-4 w-4" />
+                {getText('Start Route', 'بدء المسار', 'मार्ग शुरू करें')}
               </Button>
-              <Button onClick={handleEndRoute} variant="destructive" className="gap-2">
-                <Square className="h-4 w-4" />
-                {getText('End Route', 'إنهاء المسار', 'मार्ग समाप्त')}
+            )}
+            {currentRoute.status === 'in-progress' && (
+              <>
+                <Button onClick={handlePauseRoute} className="gap-2 bg-white/20 hover:bg-white/30 text-white border-0">
+                  <Pause className="h-4 w-4" />
+                  {getText('Pause', 'إيقاف مؤقت', 'रोकें')}
+                </Button>
+                <Button onClick={handleEndRoute} className="gap-2 bg-red-500/80 hover:bg-red-500 text-white border-0">
+                  <Square className="h-4 w-4" />
+                  {getText('End Route', 'إنهاء المسار', 'मार्ग समाप्त')}
+                </Button>
+              </>
+            )}
+            {currentRoute.status === 'paused' && (
+              <Button onClick={handleStartRoute} className="gap-2 bg-white/20 hover:bg-white/30 text-white border-0">
+                <Play className="h-4 w-4" />
+                {getText('Resume', 'استئناف', 'जारी रखें')}
               </Button>
-            </>
-          )}
-          {currentRoute.status === 'paused' && (
-            <Button onClick={handleStartRoute} className="gap-2">
-              <Play className="h-4 w-4" />
-              {getText('Resume', 'استئناف', 'जारी रखें')}
-            </Button>
-          )}
+            )}
+          </div>
         </div>
       </div>
 
       {/* Status Cards */}
       <div className="grid gap-4 md:grid-cols-4">
-        <Card>
-          <CardContent className="p-4">
+        <Card className="relative overflow-hidden border-0 shadow-lg rounded-2xl">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600" />
+          <CardContent className="p-5">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">
                   {getText('Progress', 'التقدم', 'प्रगति')}
                 </p>
-                <p className="text-2xl font-bold">
+                <p className="text-2xl font-bold mt-1">
                   {currentRoute.completedStops}/{currentRoute.totalStops || studentsOnRoute.length}
                 </p>
               </div>
               <div className="w-16">
-                <Progress 
+                <Progress
                   value={currentRoute.totalStops > 0 ? (currentRoute.completedStops / currentRoute.totalStops) * 100 : 0} 
                   className="h-2"
                 />
