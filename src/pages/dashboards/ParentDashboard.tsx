@@ -3,15 +3,13 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { GlassCard, GlassCardContent } from "@/components/ui/glass-card";
 import { 
   Wallet, 
   GraduationCap, 
   TrendingUp,
   UserPlus,
   Clock,
-  ChevronRight,
-  Sparkles
+  ChevronRight
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -34,23 +32,28 @@ const ChildCard = memo(({
     initial={{ opacity: 0, y: 10 }}
     animate={{ opacity: 1, y: 0 }}
     whileTap={{ scale: 0.98 }}
+    whileHover={{ y: -4 }}
+    className="group"
   >
-    <GlassCard 
-      className="cursor-pointer group"
+    <div 
+      className="cursor-pointer bg-card rounded-2xl border border-border overflow-hidden hover:shadow-xl transition-all duration-300"
       onClick={onClick}
-      hover
     >
-      <GlassCardContent className="py-4">
+      {/* Top accent bar */}
+      <div className="h-1.5 bg-gradient-to-r from-sky-400 via-primary to-sky-600" />
+      
+      <div className="p-4">
         <div className="flex items-center gap-4">
-          {/* Avatar */}
+          {/* Avatar with gradient ring */}
           <div className="relative">
-            <div className="w-12 h-12 rounded-lg bg-primary flex items-center justify-center">
-              <span className="text-lg font-semibold text-primary-foreground">
+            <div className="absolute -inset-1 rounded-xl bg-gradient-to-br from-sky-400 to-primary opacity-75" />
+            <div className="relative w-14 h-14 rounded-xl bg-gradient-to-br from-sky-400 to-primary flex items-center justify-center shadow-lg">
+              <span className="text-lg font-bold text-white">
                 {child.first_name?.charAt(0)}{child.last_name?.charAt(0)}
               </span>
             </div>
-            <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-success flex items-center justify-center border-2 border-card">
-              <Sparkles className="h-2 w-2 text-white" />
+            <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-card flex items-center justify-center border-2 border-card">
+              <div className="w-3 h-3 rounded-full bg-emerald-500" />
             </div>
           </div>
           
@@ -62,17 +65,18 @@ const ChildCard = memo(({
                   ? `${child.first_name_ar || child.first_name} ${child.last_name_ar || child.last_name}`
                   : `${child.first_name} ${child.last_name}`}
               </h3>
-              <Badge variant="secondary" className="text-[10px] px-2 py-0.5 rounded font-medium">
+              <Badge className="text-[10px] px-2 py-0.5 rounded-md bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-300 font-medium">
                 {child.grade}
               </Badge>
             </div>
-            <p className="text-sm text-muted-foreground mt-0.5">
+            <p className="text-sm text-muted-foreground mt-0.5 flex items-center gap-1">
+              <GraduationCap className="h-3.5 w-3.5" />
               {language === 'ar' ? `الفصل: ${child.class}` : language === 'hi' ? `कक्षा: ${child.class}` : `Class: ${child.class}`}
             </p>
           </div>
           
           {/* Balance & Arrow */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <div className="text-right">
               <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
                 {language === 'ar' ? 'الرصيد' : language === 'hi' ? 'शेष' : 'Balance'}
@@ -81,13 +85,13 @@ const ChildCard = memo(({
                 {child.wallet_balance || 0}
               </p>
             </div>
-            <div className="p-1.5 rounded-lg bg-secondary group-hover:bg-primary/10 transition-colors">
-              <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+            <div className="p-2 rounded-xl bg-primary/10 group-hover:bg-primary group-hover:text-white transition-colors">
+              <ChevronRight className="h-5 w-5 text-primary group-hover:text-white transition-colors" />
             </div>
           </div>
         </div>
-      </GlassCardContent>
-    </GlassCard>
+      </div>
+    </div>
   </motion.div>
 ));
 
@@ -105,11 +109,12 @@ const PendingStudentCard = memo(({
     initial={{ opacity: 0, y: 10 }}
     animate={{ opacity: 1, y: 0 }}
   >
-    <GlassCard className="border-warning/30 bg-warning/5">
-      <GlassCardContent className="py-3">
+    <div className="bg-card rounded-2xl border border-amber-200 dark:border-amber-700/30 overflow-hidden">
+      <div className="h-1.5 bg-gradient-to-r from-amber-400 to-orange-500" />
+      <div className="p-4">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-warning/10 rounded-lg">
-            <Clock className="h-4 w-4 text-warning" />
+          <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-600 flex items-center justify-center">
+            <Clock className="h-5 w-5 text-white" />
           </div>
           <div className="flex-1">
             <p className="font-medium text-sm">
@@ -121,12 +126,12 @@ const PendingStudentCard = memo(({
               {language === 'ar' ? 'في انتظار موافقة الإدارة' : language === 'hi' ? 'प्रशासन की स्वीकृति की प्रतीक्षा' : 'Waiting for admin approval'}
             </p>
           </div>
-          <Badge variant="outline" className="border-warning/50 text-warning bg-warning/10 rounded">
+          <Badge className="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300 border-0">
             {language === 'ar' ? 'قيد المراجعة' : language === 'hi' ? 'लंबित' : 'Pending'}
           </Badge>
         </div>
-      </GlassCardContent>
-    </GlassCard>
+      </div>
+    </div>
   </motion.div>
 ));
 
@@ -235,18 +240,18 @@ export default function ParentDashboard() {
         </p>
       </motion.div>
 
-      {/* Wallet Card - Corporate Design */}
+      {/* Wallet Card - Modern Design */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
       >
-        <GlassCard className="bg-primary text-primary-foreground">
-          <GlassCardContent className="py-5">
+        <div className="rounded-2xl overflow-hidden bg-gradient-to-br from-sky-400 via-primary to-sky-600 text-white shadow-xl">
+          <div className="p-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <div className="p-3 bg-white/15 rounded-lg">
-                  <Wallet className="h-6 w-6" />
+                <div className="h-14 w-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                  <Wallet className="h-7 w-7" />
                 </div>
                 <div>
                   <p className="text-sm opacity-90">
@@ -263,14 +268,17 @@ export default function ParentDashboard() {
               <Button 
                 size="sm"
                 onClick={() => navigate('/dashboard/wallet')}
-                className="gap-2 bg-white/20 hover:bg-white/30 text-white border-0"
+                className="gap-2 bg-white/20 hover:bg-white/30 text-white border-0 backdrop-blur-sm"
               >
                 <TrendingUp className="h-4 w-4" />
                 {language === 'ar' ? 'شحن' : language === 'hi' ? 'टॉप अप' : 'Top Up'}
               </Button>
             </div>
-          </GlassCardContent>
-        </GlassCard>
+          </div>
+          {/* Decorative elements */}
+          <div className="absolute -bottom-10 -right-10 h-40 w-40 rounded-full bg-white/10 pointer-events-none" />
+          <div className="absolute -top-10 -left-10 h-32 w-32 rounded-full bg-white/5 pointer-events-none" />
+        </div>
       </motion.div>
 
       {/* Section Header */}
@@ -333,10 +341,11 @@ export default function ParentDashboard() {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.2 }}
           >
-            <GlassCard className="border-dashed border-2 border-primary/20">
-              <GlassCardContent className="flex flex-col items-center justify-center py-12">
-                <div className="p-5 bg-gradient-to-br from-primary/20 to-accent/10 rounded-3xl mb-5">
-                  <GraduationCap className="h-14 w-14 text-primary" />
+            <div className="bg-card rounded-2xl border-2 border-dashed border-primary/20 overflow-hidden">
+              <div className="h-1.5 bg-gradient-to-r from-sky-400 via-primary to-sky-600" />
+              <div className="flex flex-col items-center justify-center py-12 px-6">
+                <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-sky-400 to-primary flex items-center justify-center shadow-xl mb-5">
+                  <GraduationCap className="h-10 w-10 text-white" />
                 </div>
                 <h3 className="text-xl font-semibold mb-2">
                   {language === 'ar' ? 'سجل طالبك الأول' : language === 'hi' ? 'अपने पहले छात्र को पंजीकृत करें' : 'Register Your First Student'}
@@ -351,13 +360,13 @@ export default function ParentDashboard() {
                 <Button 
                   size="lg" 
                   onClick={() => navigate('/dashboard/register-student')}
-                  className="gap-2 shadow-lg"
+                  className="gap-2 shadow-lg bg-gradient-to-r from-sky-500 to-primary hover:from-sky-600 hover:to-primary/90"
                 >
                   <UserPlus className="h-5 w-5" />
                   {language === 'ar' ? 'تسجيل طالب' : language === 'hi' ? 'छात्र पंजीकृत करें' : 'Register Student'}
                 </Button>
-              </GlassCardContent>
-            </GlassCard>
+              </div>
+            </div>
           </motion.div>
         )}
       </div>
