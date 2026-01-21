@@ -116,24 +116,29 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">
+      {/* Header with gradient accent */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-sky-400 via-primary to-sky-600 p-6 text-white">
+        <div className="relative z-10">
+          <h2 className="text-2xl md:text-3xl font-bold">
             {getText('Admin Dashboard', 'لوحة تحكم المسؤول', 'प्रशासक डैशबोर्ड')}
           </h2>
-          <p className="text-muted-foreground">
+          <p className="text-white/80 mt-1">
             {getText('Real-time overview and system monitoring', 'نظرة عامة في الوقت الفعلي ومراقبة النظام', 'रियल-टाइम अवलोकन और सिस्टम मॉनिटरिंग')}
           </p>
         </div>
-        <Badge variant="outline" className="text-sm">
-          {getText('Live', 'مباشر', 'लाइव')} •
+        <Badge className="absolute top-4 right-4 bg-white/20 text-white border-0 backdrop-blur-sm">
+          <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse mr-2" />
+          {getText('Live', 'مباشر', 'लाइव')}
         </Badge>
+        {/* Decorative elements */}
+        <div className="absolute -bottom-10 -right-10 h-40 w-40 rounded-full bg-white/10" />
+        <div className="absolute -top-10 -left-10 h-32 w-32 rounded-full bg-white/5" />
       </div>
 
       {/* Quick Actions - At the top */}
       <QuickActions />
 
-      {/* Stats Grid - Floating Icon Design */}
+      {/* Stats Grid - Modern Card Design */}
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
         {[
           {
@@ -141,28 +146,32 @@ export default function AdminDashboard() {
             value: stats.totalStudents,
             change: stats.studentsChange,
             icon: GraduationCap,
-            iconColor: 'text-primary',
+            iconBg: 'bg-gradient-to-br from-sky-400 to-sky-600',
+            iconColor: 'text-white',
           },
           {
             title: getText('Total Teachers', 'إجمالي المعلمين', 'कुल शिक्षक'),
             value: stats.totalTeachers,
             change: stats.teachersChange,
             icon: Users,
-            iconColor: 'text-emerald-500',
+            iconBg: 'bg-gradient-to-br from-emerald-400 to-emerald-600',
+            iconColor: 'text-white',
           },
           {
             title: getText('Active Buses', 'الحافلات النشطة', 'सक्रिय बसें'),
             value: stats.activeBuses,
             subtitle: getText('Operational', 'قيد التشغيل', 'परिचालित'),
             icon: Bus,
-            iconColor: 'text-amber-500',
+            iconBg: 'bg-gradient-to-br from-amber-400 to-amber-600',
+            iconColor: 'text-white',
           },
           {
             title: getText('Total Wallet Balance', 'إجمالي رصيد المحفظة', 'कुल वॉलेट शेष'),
             value: `${stats.totalWalletBalance.toFixed(2)} OMR`,
             subtitle: getText('Combined balance', 'الرصيد الإجمالي', 'संयुक्त शेष'),
             icon: Wallet,
-            iconColor: 'text-violet-500',
+            iconBg: 'bg-gradient-to-br from-violet-400 to-violet-600',
+            iconColor: 'text-white',
           },
         ].map((stat, index) => (
           <motion.div
@@ -170,37 +179,43 @@ export default function AdminDashboard() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.05, duration: 0.2 }}
-            className="bg-card rounded-xl p-4 hover:shadow-lg transition-shadow"
+            whileHover={{ y: -4 }}
+            className="group relative bg-card rounded-2xl border border-border overflow-hidden hover:shadow-xl transition-all duration-300"
           >
-            <div className="flex items-start gap-3">
-              {/* Floating Icon */}
-              <div className="w-12 h-12 rounded-2xl bg-background shadow-lg shadow-foreground/5 flex items-center justify-center shrink-0">
-                <stat.icon className={cn("h-6 w-6", stat.iconColor)} />
-              </div>
+            {/* Top accent bar */}
+            <div className={cn("h-1", stat.iconBg)} />
+            
+            <div className="p-4">
+              <div className="flex items-start gap-3">
+                {/* Icon with gradient */}
+                <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center shadow-lg", stat.iconBg)}>
+                  <stat.icon className={cn("h-6 w-6", stat.iconColor)} />
+                </div>
 
-              {/* Content */}
-              <div className="flex-1 min-w-0">
-                <p className="text-xs text-muted-foreground truncate">{stat.title}</p>
-                <p className="text-xl font-bold mt-0.5">{stat.value}</p>
-                {stat.change !== undefined && (
-                  <div className="flex items-center text-xs text-muted-foreground mt-1">
-                    {stat.change >= 0 ? (
-                      <ArrowUpRight className="h-3 w-3 text-green-500 mr-1" />
-                    ) : (
-                      <ArrowDownRight className="h-3 w-3 text-red-500 mr-1" />
-                    )}
-                    <span className={stat.change >= 0 ? 'text-green-600' : 'text-red-600'}>
-                      {Math.abs(stat.change)}
-                    </span>
-                    <span className="ml-1">{getText('this month', 'هذا الشهر', 'इस महीने')}</span>
-                  </div>
-                )}
-                {stat.subtitle && (
-                  <div className="flex items-center text-xs mt-1">
-                    <TrendingUp className="h-3 w-3 text-green-500 mr-1" />
-                    <span className="text-green-600">{stat.subtitle}</span>
-                  </div>
-                )}
+                {/* Content */}
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs text-muted-foreground truncate">{stat.title}</p>
+                  <p className="text-xl font-bold mt-0.5 text-foreground">{stat.value}</p>
+                  {stat.change !== undefined && (
+                    <div className="flex items-center text-xs text-muted-foreground mt-1">
+                      {stat.change >= 0 ? (
+                        <ArrowUpRight className="h-3 w-3 text-emerald-500 mr-1" />
+                      ) : (
+                        <ArrowDownRight className="h-3 w-3 text-red-500 mr-1" />
+                      )}
+                      <span className={stat.change >= 0 ? 'text-emerald-600' : 'text-red-600'}>
+                        {Math.abs(stat.change)}
+                      </span>
+                      <span className="ml-1">{getText('this month', 'هذا الشهر', 'इस महीने')}</span>
+                    </div>
+                  )}
+                  {stat.subtitle && (
+                    <div className="flex items-center text-xs mt-1">
+                      <TrendingUp className="h-3 w-3 text-emerald-500 mr-1" />
+                      <span className="text-emerald-600">{stat.subtitle}</span>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </motion.div>

@@ -1,21 +1,20 @@
 import { useState, useEffect } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { 
   Wallet, 
   User, 
-  Bus, 
-  ShoppingBag, 
   GraduationCap,
   ArrowUpRight,
   ArrowDownRight,
-  Clock
+  Clock,
+  Zap
 } from 'lucide-react';
 import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 interface Activity {
   id: string;
@@ -41,7 +40,6 @@ export function ActivityFeed() {
 
   const loadActivities = async () => {
     try {
-      // Load recent wallet transactions
       const { data: transactions } = await supabase
         .from('wallet_transactions')
         .select(`
@@ -56,7 +54,6 @@ export function ActivityFeed() {
         .order('created_at', { ascending: false })
         .limit(20);
 
-      // Load recent attendance records
       const { data: attendance } = await supabase
         .from('attendance_records')
         .select(`
@@ -69,10 +66,8 @@ export function ActivityFeed() {
         .order('created_at', { ascending: false })
         .limit(10);
 
-      // Combine and format activities
       const formattedActivities: Activity[] = [];
 
-      // Add transactions
       transactions?.forEach(t => {
         formattedActivities.push({
           id: t.id,
@@ -87,7 +82,6 @@ export function ActivityFeed() {
         });
       });
 
-      // Add attendance
       attendance?.forEach(a => {
         const student = a.students as any;
         formattedActivities.push({
@@ -102,7 +96,6 @@ export function ActivityFeed() {
         });
       });
 
-      // Sort by date
       formattedActivities.sort((a, b) => 
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       );
@@ -120,20 +113,12 @@ export function ActivityFeed() {
       .channel('activities-feed')
       .on(
         'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'wallet_transactions'
-        },
+        { event: 'INSERT', schema: 'public', table: 'wallet_transactions' },
         () => loadActivities()
       )
       .on(
         'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'attendance_records'
-        },
+        { event: 'INSERT', schema: 'public', table: 'attendance_records' },
         () => loadActivities()
       )
       .subscribe();
@@ -143,72 +128,92 @@ export function ActivityFeed() {
     };
   };
 
-  const getActivityIcon = (category: string, type: string) => {
+  const getActivityConfig = (category: string, type: string) => {
     if (category === 'wallet') {
-      if (type.includes('top_up') || type === 'deposit' || type === 'transfer_in') {
-        return <ArrowDownRight className="h-4 w-4 text-green-500" />;
-      }
-      return <ArrowUpRight className="h-4 w-4 text-orange-500" />;
+      const isIncoming = type.includes('top_up') || type === 'deposit' || type === 'transfer_in';
+      return {
+        icon: isIncoming ? ArrowDownRight : ArrowUpRight,
+        iconBg: isIncoming ? 'bg-gradient-to-br from-emerald-400 to-emerald-600' : 'bg-gradient-to-br from-amber-400 to-amber-600',
+        accentColor: isIncoming ? 'border-l-emerald-500' : 'border-l-amber-500'
+      };
     }
-    if (category === 'attendance') {
-      return <GraduationCap className="h-4 w-4 text-blue-500" />;
-    }
-    return <User className="h-4 w-4" />;
-  };
-
-  const getActivityColor = (category: string, type: string) => {
-    if (category === 'wallet') {
-      if (type.includes('top_up') || type === 'deposit' || type === 'transfer_in') {
-        return 'border-l-4 border-green-500';
-      }
-      return 'border-l-4 border-orange-500';
-    }
-    return 'border-l-4 border-blue-500';
+    return {
+      icon: GraduationCap,
+      iconBg: 'bg-gradient-to-br from-sky-400 to-sky-600',
+      accentColor: 'border-l-sky-500'
+    };
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Clock className="h-5 w-5" />
-          {language === 'ar' ? 'النشاطات الأخيرة' : 'Recent Activity'}
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <ScrollArea className="h-[500px] pr-4">
+    <div className="bg-card rounded-2xl border border-border overflow-hidden">
+      {/* Header with gradient */}
+      <div className="h-1.5 bg-gradient-to-r from-amber-400 via-orange-500 to-rose-500" />
+      
+      <div className="p-5">
+        <div className="flex items-center gap-3 mb-5">
+          <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-600 flex items-center justify-center shadow-lg">
+            <Zap className="h-5 w-5 text-white" />
+          </div>
+          <h3 className="font-semibold text-lg">
+            {language === 'ar' ? 'النشاطات الأخيرة' : 'Recent Activity'}
+          </h3>
+        </div>
+
+        <ScrollArea className="h-[400px] pr-2">
           <div className="space-y-3">
-            {activities.map((activity) => (
-              <div
-                key={activity.id}
-                className={`flex items-start gap-3 p-3 rounded-lg bg-card hover:bg-accent/50 transition-colors ${getActivityColor(activity.category, activity.type)}`}
-              >
-                <div className="p-2 rounded-full bg-muted">
-                  {getActivityIcon(activity.category, activity.type)}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">
-                    {language === 'ar' ? activity.user_name_ar : activity.user_name}
-                  </p>
-                  <p className="text-xs text-muted-foreground truncate">
-                    {language === 'ar' ? activity.description_ar : activity.description}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {format(new Date(activity.created_at), 'MMM dd, yyyy HH:mm')}
-                  </p>
-                </div>
-                {activity.amount && (
-                  <div className="text-right">
-                    <Badge variant={activity.type.includes('top_up') || activity.type === 'deposit' ? 'default' : 'secondary'}>
-                      {activity.type.includes('top_up') || activity.type === 'deposit' ? '+' : '-'}
-                      {Math.abs(activity.amount).toFixed(2)} OMR
-                    </Badge>
+            {activities.map((activity) => {
+              const config = getActivityConfig(activity.category, activity.type);
+              const Icon = config.icon;
+              
+              return (
+                <div
+                  key={activity.id}
+                  className={cn(
+                    "flex items-start gap-3 p-3 rounded-xl bg-muted/30 border border-border/50 border-l-4 transition-all hover:bg-muted/50",
+                    config.accentColor
+                  )}
+                >
+                  <div className={cn("h-9 w-9 rounded-lg flex items-center justify-center shrink-0", config.iconBg)}>
+                    <Icon className="h-4 w-4 text-white" />
                   </div>
-                )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">
+                      {language === 'ar' ? activity.user_name_ar : activity.user_name}
+                    </p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {language === 'ar' ? activity.description_ar : activity.description}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground mt-1 flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      {format(new Date(activity.created_at), 'MMM dd, HH:mm')}
+                    </p>
+                  </div>
+                  {activity.amount && (
+                    <Badge 
+                      className={cn(
+                        "shrink-0",
+                        activity.type.includes('top_up') || activity.type === 'deposit' 
+                          ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300' 
+                          : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'
+                      )}
+                    >
+                      {activity.type.includes('top_up') || activity.type === 'deposit' ? '+' : '-'}
+                      {Math.abs(activity.amount).toFixed(2)}
+                    </Badge>
+                  )}
+                </div>
+              );
+            })}
+
+            {activities.length === 0 && !loading && (
+              <div className="text-center py-8 text-muted-foreground">
+                <Clock className="h-10 w-10 mx-auto mb-2 opacity-50" />
+                <p>{language === 'ar' ? 'لا توجد أنشطة حديثة' : 'No recent activities'}</p>
               </div>
-            ))}
+            )}
           </div>
         </ScrollArea>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
