@@ -1018,111 +1018,139 @@ export default function UserManagement() {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">
-            {language === 'en' ? 'User Management' : 'إدارة المستخدمين'}
-          </h1>
-          <p className="text-muted-foreground">
-            {language === 'en' ? 'Manage system users and permissions' : 'إدارة مستخدمي النظام والصلاحيات'}
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button 
-            variant="outline" 
-            onClick={() => window.location.href = '/admin/parent-invitations'}
-          >
-            <Mail className="mr-2 h-4 w-4" />
-            {language === 'en' ? 'Parent Invitations' : 'دعوات أولياء الأمور'}
-          </Button>
-          <Button onClick={() => {
-            resetForm();
-            setIsCreateDialogOpen(true);
-          }}>
-            <Plus className="mr-2 h-4 w-4" />
-            {language === 'en' ? 'Create User' : 'إنشاء مستخدم'}
-          </Button>
+      {/* Modern Gradient Header */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-600 p-6 text-white shadow-lg">
+        <div className="absolute inset-0 opacity-10 bg-[linear-gradient(45deg,transparent_25%,white_25%,white_50%,transparent_50%,transparent_75%,white_75%)] bg-[length:20px_20px]" />
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
+              <Users className="h-8 w-8 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
+                {language === 'en' ? 'User Management' : 'إدارة المستخدمين'}
+              </h1>
+              <p className="text-white/80 text-sm md:text-base">
+                {language === 'en' ? 'Manage system users and permissions' : 'إدارة مستخدمي النظام والصلاحيات'}
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button 
+              variant="secondary"
+              className="bg-white/20 hover:bg-white/30 text-white border-0"
+              onClick={() => window.location.href = '/admin/parent-invitations'}
+            >
+              <Mail className="mr-2 h-4 w-4" />
+              {language === 'en' ? 'Parent Invitations' : 'دعوات أولياء الأمور'}
+            </Button>
+            <Button 
+              className="bg-white text-indigo-600 hover:bg-white/90"
+              onClick={() => {
+                resetForm();
+                setIsCreateDialogOpen(true);
+              }}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              {language === 'en' ? 'Create User' : 'إنشاء مستخدم'}
+            </Button>
+          </div>
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-6">
+      {/* Stats Cards with Modern Design */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <Card className="relative overflow-hidden border-0 shadow-md rounded-xl">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-400 to-blue-600" />
+          <CardContent className="p-4 md:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs md:text-sm text-muted-foreground">
                   {language === 'en' ? 'Total Users' : 'إجمالي المستخدمين'}
                 </p>
-                <p className="text-2xl font-bold">{users.length}</p>
+                <p className="text-xl md:text-2xl font-bold">{users.length}</p>
               </div>
-              <Users className="h-8 w-8 text-blue-500" />
+              <div className="p-2 md:p-3 bg-gradient-to-br from-blue-400/20 to-blue-500/20 rounded-xl">
+                <Users className="h-6 w-6 md:h-8 md:w-8 text-blue-500" />
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent className="p-6">
+        <Card className="relative overflow-hidden border-0 shadow-md rounded-xl">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-green-400 to-emerald-600" />
+          <CardContent className="p-4 md:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs md:text-sm text-muted-foreground">
                   {language === 'en' ? 'Active Users' : 'المستخدمون النشطون'}
                 </p>
-                <p className="text-2xl font-bold">{activeUsersCount}</p>
+                <p className="text-xl md:text-2xl font-bold">{activeUsersCount}</p>
               </div>
-              <UserCheck className="h-8 w-8 text-green-500" />
+              <div className="p-2 md:p-3 bg-gradient-to-br from-green-400/20 to-emerald-500/20 rounded-xl">
+                <UserCheck className="h-6 w-6 md:h-8 md:w-8 text-green-500" />
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent className="p-6">
+        <Card className="relative overflow-hidden border-0 shadow-md rounded-xl">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-red-400 to-rose-600" />
+          <CardContent className="p-4 md:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs md:text-sm text-muted-foreground">
                   {language === 'en' ? 'Inactive Users' : 'المستخدمون غير النشطين'}
                 </p>
-                <p className="text-2xl font-bold">{inactiveUsersCount}</p>
+                <p className="text-xl md:text-2xl font-bold">{inactiveUsersCount}</p>
               </div>
-              <Ban className="h-8 w-8 text-red-500" />
+              <div className="p-2 md:p-3 bg-gradient-to-br from-red-400/20 to-rose-500/20 rounded-xl">
+                <Ban className="h-6 w-6 md:h-8 md:w-8 text-red-500" />
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent className="p-6">
+        <Card className="relative overflow-hidden border-0 shadow-md rounded-xl">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-400 to-violet-600" />
+          <CardContent className="p-4 md:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs md:text-sm text-muted-foreground">
                   {language === 'en' ? 'Billing (10 OMR/user)' : 'الفوترة (10 ريال/مستخدم)'}
                 </p>
-                <p className="text-2xl font-bold">{users.length * 10} OMR</p>
+                <p className="text-xl md:text-2xl font-bold">{users.length * 10} OMR</p>
               </div>
-              <CreditCard className="h-8 w-8 text-purple-500" />
+              <div className="p-2 md:p-3 bg-gradient-to-br from-purple-400/20 to-violet-500/20 rounded-xl">
+                <CreditCard className="h-6 w-6 md:h-8 md:w-8 text-purple-500" />
+              </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
       {/* Users Table */}
-      <Card className="mx-3 md:mx-0">
-        <CardHeader className="p-3 md:p-6">
+      <Card className="relative overflow-hidden border-0 shadow-lg rounded-2xl">
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-400 via-purple-500 to-indigo-600" />
+        <CardHeader className="p-4 md:p-6">
           <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-3">
-            <CardTitle className="text-base md:text-xl">{language === 'en' ? 'Users List' : 'قائمة المستخدمين'}</CardTitle>
+            <CardTitle className="text-base md:text-xl flex items-center gap-2">
+              <Users className="h-5 w-5 text-indigo-500" />
+              {language === 'en' ? 'Users List' : 'قائمة المستخدمين'}
+            </CardTitle>
             <div className="flex flex-col sm:flex-row gap-2">
               <div className="relative">
                 <Search className="absolute left-2 top-2.5 h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
                 <Input
                   placeholder={language === 'en' ? 'Search...' : 'بحث...'}
-                  className="pl-7 md:pl-8 w-full sm:w-48 md:w-64 text-xs md:text-sm h-8 md:h-10"
+                  className="pl-7 md:pl-8 w-full sm:w-48 md:w-64 text-xs md:text-sm h-8 md:h-10 rounded-lg"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   dir="ltr"
                 />
               </div>
               <Select value={filterRole} onValueChange={setFilterRole}>
-                <SelectTrigger className="w-full sm:w-32 md:w-40 h-8 md:h-10 text-xs md:text-sm">
+                <SelectTrigger className="w-full sm:w-32 md:w-40 h-8 md:h-10 text-xs md:text-sm rounded-lg">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -1143,20 +1171,26 @@ export default function UserManagement() {
           </div>
         </CardHeader>
         <CardContent className="p-0 md:p-6">
-          {/* Mobile View - Cards */}
+          {/* Mobile View - Modern Cards */}
           <div className="md:hidden">
-            <div className="divide-y">
+            <div className="space-y-3 p-3">
               {filteredUsers.map((user) => (
-                <div key={user.id} className="p-3 space-y-2">
-                  <div className="flex justify-between items-start">
-                    <div className="space-y-1 min-w-0 flex-1">
-                      <p className="font-medium text-sm truncate">{user.full_name}</p>
-                      <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                <div key={user.id} className="relative overflow-hidden bg-card border rounded-xl p-4 shadow-sm hover:shadow-md transition-all">
+                  <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-indigo-400 to-purple-500" />
+                  <div className="flex justify-between items-start mb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-400/20 to-purple-500/20 flex items-center justify-center">
+                        <span className="text-sm font-semibold text-indigo-600">{user.full_name.charAt(0)}</span>
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium text-sm truncate">{user.full_name}</p>
+                        <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                      </div>
                     </div>
-                    <Badge className={cn("text-[10px] ml-2 flex-shrink-0", getRoleColor(user.role))}>{user.role}</Badge>
+                    <Badge className={cn("text-[10px] flex-shrink-0", getRoleColor(user.role))}>{user.role}</Badge>
                   </div>
                   
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between pt-2 border-t">
                     <Badge variant={user.is_active !== false ? "default" : "secondary"} className="text-[10px]">
                       {user.is_active !== false ? (language === 'en' ? 'Active' : 'نشط') : (language === 'en' ? 'Inactive' : 'غير نشط')}
                     </Badge>
@@ -1166,7 +1200,7 @@ export default function UserManagement() {
                         size="sm"
                         variant="ghost"
                         onClick={() => handleEditUser(user)}
-                        className="h-7 w-7 p-0"
+                        className="h-7 w-7 p-0 rounded-lg"
                       >
                         <Edit className="h-3 w-3" />
                       </Button>
@@ -1175,7 +1209,7 @@ export default function UserManagement() {
                           size="sm"
                           variant="ghost"
                           onClick={() => handleNfcProgramming(user)}
-                          className="h-7 w-7 p-0"
+                          className="h-7 w-7 p-0 rounded-lg"
                         >
                           <Wifi className="h-3 w-3" />
                         </Button>
@@ -1185,7 +1219,7 @@ export default function UserManagement() {
                           size="sm"
                           variant="ghost"
                           onClick={() => toggleUserStatus(user.id, user.is_active !== false)}
-                          className="h-7 w-7 p-0"
+                          className="h-7 w-7 p-0 rounded-lg"
                         >
                           {user.is_active !== false ? <Ban className="h-3 w-3 text-red-500" /> : <UserCheck className="h-3 w-3 text-green-500" />}
                         </Button>
@@ -1195,7 +1229,7 @@ export default function UserManagement() {
                           size="sm"
                           variant="ghost"
                           onClick={() => handleShareCredentials(user.email, userPasswords[user.id], user.full_name, user.role)}
-                          className="h-7 w-7 p-0"
+                          className="h-7 w-7 p-0 rounded-lg"
                         >
                           <Share2 className="h-3 w-3" />
                         </Button>
@@ -1356,10 +1390,16 @@ export default function UserManagement() {
 
       {/* Edit User Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl relative overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-400 via-purple-500 to-indigo-600 rounded-t-lg" />
           <form onSubmit={handleUpdateUser}>
-            <DialogHeader>
-              <DialogTitle>{language === 'en' ? 'Edit User' : 'تعديل المستخدم'}</DialogTitle>
+            <DialogHeader className="pt-2">
+              <DialogTitle className="flex items-center gap-3 text-xl">
+                <div className="p-2 bg-gradient-to-br from-indigo-400/20 to-purple-500/20 rounded-lg">
+                  <Edit className="h-5 w-5 text-indigo-600" />
+                </div>
+                {language === 'en' ? 'Edit User' : 'تعديل المستخدم'}
+              </DialogTitle>
               <DialogDescription>
                 {language === 'en' ? 'Update user information' : 'تحديث معلومات المستخدم'}
               </DialogDescription>
@@ -1499,9 +1539,15 @@ export default function UserManagement() {
 
       {/* Share Dialog */}
       <Dialog open={isShareDialogOpen} onOpenChange={setIsShareDialogOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>{language === 'en' ? 'Share Credentials' : 'مشاركة بيانات الدخول'}</DialogTitle>
+        <DialogContent className="max-w-md relative overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-400 via-cyan-500 to-blue-600 rounded-t-lg" />
+          <DialogHeader className="pt-2">
+            <DialogTitle className="flex items-center gap-3 text-xl">
+              <div className="p-2 bg-gradient-to-br from-blue-400/20 to-cyan-500/20 rounded-lg">
+                <Share2 className="h-5 w-5 text-blue-600" />
+              </div>
+              {language === 'en' ? 'Share Credentials' : 'مشاركة بيانات الدخول'}
+            </DialogTitle>
             <DialogDescription>
               {language === 'en' ? 'Share user credentials via email, WhatsApp, SMS, or print.' : 'مشاركة بيانات المستخدم عبر البريد الإلكتروني، واتساب، الرسائل النصية، أو الطباعة.'}
             </DialogDescription>
@@ -1545,9 +1591,15 @@ export default function UserManagement() {
 
       {/* Create User Dialog */}
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] p-0 flex flex-col">
+        <DialogContent className="max-w-2xl max-h-[90vh] p-0 flex flex-col relative overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-green-400 via-emerald-500 to-green-600 rounded-t-lg z-10" />
           <DialogHeader className="flex-shrink-0 px-6 pt-6 pb-4">
-            <DialogTitle>{language === 'en' ? 'Create User' : 'إنشاء مستخدم'}</DialogTitle>
+            <DialogTitle className="flex items-center gap-3 text-xl">
+              <div className="p-2 bg-gradient-to-br from-green-400/20 to-emerald-500/20 rounded-lg">
+                <Plus className="h-5 w-5 text-green-600" />
+              </div>
+              {language === 'en' ? 'Create User' : 'إنشاء مستخدم'}
+            </DialogTitle>
             <DialogDescription>
               {language === 'en' ? 'Fill in the details to create a new user' : 'املأ التفاصيل لإنشاء مستخدم جديد'}
             </DialogDescription>
@@ -1563,7 +1615,7 @@ export default function UserManagement() {
                     setFormData({ ...formData, role: value as UserProfile['role'] });
                     setSelectedEntityId('none'); // Reset entity selection when role changes
                   }}>
-                    <SelectTrigger className="w-full">
+                    <SelectTrigger className="w-full rounded-lg">
                       <SelectValue placeholder={language === 'en' ? 'Choose a role...' : 'اختر دور...'} />
                     </SelectTrigger>
                     <SelectContent>
