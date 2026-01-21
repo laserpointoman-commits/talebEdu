@@ -615,9 +615,13 @@ export default function Classes() {
 
       {/* Create Class Dialog */}
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto relative">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-cyan-400 via-blue-500 to-cyan-600 rounded-t-lg" />
+          <DialogHeader className="pt-2">
+            <DialogTitle className="flex items-center gap-3 text-xl">
+              <div className="p-2 bg-gradient-to-br from-cyan-400/20 to-blue-500/20 rounded-lg">
+                <Plus className="h-5 w-5 text-cyan-600" />
+              </div>
               {language === 'en' ? 'Create New Class' : language === 'hi' ? 'नई कक्षा बनाएं' : 'إنشاء صف جديد'}
             </DialogTitle>
             <DialogDescription>
@@ -626,9 +630,9 @@ export default function Classes() {
           </DialogHeader>
           
           <Tabs defaultValue="basic" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="basic">{language === 'en' ? 'Basic Info' : language === 'hi' ? 'मूल जानकारी' : 'معلومات أساسية'}</TabsTrigger>
-              <TabsTrigger value="details">{language === 'en' ? 'Details' : language === 'hi' ? 'विवरण' : 'التفاصيل'}</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 bg-muted/50 p-1 rounded-lg">
+              <TabsTrigger value="basic" className="rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm">{language === 'en' ? 'Basic Info' : language === 'hi' ? 'मूल जानकारी' : 'معلومات أساسية'}</TabsTrigger>
+              <TabsTrigger value="details" className="rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm">{language === 'en' ? 'Details' : language === 'hi' ? 'विवरण' : 'التفاصيل'}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="basic" className="space-y-4 mt-4">
@@ -737,9 +741,13 @@ export default function Classes() {
 
       {/* Assign Students Dialog */}
       <Dialog open={isStudentsDialogOpen} onOpenChange={setIsStudentsDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh]">
-          <DialogHeader>
-            <DialogTitle>
+        <DialogContent className="max-w-2xl max-h-[90vh] relative">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-400 via-teal-500 to-emerald-600 rounded-t-lg" />
+          <DialogHeader className="pt-2">
+            <DialogTitle className="flex items-center gap-3 text-xl">
+              <div className="p-2 bg-gradient-to-br from-emerald-400/20 to-teal-500/20 rounded-lg">
+                <UserPlus className="h-5 w-5 text-emerald-600" />
+              </div>
               {language === 'en' ? 'Assign Students to' : language === 'hi' ? 'छात्रों को असाइन करें' : 'تعيين الطلاب إلى'} {selectedClass?.name}
             </DialogTitle>
             <DialogDescription>
@@ -758,7 +766,7 @@ export default function Classes() {
               placeholder={language === 'en' ? 'Search students...' : language === 'hi' ? 'छात्र खोजें...' : 'البحث عن طلاب...'}
               value={studentSearchTerm}
               onChange={(e) => setStudentSearchTerm(e.target.value)}
-              className="pl-10"
+              className="pl-10 rounded-lg"
             />
           </div>
 
@@ -835,21 +843,27 @@ export default function Classes() {
 
       {/* View Class Dialog */}
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{selectedClass?.name}</DialogTitle>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto relative">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-400 via-indigo-500 to-blue-600 rounded-t-lg" />
+          <DialogHeader className="pt-2">
+            <DialogTitle className="flex items-center gap-3 text-xl">
+              <div className="p-2 bg-gradient-to-br from-blue-400/20 to-indigo-500/20 rounded-lg">
+                <GraduationCap className="h-5 w-5 text-blue-600" />
+              </div>
+              {selectedClass?.name}
+            </DialogTitle>
             <DialogDescription>
               {selectedClass?.grade} - {language === 'en' ? 'Section' : language === 'hi' ? 'सेक्शन' : 'الشعبة'} {selectedClass?.section}
             </DialogDescription>
           </DialogHeader>
 
           <Tabs defaultValue="students" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="students">
+            <TabsList className="grid w-full grid-cols-2 bg-muted/50 p-1 rounded-lg">
+              <TabsTrigger value="students" className="rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm">
                 <Users className="h-4 w-4 mr-2" />
                 {language === 'en' ? 'Students' : language === 'hi' ? 'छात्र' : 'الطلاب'} ({selectedClass?.students.length || 0})
               </TabsTrigger>
-              <TabsTrigger value="schedule">
+              <TabsTrigger value="schedule" className="rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm">
                 <Clock className="h-4 w-4 mr-2" />
                 {language === 'en' ? 'Schedule' : language === 'hi' ? 'शेड्यूल' : 'الجدول'} ({selectedClass?.class_schedules.length || 0})
               </TabsTrigger>
@@ -864,10 +878,10 @@ export default function Classes() {
                 ) : (
                   <div className="space-y-2">
                     {selectedClass?.students.map((student) => (
-                      <div key={student.id} className="flex items-center gap-3 p-3 border rounded-lg">
+                      <div key={student.id} className="flex items-center gap-3 p-3 border rounded-xl bg-card shadow-sm hover:shadow-md transition-all">
                         <Avatar>
                           <AvatarImage src={student.profile_image || undefined} />
-                          <AvatarFallback>
+                          <AvatarFallback className="bg-gradient-to-br from-blue-400/20 to-indigo-500/20 text-blue-600">
                             {(student.first_name?.[0] || '') + (student.last_name?.[0] || '')}
                           </AvatarFallback>
                         </Avatar>
@@ -879,7 +893,7 @@ export default function Classes() {
                             {student.student_id}
                           </p>
                         </div>
-                        <Badge variant="outline">{student.grade}</Badge>
+                        <Badge variant="outline" className="rounded-lg">{student.grade}</Badge>
                       </div>
                     ))}
                   </div>

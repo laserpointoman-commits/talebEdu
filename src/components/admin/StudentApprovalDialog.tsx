@@ -14,6 +14,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, CheckCircle2, XCircle, User, Mail, Phone, MapPin, Calendar, ArrowLeft, ArrowRight } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
 import StudentNFCDialog from './StudentNFCDialog';
 import FeeConfigStep from './FeeConfigStep';
@@ -281,13 +282,30 @@ export default function StudentApprovalDialog({
   return (
     <>
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto" dir={isRTL ? 'rtl' : 'ltr'}>
-        <DialogHeader>
-          <DialogTitle className="text-2xl">
-            {language === 'en' ? 'Student Approval' : 'موافقة الطالب'}
-            {' - '}
-            {language === 'en' ? `Step ${step} of 3` : `الخطوة ${step} من 3`}
-          </DialogTitle>
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto relative" dir={isRTL ? 'rtl' : 'ltr'}>
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-400 via-orange-500 to-amber-500 rounded-t-lg" />
+        <DialogHeader className="pt-2">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="p-2 bg-gradient-to-br from-amber-400/20 to-orange-500/20 rounded-lg">
+              <CheckCircle2 className="h-5 w-5 text-amber-600" />
+            </div>
+            <div className="flex-1">
+              <DialogTitle className="text-xl">
+                {language === 'en' ? 'Student Approval' : 'موافقة الطالب'}
+              </DialogTitle>
+              <div className="flex items-center gap-2 mt-1">
+                {[1, 2, 3].map((s) => (
+                  <div
+                    key={s}
+                    className={cn(
+                      "h-1.5 flex-1 rounded-full transition-all",
+                      s <= step ? "bg-gradient-to-r from-amber-400 to-orange-500" : "bg-muted"
+                    )}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
           <DialogDescription>
             {step === 1 && (language === 'en' ? 'Review student information' : 'مراجعة معلومات الطالب')}
             {step === 2 && (language === 'en' ? 'Configure fee details' : 'إعداد تفاصيل الرسوم')}

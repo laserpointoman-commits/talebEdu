@@ -155,26 +155,30 @@ export default function AddStudentDialog({ open, onOpenChange, onSuccess }: AddS
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto relative">
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-green-400 via-emerald-500 to-green-600 rounded-t-lg" />
+        <DialogHeader className="pt-2">
+          <DialogTitle className="flex items-center gap-3 text-xl">
+            <div className="p-2 bg-gradient-to-br from-green-400/20 to-emerald-500/20 rounded-lg">
+              <Loader2 className="h-5 w-5 text-green-600" style={{ animation: 'none' }} />
+            </div>
             {language === 'ar' ? 'إضافة طالب جديد' : 'Add New Student'}
           </DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <Tabs defaultValue="basic" className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="basic">
+            <TabsList className="grid w-full grid-cols-4 bg-muted/50 p-1 rounded-lg">
+              <TabsTrigger value="basic" className="rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm">
                 {language === 'ar' ? 'معلومات أساسية' : 'Basic Info'}
               </TabsTrigger>
-              <TabsTrigger value="personal">
+              <TabsTrigger value="personal" className="rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm">
                 {language === 'ar' ? 'معلومات شخصية' : 'Personal'}
               </TabsTrigger>
-              <TabsTrigger value="parent">
+              <TabsTrigger value="parent" className="rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm">
                 {language === 'ar' ? 'ولي الأمر' : 'Parent/Guardian'}
               </TabsTrigger>
-              <TabsTrigger value="medical">
+              <TabsTrigger value="medical" className="rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm">
                 {language === 'ar' ? 'معلومات طبية' : 'Medical'}
               </TabsTrigger>
             </TabsList>
