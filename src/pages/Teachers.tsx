@@ -584,20 +584,29 @@ export default function Teachers() {
 
   return (
     <div className="space-y-6 p-4 md:p-6" dir={language === 'ar' ? 'rtl' : 'ltr'}>
-      <PageHeader
-        title="Teachers"
-        titleAr="المعلمين"
-        titleHi="शिक्षक"
-        subtitle="Manage and view all teacher profiles"
-        subtitleAr="إدارة وعرض جميع ملفات المعلمين"
-        subtitleHi="सभी शिक्षक प्रोफाइल प्रबंधित करें और देखें"
-        actions={
-          <Button onClick={() => setIsAddDialogOpen(true)} size="sm">
-            <UserPlus className="h-4 w-4 mr-2" />
-            {language === 'en' ? 'Add' : language === 'hi' ? 'जोड़ें' : 'إضافة'}
+      {/* Modern Header */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-600 p-6 text-white shadow-xl">
+        <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent" />
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm">
+              <GraduationCap className="h-7 w-7 text-white" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold">
+                {language === 'en' ? 'Teachers' : language === 'hi' ? 'शिक्षक' : 'المعلمين'}
+              </h2>
+              <p className="text-indigo-100 text-sm">
+                {language === 'en' ? 'Manage and view all teacher profiles' : language === 'hi' ? 'सभी शिक्षक प्रोफाइल प्रबंधित करें और देखें' : 'إدارة وعرض جميع ملفات المعلمين'}
+              </p>
+            </div>
+          </div>
+          <Button onClick={() => setIsAddDialogOpen(true)} className="gap-2 bg-white/20 hover:bg-white/30 text-white border-0">
+            <UserPlus className="h-4 w-4" />
+            {language === 'en' ? 'Add Teacher' : language === 'hi' ? 'शिक्षक जोड़ें' : 'إضافة معلم'}
           </Button>
-        }
-      />
+        </div>
+      </div>
 
       <div className="relative">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
@@ -605,19 +614,22 @@ export default function Teachers() {
           placeholder={language === 'en' ? 'Search by name, email or employee ID...' : language === 'hi' ? 'नाम, ईमेल या कर्मचारी आईडी से खोजें...' : 'البحث بالاسم أو البريد أو رقم الموظف...'}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="pl-10"
+          className="pl-10 rounded-xl"
         />
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {filteredTeachers.map((teacher) => (
-          <Card key={teacher.id} className="hover:shadow-lg transition-shadow">
+          <Card key={teacher.id} className="relative overflow-hidden border-0 shadow-lg rounded-2xl hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-600" />
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <Avatar className="h-12 w-12">
+                  <Avatar className="h-12 w-12 ring-2 ring-indigo-100 dark:ring-indigo-900/30">
                     <AvatarImage src={teacher.profiles?.profile_image || ''} />
-                    <AvatarFallback>{teacher.profiles?.full_name?.charAt(0) || 'T'}</AvatarFallback>
+                    <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white">
+                      {teacher.profiles?.full_name?.charAt(0) || 'T'}
+                    </AvatarFallback>
                   </Avatar>
                   <div>
                     <CardTitle className="text-base">
@@ -633,14 +645,15 @@ export default function Teachers() {
                     size="sm"
                     variant="ghost"
                     onClick={() => handleEdit(teacher)}
+                    className="h-8 w-8 p-0 hover:bg-indigo-50 dark:hover:bg-indigo-900/20"
                   >
-                    <Edit className="h-4 w-4" />
+                    <Edit className="h-4 w-4 text-indigo-500" />
                   </Button>
                   <Button
                     size="sm"
                     variant="ghost"
                     onClick={() => handleDelete(teacher)}
-                    className="text-destructive hover:text-destructive"
+                    className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-red-50 dark:hover:bg-red-900/20"
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -649,8 +662,8 @@ export default function Teachers() {
             </CardHeader>
             <CardContent>
               <div className="space-y-2 text-sm">
-                <div className="flex items-center gap-2">
-                  <CreditCard className="h-3 w-3 text-muted-foreground" />
+                <div className="flex items-center gap-2 p-2 rounded-lg bg-indigo-50/50 dark:bg-indigo-900/10">
+                  <CreditCard className="h-3.5 w-3.5 text-indigo-500" />
                   <span className="text-xs font-medium">{teacher.employee_id}</span>
                 </div>
                 <div className="flex items-center gap-2">

@@ -24,35 +24,50 @@ export default function NFCAttendance() {
 
   return (
     <div className="space-y-6 p-6">
-      <div>
-        <h1 className="text-3xl font-bold">
-          {language === 'ar' ? 'تسجيل الحضور' : language === 'hi' ? 'उपस्थिति पंजीकरण' : 'Attendance Registration'}
-        </h1>
-        <p className="text-muted-foreground">
-          {language === 'ar' ? 'مسح السوار الذكي لتسجيل الحضور' : language === 'hi' ? 'उपस्थिति दर्ज करने के लिए NFC रिस्टबैंड स्कैन करें' : 'Scan NFC wristband to mark attendance'}
-        </p>
+      {/* Modern Header */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-green-500 via-emerald-500 to-green-600 p-6 text-white shadow-xl">
+        <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent" />
+        <div className="relative z-10 flex items-center gap-4">
+          <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm">
+            <Users className="h-7 w-7 text-white" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold">
+              {language === 'ar' ? 'تسجيل الحضور' : language === 'hi' ? 'उपस्थिति पंजीकरण' : 'Attendance Registration'}
+            </h1>
+            <p className="text-green-100 text-sm">
+              {language === 'ar' ? 'مسح السوار الذكي لتسجيل الحضور' : language === 'hi' ? 'उपस्थिति दर्ज करने के लिए NFC रिस्टबैंड स्कैन करें' : 'Scan NFC wristband to mark attendance'}
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card>
+        <Card className="relative overflow-hidden border-0 shadow-lg rounded-2xl">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-400 to-blue-600" />
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
               {language === 'ar' ? 'إجمالي الطلاب' : language === 'hi' ? 'कुल छात्र' : 'Total Students'}
             </CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-blue-400/20 to-blue-600/20 flex items-center justify-center">
+              <Users className="h-4 w-4 text-blue-500" />
+            </div>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.total}</div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="relative overflow-hidden border-0 shadow-lg rounded-2xl">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-green-400 to-green-600" />
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
               {language === 'ar' ? 'الحضور' : language === 'hi' ? 'उपस्थित' : 'Present'}
             </CardTitle>
-            <CheckCircle className="h-4 w-4 text-green-500" />
+            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-green-400/20 to-green-600/20 flex items-center justify-center">
+              <CheckCircle className="h-4 w-4 text-green-500" />
+            </div>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-500">{stats.present}</div>
@@ -62,12 +77,15 @@ export default function NFCAttendance() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="relative overflow-hidden border-0 shadow-lg rounded-2xl">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-red-400 to-red-600" />
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
               {language === 'ar' ? 'الغياب' : language === 'hi' ? 'अनुपस्थित' : 'Absent'}
             </CardTitle>
-            <XCircle className="h-4 w-4 text-red-500" />
+            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-red-400/20 to-red-600/20 flex items-center justify-center">
+              <XCircle className="h-4 w-4 text-red-500" />
+            </div>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-500">{stats.absent}</div>
@@ -87,10 +105,13 @@ export default function NFCAttendance() {
         </div>
 
         {/* Attendance List */}
-        <Card>
+        <Card className="relative overflow-hidden border-0 shadow-lg rounded-2xl">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-green-500 via-emerald-500 to-green-600" />
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Clock className="h-5 w-5" />
+              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-green-400/20 to-emerald-500/20 flex items-center justify-center">
+                <Clock className="h-4 w-4 text-green-500" />
+              </div>
               {language === 'ar' ? 'سجل اليوم' : language === 'hi' ? 'आज का लॉग' : "Today's Log"}
             </CardTitle>
           </CardHeader>
