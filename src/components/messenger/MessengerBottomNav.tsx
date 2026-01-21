@@ -27,20 +27,20 @@ export function MessengerBottomNav({
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 shrink-0 z-[110] bg-[#0a1014]"
+      className="fixed bottom-0 left-0 right-0 shrink-0 z-[110] bg-sky-100"
       style={{
         touchAction: 'none',
         paddingBottom: 'env(safe-area-inset-bottom, 0px)',
       }}
       aria-label={isArabic ? 'تنقل المراسلة' : 'Messenger navigation'}
     >
-      {/* Dark messenger background */}
+      {/* Light blue background */}
       <div
-        className="absolute inset-0 bg-gradient-to-t from-[#0a1014] via-[#0f1a20]/95 to-[#0f1a20]/85 backdrop-blur-xl"
+        className="absolute inset-0 bg-sky-100"
       />
 
-      {/* Top border glow */}
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+      {/* Top border */}
+      <div className="absolute top-0 left-0 right-0 h-px bg-sky-200" />
 
       {/* Active tab soft glow */}
       <motion.div

@@ -120,7 +120,7 @@ export default function BottomNavigation() {
 
   return (
     <div
-      className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-card"
+      className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-sky-100"
       style={{
         touchAction: 'none',
         paddingBottom: 'env(safe-area-inset-bottom, 0px)',
@@ -128,7 +128,7 @@ export default function BottomNavigation() {
       dir="ltr"
     >
       {/* Clean background */}
-      <div className="absolute inset-0 bg-card border-t border-border shadow-lg" />
+      <div className="absolute inset-0 bg-sky-100 border-t border-sky-200 shadow-lg" />
 
       {/* Navigation container */}
       <nav className="relative flex items-center justify-around px-1 h-14">

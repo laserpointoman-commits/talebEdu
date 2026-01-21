@@ -15,11 +15,11 @@ export default function PageHeader({ title, showHome = true }: PageHeaderProps) 
 
   return (
     <header 
-      className="fixed left-0 right-0 top-0 z-50 bg-card"
+      className="fixed left-0 right-0 top-0 z-50 bg-sky-100"
       style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
       dir="ltr"
     >
-      <div className="h-12 border-b border-border bg-card shadow-sm flex items-center justify-between px-2"
+      <div className="h-12 border-b border-sky-200 bg-sky-100 shadow-sm flex items-center justify-between px-2"
       >
         {/* Left - Back & Home */}
         <div className="flex items-center gap-1">
