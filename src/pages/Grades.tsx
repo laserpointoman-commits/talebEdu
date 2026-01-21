@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Trophy, TrendingUp, Award, FileText } from 'lucide-react';
+import { motion } from 'framer-motion';
 import LogoLoader from '@/components/LogoLoader';
 import GradeManagement from '@/components/features/GradeManagement';
 
@@ -192,89 +193,98 @@ export default function Grades() {
 
   // For students and parents - show read-only grades view
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight">{t('dashboard.grades')}</h2>
-        <p className="text-muted-foreground">
-          {language === 'en' ? 'View student grades' : language === 'hi' ? 'छात्र ग्रेड देखें' : 'عرض درجات الطلاب'}
-        </p>
-      </div>
+    <div className="space-y-6 p-4 md:p-6">
+      {/* Gradient Header */}
+      <motion.div 
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-600 p-6 text-white shadow-lg"
+      >
+        <div className="absolute inset-0 opacity-10 bg-[linear-gradient(45deg,transparent_25%,white_25%,white_50%,transparent_50%,transparent_75%,white_75%)] bg-[length:20px_20px]" />
+        <div className="relative z-10">
+          <h2 className="text-2xl md:text-3xl font-bold">{t('dashboard.grades')}</h2>
+          <p className="mt-1 text-white/80 text-sm md:text-base">
+            {language === 'en' ? 'View student grades' : language === 'hi' ? 'छात्र ग्रेड देखें' : 'عرض درجات الطلاب'}
+          </p>
+        </div>
+      </motion.div>
 
       {/* Overview Stats */}
       <div className="grid gap-4 md:grid-cols-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              {language === 'en' ? 'Overall GPA' : language === 'hi' ? 'कुल जीपीए' : 'المعدل التراكمي'}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-2">
-              <Trophy className="h-5 w-5 text-warning" />
-              <span className="text-2xl font-bold">{stats.overallGPA}</span>
-              <span className="text-sm text-muted-foreground">/ 4.0</span>
-            </div>
-            <Progress value={(stats.overallGPA / 4) * 100} className="mt-2" />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              {language === 'en' ? 'Total Exams' : language === 'hi' ? 'कुल परीक्षाएं' : 'إجمالي الاختبارات'}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-2">
-              <Award className="h-5 w-5 text-primary" />
-              <span className="text-2xl font-bold">{stats.totalExams}</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              {language === 'en' ? 'Average Score' : language === 'hi' ? 'औसत स्कोर' : 'متوسط الدرجة'}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-2">
-              <FileText className="h-5 w-5 text-info" />
-              <span className="text-2xl font-bold">{stats.averageScore}%</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              {language === 'en' ? 'Performance' : language === 'hi' ? 'प्रदर्शन' : 'الأداء'}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-success" />
-              <span className="text-2xl font-bold">
-                {stats.averageScore >= 90 ? (language === 'en' ? 'Excellent' : language === 'hi' ? 'उत्कृष्ट' : 'ممتاز') :
-                 stats.averageScore >= 80 ? (language === 'en' ? 'Good' : language === 'hi' ? 'अच्छा' : 'جيد جداً') :
-                 stats.averageScore >= 70 ? (language === 'en' ? 'Fair' : language === 'hi' ? 'ठीक' : 'جيد') :
-                 (language === 'en' ? 'Needs Work' : language === 'hi' ? 'सुधार की जरूरत' : 'يحتاج تحسين')}
-              </span>
-            </div>
-          </CardContent>
-        </Card>
+        {[
+          {
+            title: language === 'en' ? 'Overall GPA' : language === 'hi' ? 'कुल जीपीए' : 'المعدل التراكمي',
+            value: stats.overallGPA,
+            suffix: '/ 4.0',
+            icon: Trophy,
+            gradient: 'from-amber-500 to-yellow-400',
+            extra: <Progress value={(stats.overallGPA / 4) * 100} className="mt-2" />
+          },
+          {
+            title: language === 'en' ? 'Total Exams' : language === 'hi' ? 'कुल परीक्षाएं' : 'إجمالي الاختبارات',
+            value: stats.totalExams,
+            icon: Award,
+            gradient: 'from-blue-500 to-sky-400',
+          },
+          {
+            title: language === 'en' ? 'Average Score' : language === 'hi' ? 'औसत स्कोर' : 'متوسط الدرجة',
+            value: `${stats.averageScore}%`,
+            icon: FileText,
+            gradient: 'from-cyan-500 to-teal-400',
+          },
+          {
+            title: language === 'en' ? 'Performance' : language === 'hi' ? 'प्रदर्शन' : 'الأداء',
+            value: stats.averageScore >= 90 ? (language === 'en' ? 'Excellent' : language === 'hi' ? 'उत्कृष्ट' : 'ممتاز') :
+                   stats.averageScore >= 80 ? (language === 'en' ? 'Good' : language === 'hi' ? 'अच्छा' : 'جيد جداً') :
+                   stats.averageScore >= 70 ? (language === 'en' ? 'Fair' : language === 'hi' ? 'ठीक' : 'جيد') :
+                   (language === 'en' ? 'Needs Work' : language === 'hi' ? 'सुधार की जरूरत' : 'يحتاج تحسين'),
+            icon: TrendingUp,
+            gradient: 'from-emerald-500 to-green-400',
+          },
+        ].map((stat, idx) => (
+          <motion.div
+            key={stat.title}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: idx * 0.05 }}
+          >
+            <Card className="overflow-hidden rounded-2xl shadow-md hover:shadow-xl transition-all">
+              <div className={`h-1 bg-gradient-to-r ${stat.gradient}`} />
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-4">
+                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${stat.gradient} flex items-center justify-center shadow-lg`}>
+                    <stat.icon className="h-6 w-6 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-xs text-muted-foreground font-medium">{stat.title}</p>
+                    <div className="flex items-center gap-1">
+                      <span className="text-2xl font-bold">{stat.value}</span>
+                      {stat.suffix && <span className="text-sm text-muted-foreground">{stat.suffix}</span>}
+                    </div>
+                  </div>
+                </div>
+                {stat.extra}
+              </CardContent>
+            </Card>
+          </motion.div>
+        ))}
       </div>
 
       {/* Grades Table */}
-      <Card>
+      <Card className="overflow-hidden rounded-2xl shadow-md">
+        <div className="h-1 bg-gradient-to-r from-indigo-400 via-purple-500 to-indigo-600" />
         <CardHeader>
-          <CardTitle>{language === 'en' ? 'Recent Grades' : language === 'hi' ? 'हाल के ग्रेड' : 'الدرجات الأخيرة'}</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center">
+              <FileText className="h-4 w-4 text-white" />
+            </div>
+            {language === 'en' ? 'Recent Grades' : language === 'hi' ? 'हाल के ग्रेड' : 'الدرجات الأخيرة'}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           {grades.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
-              <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <FileText className="h-12 w-12 mx-auto mb-4 opacity-30" />
               <p>{language === 'en' ? 'No grades found' : language === 'hi' ? 'कोई ग्रेड नहीं मिला' : 'لا توجد درجات'}</p>
               <p className="text-sm mt-2">
                 {language === 'en' 
@@ -285,21 +295,27 @@ export default function Grades() {
             </div>
           ) : (
             <div className="space-y-3">
-              {grades.map((grade) => {
+              {grades.map((grade, idx) => {
                 const percentage = grade.exam.total_marks 
                   ? Math.round((grade.marks_obtained / grade.exam.total_marks) * 100)
                   : grade.marks_obtained;
                 
                 return (
-                  <div key={grade.id} className="flex items-center justify-between p-3 border rounded-lg">
+                  <motion.div 
+                    key={grade.id} 
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: idx * 0.03 }}
+                    className="flex items-center justify-between p-4 rounded-xl border bg-card hover:bg-muted/50 transition-colors"
+                  >
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                        <span className={`font-bold ${getGradeColor(grade.grade)}`}>
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/50 dark:to-purple-900/50 flex items-center justify-center">
+                        <span className={`font-bold text-lg ${getGradeColor(grade.grade)}`}>
                           {grade.grade || '-'}
                         </span>
                       </div>
                       <div>
-                        <p className="font-medium">{grade.subject}</p>
+                        <p className="font-semibold">{grade.subject}</p>
                         <p className="text-sm text-muted-foreground">
                           {getExamTypeLabel(grade.exam.exam_type)}
                         </p>
@@ -307,7 +323,7 @@ export default function Grades() {
                     </div>
                     <div className="flex items-center gap-4">
                       <div className="text-right">
-                        <p className="font-medium">
+                        <p className="font-semibold">
                           {grade.marks_obtained}/{grade.exam.total_marks || 100}
                         </p>
                         <p className="text-xs text-muted-foreground">
@@ -318,7 +334,7 @@ export default function Grades() {
                       </div>
                       <Progress value={percentage} className="w-20" />
                     </div>
-                  </div>
+                  </motion.div>
                 );
               })}
             </div>

@@ -143,25 +143,32 @@ export default function Canteen() {
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight">{t('dashboard.canteen')}</h2>
-        <p className="text-muted-foreground">
-          {getText('School canteen menu', 'قائمة المقصف المدرسي', 'स्कूल कैंटीन मेन्यू')}
-        </p>
+    <div className="space-y-6 p-4 md:p-6">
+      {/* Gradient Header */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 p-6 text-white shadow-lg">
+        <div className="absolute inset-0 opacity-10 bg-[linear-gradient(45deg,transparent_25%,white_25%,white_50%,transparent_50%,transparent_75%,white_75%)] bg-[length:20px_20px]" />
+        <div className="relative z-10">
+          <h2 className="text-2xl md:text-3xl font-bold">{t('dashboard.canteen')}</h2>
+          <p className="mt-1 text-white/80 text-sm md:text-base">
+            {getText('School canteen menu', 'قائمة المقصف المدرسي', 'स्कूल कैंटीन मेन्यू')}
+          </p>
+        </div>
       </div>
 
       {/* Wallet Balance */}
-      <Card className="bg-gradient-to-br from-primary/10 to-primary/5">
+      <Card className="overflow-hidden rounded-2xl shadow-md border-0 bg-gradient-to-br from-primary/5 to-primary/10">
+        <div className="h-1 bg-gradient-to-r from-rose-400 via-pink-500 to-rose-600" />
         <CardContent className="pt-6">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Wallet className="h-5 w-5 text-primary" />
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-rose-500 to-pink-500 flex items-center justify-center shadow-lg">
+                <Wallet className="h-7 w-7 text-white" />
+              </div>
               <div>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-muted-foreground font-medium">
                   {getText('Wallet Balance', 'رصيد المحفظة', 'वॉलेट बैलेंस')}
                 </p>
-                <p className="text-2xl font-bold text-primary">
+                <p className="text-3xl font-bold text-primary">
                   {language === 'ar' ? `${walletBalance.toFixed(2)} ر.ع` : `OMR ${walletBalance.toFixed(2)}`}
                 </p>
               </div>
@@ -172,20 +179,28 @@ export default function Canteen() {
 
       {/* Menu Items - Read Only View */}
       <div>
-        <h3 className="text-lg font-semibold mb-4">{getText('Menu Items', 'قائمة الطعام', 'मेन्यू आइटम')}</h3>
+        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-rose-500 to-pink-500 flex items-center justify-center">
+            <Package className="h-4 w-4 text-white" />
+          </div>
+          {getText('Menu Items', 'قائمة الطعام', 'मेन्यू आइटम')}
+        </h3>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {menuItems.map((item) => (
-            <Card key={item.id} className="hover:shadow-lg transition-shadow">
+          {menuItems.map((item, idx) => (
+            <Card key={item.id} className="overflow-hidden rounded-xl hover:shadow-lg transition-all group border-0 shadow-md">
+              <div className="h-1 bg-gradient-to-r from-rose-400 to-pink-500" />
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
-                  <item.icon className="h-8 w-8 text-primary" />
-                  <Badge variant={item.available ? 'default' : 'secondary'}>
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-rose-100 to-pink-100 dark:from-rose-900/50 dark:to-pink-900/50 flex items-center justify-center">
+                    <item.icon className="h-6 w-6 text-rose-600" />
+                  </div>
+                  <Badge variant={item.available ? 'default' : 'secondary'} className={item.available ? 'bg-emerald-500' : ''}>
                     {item.available ? getText('Available', 'متوفر', 'उपलब्ध') : getText('Sold Out', 'نفذ', 'बिक गया')}
                   </Badge>
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="font-medium text-lg mb-1">{language === 'en' ? item.name : item.nameAr}</p>
+                <p className="font-semibold text-lg mb-1">{language === 'en' ? item.name : item.nameAr}</p>
                 <p className="text-sm text-muted-foreground mb-3">{item.category}</p>
                 <div className="flex items-center justify-between">
                   <span className="text-xl font-bold text-primary">
@@ -200,16 +215,24 @@ export default function Canteen() {
 
       {/* Purchase History */}
       {purchaseHistory.length > 0 && (
-        <Card>
+        <Card className="overflow-hidden rounded-2xl shadow-md">
+          <div className="h-1 bg-gradient-to-r from-rose-400 via-pink-500 to-rose-600" />
           <CardHeader>
-            <CardTitle>{getText('Recent Purchases', 'المشتريات الأخيرة', 'हाल की खरीदारी')}</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-rose-500 to-pink-500 flex items-center justify-center">
+                <ShoppingBag className="h-4 w-4 text-white" />
+              </div>
+              {getText('Recent Purchases', 'المشتريات الأخيرة', 'हाल की खरीदारी')}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {purchaseHistory.slice(0, 5).map((purchase) => (
-                <div key={purchase.id} className="flex items-center justify-between p-3 bg-accent/5 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <ShoppingBag className="h-4 w-4 text-muted-foreground" />
+              {purchaseHistory.slice(0, 5).map((purchase, idx) => (
+                <div key={purchase.id} className="flex items-center justify-between p-4 bg-muted/50 rounded-xl hover:bg-muted transition-colors">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-lg bg-rose-100 dark:bg-rose-900/50 flex items-center justify-center">
+                      <ShoppingBag className="h-5 w-5 text-rose-600" />
+                    </div>
                     <div>
                       <p className="font-medium">
                         {language === 'ar' ? purchase.description_ar || purchase.description : purchase.description}
@@ -219,7 +242,7 @@ export default function Canteen() {
                       </p>
                     </div>
                   </div>
-                  <span className="font-medium text-red-600">
+                  <span className="font-semibold text-red-600">
                     {language === 'ar' 
                       ? `${Math.abs(purchase.amount).toFixed(2)} ر.ع`
                       : `OMR ${Math.abs(purchase.amount).toFixed(2)}`}

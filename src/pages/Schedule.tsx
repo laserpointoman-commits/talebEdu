@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Clock, MapPin, Users, BookOpen, Download } from 'lucide-react';
+import { Clock, MapPin, Users, BookOpen, Download, Calendar as CalendarIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import LogoLoader from '@/components/LogoLoader';
 
@@ -174,47 +174,57 @@ export default function Schedule() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">{t('dashboard.schedule')}</h2>
-          <p className="text-muted-foreground">
-            {t('schedule.manageSchedules')}
-          </p>
+    <div className="space-y-6 p-4 md:p-6">
+      {/* Gradient Header */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-violet-500 via-purple-500 to-violet-600 p-6 text-white shadow-lg">
+        <div className="absolute inset-0 opacity-10 bg-[linear-gradient(45deg,transparent_25%,white_25%,white_50%,transparent_50%,transparent_75%,white_75%)] bg-[length:20px_20px]" />
+        <div className="relative z-10 flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl md:text-3xl font-bold">{t('dashboard.schedule')}</h2>
+            <p className="mt-1 text-white/80 text-sm md:text-base">
+              {t('schedule.manageSchedules')}
+            </p>
+          </div>
+          <Button onClick={downloadClassSchedule} variant="secondary" className="bg-white/20 hover:bg-white/30 text-white border-0">
+            <Download className="h-4 w-4 mr-2" />
+            {t('schedule.downloadSchedule')}
+          </Button>
         </div>
-        <Button onClick={downloadClassSchedule} variant="outline">
-          <Download className="h-4 w-4 mr-2" />
-          {t('schedule.downloadSchedule')}
-        </Button>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
-        <Card className="lg:col-span-2">
+        <Card className="lg:col-span-2 overflow-hidden rounded-2xl shadow-md">
+          <div className="h-1 bg-gradient-to-r from-violet-400 via-purple-500 to-violet-600" />
           <CardHeader>
-            <CardTitle>{t('schedule.todaySchedule')}</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-purple-500 flex items-center justify-center">
+                <Clock className="h-4 w-4 text-white" />
+              </div>
+              {t('schedule.todaySchedule')}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             {todaySchedule.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
-                <Clock className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <Clock className="h-12 w-12 mx-auto mb-4 opacity-30" />
                 <p>{getText('No classes scheduled for this day', 'لا توجد حصص مجدولة لهذا اليوم', 'इस दिन के लिए कोई कक्षा निर्धारित नहीं है')}</p>
               </div>
             ) : (
               <div className="space-y-3" dir={dir}>
-                {todaySchedule.map((item) => (
-                  <div key={item.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors">
+                {todaySchedule.map((item, idx) => (
+                  <div key={item.id} className="flex items-center justify-between p-4 rounded-xl border bg-card hover:bg-muted/50 transition-colors">
                     <div className={`flex items-center gap-4 ${dir === 'rtl' ? 'flex-row-reverse' : ''}`}>
-                      <div className="flex flex-col items-center">
-                        <Clock className="h-4 w-4 text-muted-foreground mb-1" />
-                        <span className="text-xs font-medium">{item.time.split(' - ')[0] || item.time}</span>
+                      <div className="flex flex-col items-center bg-primary/10 px-3 py-2 rounded-lg min-w-[80px]">
+                        <Clock className="h-4 w-4 text-primary mb-1" />
+                        <span className="text-xs font-semibold text-primary">{item.time.split(' - ')[0] || item.time}</span>
                         {item.time.includes(' - ') && (
                           <span className="text-xs text-muted-foreground">{item.time.split(' - ')[1]}</span>
                         )}
                       </div>
                       <div className="flex-1">
-                        <p className="font-medium">{item.subject}</p>
+                        <p className="font-semibold">{item.subject}</p>
                         {item.teacher !== '-' && (
-                          <div className="flex items-center gap-4 mt-1">
+                          <div className="flex items-center gap-4 mt-1 flex-wrap">
                             <span className="text-sm text-muted-foreground flex items-center gap-1">
                               <Users className="h-3 w-3" />
                               {item.teacher}
@@ -233,7 +243,7 @@ export default function Schedule() {
                         )}
                       </div>
                     </div>
-                    <Badge variant="outline">{item.subject}</Badge>
+                    <Badge variant="outline" className="border-violet-300 text-violet-600">{item.subject}</Badge>
                   </div>
                 ))}
               </div>
@@ -241,29 +251,35 @@ export default function Schedule() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="overflow-hidden rounded-2xl shadow-md">
+          <div className="h-1 bg-gradient-to-r from-violet-400 via-purple-500 to-violet-600" />
           <CardHeader>
-            <CardTitle>{t('common.calendar')}</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-purple-500 flex items-center justify-center">
+                <CalendarIcon className="h-4 w-4 text-white" />
+              </div>
+              {t('common.calendar')}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <Calendar
               mode="single"
               selected={selectedDate}
               onSelect={setSelectedDate}
-              className="rounded-md border"
+              className="rounded-lg border"
             />
-            <div className="mt-4 p-3 bg-muted rounded-lg">
-              <p className="text-sm font-medium mb-2">
+            <div className="mt-4 p-4 bg-gradient-to-br from-violet-50 to-purple-50 dark:from-violet-950/50 dark:to-purple-950/50 rounded-xl">
+              <p className="text-sm font-semibold mb-3">
                 {t('schedule.scheduleSummary')}
               </p>
-              <div className="space-y-1">
+              <div className="space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">{t('schedule.classes')}</span>
-                  <span className="font-medium">{todaySchedule.length}</span>
+                  <span className="font-bold text-primary">{todaySchedule.length}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">{t('schedule.totalHours')}</span>
-                  <span className="font-medium">
+                  <span className="font-bold text-primary">
                     {todaySchedule.length > 0 ? `~${Math.round(todaySchedule.length * 0.75)} ${t('time.hrs')}` : '0'}
                   </span>
                 </div>

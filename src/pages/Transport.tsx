@@ -204,74 +204,80 @@ export default function Transport() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">{t('dashboard.transport')}</h2>
-          <p className="text-muted-foreground">
-            {getText('Manage school transportation and buses', 'إدارة النقل المدرسي والحافلات', 'स्कूल परिवहन और बसों का प्रबंधन करें')}
-          </p>
-        </div>
-        {(profile?.role === 'admin' || profile?.role === 'developer') && (
-          <div className="flex gap-2 flex-wrap">
-            <Button onClick={() => navigate('/dashboard/admin/drivers')}>
-              <UserPlus className="h-4 w-4 mr-2" />
-              {getText('Manage Drivers', 'إدارة السائقين', 'ड्राइवर प्रबंधन')}
-            </Button>
-            <Button onClick={() => navigate('/dashboard/admin/buses')}>
-              <Bus className="h-4 w-4 mr-2" />
-              {getText('Manage Buses', 'إدارة الحافلات', 'बस प्रबंधन')}
-            </Button>
-            <Button onClick={() => navigate('/dashboard/admin/routes')}>
-              <Route className="h-4 w-4 mr-2" />
-              {getText('Manage Routes', 'إدارة المسارات', 'मार्ग प्रबंधन')}
-            </Button>
+    <div className="space-y-6 p-4 md:p-6">
+      {/* Gradient Header */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-cyan-500 via-teal-500 to-cyan-600 p-6 text-white shadow-lg">
+        <div className="absolute inset-0 opacity-10 bg-[linear-gradient(45deg,transparent_25%,white_25%,white_50%,transparent_50%,transparent_75%,white_75%)] bg-[length:20px_20px]" />
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h2 className="text-2xl md:text-3xl font-bold">{t('dashboard.transport')}</h2>
+            <p className="mt-1 text-white/80 text-sm md:text-base">
+              {getText('Manage school transportation and buses', 'إدارة النقل المدرسي والحافلات', 'स्कूल परिवहन और बसों का प्रबंधन करें')}
+            </p>
           </div>
-        )}
+          {(profile?.role === 'admin' || profile?.role === 'developer') && (
+            <div className="flex gap-2 flex-wrap">
+              <Button onClick={() => navigate('/dashboard/admin/drivers')} variant="secondary" className="bg-white/20 hover:bg-white/30 text-white border-0">
+                <UserPlus className="h-4 w-4 mr-2" />
+                {getText('Drivers', 'السائقين', 'ड्राइवर')}
+              </Button>
+              <Button onClick={() => navigate('/dashboard/admin/buses')} variant="secondary" className="bg-white/20 hover:bg-white/30 text-white border-0">
+                <Bus className="h-4 w-4 mr-2" />
+                {getText('Buses', 'الحافلات', 'बसें')}
+              </Button>
+              <Button onClick={() => navigate('/dashboard/admin/routes')} variant="secondary" className="bg-white/20 hover:bg-white/30 text-white border-0">
+                <Route className="h-4 w-4 mr-2" />
+                {getText('Routes', 'المسارات', 'मार्ग')}
+              </Button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Statistics */}
       <div className="grid gap-4 md:grid-cols-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              {getText('Total Buses', 'إجمالي الحافلات', 'कुल बसें')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{buses.length}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              {getText('Active Buses', 'الحافلات النشطة', 'सक्रिय बसें')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-500">{activeBuses.length}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              {getText('Total Capacity', 'السعة الإجمالية', 'कुल क्षमता')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalCapacity}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              {getText('Current Students', 'الطلاب الحاليون', 'वर्तमान छात्र')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalStudents}</div>
-          </CardContent>
-        </Card>
+        {[
+          { 
+            title: getText('Total Buses', 'إجمالي الحافلات', 'कुल बसें'),
+            value: buses.length,
+            icon: Bus,
+            gradient: 'from-blue-500 to-sky-400'
+          },
+          { 
+            title: getText('Active Buses', 'الحافلات النشطة', 'सक्रिय बसें'),
+            value: activeBuses.length,
+            icon: Activity,
+            gradient: 'from-emerald-500 to-green-400',
+            valueColor: 'text-emerald-600'
+          },
+          { 
+            title: getText('Total Capacity', 'السعة الإجمالية', 'कुल क्षमता'),
+            value: totalCapacity,
+            icon: Users,
+            gradient: 'from-amber-500 to-orange-400'
+          },
+          { 
+            title: getText('Current Students', 'الطلاب الحاليون', 'वर्तमान छात्र'),
+            value: totalStudents,
+            icon: Users,
+            gradient: 'from-violet-500 to-purple-400'
+          }
+        ].map((stat, idx) => (
+          <Card key={stat.title} className="overflow-hidden rounded-2xl shadow-md hover:shadow-xl transition-all">
+            <div className={`h-1 bg-gradient-to-r ${stat.gradient}`} />
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-4">
+                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${stat.gradient} flex items-center justify-center shadow-lg`}>
+                  <stat.icon className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground font-medium">{stat.title}</p>
+                  <p className={`text-2xl font-bold ${stat.valueColor || ''}`}>{stat.value}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       {/* Bus List */}
