@@ -1,6 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useStudents } from '@/contexts/StudentsContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -12,10 +14,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Plus, Edit, Trash2, Bus, Users, Activity, Wrench, Calendar, UserPlus, X, Search, Loader2 } from 'lucide-react';
+import { Plus, Edit, Trash2, Bus, Users, Activity, Wrench, Calendar, UserPlus, X, Search, Loader2, Phone, Video } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { callService } from '@/services/callService';
 
 interface BusData {
   id: string;
@@ -36,6 +39,7 @@ interface DriverData {
     id: string;
     full_name: string;
     full_name_ar: string | null;
+    profile_image?: string | null;
   } | null;
 }
 
@@ -52,6 +56,8 @@ interface TeacherData {
 export default function BusesManagement() {
   const { t, language } = useLanguage();
   const { students } = useStudents();
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -106,7 +112,7 @@ export default function BusesManagement() {
           id,
           employee_id,
           license_number,
-          profile:profiles!drivers_profile_id_fkey(id, full_name, full_name_ar)
+          profile:profiles!drivers_profile_id_fkey(id, full_name, full_name_ar, profile_image)
         `)
         .eq('status', 'active');
       if (error) throw error;
@@ -121,12 +127,64 @@ export default function BusesManagement() {
       // Get profiles with supervisor role or teachers
       const { data: profiles, error } = await supabase
         .from('profiles')
-        .select('id, full_name, full_name_ar, role')
+        .select('id, full_name, full_name_ar, profile_image, role')
         .in('role', ['supervisor', 'teacher', 'admin']);
       if (error) throw error;
       return profiles || [];
     }
   });
+
+  useEffect(() => {
+    if (user?.id) callService.initialize(user.id);
+  }, [user?.id]);
+
+  const driverById = useMemo(() => new Map(drivers.map(d => [d.id, d])), [drivers]);
+  const supervisorById = useMemo(() => new Map(supervisors.map((s: any) => [s.id, s])), [supervisors]);
+
+  const requestCallViaMessenger = (payload: { recipientId: string; recipientName: string; recipientImage: string | null; callType: 'voice' | 'video' }) => {
+    try {
+      sessionStorage.setItem('pendingCall', JSON.stringify(payload));
+      navigate('/dashboard/messenger');
+    } catch (e) {
+      console.error('Failed to set pending call:', e);
+      toast({
+        variant: 'destructive',
+        title: language === 'ar' ? 'خطأ' : 'Error',
+        description: language === 'ar' ? 'تعذر بدء المكالمة' : 'Could not start call',
+      });
+    }
+  };
+
+  const callBusDevice = (bus: BusData, callType: 'voice' | 'video') => {
+    // Prefer supervisor (usually CM30), fallback to driver
+    const supervisor = bus.supervisor_id ? supervisorById.get(bus.supervisor_id) : undefined;
+    if (supervisor) {
+      requestCallViaMessenger({
+        recipientId: supervisor.id,
+        recipientName: language === 'ar' ? (supervisor.full_name_ar || supervisor.full_name) : supervisor.full_name,
+        recipientImage: supervisor.profile_image || null,
+        callType,
+      });
+      return;
+    }
+
+    const driver = bus.driver_id ? driverById.get(bus.driver_id) : undefined;
+    if (driver?.profile?.id) {
+      requestCallViaMessenger({
+        recipientId: driver.profile.id,
+        recipientName: language === 'ar' ? (driver.profile.full_name_ar || driver.profile.full_name) : driver.profile.full_name,
+        recipientImage: driver.profile.profile_image || null,
+        callType,
+      });
+      return;
+    }
+
+    toast({
+      variant: 'destructive',
+      title: language === 'ar' ? 'لا يوجد حساب' : 'No account',
+      description: language === 'ar' ? 'لا يوجد سائق/مشرف مُعيّن لهذه الحافلة' : 'No driver/supervisor assigned to this bus',
+    });
+  };
 
   // Add bus mutation
   const addBusMutation = useMutation({
@@ -554,6 +612,22 @@ export default function BusesManagement() {
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => callBusDevice(bus, 'voice')}
+                          title={language === 'ar' ? 'اتصال صوتي' : 'Voice call'}
+                        >
+                          <Phone className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => callBusDevice(bus, 'video')}
+                          title={language === 'ar' ? 'اتصال مرئي' : 'Video call'}
+                        >
+                          <Video className="h-4 w-4" />
+                        </Button>
                         <Button size="sm" variant="ghost" onClick={() => handleEditBus(bus)}>
                           <Edit className="h-4 w-4" />
                         </Button>
