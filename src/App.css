@@ -7,6 +7,11 @@
   text-align: initial;
 }
 
+/* Android WebView: make root a full-height flex root so nested scrollers can compute heights correctly */
+html.native-android #root {
+  height: 100%;
+}
+
 .logo {
   height: 6em;
   padding: 1.5em;

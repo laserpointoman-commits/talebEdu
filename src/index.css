@@ -20,6 +20,7 @@
 html {
   overscroll-behavior: none;
   -webkit-overflow-scrolling: touch;
+  height: 100%;
 }
 
 body {
@@ -40,11 +41,22 @@ body {
   min-height: 100%;
   /* Default: allow document scrolling on web + Android webviews */
   overflow: auto;
+  height: 100%;
 }
 
 /* Lock document scrolling only for native iOS builds */
 html.native-ios body {
   position: fixed;
+  height: 100%;
+  overflow: hidden;
+}
+
+/*
+  Android WebView/CM30: ensure the document itself does NOT scroll.
+  Nested scroll containers (e.g. DashboardLayout <main>) become unreliable when the document is scrollable.
+*/
+html.native-android,
+html.native-android body {
   height: 100%;
   overflow: hidden;
 }

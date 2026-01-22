@@ -14,10 +14,30 @@ interface NfcPinLoginRequest {
 }
 
 function normalizeNfcId(raw: string): string {
-  return (raw ?? '')
+  const cleaned = (raw ?? '')
     .replace(/\u0000/g, '')
     .replace(/^NFC\s*[:\-]\s*/i, '')
     .trim();
+
+  const compact = cleaned.replace(/[^0-9a-fA-F]/g, '');
+  const looksLikeHexUid = compact.length >= 8 && compact.length <= 32 && /^[0-9a-fA-F]+$/.test(compact);
+  return looksLikeHexUid ? compact.toUpperCase() : cleaned;
+}
+
+function buildNfcCandidates(raw: string): string[] {
+  const base = normalizeNfcId(raw);
+  const candidates = new Set<string>();
+  candidates.add(base);
+  candidates.add(base.toLowerCase());
+  candidates.add(base.toUpperCase());
+
+  const compact = base.replace(/[^0-9a-fA-F]/g, '');
+  if (compact) {
+    candidates.add(compact);
+    candidates.add(compact.toUpperCase());
+    candidates.add(compact.toLowerCase());
+  }
+  return Array.from(candidates).filter(Boolean);
 }
 
 // Convert Uint8Array to hex string
@@ -54,6 +74,7 @@ serve(async (req) => {
   try {
     const { nfcId: rawNfcId, pin, email: providedEmail }: NfcPinLoginRequest = await req.json();
     const nfcId = normalizeNfcId(rawNfcId);
+    const nfcCandidates = buildNfcCandidates(rawNfcId);
 
     // Validate PIN format (4 digits)
     if (!pin || !/^\d{4}$/.test(pin)) {
@@ -79,8 +100,8 @@ serve(async (req) => {
       const { data: employee } = await supabase
         .from('employees')
         .select('profile_id')
-        .eq('nfc_id', nfcId)
-        .single();
+        .in('nfc_id', nfcCandidates.length ? nfcCandidates : [nfcId])
+        .maybeSingle();
 
       if (employee?.profile_id) {
         profileId = employee.profile_id;
@@ -88,8 +109,8 @@ serve(async (req) => {
         const { data: teacher } = await supabase
           .from('teachers')
           .select('profile_id')
-          .eq('nfc_id', nfcId)
-          .single();
+          .in('nfc_id', nfcCandidates.length ? nfcCandidates : [nfcId])
+          .maybeSingle();
 
         if (teacher?.profile_id) {
           profileId = teacher.profile_id;
@@ -98,8 +119,8 @@ serve(async (req) => {
 
       if (!profileId) {
         return new Response(
-          JSON.stringify({ error: 'NFC card not recognized' }),
-          { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          JSON.stringify({ error: 'NFC card not recognized', found: false, reason: 'not_recognized' }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
 
