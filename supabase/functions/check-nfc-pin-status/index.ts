@@ -38,6 +38,26 @@ function buildNfcCandidates(nfcId: string): string[] {
     candidates.add(compact.toLowerCase());
   }
 
+  // CM30/Android sometimes returns a proprietary format like "FC243848647"
+  // while the DB stores staff cards as "NFC-243848647" or "TCH-243848647".
+  // Extract the numeric portion and try those prefixed variants.
+  const fcMatch = base.match(/^FC\s*([0-9]+)$/i);
+  const numericRaw = fcMatch?.[1] ?? base.replace(/\D/g, '');
+  if (numericRaw && numericRaw.length >= 6) {
+    const paddedVariants = new Set<string>([numericRaw]);
+    // Try common fixed lengths (keep minimal to avoid false positives)
+    if (numericRaw.length < 9) paddedVariants.add(numericRaw.padStart(9, '0'));
+    if (numericRaw.length < 10) paddedVariants.add(numericRaw.padStart(10, '0'));
+
+    for (const num of paddedVariants) {
+      candidates.add(num);
+      candidates.add(`NFC-${num}`);
+      candidates.add(`TCH-${num}`);
+      candidates.add(`nfc-${num}`);
+      candidates.add(`tch-${num}`);
+    }
+  }
+
   return Array.from(candidates).filter(Boolean);
 }
 
