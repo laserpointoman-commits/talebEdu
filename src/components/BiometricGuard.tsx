@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
 import { NativeAuthService } from '@/services/nativeAuth';
-import { useAuth } from '@/contexts/AuthContext';
+import { AuthContext } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,7 +10,11 @@ import { Fingerprint, Lock, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function BiometricGuard({ children }: { children: React.ReactNode }) {
-  const { user, loading: authLoading } = useAuth();
+  // Use useContext directly to gracefully handle HMR when AuthProvider hasn't mounted
+  const auth = useContext(AuthContext);
+  const user = auth?.user;
+  const authLoading = auth?.loading ?? true;
+
   const { language } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
