@@ -316,7 +316,48 @@ export default function BusAttendanceDevice() {
 
       if (error || !student) {
         console.log('Student not found for candidates:', candidates);
-        showError(language === 'ar' ? 'فشل المسح' : 'Scan failed', language === 'ar' ? 'الطالب غير موجود' : 'Student not found');
+        // Best-effort logging so we can see what CM30 returns in the wild.
+        try {
+          const nowIso = new Date().toISOString();
+          await supabase.from('checkpoint_logs').insert({
+            student_id: null,
+            student_name: null,
+            nfc_id: (nfcData.id ?? '').slice(0, 100) || null,
+            timestamp: nowIso,
+            type: 'unknown_card',
+            location: busData?.bus_number ? `Bus ${busData.bus_number}` : 'Bus',
+            device_id: deviceId,
+            synced: true,
+          });
+        } catch {
+          // ignore
+        }
+
+        try {
+          await supabase.from('error_logs').insert({
+            error_message: 'Student not found',
+            error_type: 'nfc_student_lookup',
+            function_name: 'BusAttendanceDevice',
+            metadata: {
+              device_id: deviceId,
+              raw_id: nfcData.id,
+              candidates,
+              ts: new Date().toISOString(),
+            },
+          });
+        } catch {
+          // ignore
+        }
+
+        const scannedLabel = (nfcData.id ?? '').slice(0, 32);
+        showError(
+          language === 'ar' ? 'فشل المسح' : 'Scan failed',
+          language === 'ar'
+            ? 'الطالب غير موجود'
+            : scannedLabel
+              ? `Student not found: ${scannedLabel}`
+              : 'Student not found'
+        );
         return;
       }
 

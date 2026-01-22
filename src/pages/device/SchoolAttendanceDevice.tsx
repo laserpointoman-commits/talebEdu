@@ -376,7 +376,50 @@ export default function SchoolAttendanceDevice() {
 
       if (error || !student) {
         console.log('Student not found for candidates:', candidates);
-        toast.error(language === 'ar' ? 'الطالب غير موجود' : 'Student not found', { duration: 1500 });
+        // Persist what the scanner actually returned so we can debug CM30 format mismatches.
+        // This runs best-effort and must never block scanning.
+        try {
+          const nowIso = new Date().toISOString();
+          await supabase.from('checkpoint_logs').insert({
+            student_id: null,
+            student_name: null,
+            nfc_id: (nfcData.id ?? '').slice(0, 100) || null,
+            timestamp: nowIso,
+            type: 'unknown_card',
+            location: 'School Gate',
+            device_id: deviceId,
+            synced: true,
+          });
+        } catch (e) {
+          // ignore
+        }
+
+        try {
+          await supabase.from('error_logs').insert({
+            error_message: 'Student not found',
+            error_type: 'nfc_student_lookup',
+            function_name: 'SchoolAttendanceDevice',
+            metadata: {
+              device_id: deviceId,
+              raw_id: nfcData.id,
+              candidates,
+              scan_mode: scanMode,
+              ts: new Date().toISOString(),
+            },
+          });
+        } catch {
+          // ignore
+        }
+
+        const scannedLabel = (nfcData.id ?? '').slice(0, 32);
+        toast.error(
+          language === 'ar'
+            ? 'الطالب غير موجود'
+            : scannedLabel
+              ? `Student not found: ${scannedLabel}`
+              : 'Student not found',
+          { duration: 2200 }
+        );
         setIsProcessing(false);
         return;
       }
