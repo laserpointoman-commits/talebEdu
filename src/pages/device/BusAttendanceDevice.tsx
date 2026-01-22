@@ -27,6 +27,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { LanguageSwitcher } from '@/components/ui/language-switcher';
 import { ScanFeedbackOverlay, type ScanFeedbackState } from '@/components/device/ScanFeedbackOverlay';
 import { useBusLocationTracking } from '@/hooks/use-bus-location-tracking';
+import { kioskService } from '@/services/kioskService';
+import { KioskExitGesture } from '@/components/device/KioskExitGesture';
 
 interface ScannedStudent {
   id: string;
@@ -98,6 +100,13 @@ export default function BusAttendanceDevice() {
     }
     loadSession();
   }, [deviceId]);
+
+  useEffect(() => {
+    kioskService.startKiosk();
+    return () => {
+      // keep kiosk running unless user exits with PIN
+    };
+  }, []);
 
   const loadSession = async () => {
     try {
@@ -332,8 +341,14 @@ export default function BusAttendanceDevice() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950/20 dark:to-cyan-950/20 p-4" dir={language === 'ar' ? 'rtl' : 'ltr'}>
-      <ScanFeedbackOverlay state={feedback} />
+    <KioskExitGesture
+      onExit={() => {
+        stopScanning();
+        window.location.href = '/device/login?type=bus';
+      }}
+    >
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950/20 dark:to-cyan-950/20 p-4" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+        <ScanFeedbackOverlay state={feedback} />
       <div className="max-w-4xl mx-auto space-y-4">
         {/* Header */}
         <Card>
@@ -607,6 +622,7 @@ export default function BusAttendanceDevice() {
           )}
         </DialogContent>
       </Dialog>
-    </div>
+      </div>
+    </KioskExitGesture>
   );
 }

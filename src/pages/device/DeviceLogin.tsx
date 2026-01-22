@@ -26,6 +26,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { LanguageSwitcher } from '@/components/ui/language-switcher';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
+import { kioskService } from '@/services/kioskService';
+import { KioskExitGesture } from '@/components/device/KioskExitGesture';
 
 type DeviceType = 'bus' | 'school_gate';
 
@@ -63,6 +65,11 @@ export default function DeviceLogin() {
   useEffect(() => {
     checkExistingSession();
   }, [deviceId]);
+
+  useEffect(() => {
+    // Enter kiosk mode on Android CM30
+    kioskService.startKiosk();
+  }, []);
 
   const checkExistingSession = async () => {
     try {
@@ -312,7 +319,8 @@ export default function DeviceLogin() {
   // If already logged in, show session info with logout option
   if (session) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center p-4" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+      <KioskExitGesture onExit={() => (window.location.href = '/landing')}>
+        <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center p-4" dir={language === 'ar' ? 'rtl' : 'ltr'}>
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             <div className="flex justify-end mb-2">
@@ -355,12 +363,14 @@ export default function DeviceLogin() {
             </Button>
           </CardContent>
         </Card>
-      </div>
+        </div>
+      </KioskExitGesture>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center p-4" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+    <KioskExitGesture onExit={() => (window.location.href = '/landing')}>
+      <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center p-4" dir={language === 'ar' ? 'rtl' : 'ltr'}>
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex justify-end mb-2">
@@ -513,6 +523,8 @@ export default function DeviceLogin() {
           </Tabs>
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </KioskExitGesture>
   );
 }
+
