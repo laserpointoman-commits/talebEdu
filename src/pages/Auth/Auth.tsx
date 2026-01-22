@@ -332,7 +332,9 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen w-full relative overflow-hidden bg-background">
+    // On native Android we lock document scrolling globally (to keep dashboard scrolling stable),
+    // so the Auth page must provide its own scroll container.
+    <div className="h-[100dvh] w-full relative overflow-y-auto overscroll-none bg-background">
       {/* Simple Background */}
       <div className="fixed inset-0 bg-gradient-to-br from-primary/5 via-background to-secondary/5" />
 
@@ -350,7 +352,7 @@ export default function Auth() {
       </div>
 
       {/* Main Content */}
-      <div className="relative z-10 min-h-screen flex items-center justify-center p-4">
+      <div className="relative z-10 min-h-[100dvh] flex items-center justify-center p-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
