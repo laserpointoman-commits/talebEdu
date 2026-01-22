@@ -255,6 +255,9 @@ class CallService {
   private async handleIncomingCall(data: any) {
     const { callId, callType, callerId, offer } = data;
 
+    console.log('[CallService] handleIncomingCall triggered:', { callId, callType, callerId });
+    console.log('[CallService] Current path:', window.location.pathname);
+
     // Fetch caller info
     const { data: callerProfile } = await supabase
       .from('profiles')
@@ -277,16 +280,20 @@ class CallService {
 
     // Check if we're on a device page (CM30 kiosk mode) - auto-answer immediately
     const isDevicePage = window.location.pathname.startsWith('/device/');
+    console.log('[CallService] Is device page?', isDevicePage);
+    
     if (isDevicePage) {
-      console.log('[CallService] CM30 device mode detected - auto-answering call');
+      console.log('[CallService] CM30 device mode detected - auto-answering call in 300ms');
       // Small delay to ensure state is updated, then auto-accept
       setTimeout(() => {
+        console.log('[CallService] Executing auto-accept now');
         this.acceptCall().catch((e) => console.error('Auto-accept failed:', e));
       }, 300);
       return;
     }
 
     // Normal mode: Play ringtone and wait for user interaction
+    console.log('[CallService] Normal mode - playing ringtone');
     this.playRingtone();
   }
 

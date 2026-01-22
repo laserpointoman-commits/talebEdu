@@ -127,8 +127,9 @@ export default function BusAttendanceDevice() {
       setSession(sessionData);
 
       // Initialize call service for emergency calls from admin
-      // Look up the profile_id from employees table using the session's nfc_id
+      // Look up the profile_id from employees or teachers table using the session's nfc_id
       if (sessionData.nfc_id) {
+        // Try employees first (drivers, supervisors)
         const { data: employee } = await supabase
           .from('employees')
           .select('profile_id')
@@ -136,9 +137,26 @@ export default function BusAttendanceDevice() {
           .maybeSingle();
         
         if (employee?.profile_id) {
+          console.log('[BusDevice] Initializing callService with employee profile_id:', employee.profile_id);
           callService.initialize(employee.profile_id).catch((e) => {
             console.warn('CallService init failed on device:', e);
           });
+        } else {
+          // Fallback: try teachers table
+          const { data: teacher } = await supabase
+            .from('teachers')
+            .select('profile_id')
+            .eq('nfc_id', sessionData.nfc_id)
+            .maybeSingle();
+            
+          if (teacher?.profile_id) {
+            console.log('[BusDevice] Initializing callService with teacher profile_id:', teacher.profile_id);
+            callService.initialize(teacher.profile_id).catch((e) => {
+              console.warn('CallService init failed on device:', e);
+            });
+          } else {
+            console.warn('[BusDevice] Could not find profile_id for NFC:', sessionData.nfc_id);
+          }
         }
       }
 
