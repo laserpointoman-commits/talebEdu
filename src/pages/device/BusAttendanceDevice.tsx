@@ -191,6 +191,28 @@ export default function BusAttendanceDevice() {
   const buildNfcCandidates = (rawId: string): string[] => {
     const cleaned = (rawId ?? '').replace(/\u0000/g, '').trim().toUpperCase();
     const candidates: string[] = [cleaned];
+
+    // Handle cases where stored/tag IDs include or omit the leading "NFC-".
+    // Examples:
+    // - "NFC-STD-000000123" <-> "STD-000000123"
+    // - "NFC-TCH-000000123" <-> "TCH-000000123"
+    if (cleaned.startsWith('NFC-')) {
+      candidates.push(cleaned.slice(4));
+    } else if (cleaned.startsWith('STD-') || cleaned.startsWith('TCH-')) {
+      candidates.push(`NFC-${cleaned}`);
+    }
+
+    // If tag contains NFC + digits (e.g., "NFC779373"), try additional variants.
+    const nfcDigitsMatch = cleaned.match(/^NFC(\d+)$/);
+    if (nfcDigitsMatch?.[1]) {
+      const numericPart = nfcDigitsMatch[1];
+      const padded = numericPart.padStart(9, '0');
+      candidates.push(numericPart);
+      candidates.push(`NFC-${numericPart}`);
+      candidates.push(`NFC-${padded}`);
+      candidates.push(`NFC-STD-${numericPart}`);
+      candidates.push(`NFC-STD-${padded}`);
+    }
     
     // If starts with FC (CM30 format), extract numeric part
     if (cleaned.startsWith('FC')) {
