@@ -38,13 +38,15 @@ body {
   */
   width: 100%;
   min-height: 100%;
-  overflow: hidden;
+  /* Default: allow document scrolling on web + Android webviews */
+  overflow: auto;
 }
 
 /* Lock document scrolling only for native iOS builds */
 html.native-ios body {
   position: fixed;
   height: 100%;
+  overflow: hidden;
 }
 
 /* Native iOS Button Feel */
