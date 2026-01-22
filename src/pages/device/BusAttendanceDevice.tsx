@@ -196,21 +196,30 @@ export default function BusAttendanceDevice() {
     if (cleaned.startsWith('FC')) {
       const numericPart = cleaned.slice(2);
       candidates.push(numericPart);
-      // Try NFC- and TCH- prefixes with zero-padding
+      // Try NFC-STD- prefix (student cards format)
       const padded = numericPart.padStart(9, '0');
-      candidates.push(`NFC-${padded}`);
+      candidates.push(`NFC-STD-${padded}`);
+      candidates.push(`NFC-STD-${numericPart}`);
+      // Also try NFC + numeric (e.g., NFC779373)
+      candidates.push(`NFC${numericPart}`);
+      // Try TCH- prefixes for staff
       candidates.push(`TCH-${padded}`);
-      candidates.push(`NFC-${numericPart}`);
       candidates.push(`TCH-${numericPart}`);
+      // Legacy formats
+      candidates.push(`NFC-${padded}`);
+      candidates.push(`NFC-${numericPart}`);
     }
     
     // If it's just numeric, try with prefixes
     if (/^\d+$/.test(cleaned)) {
       const padded = cleaned.padStart(9, '0');
-      candidates.push(`NFC-${padded}`);
+      candidates.push(`NFC-STD-${padded}`);
+      candidates.push(`NFC-STD-${cleaned}`);
+      candidates.push(`NFC${cleaned}`);
       candidates.push(`TCH-${padded}`);
-      candidates.push(`NFC-${cleaned}`);
       candidates.push(`TCH-${cleaned}`);
+      candidates.push(`NFC-${padded}`);
+      candidates.push(`NFC-${cleaned}`);
     }
     
     // Try lowercase variants
