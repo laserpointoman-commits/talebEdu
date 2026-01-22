@@ -143,10 +143,19 @@ class NFCService {
 
     const normalizeId = (raw: string): string => {
       // Normalize across plugins / tags (trim, strip nulls, strip common prefixes)
-      const cleaned = (raw ?? '')
+      let cleaned = (raw ?? '')
         .replace(/\u0000/g, '')
         .replace(/^NFC\s*[:\-]\s*/i, '')
         .trim();
+
+      // If it looks like a raw UID (often returned as hex, sometimes with separators),
+      // canonicalize it so backend lookups are consistent.
+      const compact = cleaned.replace(/[^0-9a-fA-F]/g, '');
+      const looksLikeHexUid = compact.length >= 8 && compact.length <= 32 && /^[0-9a-fA-F]+$/.test(compact);
+      if (looksLikeHexUid) {
+        cleaned = compact.toUpperCase();
+      }
+
       return cleaned;
     };
     try {

@@ -12,10 +12,33 @@ interface CheckPinRequest {
 }
 
 function normalizeNfcId(raw: string): string {
-  return (raw ?? '')
+  const cleaned = (raw ?? '')
     .replace(/\u0000/g, '')
     .replace(/^NFC\s*[:\-]\s*/i, '')
     .trim();
+
+  // If it looks like a hex UID, canonicalize to uppercase without separators.
+  const compact = cleaned.replace(/[^0-9a-fA-F]/g, '');
+  const looksLikeHexUid = compact.length >= 8 && compact.length <= 32 && /^[0-9a-fA-F]+$/.test(compact);
+  return looksLikeHexUid ? compact.toUpperCase() : cleaned;
+}
+
+function buildNfcCandidates(nfcId: string): string[] {
+  const base = normalizeNfcId(nfcId);
+  const candidates = new Set<string>();
+  candidates.add(base);
+  candidates.add(base.toLowerCase());
+  candidates.add(base.toUpperCase());
+
+  // Also try a compact variant (strip separators) in case DB stored it differently.
+  const compact = base.replace(/[^0-9a-fA-F]/g, '');
+  if (compact) {
+    candidates.add(compact);
+    candidates.add(compact.toUpperCase());
+    candidates.add(compact.toLowerCase());
+  }
+
+  return Array.from(candidates).filter(Boolean);
 }
 
 serve(async (req) => {
@@ -26,11 +49,13 @@ serve(async (req) => {
   try {
     const { nfcId: rawNfcId, email }: CheckPinRequest = await req.json();
     const nfcId = rawNfcId ? normalizeNfcId(rawNfcId) : undefined;
+    const nfcCandidates = rawNfcId ? buildNfcCandidates(rawNfcId) : [];
 
     console.log('[check-nfc-pin-status] request', {
       hasEmail: !!email,
       rawNfcId: rawNfcId ?? null,
       nfcId: nfcId ?? null,
+      candidates: nfcCandidates,
     });
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -48,7 +73,7 @@ serve(async (req) => {
       const { data: employee, error: employeeError } = await supabase
         .from('employees')
         .select('profile_id')
-        .eq('nfc_id', nfcId)
+        .in('nfc_id', nfcCandidates.length ? nfcCandidates : [nfcId])
         .maybeSingle();
 
       if (employeeError) {
@@ -63,7 +88,7 @@ serve(async (req) => {
         const { data: teacher, error: teacherError } = await supabase
           .from('teachers')
           .select('profile_id')
-          .eq('nfc_id', nfcId)
+          .in('nfc_id', nfcCandidates.length ? nfcCandidates : [nfcId])
           .maybeSingle();
 
         if (teacherError) {
