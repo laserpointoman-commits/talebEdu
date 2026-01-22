@@ -505,10 +505,10 @@ export default function DeviceLogin() {
                       onChange={(v) => setPin(v.replace(/\D/g, '').slice(0, 4))}
                     >
                       <InputOTPGroup>
-                        <InputOTPSlot index={0} />
-                        <InputOTPSlot index={1} />
-                        <InputOTPSlot index={2} />
-                        <InputOTPSlot index={3} />
+                        <InputOTPSlot index={0} mask />
+                        <InputOTPSlot index={1} mask />
+                        <InputOTPSlot index={2} mask />
+                        <InputOTPSlot index={3} mask />
                       </InputOTPGroup>
                     </InputOTP>
                   </div>

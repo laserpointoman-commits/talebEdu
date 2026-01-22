@@ -520,10 +520,10 @@ const Profile = () => {
                           <div className="flex justify-center">
                             <InputOTP maxLength={4} value={nfcPin} onChange={setNfcPin}>
                               <InputOTPGroup>
-                                <InputOTPSlot index={0} className="w-12 h-12 text-xl" />
-                                <InputOTPSlot index={1} className="w-12 h-12 text-xl" />
-                                <InputOTPSlot index={2} className="w-12 h-12 text-xl" />
-                                <InputOTPSlot index={3} className="w-12 h-12 text-xl" />
+                                <InputOTPSlot index={0} className="w-12 h-12 text-xl" mask />
+                                <InputOTPSlot index={1} className="w-12 h-12 text-xl" mask />
+                                <InputOTPSlot index={2} className="w-12 h-12 text-xl" mask />
+                                <InputOTPSlot index={3} className="w-12 h-12 text-xl" mask />
                               </InputOTPGroup>
                             </InputOTP>
                           </div>
@@ -533,10 +533,10 @@ const Profile = () => {
                           <div className="flex justify-center">
                             <InputOTP maxLength={4} value={confirmNfcPin} onChange={setConfirmNfcPin}>
                               <InputOTPGroup>
-                                <InputOTPSlot index={0} className="w-12 h-12 text-xl" />
-                                <InputOTPSlot index={1} className="w-12 h-12 text-xl" />
-                                <InputOTPSlot index={2} className="w-12 h-12 text-xl" />
-                                <InputOTPSlot index={3} className="w-12 h-12 text-xl" />
+                                <InputOTPSlot index={0} className="w-12 h-12 text-xl" mask />
+                                <InputOTPSlot index={1} className="w-12 h-12 text-xl" mask />
+                                <InputOTPSlot index={2} className="w-12 h-12 text-xl" mask />
+                                <InputOTPSlot index={3} className="w-12 h-12 text-xl" mask />
                               </InputOTPGroup>
                             </InputOTP>
                           </div>
