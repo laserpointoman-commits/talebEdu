@@ -187,16 +187,53 @@ export default function BusAttendanceDevice() {
     continuousScanLoop();
   }, [continuousScanLoop, isTripActive, language, showError]);
 
+  // Build NFC ID candidates for matching (same logic as backend)
+  const buildNfcCandidates = (rawId: string): string[] => {
+    const cleaned = (rawId ?? '').replace(/\u0000/g, '').trim().toUpperCase();
+    const candidates: string[] = [cleaned];
+    
+    // If starts with FC (CM30 format), extract numeric part
+    if (cleaned.startsWith('FC')) {
+      const numericPart = cleaned.slice(2);
+      candidates.push(numericPart);
+      // Try NFC- and TCH- prefixes with zero-padding
+      const padded = numericPart.padStart(9, '0');
+      candidates.push(`NFC-${padded}`);
+      candidates.push(`TCH-${padded}`);
+      candidates.push(`NFC-${numericPart}`);
+      candidates.push(`TCH-${numericPart}`);
+    }
+    
+    // If it's just numeric, try with prefixes
+    if (/^\d+$/.test(cleaned)) {
+      const padded = cleaned.padStart(9, '0');
+      candidates.push(`NFC-${padded}`);
+      candidates.push(`TCH-${padded}`);
+      candidates.push(`NFC-${cleaned}`);
+      candidates.push(`TCH-${cleaned}`);
+    }
+    
+    // Try lowercase variants
+    candidates.push(...candidates.map(c => c.toLowerCase()));
+    
+    return [...new Set(candidates)];
+  };
+
   const handleNfcScan = async (nfcData: NFCData) => {
     try {
-      // Find student by NFC ID
+      const candidates = buildNfcCandidates(nfcData.id);
+      console.log('NFC scan - trying candidates:', candidates);
+      
+      // Find student by any matching NFC ID candidate
       const { data: student, error } = await supabase
         .from('students')
         .select('id, first_name, last_name, first_name_ar, last_name_ar, class, nfc_id')
-        .eq('nfc_id', nfcData.id)
-        .single();
+        .in('nfc_id', candidates)
+        .limit(1)
+        .maybeSingle();
 
       if (error || !student) {
+        console.log('Student not found for candidates:', candidates);
         showError(language === 'ar' ? 'فشل المسح' : 'Scan failed', language === 'ar' ? 'الطالب غير موجود' : 'Student not found');
         return;
       }
@@ -292,7 +329,12 @@ export default function BusAttendanceDevice() {
     try {
       const nfcData = await nfcService.readOnce();
       
-      if (nfcData.id !== session?.nfc_id) {
+      // Build candidates for session NFC ID comparison
+      const sessionCandidates = session?.nfc_id ? buildNfcCandidates(session.nfc_id) : [];
+      const scannedCandidates = buildNfcCandidates(nfcData.id);
+      const hasMatch = scannedCandidates.some(c => sessionCandidates.includes(c));
+      
+      if (!hasMatch) {
         toast.error(language === 'ar' ? 'يجب استخدام نفس البطاقة للخروج' : 'Must use same card for logout');
         return;
       }
@@ -304,6 +346,8 @@ export default function BusAttendanceDevice() {
         .eq('status', 'active');
 
       stopScanning();
+      // Reset NFC service state so next login can scan fresh
+      nfcService.reset();
       navigate('/device/login?type=bus');
       toast.success(language === 'ar' ? 'تم تسجيل الخروج' : 'Logged out');
     } catch (error) {
