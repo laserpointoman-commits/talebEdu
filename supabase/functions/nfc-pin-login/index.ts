@@ -37,6 +37,24 @@ function buildNfcCandidates(raw: string): string[] {
     candidates.add(compact.toUpperCase());
     candidates.add(compact.toLowerCase());
   }
+
+  // CM30/Android sometimes returns IDs like "FC243848647" while DB stores
+  // staff cards as "NFC-243848647" / "TCH-243848647".
+  const fcMatch = base.match(/^FC\s*([0-9]+)$/i);
+  const numericRaw = fcMatch?.[1] ?? base.replace(/\D/g, '');
+  if (numericRaw && numericRaw.length >= 6) {
+    const paddedVariants = new Set<string>([numericRaw]);
+    if (numericRaw.length < 9) paddedVariants.add(numericRaw.padStart(9, '0'));
+    if (numericRaw.length < 10) paddedVariants.add(numericRaw.padStart(10, '0'));
+
+    for (const num of paddedVariants) {
+      candidates.add(num);
+      candidates.add(`NFC-${num}`);
+      candidates.add(`TCH-${num}`);
+      candidates.add(`nfc-${num}`);
+      candidates.add(`tch-${num}`);
+    }
+  }
   return Array.from(candidates).filter(Boolean);
 }
 
