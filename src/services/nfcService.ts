@@ -141,12 +141,15 @@ class NFCService {
   private parseTagMessage(message: string): NFCData {
     const trimmed = (message ?? '').trim();
 
-    const normalizeId = (raw: string): string => {
-      // Normalize across plugins / tags (trim, strip nulls, strip common prefixes)
-      let cleaned = (raw ?? '')
-        .replace(/\u0000/g, '')
-        .replace(/^NFC\s*[:\-]\s*/i, '')
-        .trim();
+      const normalizeId = (raw: string): string => {
+        // Normalize across plugins / tags (trim, strip nulls).
+        // IMPORTANT: Do NOT strip the "NFC-" prefix because our app stores real IDs like
+        // "NFC-STD-000000123" in the database and on tags.
+        let cleaned = (raw ?? '')
+          .replace(/\u0000/g, '')
+          // Some readers prepend a label like "NFC: <id>"; strip ONLY the colon variant.
+          .replace(/^NFC\s*:\s*/i, '')
+          .trim();
 
       // If it looks like a raw UID (often returned as hex, sometimes with separators),
       // canonicalize it so backend lookups are consistent.

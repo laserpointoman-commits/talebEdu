@@ -39,6 +39,11 @@ self.addEventListener('activate', (event) => {
 
 // Fetch event - network first, fallback to cache
 self.addEventListener('fetch', (event) => {
+  // Cache API only supports GET requests. Avoid caching POST/PUT/etc to prevent runtime errors.
+  if (event.request.method !== 'GET') {
+    return;
+  }
+
   // Skip API calls for caching
   if (event.request.url.includes('/rest/v1/') || 
       event.request.url.includes('/auth/v1/')) {

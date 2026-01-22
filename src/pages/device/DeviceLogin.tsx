@@ -268,6 +268,13 @@ export default function DeviceLogin() {
   const buildNfcCandidates = (rawId: string): string[] => {
     const cleaned = (rawId ?? '').replace(/\u0000/g, '').trim().toUpperCase();
     const candidates: string[] = [cleaned];
+
+    // Handle cases where stored/tag IDs include or omit the leading "NFC-".
+    if (cleaned.startsWith('NFC-')) {
+      candidates.push(cleaned.slice(4));
+    } else if (cleaned.startsWith('STD-') || cleaned.startsWith('TCH-')) {
+      candidates.push(`NFC-${cleaned}`);
+    }
     
     if (cleaned.startsWith('FC')) {
       const numericPart = cleaned.slice(2);
