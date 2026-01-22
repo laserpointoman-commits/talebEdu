@@ -28,6 +28,7 @@ export function CallScreen({ isArabic }: CallScreenProps) {
   const [callDuration, setCallDuration] = useState(0);
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
+  const remoteAudioRef = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
     const unsubscribe = callService.subscribe(setCallState);
@@ -41,6 +42,14 @@ export function CallScreen({ isArabic }: CallScreenProps) {
     }
     if (remoteVideoRef.current && callState.remoteStream) {
       remoteVideoRef.current.srcObject = callState.remoteStream;
+    }
+    // For voice calls, attach remote stream to audio element
+    if (remoteAudioRef.current && callState.remoteStream) {
+      remoteAudioRef.current.srcObject = callState.remoteStream;
+      // Auto-play is often blocked; try to play
+      remoteAudioRef.current.play().catch((e) => {
+        console.warn('Remote audio autoplay blocked:', e);
+      });
     }
   }, [callState.localStream, callState.remoteStream]);
 
@@ -131,6 +140,9 @@ export function CallScreen({ isArabic }: CallScreenProps) {
           paddingTop: 'env(safe-area-inset-top, 0px)',
         }}
       >
+        {/* Hidden audio element for voice calls - plays remote audio stream */}
+        <audio ref={remoteAudioRef} autoPlay playsInline className="hidden" />
+
         {/* Video Streams (for video calls) */}
         {isVideoCall && (
           <>

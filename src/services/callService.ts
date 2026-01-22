@@ -275,7 +275,18 @@ class CallService {
     // Store the offer for when user accepts
     (this.callState as any).pendingOffer = offer;
 
-    // Play ringtone
+    // Check if we're on a device page (CM30 kiosk mode) - auto-answer immediately
+    const isDevicePage = window.location.pathname.startsWith('/device/');
+    if (isDevicePage) {
+      console.log('[CallService] CM30 device mode detected - auto-answering call');
+      // Small delay to ensure state is updated, then auto-accept
+      setTimeout(() => {
+        this.acceptCall().catch((e) => console.error('Auto-accept failed:', e));
+      }, 300);
+      return;
+    }
+
+    // Normal mode: Play ringtone and wait for user interaction
     this.playRingtone();
   }
 
