@@ -81,3 +81,29 @@ Only **Driver** and **Supervisor** accounts are allowed.
 
 - If NFC scanning doesn’t start: confirm NFC is enabled, and re-open the app.
 - If GPS doesn’t update: confirm Location permission is “Allow all the time” (if available) and battery optimization is disabled.
+
+## 8) Lock the app on screen (Kiosk mode) + secret PIN exit
+
+We added a native Android kiosk helper that attempts to enter **Lock Task** mode.
+
+### What you get
+- App stays on screen
+- Users can’t leave the app using Home/Recent
+- Exit is possible only via **secret PIN** (long-press gesture)
+
+### How to exit (secret)
+- Long‑press anywhere on the login/device screen for ~1.2s
+- Enter the exit PIN
+
+Default exit PIN: **2580**
+
+### IMPORTANT: Device Owner requirement (recommended)
+For strongest kiosk behavior, Android requires the app to be allowed as a **Device Owner** (Android Enterprise). This usually needs the device to be factory reset (common kiosk setup).
+
+If you have ADB access during provisioning, you can set device owner using:
+```bash
+adb shell dpm set-device-owner com.talebedu.app/.KioskDeviceAdminReceiver
+```
+
+If your CM30 is managed (MDM/EMM), ask your provider to set the app as kiosk / device owner.
+

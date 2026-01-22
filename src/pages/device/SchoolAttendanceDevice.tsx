@@ -31,6 +31,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { LanguageSwitcher } from '@/components/ui/language-switcher';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { KeepAwake } from '@capacitor-community/keep-awake';
+import { kioskService } from '@/services/kioskService';
+import { KioskExitGesture } from '@/components/device/KioskExitGesture';
 
 interface ScannedStudent {
   id: string;
@@ -91,6 +93,10 @@ export default function SchoolAttendanceDevice() {
     return () => {
       KeepAwake.allowSleep().catch(console.error);
     };
+  }, []);
+
+  useEffect(() => {
+    kioskService.startKiosk();
   }, []);
 
   // Update time every second
@@ -464,8 +470,14 @@ export default function SchoolAttendanceDevice() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 to-secondary/5 p-4" dir={language === 'ar' ? 'rtl' : 'ltr'}>
-      <div className="max-w-4xl mx-auto space-y-4">
+    <KioskExitGesture
+      onExit={() => {
+        stopScanning();
+        window.location.href = '/device/login?type=school_gate';
+      }}
+    >
+      <div className="min-h-screen bg-gradient-to-br from-primary/5 to-secondary/5 p-4" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+        <div className="max-w-4xl mx-auto space-y-4">
         {/* Header */}
         <Card>
           <CardHeader className="pb-3">
@@ -744,7 +756,7 @@ export default function SchoolAttendanceDevice() {
             </ScrollArea>
           </CardContent>
         </Card>
-      </div>
+        </div>
 
       {/* Manual Entry Dialog */}
       <Dialog open={showManualEntry} onOpenChange={setShowManualEntry}>
@@ -868,6 +880,8 @@ export default function SchoolAttendanceDevice() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+      </div>
+    </KioskExitGesture>
   );
 }
+
