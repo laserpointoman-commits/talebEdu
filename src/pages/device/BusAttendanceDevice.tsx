@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,13 +16,17 @@ import {
   LogOut,
   Plus,
   Search,
-  AlertTriangle
+  AlertTriangle,
+  Play,
+  MapPin
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { nfcService, NFCData } from '@/services/nfcService';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LanguageSwitcher } from '@/components/ui/language-switcher';
+import { ScanFeedbackOverlay, type ScanFeedbackState } from '@/components/device/ScanFeedbackOverlay';
+import { useBusLocationTracking } from '@/hooks/use-bus-location-tracking';
 
 interface ScannedStudent {
   id: string;
@@ -50,10 +54,35 @@ export default function BusAttendanceDevice() {
   const [session, setSession] = useState<any>(null);
   const [busData, setBusData] = useState<any>(null);
   const [isScanning, setIsScanning] = useState(false);
+  const [isTripActive, setIsTripActive] = useState(false);
+  const [tripDirection, setTripDirection] = useState<'to_school' | 'to_home'>('to_school');
   const [scannedStudents, setScannedStudents] = useState<ScannedStudent[]>([]);
   const [lastScanned, setLastScanned] = useState<string | null>(null);
   const [scanCount, setScanCount] = useState(0);
   const scanningRef = useRef(false);
+
+  const [feedback, setFeedback] = useState<ScanFeedbackState>({ open: false });
+  const feedbackTimer = useRef<number | null>(null);
+
+  const studentStatus = useRef<Map<string, 'board' | 'exit'>>(new Map());
+  const shouldContinueLoop = useRef(false);
+
+  const { isTracking } = useBusLocationTracking({ enabled: isTripActive, busId: busData?.id ?? null });
+
+  const clearFeedbackLater = useCallback((ms: number) => {
+    if (feedbackTimer.current) window.clearTimeout(feedbackTimer.current);
+    feedbackTimer.current = window.setTimeout(() => setFeedback({ open: false }), ms);
+  }, []);
+
+  const showSuccess = useCallback((title: string, subtitle?: string) => {
+    setFeedback({ open: true, type: 'success', title, subtitle });
+    clearFeedbackLater(650);
+  }, [clearFeedbackLater]);
+
+  const showError = useCallback((title: string, subtitle?: string) => {
+    setFeedback({ open: true, type: 'error', title, subtitle });
+    clearFeedbackLater(650);
+  }, [clearFeedbackLater]);
   
   // Manual entry state
   const [showManualEntry, setShowManualEntry] = useState(false);
@@ -101,43 +130,53 @@ export default function BusAttendanceDevice() {
     }
   };
 
-  const startContinuousScanning = async () => {
-    setIsScanning(true);
-    scanningRef.current = true;
+  const stopScanning = useCallback(() => {
+    shouldContinueLoop.current = false;
+    nfcService.stopScanning();
+    setIsScanning(false);
+    scanningRef.current = false;
+  }, []);
 
-    try {
-      await nfcService.startScanning(async (nfcData: NFCData) => {
+  const continuousScanLoop = useCallback(async () => {
+    while (shouldContinueLoop.current) {
+      try {
+        const nfcData = await nfcService.readOnce();
+        if (!shouldContinueLoop.current) break;
+
         if (awaitingNfcConfirm && selectedStudent) {
-          // Confirm manual entry
           if (nfcData.id === selectedStudent.nfcId) {
             await recordAttendance(selectedStudent.studentId, selectedStudent.studentName, '', true);
             setSelectedStudent(null);
             setAwaitingNfcConfirm(false);
             setShowManualEntry(false);
-            toast.success(language === 'ar' ? 'تم تأكيد الحضور' : 'Attendance confirmed');
+            showSuccess(language === 'ar' ? 'تم التأكيد' : 'Confirmed', selectedStudent.studentName);
           } else {
-            toast.error(language === 'ar' ? 'بطاقة غير صحيحة' : 'Wrong card');
+            showError(language === 'ar' ? 'بطاقة خاطئة' : 'Wrong card');
           }
-          return;
+          await new Promise((r) => setTimeout(r, 120));
+          continue;
         }
 
         await handleNfcScan(nfcData);
-      });
-      toast.success(language === 'ar' ? 'بدأ المسح المستمر' : 'Continuous scanning started');
-    } catch (error) {
-      console.error('Error starting scan:', error);
-      setIsScanning(false);
-      scanningRef.current = false;
-      toast.error(language === 'ar' ? 'فشل بدء المسح' : 'Failed to start scanning');
+        await new Promise((r) => setTimeout(r, 120));
+      } catch {
+        // Keep scanning; very small backoff.
+        await new Promise((r) => setTimeout(r, 200));
+      }
     }
-  };
+  }, [awaitingNfcConfirm, selectedStudent, language, showError, showSuccess]);
 
-  const stopScanning = () => {
-    nfcService.stopScanning();
-    setIsScanning(false);
-    scanningRef.current = false;
-    toast.info(language === 'ar' ? 'توقف المسح' : 'Scanning stopped');
-  };
+  const startContinuousScanning = useCallback(async () => {
+    if (scanningRef.current) return;
+    if (!isTripActive) {
+      showError(language === 'ar' ? 'ابدأ الرحلة أولاً' : 'Start trip first');
+      return;
+    }
+    setIsScanning(true);
+    scanningRef.current = true;
+    shouldContinueLoop.current = true;
+    continuousScanLoop();
+  }, [continuousScanLoop, isTripActive, language, showError]);
 
   const handleNfcScan = async (nfcData: NFCData) => {
     try {
@@ -149,20 +188,12 @@ export default function BusAttendanceDevice() {
         .single();
 
       if (error || !student) {
-        toast.error(language === 'ar' ? 'الطالب غير موجود' : 'Student not found', { duration: 1500 });
+        showError(language === 'ar' ? 'فشل المسح' : 'Scan failed', language === 'ar' ? 'الطالب غير موجود' : 'Student not found');
         return;
       }
 
       const studentName = `${student.first_name} ${student.last_name}`;
       const studentNameAr = `${student.first_name_ar || student.first_name} ${student.last_name_ar || student.last_name}`;
-
-      // Check if already scanned
-      const alreadyScanned = scannedStudents.some(s => s.id === student.id);
-      if (alreadyScanned) {
-        setLastScanned(language === 'ar' ? `${studentNameAr} - تم المسح مسبقاً` : `${studentName} - Already scanned`);
-        setTimeout(() => setLastScanned(null), 1500);
-        return;
-      }
 
       await recordAttendance(student.id, studentName, studentNameAr, true);
 
@@ -173,17 +204,22 @@ export default function BusAttendanceDevice() {
 
   const recordAttendance = async (studentId: string, name: string, nameAr: string, nfcVerified: boolean) => {
     try {
+      const prev = studentStatus.current.get(studentId);
+      const nextAction: 'board' | 'exit' = prev === 'board' ? 'exit' : 'board';
+
       // Record bus boarding
       await supabase.functions.invoke('record-bus-activity', {
         body: {
           studentId,
           busId: busData?.id,
-          action: 'board',
+          action: nextAction,
           location: busData?.bus_number || 'Bus',
           deviceId,
           nfcVerified
         }
       });
+
+      studentStatus.current.set(studentId, nextAction);
 
       const now = new Date();
       const newStudent: ScannedStudent = {
@@ -192,22 +228,21 @@ export default function BusAttendanceDevice() {
         nameAr: nameAr || name,
         class: '',
         scanTime: now.toLocaleTimeString(),
-        action: 'board',
+        action: nextAction,
         nfcVerified
       };
 
       setScannedStudents(prev => [newStudent, ...prev]);
       setScanCount(prev => prev + 1);
 
-      // Show quick confirmation
-      setLastScanned(language === 'ar' ? nameAr || name : name);
-      setTimeout(() => setLastScanned(null), 1500);
-
-      toast.success(`✓ ${language === 'ar' ? nameAr || name : name}`, { duration: 1500 });
+      const displayName = language === 'ar' ? nameAr || name : name;
+      setLastScanned(displayName);
+      setTimeout(() => setLastScanned(null), 900);
+      showSuccess(displayName, nextAction === 'board' ? (language === 'ar' ? 'صعد إلى الحافلة' : 'Boarded') : (language === 'ar' ? 'نزل من الحافلة' : 'Exited'));
 
     } catch (error) {
       console.error('Error recording attendance:', error);
-      toast.error(language === 'ar' ? 'فشل تسجيل الحضور' : 'Failed to record attendance');
+      showError(language === 'ar' ? 'فشل' : 'Failed', language === 'ar' ? 'تعذر تسجيل الحضور' : 'Could not record');
     }
   };
 
@@ -267,8 +302,38 @@ export default function BusAttendanceDevice() {
     }
   };
 
+  const startTrip = async () => {
+    if (!busData?.id) {
+      showError(language === 'ar' ? 'لا توجد حافلة' : 'No bus linked', language === 'ar' ? 'اربط الجهاز بحافلة أولاً' : 'Link this device to a bus first');
+      return;
+    }
+
+    try {
+      // Create a trip record (so parent tracking sees it as active)
+      await supabase
+        .from('bus_trips')
+        .insert({
+          bus_id: busData.id,
+          status: 'in_progress',
+          trip_type: tripDirection === 'to_school' ? 'morning' : 'afternoon',
+          started_at: new Date().toISOString(),
+          driver_id: session?.session_type === 'bus_driver' ? session?.linked_user_id ?? null : null,
+          supervisor_id: session?.session_type === 'bus_supervisor' ? session?.linked_user_id ?? null : null,
+        });
+
+      setIsTripActive(true);
+      showSuccess(language === 'ar' ? 'بدأت الرحلة' : 'Trip started', tripDirection === 'to_school' ? (language === 'ar' ? 'إلى المدرسة' : 'To school') : (language === 'ar' ? 'إلى البيت' : 'To home'));
+      // Auto start scanning
+      await startContinuousScanning();
+    } catch (e) {
+      console.error('Start trip error:', e);
+      showError(language === 'ar' ? 'فشل' : 'Failed', language === 'ar' ? 'تعذر بدء الرحلة' : 'Could not start trip');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950/20 dark:to-cyan-950/20 p-4" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+      <ScanFeedbackOverlay state={feedback} />
       <div className="max-w-4xl mx-auto space-y-4">
         {/* Header */}
         <Card>
@@ -290,6 +355,10 @@ export default function BusAttendanceDevice() {
                 <Badge variant="secondary" className="text-lg px-4 py-2">
                   {scanCount} {language === 'ar' ? 'طالب' : 'students'}
                 </Badge>
+                  <Badge variant={isTracking ? 'default' : 'secondary'} className="gap-1">
+                    <MapPin className="h-3.5 w-3.5" />
+                    {isTracking ? (language === 'ar' ? 'GPS يعمل' : 'GPS on') : (language === 'ar' ? 'GPS' : 'GPS')}
+                  </Badge>
                 <Button variant="outline" size="icon" onClick={handleLogout}>
                   <LogOut className="h-4 w-4" />
                 </Button>
@@ -297,6 +366,50 @@ export default function BusAttendanceDevice() {
             </div>
           </CardHeader>
         </Card>
+
+        {/* Trip Setup */}
+        {!isTripActive && (
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex flex-col gap-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-sm text-muted-foreground">
+                      {language === 'ar' ? 'اختر اتجاه الرحلة' : 'Choose trip direction'}
+                    </div>
+                    <div className="text-lg font-semibold">
+                      {language === 'ar' ? 'المدرسة / البيت' : 'School / Home'}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <Button
+                    type="button"
+                    variant={tripDirection === 'to_school' ? 'default' : 'outline'}
+                    className="h-14 text-lg"
+                    onClick={() => setTripDirection('to_school')}
+                  >
+                    {language === 'ar' ? 'إلى المدرسة' : 'To School'}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={tripDirection === 'to_home' ? 'default' : 'outline'}
+                    className="h-14 text-lg"
+                    onClick={() => setTripDirection('to_home')}
+                  >
+                    {language === 'ar' ? 'إلى البيت' : 'To Home'}
+                  </Button>
+                </div>
+
+                <Button onClick={startTrip} className="h-14 text-lg">
+                  <Play className="mr-2 h-5 w-5" />
+                  {language === 'ar' ? 'بدء الرحلة' : 'Start Trip'}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Scanning Controls */}
         <Card>

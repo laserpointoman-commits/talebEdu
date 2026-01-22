@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -16,13 +16,16 @@ import {
   Globe,
   User,
   Lock,
-  LogOut
+  LogOut,
+  KeyRound
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { nfcService, NFCData } from '@/services/nfcService';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LanguageSwitcher } from '@/components/ui/language-switcher';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 
 type DeviceType = 'bus' | 'school_gate';
 
@@ -46,10 +49,16 @@ export default function DeviceLogin() {
   const [isScanning, setIsScanning] = useState(false);
   const [session, setSession] = useState<DeviceSession | null>(null);
   const [loading, setLoading] = useState(false);
+
+  const [pinDialogOpen, setPinDialogOpen] = useState(false);
+  const [pin, setPin] = useState('');
+  const [pendingNfc, setPendingNfc] = useState<{ nfcId: string; email: string } | null>(null);
   
   // Account login form
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+
+  const allowedRoles = useMemo(() => new Set(['driver', 'supervisor']), []);
 
   useEffect(() => {
     checkExistingSession();
@@ -84,58 +93,93 @@ export default function DeviceLogin() {
     }
   };
 
-  const handleNfcLogin = async (nfcData: NFCData) => {
+  const beginNfcPinLogin = async (nfcData: NFCData) => {
     setIsScanning(false);
     setLoading(true);
-
     try {
-      // Find employee by NFC ID
-      const { data: employee, error } = await supabase
-        .from('employees')
-        .select('*, profiles(full_name, role)')
-        .eq('nfc_id', nfcData.id)
-        .single();
+      const nfcId = nfcData.id;
+      const { data: checkResult, error: checkError } = await supabase.functions.invoke('check-nfc-pin-status', {
+        body: { nfcId }
+      });
 
-      if (error || !employee) {
+      if (checkError) throw checkError;
+      if (!checkResult?.found) {
         toast.error(language === 'ar' ? 'بطاقة غير معروفة' : 'Unknown card');
-        setLoading(false);
         return;
       }
 
-      const sessionType = deviceType === 'bus' 
-        ? ((employee.position === 'bus_driver') ? 'bus_driver' : 'bus_supervisor')
+      if (!allowedRoles.has(checkResult.role)) {
+        toast.error(language === 'ar' ? 'هذا الجهاز للسائق/المشرف فقط' : 'This device is for Driver/Supervisor only');
+        return;
+      }
+
+      if (!checkResult.hasPinSet) {
+        toast.error(language === 'ar' ? 'الرجاء إنشاء PIN من صفحة الموظفين أولاً' : 'Please set up your PIN on the staff login page first');
+        return;
+      }
+
+      setPendingNfc({ nfcId, email: checkResult.email });
+      setPin('');
+      setPinDialogOpen(true);
+    } catch (e: any) {
+      console.error('NFC PIN begin error:', e);
+      toast.error(language === 'ar' ? 'فشل قراءة البطاقة' : 'Card scan failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const completeNfcPinLogin = async () => {
+    if (!pendingNfc || pin.length !== 4) return;
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('nfc-pin-login', {
+        body: {
+          nfcId: pendingNfc.nfcId,
+          pin,
+          email: pendingNfc.email,
+        }
+      });
+      if (error) throw error;
+      if (!data?.success || !data?.session) {
+        toast.error(language === 'ar' ? 'PIN غير صحيح' : 'Incorrect PIN');
+        setPin('');
+        return;
+      }
+
+      const { error: setSessionError } = await supabase.auth.setSession({
+        access_token: data.session.access_token,
+        refresh_token: data.session.refresh_token,
+      });
+      if (setSessionError) throw setSessionError;
+
+      // Fetch role to set session_type
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('full_name, role')
+        .eq('email', pendingNfc.email)
+        .maybeSingle();
+
+      const role = (profile as any)?.role as string | undefined;
+      const fullName = (profile as any)?.full_name as string | undefined;
+      const sessionType = deviceType === 'bus'
+        ? (role === 'driver' ? 'bus_driver' : 'bus_supervisor')
         : 'school_gate';
 
-      // Create session
       const { error: sessionError } = await supabase
         .from('device_sessions')
-        .insert({
-          device_id: deviceId,
-          nfc_id: nfcData.id,
-          session_type: sessionType,
-          status: 'active'
-        });
+        .insert({ device_id: deviceId, nfc_id: pendingNfc.nfcId, session_type: sessionType, status: 'active' });
 
       if (sessionError) throw sessionError;
 
-      setSession({
-        deviceId,
-        nfcId: nfcData.id,
-        sessionType,
-        userName: (employee.profiles as any)?.full_name
-      });
+      setSession({ deviceId, nfcId: pendingNfc.nfcId, sessionType, userName: fullName });
+      setPinDialogOpen(false);
+      setPendingNfc(null);
 
-      toast.success(language === 'ar' ? 'تم تسجيل الدخول بنجاح' : 'Login successful');
-
-      // Redirect to appropriate dashboard
-      if (deviceType === 'bus') {
-        navigate(`/device/bus-attendance?device=${deviceId}`);
-      } else {
-        navigate(`/device/school-attendance?device=${deviceId}`);
-      }
-
-    } catch (error: any) {
-      console.error('NFC login error:', error);
+      if (deviceType === 'bus') navigate(`/device/bus-attendance?device=${deviceId}`);
+      else navigate(`/device/school-attendance?device=${deviceId}`);
+    } catch (e: any) {
+      console.error('NFC PIN login error:', e);
       toast.error(language === 'ar' ? 'فشل تسجيل الدخول' : 'Login failed');
     } finally {
       setLoading(false);
@@ -154,39 +198,47 @@ export default function DeviceLogin() {
 
       if (authError) throw authError;
 
-      // Get employee info
-      const { data: employee } = await supabase
-        .from('employees')
-        .select('*')
-        .eq('profile_id', authData.user.id)
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('full_name, role')
+        .eq('id', authData.user.id)
         .single();
 
-      if (!employee?.nfc_id) {
-        toast.error(language === 'ar' ? 'لم يتم ربط بطاقة NFC بهذا الحساب' : 'No NFC card linked to this account');
+      if (!allowedRoles.has((profile as any)?.role)) {
+        toast.error(language === 'ar' ? 'هذا الجهاز للسائق/المشرف فقط' : 'This device is for Driver/Supervisor only');
         await supabase.auth.signOut();
-        setLoading(false);
         return;
       }
 
-      const sessionType = deviceType === 'bus' 
-        ? ((employee.position === 'bus_driver') ? 'bus_driver' : 'bus_supervisor')
+      // Fetch NFC id from staff tables (auto-detect)
+      const { data: driver } = await supabase
+        .from('drivers')
+        .select('nfc_id')
+        .eq('profile_id', authData.user.id)
+        .maybeSingle();
+      const { data: supervisor } = await supabase
+        .from('supervisors')
+        .select('nfc_id')
+        .eq('profile_id', authData.user.id)
+        .maybeSingle();
+
+      const nfcId = (driver as any)?.nfc_id || (supervisor as any)?.nfc_id;
+      if (!nfcId) {
+        toast.error(language === 'ar' ? 'لم يتم ربط بطاقة NFC بهذا الحساب' : 'No NFC card linked to this account');
+        await supabase.auth.signOut();
+        return;
+      }
+
+      const role = (profile as any)?.role as string;
+      const sessionType = deviceType === 'bus'
+        ? (role === 'driver' ? 'bus_driver' : 'bus_supervisor')
         : 'school_gate';
 
-      // Create session
       await supabase
         .from('device_sessions')
-        .insert({
-          device_id: deviceId,
-          nfc_id: employee.nfc_id,
-          session_type: sessionType,
-          status: 'active'
-        });
+        .insert({ device_id: deviceId, nfc_id: nfcId, session_type: sessionType, status: 'active' });
 
-      setSession({
-        deviceId,
-        nfcId: employee.nfc_id,
-        sessionType
-      });
+      setSession({ deviceId, nfcId, sessionType, userName: (profile as any)?.full_name });
 
       toast.success(language === 'ar' ? 'تم تسجيل الدخول بنجاح' : 'Login successful');
 
@@ -248,7 +300,7 @@ export default function DeviceLogin() {
     setIsScanning(true);
     try {
       const nfcData = await nfcService.readOnce();
-      await handleNfcLogin(nfcData);
+      await beginNfcPinLogin(nfcData);
     } catch (error) {
       console.error('NFC scan error:', error);
       toast.error(language === 'ar' ? 'فشل مسح البطاقة' : 'Card scan failed');
@@ -386,6 +438,46 @@ export default function DeviceLogin() {
                   ? (language === 'ar' ? 'جاري المسح...' : 'Scanning...') 
                   : (language === 'ar' ? 'مسح بطاقة NFC' : 'Scan NFC Card')}
               </Button>
+
+              <Dialog open={pinDialogOpen} onOpenChange={setPinDialogOpen}>
+                <DialogContent className="max-w-sm">
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                      <KeyRound className="h-5 w-5" />
+                      {language === 'ar' ? 'أدخل رمز PIN' : 'Enter PIN'}
+                    </DialogTitle>
+                    <DialogDescription>
+                      {language === 'ar'
+                        ? 'رمز PIN مكون من 4 أرقام'
+                        : '4-digit PIN'}
+                    </DialogDescription>
+                  </DialogHeader>
+
+                  <div className="flex justify-center" dir="ltr">
+                    <InputOTP
+                      maxLength={4}
+                      value={pin}
+                      onChange={(v) => setPin(v.replace(/\D/g, '').slice(0, 4))}
+                    >
+                      <InputOTPGroup>
+                        <InputOTPSlot index={0} />
+                        <InputOTPSlot index={1} />
+                        <InputOTPSlot index={2} />
+                        <InputOTPSlot index={3} />
+                      </InputOTPGroup>
+                    </InputOTP>
+                  </div>
+
+                  <Button
+                    className="mt-4 w-full h-12"
+                    onClick={completeNfcPinLogin}
+                    disabled={loading || pin.length !== 4}
+                  >
+                    <LogIn className="mr-2 h-5 w-5" />
+                    {language === 'ar' ? 'تسجيل الدخول' : 'Login'}
+                  </Button>
+                </DialogContent>
+              </Dialog>
             </TabsContent>
 
             <TabsContent value="account">
