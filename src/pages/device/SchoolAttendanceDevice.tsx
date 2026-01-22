@@ -101,6 +101,59 @@ export default function SchoolAttendanceDevice() {
     kioskService.startKiosk();
   }, []);
 
+  // Initialize call service for emergency calls from admin
+  useEffect(() => {
+    const initCallService = async () => {
+      try {
+        // Check for active device session
+        const { data: sessionData } = await supabase
+          .from('device_sessions')
+          .select('*')
+          .eq('device_id', deviceId)
+          .eq('status', 'active')
+          .maybeSingle();
+
+        if (sessionData?.nfc_id) {
+          setSession(sessionData);
+          
+          // Try employees first (school gate operators)
+          const { data: employee } = await supabase
+            .from('employees')
+            .select('profile_id')
+            .eq('nfc_id', sessionData.nfc_id)
+            .maybeSingle();
+          
+          if (employee?.profile_id) {
+            console.log('[SchoolDevice] Initializing callService with employee profile_id:', employee.profile_id);
+            callService.initialize(employee.profile_id).catch((e) => {
+              console.warn('CallService init failed on device:', e);
+            });
+          } else {
+            // Fallback: try teachers table
+            const { data: teacher } = await supabase
+              .from('teachers')
+              .select('profile_id')
+              .eq('nfc_id', sessionData.nfc_id)
+              .maybeSingle();
+              
+            if (teacher?.profile_id) {
+              console.log('[SchoolDevice] Initializing callService with teacher profile_id:', teacher.profile_id);
+              callService.initialize(teacher.profile_id).catch((e) => {
+                console.warn('CallService init failed on device:', e);
+              });
+            } else {
+              console.warn('[SchoolDevice] Could not find profile_id for NFC:', sessionData.nfc_id);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error initializing call service:', error);
+      }
+    };
+
+    initCallService();
+  }, [deviceId]);
+
   // Update time every second
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
