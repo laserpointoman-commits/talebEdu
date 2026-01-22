@@ -302,13 +302,31 @@ export default function SchoolAttendanceDevice() {
     toast.info(language === 'ar' ? 'توقف المسح' : 'Scanning stopped');
   };
 
-  // Build NFC ID candidates for matching - handles FC format from CM30
+  // Build NFC ID candidates for matching - handles all CM30 NFC formats
   const buildNfcCandidates = (rawId: string): string[] => {
-    const cleaned = (rawId ?? '').replace(/\u0000/g, '').trim().toUpperCase();
-    const candidates: string[] = [cleaned];
+    const cleaned = (rawId ?? '').replace(/\u0000/g, '').trim();
+    const candidates: string[] = [];
+    
+    // Add original as-is (database might store exact match like NFC-STD-000000008)
+    candidates.push(cleaned);
+    candidates.push(cleaned.toUpperCase());
+    candidates.push(cleaned.toLowerCase());
 
-    // If starts with FC (CM30 format), extract numeric part
-    if (cleaned.startsWith('FC')) {
+    // If it already starts with NFC-STD-, also try without prefix variants
+    if (cleaned.toUpperCase().startsWith('NFC-STD-')) {
+      candidates.push(cleaned);
+      // Extract numeric part after prefix
+      const numericPart = cleaned.slice(8);
+      candidates.push(numericPart);
+      // Add with different padding
+      const numOnly = numericPart.replace(/^0+/, '');
+      if (numOnly) {
+        candidates.push(`NFC-STD-${numOnly.padStart(9, '0')}`);
+      }
+    }
+
+    // If starts with FC (CM30 raw UID format), extract numeric part
+    if (cleaned.toUpperCase().startsWith('FC')) {
       const numericPart = cleaned.slice(2);
       candidates.push(numericPart);
       
@@ -316,17 +334,26 @@ export default function SchoolAttendanceDevice() {
       const padded9 = numericPart.padStart(9, '0');
       candidates.push(`NFC-STD-${padded9}`);
       candidates.push(`NFC-STD-${numericPart}`);
+      candidates.push(`nfc-std-${padded9}`);
     }
     
-    // If it's just numeric
+    // If it's just numeric (raw decimal from some readers)
     if (/^\d+$/.test(cleaned)) {
       const padded9 = cleaned.padStart(9, '0');
       candidates.push(`NFC-STD-${padded9}`);
       candidates.push(`NFC-STD-${cleaned}`);
     }
     
-    // Add lowercase variants
-    candidates.push(...candidates.map(c => c.toLowerCase()));
+    // If it's hex (raw UID), convert to decimal and try
+    if (/^[0-9A-Fa-f]+$/.test(cleaned) && cleaned.length >= 8) {
+      try {
+        const decimalVal = parseInt(cleaned, 16);
+        const padded9 = String(decimalVal).padStart(9, '0');
+        candidates.push(`NFC-STD-${padded9}`);
+        candidates.push(`NFC-STD-${decimalVal}`);
+      } catch {}
+    }
+    
     return [...new Set(candidates)];
   };
 

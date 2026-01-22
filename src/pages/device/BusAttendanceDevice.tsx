@@ -223,20 +223,40 @@ export default function BusAttendanceDevice() {
     continuousScanLoop();
   }, [continuousScanLoop, isTripActive, language, showError]);
 
-  // Build NFC ID candidates for matching (same logic as backend)
+  // Build NFC ID candidates for matching (handles all CM30 NFC formats)
   const buildNfcCandidates = (rawId: string): string[] => {
-    const cleaned = (rawId ?? '').replace(/\u0000/g, '').trim().toUpperCase();
-    const candidates: string[] = [cleaned];
+    const cleaned = (rawId ?? '').replace(/\u0000/g, '').trim();
+    const candidates: string[] = [];
+    
+    // Add original as-is (database stores exact match like NFC-STD-000000008)
+    candidates.push(cleaned);
+    candidates.push(cleaned.toUpperCase());
+    candidates.push(cleaned.toLowerCase());
+
+    // If it already starts with NFC-STD-, we have the correct format!
+    if (cleaned.toUpperCase().startsWith('NFC-STD-')) {
+      candidates.push(cleaned);
+      // Also try different case variants
+      candidates.push(cleaned.toUpperCase());
+      candidates.push(cleaned.toLowerCase());
+      // Extract numeric part after prefix for fallback matching
+      const numericPart = cleaned.slice(8);
+      candidates.push(numericPart);
+      const numOnly = numericPart.replace(/^0+/, '');
+      if (numOnly) {
+        candidates.push(`NFC-STD-${numOnly.padStart(9, '0')}`);
+      }
+    }
 
     // Handle cases where stored/tag IDs include or omit the leading "NFC-".
-    if (cleaned.startsWith('NFC-')) {
+    if (cleaned.toUpperCase().startsWith('NFC-')) {
       candidates.push(cleaned.slice(4));
-    } else if (cleaned.startsWith('STD-') || cleaned.startsWith('TCH-')) {
+    } else if (cleaned.toUpperCase().startsWith('STD-') || cleaned.toUpperCase().startsWith('TCH-')) {
       candidates.push(`NFC-${cleaned}`);
     }
 
     // If tag contains NFC + digits (e.g., "NFC779373"), try additional variants.
-    const nfcDigitsMatch = cleaned.match(/^NFC(\d+)$/);
+    const nfcDigitsMatch = cleaned.toUpperCase().match(/^NFC(\d+)$/);
     if (nfcDigitsMatch?.[1]) {
       const numericPart = nfcDigitsMatch[1];
       const padded = numericPart.padStart(9, '0');
@@ -247,54 +267,36 @@ export default function BusAttendanceDevice() {
       candidates.push(`NFC-STD-${padded}`);
     }
     
-    // If starts with FC (CM30 format), extract numeric part and try ALL student prefixes
-    if (cleaned.startsWith('FC')) {
+    // If starts with FC (CM30 raw UID format), extract numeric part
+    if (cleaned.toUpperCase().startsWith('FC')) {
       const numericPart = cleaned.slice(2);
       candidates.push(numericPart);
       
       // Student cards are stored as NFC-STD-XXXXXXXXX (9 digits padded)
       const padded9 = numericPart.padStart(9, '0');
-      const padded10 = numericPart.padStart(10, '0');
-      const padded12 = numericPart.padStart(12, '0');
-      
-      // All possible student card formats
       candidates.push(`NFC-STD-${padded9}`);
-      candidates.push(`NFC-STD-${padded10}`);
-      candidates.push(`NFC-STD-${padded12}`);
       candidates.push(`NFC-STD-${numericPart}`);
-      candidates.push(`STD-${padded9}`);
-      candidates.push(`STD-${numericPart}`);
-      
-      // Staff card formats
-      candidates.push(`NFC-${numericPart}`);
-      candidates.push(`NFC-${padded9}`);
-      candidates.push(`NFC${numericPart}`);
-      candidates.push(`TCH-${padded9}`);
-      candidates.push(`TCH-${numericPart}`);
+      candidates.push(`nfc-std-${padded9}`);
     }
     
     // If it's just numeric, try with prefixes
     if (/^\d+$/.test(cleaned)) {
       const padded9 = cleaned.padStart(9, '0');
-      const padded10 = cleaned.padStart(10, '0');
       
       // Student formats
       candidates.push(`NFC-STD-${padded9}`);
-      candidates.push(`NFC-STD-${padded10}`);
       candidates.push(`NFC-STD-${cleaned}`);
-      candidates.push(`STD-${padded9}`);
-      candidates.push(`STD-${cleaned}`);
-      
-      // Staff formats
-      candidates.push(`NFC${cleaned}`);
-      candidates.push(`TCH-${padded9}`);
-      candidates.push(`TCH-${cleaned}`);
-      candidates.push(`NFC-${padded9}`);
-      candidates.push(`NFC-${cleaned}`);
     }
     
-    // Try lowercase variants
-    candidates.push(...candidates.map(c => c.toLowerCase()));
+    // If it's hex (raw UID), convert to decimal and try
+    if (/^[0-9A-Fa-f]+$/.test(cleaned) && cleaned.length >= 8) {
+      try {
+        const decimalVal = parseInt(cleaned, 16);
+        const padded9 = String(decimalVal).padStart(9, '0');
+        candidates.push(`NFC-STD-${padded9}`);
+        candidates.push(`NFC-STD-${decimalVal}`);
+      } catch {}
+    }
     
     return [...new Set(candidates)];
   };
