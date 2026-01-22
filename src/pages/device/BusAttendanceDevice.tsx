@@ -29,6 +29,8 @@ import { ScanFeedbackOverlay, type ScanFeedbackState } from '@/components/device
 import { useBusLocationTracking } from '@/hooks/use-bus-location-tracking';
 import { kioskService } from '@/services/kioskService';
 import { KioskExitGesture } from '@/components/device/KioskExitGesture';
+import { CallScreen } from '@/components/messenger/CallScreen';
+import { callService } from '@/services/callService';
 
 interface ScannedStudent {
   id: string;
@@ -123,6 +125,22 @@ export default function BusAttendanceDevice() {
       }
 
       setSession(sessionData);
+
+      // Initialize call service for emergency calls from admin
+      // Look up the profile_id from employees table using the session's nfc_id
+      if (sessionData.nfc_id) {
+        const { data: employee } = await supabase
+          .from('employees')
+          .select('profile_id')
+          .eq('nfc_id', sessionData.nfc_id)
+          .maybeSingle();
+        
+        if (employee?.profile_id) {
+          callService.initialize(employee.profile_id).catch((e) => {
+            console.warn('CallService init failed on device:', e);
+          });
+        }
+      }
 
       // Get linked bus
       const { data: deviceConfig } = await supabase
@@ -697,6 +715,7 @@ export default function BusAttendanceDevice() {
           )}
         </DialogContent>
       </Dialog>
+      <CallScreen isArabic={language === 'ar'} />
       </div>
     </KioskExitGesture>
   );

@@ -33,6 +33,8 @@ import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { KeepAwake } from '@capacitor-community/keep-awake';
 import { kioskService } from '@/services/kioskService';
 import { KioskExitGesture } from '@/components/device/KioskExitGesture';
+import { CallScreen } from '@/components/messenger/CallScreen';
+import { callService } from '@/services/callService';
 
 interface ScannedStudent {
   id: string;
@@ -880,8 +882,8 @@ export default function SchoolAttendanceDevice() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <CallScreen isArabic={language === 'ar'} />
       </div>
     </KioskExitGesture>
   );
 }
-
