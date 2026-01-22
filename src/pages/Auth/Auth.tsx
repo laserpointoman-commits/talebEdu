@@ -613,10 +613,10 @@ export default function Auth() {
               }}
             >
               <InputOTPGroup>
-                <InputOTPSlot index={0} className="w-14 h-14 text-2xl" />
-                <InputOTPSlot index={1} className="w-14 h-14 text-2xl" />
-                <InputOTPSlot index={2} className="w-14 h-14 text-2xl" />
-                <InputOTPSlot index={3} className="w-14 h-14 text-2xl" />
+                <InputOTPSlot index={0} className="w-14 h-14 text-2xl" mask />
+                <InputOTPSlot index={1} className="w-14 h-14 text-2xl" mask />
+                <InputOTPSlot index={2} className="w-14 h-14 text-2xl" mask />
+                <InputOTPSlot index={3} className="w-14 h-14 text-2xl" mask />
               </InputOTPGroup>
             </InputOTP>
             <Button
@@ -664,10 +664,10 @@ export default function Auth() {
                 onChange={setNewPin}
               >
                 <InputOTPGroup>
-                  <InputOTPSlot index={0} className="w-14 h-14 text-2xl" />
-                  <InputOTPSlot index={1} className="w-14 h-14 text-2xl" />
-                  <InputOTPSlot index={2} className="w-14 h-14 text-2xl" />
-                  <InputOTPSlot index={3} className="w-14 h-14 text-2xl" />
+                  <InputOTPSlot index={0} className="w-14 h-14 text-2xl" mask />
+                  <InputOTPSlot index={1} className="w-14 h-14 text-2xl" mask />
+                  <InputOTPSlot index={2} className="w-14 h-14 text-2xl" mask />
+                  <InputOTPSlot index={3} className="w-14 h-14 text-2xl" mask />
                 </InputOTPGroup>
               </InputOTP>
             ) : (
@@ -677,10 +677,10 @@ export default function Auth() {
                 onChange={setConfirmPin}
               >
                 <InputOTPGroup>
-                  <InputOTPSlot index={0} className="w-14 h-14 text-2xl" />
-                  <InputOTPSlot index={1} className="w-14 h-14 text-2xl" />
-                  <InputOTPSlot index={2} className="w-14 h-14 text-2xl" />
-                  <InputOTPSlot index={3} className="w-14 h-14 text-2xl" />
+                  <InputOTPSlot index={0} className="w-14 h-14 text-2xl" mask />
+                  <InputOTPSlot index={1} className="w-14 h-14 text-2xl" mask />
+                  <InputOTPSlot index={2} className="w-14 h-14 text-2xl" mask />
+                  <InputOTPSlot index={3} className="w-14 h-14 text-2xl" mask />
                 </InputOTPGroup>
               </InputOTP>
             )}
