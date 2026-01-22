@@ -264,6 +264,33 @@ export default function DeviceLogin() {
     }
   };
 
+  // Build NFC ID candidates for matching (same logic as backend)
+  const buildNfcCandidates = (rawId: string): string[] => {
+    const cleaned = (rawId ?? '').replace(/\u0000/g, '').trim().toUpperCase();
+    const candidates: string[] = [cleaned];
+    
+    if (cleaned.startsWith('FC')) {
+      const numericPart = cleaned.slice(2);
+      candidates.push(numericPart);
+      const padded = numericPart.padStart(9, '0');
+      candidates.push(`NFC-${padded}`);
+      candidates.push(`TCH-${padded}`);
+      candidates.push(`NFC-${numericPart}`);
+      candidates.push(`TCH-${numericPart}`);
+    }
+    
+    if (/^\d+$/.test(cleaned)) {
+      const padded = cleaned.padStart(9, '0');
+      candidates.push(`NFC-${padded}`);
+      candidates.push(`TCH-${padded}`);
+      candidates.push(`NFC-${cleaned}`);
+      candidates.push(`TCH-${cleaned}`);
+    }
+    
+    candidates.push(...candidates.map(c => c.toLowerCase()));
+    return [...new Set(candidates)];
+  };
+
   const handleLogout = async (requireNfc: boolean = true) => {
     if (requireNfc && session) {
       // Require NFC scan to confirm logout
@@ -273,7 +300,12 @@ export default function DeviceLogin() {
       try {
         const nfcData = await nfcService.readOnce();
         
-        if (nfcData.id !== session.nfcId) {
+        // Build candidates for both scanned and session NFC IDs
+        const sessionCandidates = buildNfcCandidates(session.nfcId);
+        const scannedCandidates = buildNfcCandidates(nfcData.id);
+        const hasMatch = scannedCandidates.some(c => sessionCandidates.includes(c));
+        
+        if (!hasMatch) {
           toast.error(language === 'ar' ? 'يجب استخدام نفس البطاقة للخروج' : 'Must use same card for logout');
           setIsScanning(false);
           return;
@@ -297,6 +329,8 @@ export default function DeviceLogin() {
         .eq('status', 'active');
 
       await supabase.auth.signOut();
+      // Reset NFC service so next login can scan fresh
+      nfcService.reset();
       setSession(null);
       toast.success(language === 'ar' ? 'تم تسجيل الخروج' : 'Logged out');
     } catch (error) {

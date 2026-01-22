@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { User, Session } from '@supabase/supabase-js';
 import { toast } from 'sonner';
 import SplashScreen from '@/components/SplashScreen';
-
+import { nfcService } from '@/services/nfcService';
 interface Profile {
   id: string;
   email: string;
@@ -168,6 +168,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.removeItem('hasShownInitialSplash');
       localStorage.clear();
       sessionStorage.clear();
+      
+      // Reset NFC service so next login can scan fresh
+      nfcService.reset();
       
       // Sign out from Supabase (scope: local to avoid invalidating other devices)
       try {
