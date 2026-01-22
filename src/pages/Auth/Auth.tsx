@@ -132,7 +132,8 @@ export default function Auth() {
         return;
       }
 
-      if (!checkResult.found) {
+      // Backend returns 200 with { found:false } for unknown cards.
+      if (!checkResult?.found) {
         toast.error(language === 'ar' ? 'بطاقة غير معروفة' : 'Unknown card');
         return;
       }
