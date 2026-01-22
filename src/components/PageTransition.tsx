@@ -86,6 +86,7 @@ export default function PageTransition({ children }: { children: React.ReactNode
           animate={variant.animate}
           exit={variant.exit}
           transition={variant.transition}
+          className="min-h-[100dvh]"
         >
           {children}
         </motion.div>

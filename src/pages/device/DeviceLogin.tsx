@@ -218,18 +218,19 @@ export default function DeviceLogin() {
       }
 
       // Fetch NFC id from staff tables (auto-detect)
-      const { data: driver } = await supabase
-        .from('drivers')
+      // NOTE: this backend stores staff NFC mapping in employees (and teachers for teacher-only cards).
+      const { data: employee } = await supabase
+        .from('employees')
         .select('nfc_id')
         .eq('profile_id', authData.user.id)
         .maybeSingle();
-      const { data: supervisor } = await supabase
-        .from('supervisors')
+      const { data: teacher } = await supabase
+        .from('teachers')
         .select('nfc_id')
         .eq('profile_id', authData.user.id)
         .maybeSingle();
 
-      const nfcId = (driver as any)?.nfc_id || (supervisor as any)?.nfc_id;
+      const nfcId = (employee as any)?.nfc_id || (teacher as any)?.nfc_id;
       if (!nfcId) {
         toast.error(language === 'ar' ? 'لم يتم ربط بطاقة NFC بهذا الحساب' : 'No NFC card linked to this account');
         await supabase.auth.signOut();

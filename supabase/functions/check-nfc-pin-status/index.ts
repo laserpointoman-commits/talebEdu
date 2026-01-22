@@ -27,6 +27,12 @@ serve(async (req) => {
     const { nfcId: rawNfcId, email }: CheckPinRequest = await req.json();
     const nfcId = rawNfcId ? normalizeNfcId(rawNfcId) : undefined;
 
+    console.log('[check-nfc-pin-status] request', {
+      hasEmail: !!email,
+      rawNfcId: rawNfcId ?? null,
+      nfcId: nfcId ?? null,
+    });
+
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey, {
@@ -39,22 +45,30 @@ serve(async (req) => {
     // If NFC ID provided, look up the profile
     if (nfcId && !email) {
       // Try employees first (this is where NFC mapping lives for most staff)
-      const { data: employee } = await supabase
+      const { data: employee, error: employeeError } = await supabase
         .from('employees')
         .select('profile_id')
         .eq('nfc_id', nfcId)
-        .single();
+        .maybeSingle();
+
+      if (employeeError) {
+        console.error('[check-nfc-pin-status] employees lookup error', employeeError);
+      }
 
       if (employee?.profile_id) {
         profileId = employee.profile_id;
       } else {
         // supervisors/drivers tables do NOT have nfc_id in this database.
         // Teachers may have their own nfc_id.
-        const { data: teacher } = await supabase
+        const { data: teacher, error: teacherError } = await supabase
           .from('teachers')
           .select('profile_id')
           .eq('nfc_id', nfcId)
-          .single();
+          .maybeSingle();
+
+        if (teacherError) {
+          console.error('[check-nfc-pin-status] teachers lookup error', teacherError);
+        }
 
         if (teacher?.profile_id) {
           profileId = teacher.profile_id;
@@ -62,9 +76,11 @@ serve(async (req) => {
       }
 
       if (!profileId) {
+        // IMPORTANT: return 200 so clients don't treat "unknown card" as a transport error
+        // (which shows "Failed to verify card").
         return new Response(
-          JSON.stringify({ error: 'NFC card not recognized', found: false }),
-          { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          JSON.stringify({ found: false, reason: 'not_recognized' }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
     }

@@ -357,6 +357,11 @@ All colors MUST be HSL.
     background-image: var(--gradient-mesh);
     background-attachment: fixed;
   }
+
+  /* Some Android WebViews (e.g. CM30) can glitch/freeze nested scrolling when using fixed backgrounds. */
+  html.native-android body {
+    background-attachment: scroll;
+  }
   
   /* Enhanced Typography */
   h1, h2, h3, h4, h5, h6 {
