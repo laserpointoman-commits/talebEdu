@@ -335,17 +335,8 @@ export default function Auth() {
       {/* Simple Background */}
       <div className="fixed inset-0 bg-gradient-to-br from-primary/5 via-background to-secondary/5" />
 
-      {/* Top Actions - About Button & Language Switcher */}
+      {/* Top Actions - Language Switcher */}
       <div className="fixed top-6 right-6 z-50 flex items-center gap-3">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => navigate('/presentation-sales')}
-          className="gap-2 bg-card hover:bg-secondary border-border transition-colors"
-        >
-          <Globe className="h-4 w-4" />
-          {language === 'en' ? 'About' : 'حول'}
-        </Button>
         <Button
           variant="outline"
           size="sm"
