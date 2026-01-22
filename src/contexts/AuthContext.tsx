@@ -26,7 +26,7 @@ interface AuthState {
   logout: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthState | undefined>(undefined);
+export const AuthContext = createContext<AuthState | undefined>(undefined);
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
