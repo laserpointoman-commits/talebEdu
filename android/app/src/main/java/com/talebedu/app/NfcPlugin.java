@@ -206,7 +206,15 @@ public class NfcPlugin extends Plugin {
     }
 
     // 2) Otherwise read and emit
+    // NOTE:
+    // Depending on the dispatch action (TAG_DISCOVERED / TECH_DISCOVERED), Android may NOT
+    // populate EXTRA_NDEF_MESSAGES even if the tag contains NDEF text.
+    // If we only rely on intent extras, we often fall back to UID hex, which will not match
+    // database-stored application IDs like "NFC-STD-000000030".
     String message = readTextFromIntent(intent);
+    if (message == null || message.trim().isEmpty()) {
+      message = readTextFromTag(tag);
+    }
     if (message == null || message.trim().isEmpty()) {
       // Fallback: use tag ID as hex string
       byte[] id = tag.getId();
@@ -254,24 +262,73 @@ public class NfcPlugin extends Plugin {
       NdefRecord[] records = msg.getRecords();
       if (records == null || records.length == 0) return null;
 
-      NdefRecord record = records[0];
+      return readTextFromRecord(records[0]);
+    } catch (Exception e) {
+      return null;
+    }
+  }
+
+  private String readTextFromTag(Tag tag) {
+    Ndef ndef = null;
+    try {
+      ndef = Ndef.get(tag);
+      if (ndef == null) return null;
+      ndef.connect();
+
+      NdefMessage msg = null;
+      try {
+        msg = ndef.getNdefMessage();
+      } catch (Exception ignored) {
+        // Some tags/readers fail here; try cached below.
+      }
+      if (msg == null) {
+        try {
+          msg = ndef.getCachedNdefMessage();
+        } catch (Exception ignored) {}
+      }
+      if (msg == null) return null;
+
+      NdefRecord[] records = msg.getRecords();
+      if (records == null || records.length == 0) return null;
+      return readTextFromRecord(records[0]);
+    } catch (Exception e) {
+      return null;
+    } finally {
+      if (ndef != null) {
+        try { ndef.close(); } catch (Exception ignored) {}
+      }
+    }
+  }
+
+  private String readTextFromRecord(NdefRecord record) {
+    try {
+      if (record == null) return null;
+
       short tnf = record.getTnf();
       byte[] type = record.getType();
-      if (tnf != NdefRecord.TNF_WELL_KNOWN) return null;
-      if (type == null || type.length == 0) return null;
-      // RTD_TEXT = "T"
-      if (type[0] != 'T') return null;
 
+      // Preferred: NFC Forum Text Record (TNF_WELL_KNOWN + RTD_TEXT)
+      if (tnf == NdefRecord.TNF_WELL_KNOWN && type != null && type.length > 0 && type[0] == 'T') {
+        byte[] payload = record.getPayload();
+        if (payload == null || payload.length == 0) return null;
+
+        // NFC Forum Text Record:
+        // [status byte][language code][text]
+        int status = payload[0] & 0xFF;
+        int langLength = status & 0x3F;
+        int textStart = 1 + langLength;
+        if (textStart >= payload.length) return null;
+
+        // Status bit 7 indicates UTF-16 when set; default is UTF-8.
+        boolean isUtf16 = (status & 0x80) != 0;
+        return new String(payload, textStart, payload.length - textStart, isUtf16 ? StandardCharsets.UTF_16 : StandardCharsets.UTF_8);
+      }
+
+      // Fallback: treat payload as UTF-8 text when it's not a well-known text record.
+      // This helps with tags written by other tools that store plain text/JSON in a MIME record.
       byte[] payload = record.getPayload();
       if (payload == null || payload.length == 0) return null;
-
-      // NFC Forum Text Record:
-      // [status byte][language code][text]
-      int status = payload[0] & 0xFF;
-      int langLength = status & 0x3F;
-      int textStart = 1 + langLength;
-      if (textStart >= payload.length) return null;
-      return new String(payload, textStart, payload.length - textStart, StandardCharsets.UTF_8);
+      return new String(payload, StandardCharsets.UTF_8);
     } catch (Exception e) {
       return null;
     }
