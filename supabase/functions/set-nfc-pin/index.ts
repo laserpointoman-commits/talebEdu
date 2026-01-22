@@ -14,6 +14,13 @@ interface SetPinRequest {
   profileId?: string;
 }
 
+function normalizeNfcId(raw: string): string {
+  return (raw ?? '')
+    .replace(/\u0000/g, '')
+    .replace(/^NFC\s*[:\-]\s*/i, '')
+    .trim();
+}
+
 // Convert Uint8Array to hex string
 function toHexString(bytes: Uint8Array): string {
   return new TextDecoder().decode(hexEncode(bytes));
@@ -43,7 +50,8 @@ serve(async (req) => {
   }
 
   try {
-    const { pin, nfcId, email, profileId }: SetPinRequest = await req.json();
+    const { pin, nfcId: rawNfcId, email, profileId }: SetPinRequest = await req.json();
+    const nfcId = rawNfcId ? normalizeNfcId(rawNfcId) : undefined;
 
     // Validate PIN format (4 digits)
     if (!pin || !/^\d{4}$/.test(pin)) {
@@ -91,11 +99,11 @@ serve(async (req) => {
         // Try to find profile by NFC ID across tables
         let foundProfileId: string | null = null;
 
+        // NOTE: supervisors/drivers tables do NOT have nfc_id in this database.
+        // NFC mapping is stored in employees.nfc_id (and teachers.nfc_id).
         const tables = [
           { table: 'employees', column: 'nfc_id' },
-          { table: 'supervisors', column: 'nfc_id' },
           { table: 'teachers', column: 'nfc_id' },
-          { table: 'drivers', column: 'nfc_id' },
         ];
 
         for (const { table, column } of tables) {

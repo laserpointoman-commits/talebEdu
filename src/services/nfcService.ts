@@ -140,11 +140,20 @@ class NFCService {
 
   private parseTagMessage(message: string): NFCData {
     const trimmed = (message ?? '').trim();
+
+    const normalizeId = (raw: string): string => {
+      // Normalize across plugins / tags (trim, strip nulls, strip common prefixes)
+      const cleaned = (raw ?? '')
+        .replace(/\u0000/g, '')
+        .replace(/^NFC\s*[:\-]\s*/i, '')
+        .trim();
+      return cleaned;
+    };
     try {
       const parsed = JSON.parse(trimmed) as Partial<NFCData>;
       if (parsed && typeof parsed.id === 'string') {
         return {
-          id: parsed.id,
+          id: normalizeId(parsed.id),
           type: (parsed.type ?? 'student') as NFCData['type'],
           name: parsed.name ?? '',
           additionalData: parsed.additionalData
@@ -155,7 +164,7 @@ class NFCService {
     }
 
     return {
-      id: trimmed,
+      id: normalizeId(trimmed),
       type: 'student',
       name: ''
     };
@@ -374,26 +383,10 @@ class NFCService {
           try {
             const eventData = event as { message?: string };
             if (eventData.message) {
-              // Try to parse as JSON first
-              try {
-                const data = JSON.parse(eventData.message) as NFCData;
-                if (this.scanCallback) {
-                  this.scanCallback(data);
-                  toast.success("NFC tag scanned successfully");
-                }
-              } catch {
-                // If not JSON, treat as raw NFC ID (the nfc_id stored in the tag)
-                console.log('NFC: Raw message (not JSON):', eventData.message);
-                // Try to construct NFCData from raw string
-                const rawData: NFCData = {
-                  id: eventData.message,
-                  type: 'student',
-                  name: ''
-                };
-                if (this.scanCallback) {
-                  this.scanCallback(rawData);
-                  toast.success("NFC tag scanned successfully");
-                }
+              const parsed = this.parseTagMessage(eventData.message);
+              if (this.scanCallback) {
+                this.scanCallback(parsed);
+                toast.success("NFC tag scanned successfully");
               }
             }
           } catch (e) {

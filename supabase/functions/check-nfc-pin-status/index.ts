@@ -11,13 +11,21 @@ interface CheckPinRequest {
   email?: string;
 }
 
+function normalizeNfcId(raw: string): string {
+  return (raw ?? '')
+    .replace(/\u0000/g, '')
+    .replace(/^NFC\s*[:\-]\s*/i, '')
+    .trim();
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { nfcId, email }: CheckPinRequest = await req.json();
+    const { nfcId: rawNfcId, email }: CheckPinRequest = await req.json();
+    const nfcId = rawNfcId ? normalizeNfcId(rawNfcId) : undefined;
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -30,7 +38,7 @@ serve(async (req) => {
 
     // If NFC ID provided, look up the profile
     if (nfcId && !email) {
-      // Try employees first
+      // Try employees first (this is where NFC mapping lives for most staff)
       const { data: employee } = await supabase
         .from('employees')
         .select('profile_id')
@@ -40,37 +48,16 @@ serve(async (req) => {
       if (employee?.profile_id) {
         profileId = employee.profile_id;
       } else {
-        // Try supervisors
-        const { data: supervisor } = await supabase
-          .from('supervisors')
+        // supervisors/drivers tables do NOT have nfc_id in this database.
+        // Teachers may have their own nfc_id.
+        const { data: teacher } = await supabase
+          .from('teachers')
           .select('profile_id')
           .eq('nfc_id', nfcId)
           .single();
 
-        if (supervisor?.profile_id) {
-          profileId = supervisor.profile_id;
-        } else {
-          // Try teachers
-          const { data: teacher } = await supabase
-            .from('teachers')
-            .select('profile_id')
-            .eq('nfc_id', nfcId)
-            .single();
-
-          if (teacher?.profile_id) {
-            profileId = teacher.profile_id;
-          } else {
-            // Try drivers
-            const { data: driver } = await supabase
-              .from('drivers')
-              .select('profile_id')
-              .eq('nfc_id', nfcId)
-              .single();
-
-            if (driver?.profile_id) {
-              profileId = driver.profile_id;
-            }
-          }
+        if (teacher?.profile_id) {
+          profileId = teacher.profile_id;
         }
       }
 

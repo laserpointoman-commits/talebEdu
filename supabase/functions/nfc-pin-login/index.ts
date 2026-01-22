@@ -13,6 +13,13 @@ interface NfcPinLoginRequest {
   email?: string;
 }
 
+function normalizeNfcId(raw: string): string {
+  return (raw ?? '')
+    .replace(/\u0000/g, '')
+    .replace(/^NFC\s*[:\-]\s*/i, '')
+    .trim();
+}
+
 // Convert Uint8Array to hex string
 function toHexString(bytes: Uint8Array): string {
   return new TextDecoder().decode(hexEncode(bytes));
@@ -45,7 +52,8 @@ serve(async (req) => {
   }
 
   try {
-    const { nfcId, pin, email: providedEmail }: NfcPinLoginRequest = await req.json();
+    const { nfcId: rawNfcId, pin, email: providedEmail }: NfcPinLoginRequest = await req.json();
+    const nfcId = normalizeNfcId(rawNfcId);
 
     // Validate PIN format (4 digits)
     if (!pin || !/^\d{4}$/.test(pin)) {
@@ -66,7 +74,8 @@ serve(async (req) => {
 
     // If email not provided, look up by NFC ID
     if (!userEmail) {
-      // First try employees table
+      // NOTE: supervisors/drivers tables do NOT have nfc_id in this database.
+      // NFC mapping is stored in employees.nfc_id (and teachers.nfc_id).
       const { data: employee } = await supabase
         .from('employees')
         .select('profile_id')
@@ -76,37 +85,14 @@ serve(async (req) => {
       if (employee?.profile_id) {
         profileId = employee.profile_id;
       } else {
-        // Try supervisors table
-        const { data: supervisor } = await supabase
-          .from('supervisors')
+        const { data: teacher } = await supabase
+          .from('teachers')
           .select('profile_id')
           .eq('nfc_id', nfcId)
           .single();
 
-        if (supervisor?.profile_id) {
-          profileId = supervisor.profile_id;
-        } else {
-          // Try teachers table
-          const { data: teacher } = await supabase
-            .from('teachers')
-            .select('profile_id')
-            .eq('nfc_id', nfcId)
-            .single();
-
-          if (teacher?.profile_id) {
-            profileId = teacher.profile_id;
-          } else {
-            // Try drivers table
-            const { data: driver } = await supabase
-              .from('drivers')
-              .select('profile_id')
-              .eq('nfc_id', nfcId)
-              .single();
-
-            if (driver?.profile_id) {
-              profileId = driver.profile_id;
-            }
-          }
+        if (teacher?.profile_id) {
+          profileId = teacher.profile_id;
         }
       }
 

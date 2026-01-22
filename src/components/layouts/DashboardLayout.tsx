@@ -120,7 +120,9 @@ function DashboardLayout({ children }: DashboardLayoutProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-background flex flex-col overflow-hidden">
+    // NOTE: Avoid `position: fixed` on the full app wrapper.
+    // Some Android webviews (e.g. CM30) can fail to scroll nested overflow containers when the root is fixed.
+    <div className="h-[100dvh] w-full bg-background flex flex-col overflow-hidden">
       {/* Top Bar - iOS Safe Area Aware - Always LTR - Fixed with solid background */}
       <header 
         className="fixed left-0 right-0 top-0 z-50 bg-sky-100"
@@ -299,7 +301,7 @@ function DashboardLayout({ children }: DashboardLayoutProps) {
       />
 
       {/* Main layout */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 min-h-0 overflow-hidden">
         {/* Desktop Sidebar - Wider for better readability */}
         <div className={cn(
           "hidden lg:block transition-all duration-300 shrink-0 overflow-hidden",
@@ -313,7 +315,7 @@ function DashboardLayout({ children }: DashboardLayoutProps) {
         {/* Main Content */}
         <main 
           ref={mainScrollRef}
-          className="flex-1 overflow-y-auto overscroll-none bg-muted/10"
+          className="flex-1 min-h-0 overflow-y-auto overscroll-none bg-muted/10"
           style={{
             paddingBottom: showBottomNav
               ? 'calc(3.5rem + env(safe-area-inset-bottom, 0px))'
