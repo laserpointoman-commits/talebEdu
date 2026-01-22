@@ -200,7 +200,12 @@ export default function NfcProgramming({ isOpen, onClose, userData, onSuccess }:
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px] overflow-hidden">
+      {/*
+        NOTE: Do not set `overflow-hidden` here.
+        On CM30/Android WebViews it prevents the dialog from scrolling.
+        Our base DialogContent already provides `max-h` + `overflow-y-auto`.
+      */}
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold">
             {language === 'en' ? 'NFC Card Programming' : 'برمجة بطاقة NFC'}
@@ -382,3 +387,4 @@ export default function NfcProgramming({ isOpen, onClose, userData, onSuccess }:
     </Dialog>
   );
 }
+

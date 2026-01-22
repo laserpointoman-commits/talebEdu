@@ -15,6 +15,7 @@ import PageTransition from "@/components/PageTransition";
 import InstallPrompt from "@/components/mobile/InstallPrompt";
 import NetworkStatus from "@/components/mobile/NetworkStatus";
 import BiometricGuard from "@/components/BiometricGuard";
+import CallServiceBootstrap from "@/components/CallServiceBootstrap";
 import { PushNotificationService } from "@/services/pushNotifications";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth/Auth";
@@ -112,6 +113,7 @@ function App() {
                   <OfflineIndicator />
                   <InstallPrompt />
                   <NetworkStatus />
+                  <CallServiceBootstrap />
                   <StudentsProvider>
                     <BiometricGuard>
                       <PageTransition>

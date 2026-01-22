@@ -70,8 +70,64 @@ class CallService {
 
   // Initialize the service with current user
   async initialize(userId: string) {
+    // If re-initializing (route changes, hot reload), clean up old listener.
+    if (this.callChannel) {
+      try {
+        supabase.removeChannel(this.callChannel);
+      } catch {
+        // ignore
+      }
+      this.callChannel = null;
+    }
+
     this.currentUserId = userId;
     await this.setupCallListener();
+  }
+
+  private waitForChannelSubscribed(channel: ReturnType<typeof supabase.channel>) {
+    return new Promise<void>((resolve, reject) => {
+      let settled = false;
+      const timeout = window.setTimeout(() => {
+        if (settled) return;
+        settled = true;
+        reject(new Error('Realtime channel subscribe timed out'));
+      }, 8000);
+
+      channel.subscribe((status) => {
+        if (settled) return;
+
+        if (status === 'SUBSCRIBED') {
+          settled = true;
+          window.clearTimeout(timeout);
+          resolve();
+        }
+
+        if (status === 'TIMED_OUT' || status === 'CLOSED' || status === 'CHANNEL_ERROR') {
+          settled = true;
+          window.clearTimeout(timeout);
+          reject(new Error(`Realtime channel subscribe failed: ${status}`));
+        }
+      });
+    });
+  }
+
+  private async sendSignal(toUserId: string, event: string, payload: any) {
+    const ch = supabase.channel(`calls:${toUserId}`);
+
+    try {
+      await this.waitForChannelSubscribed(ch);
+      await ch.send({
+        type: 'broadcast',
+        event,
+        payload,
+      });
+    } finally {
+      try {
+        supabase.removeChannel(ch);
+      } catch {
+        // ignore
+      }
+    }
   }
 
   // Set up listener for incoming calls
@@ -164,20 +220,13 @@ class CallService {
       const offer = await this.peerConnection!.createOffer();
       await this.peerConnection!.setLocalDescription(offer);
 
-      // Send offer to recipient via broadcast
-      const recipientChannel = supabase.channel(`calls:${recipientId}`);
-      await recipientChannel.subscribe();
-      
-      await recipientChannel.send({
-        type: 'broadcast',
-        event: 'call-offer',
-        payload: {
-          callId,
-          callType,
-          callerId: this.currentUserId,
-          callerName: '',
-          offer: offer.sdp,
-        },
+      // Send offer to recipient via broadcast (wait for SUBSCRIBED on Android WebViews)
+      await this.sendSignal(recipientId, 'call-offer', {
+        callId,
+        callType,
+        callerId: this.currentUserId,
+        callerName: '',
+        offer: offer.sdp,
       });
 
       // Log call attempt (wrapped in try-catch for safety)
@@ -269,16 +318,9 @@ class CallService {
       await this.peerConnection!.setLocalDescription(answer);
 
       // Send answer to caller
-      const callerChannel = supabase.channel(`calls:${this.callState.remoteUserId}`);
-      await callerChannel.subscribe();
-      
-      await callerChannel.send({
-        type: 'broadcast',
-        event: 'call-answer',
-        payload: {
-          callId: this.callState.callId,
-          answer: answer.sdp,
-        },
+      await this.sendSignal(this.callState.remoteUserId, 'call-answer', {
+        callId: this.callState.callId,
+        answer: answer.sdp,
       });
 
       this.updateState({
@@ -302,15 +344,8 @@ class CallService {
     this.stopRingtone();
 
     // Send rejection to caller
-    const callerChannel = supabase.channel(`calls:${this.callState.remoteUserId}`);
-    await callerChannel.subscribe();
-    
-    await callerChannel.send({
-      type: 'broadcast',
-      event: 'call-reject',
-      payload: {
-        callId: this.callState.callId,
-      },
+    await this.sendSignal(this.callState.remoteUserId, 'call-reject', {
+      callId: this.callState.callId,
     });
 
     // Log as missed call
@@ -377,15 +412,8 @@ class CallService {
   async endCall() {
     if (this.callState.remoteUserId) {
       // Notify remote user
-      const remoteChannel = supabase.channel(`calls:${this.callState.remoteUserId}`);
-      await remoteChannel.subscribe();
-      
-      await remoteChannel.send({
-        type: 'broadcast',
-        event: 'call-end',
-        payload: {
-          callId: this.callState.callId,
-        },
+      await this.sendSignal(this.callState.remoteUserId, 'call-end', {
+        callId: this.callState.callId,
       });
     }
 
@@ -452,17 +480,14 @@ class CallService {
     // Handle ICE candidates
     this.peerConnection.onicecandidate = async (event) => {
       if (event.candidate && this.callState.remoteUserId) {
-        const remoteChannel = supabase.channel(`calls:${this.callState.remoteUserId}`);
-        await remoteChannel.subscribe();
-        
-        await remoteChannel.send({
-          type: 'broadcast',
-          event: 'ice-candidate',
-          payload: {
+        try {
+          await this.sendSignal(this.callState.remoteUserId, 'ice-candidate', {
             callId: this.callState.callId,
             candidate: event.candidate.toJSON(),
-          },
-        });
+          });
+        } catch (e) {
+          console.warn('Failed to send ICE candidate:', e);
+        }
       }
     };
 
