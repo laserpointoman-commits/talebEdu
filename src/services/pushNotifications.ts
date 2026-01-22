@@ -16,6 +16,18 @@ export class PushNotificationService {
       return;
     }
 
+    // IMPORTANT (Android): Capacitor PushNotifications requires Firebase (FCM) to be configured.
+    // If google-services.json isn't present / Firebase isn't initialized, calling register() will
+    // crash the native app process. Until Android FCM is set up, we safely no-op on Android.
+    const platform = Capacitor.getPlatform();
+    if (platform === 'android') {
+      console.warn(
+        '[PushNotifications] Android push is disabled because Firebase/FCM is not configured. ' +
+          'This prevents an app crash. (iOS push remains enabled.)'
+      );
+      return;
+    }
+
     try {
       // Check current permission status
       let permission = await PushNotifications.checkPermissions();
@@ -30,7 +42,7 @@ export class PushNotificationService {
         return;
       }
 
-      // Register for push notifications
+      // Register for push notifications (iOS)
       await PushNotifications.register();
 
       // On success, register token with backend
