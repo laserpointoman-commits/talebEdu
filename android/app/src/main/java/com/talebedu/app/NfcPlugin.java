@@ -82,6 +82,28 @@ public class NfcPlugin extends Plugin {
   @PluginMethod
   public void stopScanning(PluginCall call) {
     scanning = false;
+    
+    // Clear any pending readOnce to prevent blocking on next login
+    if (pendingReadOnceCall != null) {
+      try {
+        JSObject cancelResult = new JSObject();
+        cancelResult.put("message", "");
+        pendingReadOnceCall.resolve(cancelResult);
+      } catch (Exception ignored) {}
+      pendingReadOnceCall = null;
+    }
+    
+    // Also clear any pending write
+    if (lastWriteCall != null) {
+      try {
+        JSObject cancelResult = new JSObject();
+        cancelResult.put("success", false);
+        lastWriteCall.resolve(cancelResult);
+      } catch (Exception ignored) {}
+      lastWriteCall = null;
+      lastWriteMessage = null;
+    }
+    
     disableForegroundDispatch();
     JSObject ret = new JSObject();
     ret.put("success", true);
@@ -94,9 +116,16 @@ public class NfcPlugin extends Plugin {
       call.reject("NFC not supported");
       return;
     }
+    
+    // If a previous readOnce is still pending, cancel it gracefully
+    // This prevents "readOnce already pending" blocking forever after logout
     if (pendingReadOnceCall != null) {
-      call.reject("readOnce already pending");
-      return;
+      try {
+        JSObject cancelResult = new JSObject();
+        cancelResult.put("message", "");
+        pendingReadOnceCall.resolve(cancelResult);
+      } catch (Exception ignored) {}
+      pendingReadOnceCall = null;
     }
 
     pendingReadOnceCall = call;
