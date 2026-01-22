@@ -27,10 +27,24 @@ body {
   -moz-osx-font-smoothing: grayscale;
   overscroll-behavior: none;
   -webkit-overflow-scrolling: touch;
-  position: fixed;
+  /*
+    IMPORTANT:
+    We don't lock the entire document on all platforms.
+    On some Android hardware/webviews (e.g. CM30), `position: fixed` on body
+    can prevent nested scroll containers from scrolling.
+
+    Scrolling is handled by app layout containers (e.g. DashboardLayout main).
+    We only fully lock the document on native iOS where it helps prevent bounce.
+  */
   width: 100%;
-  height: 100%;
+  min-height: 100%;
   overflow: hidden;
+}
+
+/* Lock document scrolling only for native iOS builds */
+html.native-ios body {
+  position: fixed;
+  height: 100%;
 }
 
 /* Native iOS Button Feel */

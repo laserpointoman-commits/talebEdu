@@ -1,4 +1,5 @@
 import React, { Suspense, useEffect } from "react";
+import { Capacitor } from "@capacitor/core";
 import LogoLoader from "./components/LogoLoader";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -70,6 +71,19 @@ const createQueryClient = () => new QueryClient({
 function App() {
   // Create query client inside component but memoized
   const [queryClient] = React.useState(createQueryClient);
+
+  // Platform-specific document classes (used for safe CSS behavior across devices)
+  useEffect(() => {
+    try {
+      const platform = Capacitor.getPlatform();
+      const html = document.documentElement;
+      html.classList.toggle("native", Capacitor.isNativePlatform());
+      html.classList.toggle("native-ios", Capacitor.isNativePlatform() && platform === "ios");
+      html.classList.toggle("native-android", Capacitor.isNativePlatform() && platform === "android");
+    } catch {
+      // ignore
+    }
+  }, []);
 
   // Initialize push notifications on app startup
   useEffect(() => {
