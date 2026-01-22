@@ -169,8 +169,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.clear();
       sessionStorage.clear();
       
-      // Reset NFC service so next login can scan fresh
-      nfcService.reset();
+      // Reset NFC service so next login can scan fresh (await to ensure clean state)
+      try {
+        await nfcService.reset();
+      } catch {}
       
       // Sign out from Supabase (scope: local to avoid invalidating other devices)
       try {

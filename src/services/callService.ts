@@ -84,30 +84,55 @@ class CallService {
     await this.setupCallListener();
   }
 
-  private waitForChannelSubscribed(channel: ReturnType<typeof supabase.channel>) {
+  private waitForChannelSubscribed(channel: ReturnType<typeof supabase.channel>, retries = 3): Promise<void> {
     return new Promise<void>((resolve, reject) => {
       let settled = false;
-      const timeout = window.setTimeout(() => {
-        if (settled) return;
-        settled = true;
-        reject(new Error('Realtime channel subscribe timed out'));
-      }, 8000);
+      let attemptCount = 0;
+      
+      const attempt = () => {
+        attemptCount++;
+        console.log(`[CallService] Channel subscribe attempt ${attemptCount}/${retries}`);
+        
+        const timeout = window.setTimeout(() => {
+          if (settled) return;
+          
+          if (attemptCount < retries) {
+            console.log('[CallService] Subscribe timeout, retrying...');
+            // Unsubscribe and retry
+            try { channel.unsubscribe(); } catch {}
+            attempt();
+          } else {
+            settled = true;
+            reject(new Error('Realtime channel subscribe timed out after retries'));
+          }
+        }, 15000); // Increased to 15s per attempt
 
-      channel.subscribe((status) => {
-        if (settled) return;
+        channel.subscribe((status) => {
+          if (settled) return;
 
-        if (status === 'SUBSCRIBED') {
-          settled = true;
-          window.clearTimeout(timeout);
-          resolve();
-        }
+          console.log(`[CallService] Channel status: ${status}`);
 
-        if (status === 'TIMED_OUT' || status === 'CLOSED' || status === 'CHANNEL_ERROR') {
-          settled = true;
-          window.clearTimeout(timeout);
-          reject(new Error(`Realtime channel subscribe failed: ${status}`));
-        }
-      });
+          if (status === 'SUBSCRIBED') {
+            settled = true;
+            window.clearTimeout(timeout);
+            resolve();
+          }
+
+          if (status === 'TIMED_OUT' || status === 'CLOSED' || status === 'CHANNEL_ERROR') {
+            window.clearTimeout(timeout);
+            if (attemptCount < retries) {
+              console.log(`[CallService] Subscribe failed with ${status}, retrying...`);
+              try { channel.unsubscribe(); } catch {}
+              attempt();
+            } else {
+              settled = true;
+              reject(new Error(`Realtime channel subscribe failed: ${status}`));
+            }
+          }
+        });
+      };
+      
+      attempt();
     });
   }
 

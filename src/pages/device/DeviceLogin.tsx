@@ -336,8 +336,10 @@ export default function DeviceLogin() {
         .eq('status', 'active');
 
       await supabase.auth.signOut();
-      // Reset NFC service so next login can scan fresh
-      nfcService.reset();
+      // Reset NFC service so next login can scan fresh (await for clean state)
+      try {
+        await nfcService.reset();
+      } catch {}
       setSession(null);
       toast.success(language === 'ar' ? 'تم تسجيل الخروج' : 'Logged out');
     } catch (error) {

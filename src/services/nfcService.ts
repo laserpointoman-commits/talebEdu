@@ -48,16 +48,30 @@ class NFCService {
    * Reset NFC service state - call this after logout to ensure
    * the service is ready for a fresh login session (e.g. NFC PIN login).
    */
-  reset(): void {
-    console.log('NFC: Resetting service state');
-    // Fire-and-forget hard stop; callers often can't await (e.g. logout).
-    this.stopScanning().catch(() => {});
+  async reset(): Promise<void> {
+    console.log('NFC: Resetting service state - force stopping all scanning');
+    
+    // Clear all internal state first
     this.scanning = false;
     this.scanCallback = null;
+    
+    // Remove listener handle
     if (this.listenerHandle) {
       try { this.listenerHandle.remove(); } catch {}
       this.listenerHandle = null;
     }
+    
+    // Force stop native scanning session multiple times to ensure it's cleared
+    if (NfcPlugin && Capacitor.isNativePlatform()) {
+      for (let i = 0; i < 3; i++) {
+        try {
+          await NfcPlugin.stopScanning();
+        } catch {}
+        await new Promise(r => setTimeout(r, 50));
+      }
+    }
+    
+    console.log('NFC: Reset complete');
   }
 
   private async initializeNFC(): Promise<void> {

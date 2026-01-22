@@ -229,9 +229,6 @@ export default function BusAttendanceDevice() {
     const candidates: string[] = [cleaned];
 
     // Handle cases where stored/tag IDs include or omit the leading "NFC-".
-    // Examples:
-    // - "NFC-STD-000000123" <-> "STD-000000123"
-    // - "NFC-TCH-000000123" <-> "TCH-000000123"
     if (cleaned.startsWith('NFC-')) {
       candidates.push(cleaned.slice(4));
     } else if (cleaned.startsWith('STD-') || cleaned.startsWith('TCH-')) {
@@ -250,33 +247,49 @@ export default function BusAttendanceDevice() {
       candidates.push(`NFC-STD-${padded}`);
     }
     
-    // If starts with FC (CM30 format), extract numeric part
+    // If starts with FC (CM30 format), extract numeric part and try ALL student prefixes
     if (cleaned.startsWith('FC')) {
       const numericPart = cleaned.slice(2);
       candidates.push(numericPart);
-      // Try NFC-STD- prefix (student cards format)
-      const padded = numericPart.padStart(9, '0');
-      candidates.push(`NFC-STD-${padded}`);
+      
+      // Student cards are stored as NFC-STD-XXXXXXXXX (9 digits padded)
+      const padded9 = numericPart.padStart(9, '0');
+      const padded10 = numericPart.padStart(10, '0');
+      const padded12 = numericPart.padStart(12, '0');
+      
+      // All possible student card formats
+      candidates.push(`NFC-STD-${padded9}`);
+      candidates.push(`NFC-STD-${padded10}`);
+      candidates.push(`NFC-STD-${padded12}`);
       candidates.push(`NFC-STD-${numericPart}`);
-      // Also try NFC + numeric (e.g., NFC779373)
-      candidates.push(`NFC${numericPart}`);
-      // Try TCH- prefixes for staff
-      candidates.push(`TCH-${padded}`);
-      candidates.push(`TCH-${numericPart}`);
-      // Legacy formats
-      candidates.push(`NFC-${padded}`);
+      candidates.push(`STD-${padded9}`);
+      candidates.push(`STD-${numericPart}`);
+      
+      // Staff card formats
       candidates.push(`NFC-${numericPart}`);
+      candidates.push(`NFC-${padded9}`);
+      candidates.push(`NFC${numericPart}`);
+      candidates.push(`TCH-${padded9}`);
+      candidates.push(`TCH-${numericPart}`);
     }
     
     // If it's just numeric, try with prefixes
     if (/^\d+$/.test(cleaned)) {
-      const padded = cleaned.padStart(9, '0');
-      candidates.push(`NFC-STD-${padded}`);
+      const padded9 = cleaned.padStart(9, '0');
+      const padded10 = cleaned.padStart(10, '0');
+      
+      // Student formats
+      candidates.push(`NFC-STD-${padded9}`);
+      candidates.push(`NFC-STD-${padded10}`);
       candidates.push(`NFC-STD-${cleaned}`);
+      candidates.push(`STD-${padded9}`);
+      candidates.push(`STD-${cleaned}`);
+      
+      // Staff formats
       candidates.push(`NFC${cleaned}`);
-      candidates.push(`TCH-${padded}`);
+      candidates.push(`TCH-${padded9}`);
       candidates.push(`TCH-${cleaned}`);
-      candidates.push(`NFC-${padded}`);
+      candidates.push(`NFC-${padded9}`);
       candidates.push(`NFC-${cleaned}`);
     }
     
@@ -413,8 +426,10 @@ export default function BusAttendanceDevice() {
         .eq('status', 'active');
 
       stopScanning();
-      // Reset NFC service state so next login can scan fresh
-      nfcService.reset();
+      // Reset NFC service state so next login can scan fresh (await for clean state)
+      try {
+        await nfcService.reset();
+      } catch {}
       navigate('/device/login?type=bus');
       toast.success(language === 'ar' ? 'تم تسجيل الخروج' : 'Logged out');
     } catch (error) {

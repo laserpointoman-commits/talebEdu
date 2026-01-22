@@ -302,19 +302,53 @@ export default function SchoolAttendanceDevice() {
     toast.info(language === 'ar' ? 'توقف المسح' : 'Scanning stopped');
   };
 
+  // Build NFC ID candidates for matching - handles FC format from CM30
+  const buildNfcCandidates = (rawId: string): string[] => {
+    const cleaned = (rawId ?? '').replace(/\u0000/g, '').trim().toUpperCase();
+    const candidates: string[] = [cleaned];
+
+    // If starts with FC (CM30 format), extract numeric part
+    if (cleaned.startsWith('FC')) {
+      const numericPart = cleaned.slice(2);
+      candidates.push(numericPart);
+      
+      // Student cards are stored as NFC-STD-XXXXXXXXX (9 digits padded)
+      const padded9 = numericPart.padStart(9, '0');
+      candidates.push(`NFC-STD-${padded9}`);
+      candidates.push(`NFC-STD-${numericPart}`);
+    }
+    
+    // If it's just numeric
+    if (/^\d+$/.test(cleaned)) {
+      const padded9 = cleaned.padStart(9, '0');
+      candidates.push(`NFC-STD-${padded9}`);
+      candidates.push(`NFC-STD-${cleaned}`);
+    }
+    
+    // Add lowercase variants
+    candidates.push(...candidates.map(c => c.toLowerCase()));
+    return [...new Set(candidates)];
+  };
+
   const handleNfcScan = async (nfcData: NFCData) => {
     if (isProcessing) return;
     setIsProcessing(true);
 
     try {
-      // Find student by NFC ID
+      // Build candidates to match various NFC ID formats
+      const candidates = buildNfcCandidates(nfcData.id);
+      console.log('School NFC scan - trying candidates:', candidates);
+      
+      // Find student by any matching NFC ID candidate
       const { data: student, error } = await supabase
         .from('students')
         .select('id, student_id, first_name, last_name, first_name_ar, last_name_ar, class, nfc_id, parent_id')
-        .eq('nfc_id', nfcData.id)
-        .single();
+        .in('nfc_id', candidates)
+        .limit(1)
+        .maybeSingle();
 
       if (error || !student) {
+        console.log('Student not found for candidates:', candidates);
         toast.error(language === 'ar' ? 'الطالب غير موجود' : 'Student not found', { duration: 1500 });
         setIsProcessing(false);
         return;
@@ -520,6 +554,10 @@ export default function SchoolAttendanceDevice() {
 
   const handleLogout = async () => {
     stopScanning();
+    // Reset NFC service so next login can scan fresh
+    try {
+      await nfcService.reset();
+    } catch {}
     navigate('/device/login?type=school_gate');
     toast.success(language === 'ar' ? 'تم تسجيل الخروج' : 'Logged out');
   };
