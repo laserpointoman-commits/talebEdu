@@ -1,13 +1,15 @@
 package com.talebedu.app;
 
 import android.app.Activity;
+import android.app.ActivityManager;
+import android.content.Context;
 import android.os.Build;
 
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
+import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
-import com.getcapacitor.annotation.PluginMethod;
 
 @CapacitorPlugin(name = "Kiosk")
 public class KioskPlugin extends Plugin {
@@ -80,7 +82,13 @@ public class KioskPlugin extends Plugin {
 
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
       Activity activity = getActivity();
-      boolean locked = activity != null && activity.isInLockTaskMode();
+      boolean locked = false;
+      if (activity != null) {
+        ActivityManager am = (ActivityManager) activity.getSystemService(Context.ACTIVITY_SERVICE);
+        if (am != null) {
+          locked = am.getLockTaskModeState() != ActivityManager.LOCK_TASK_MODE_NONE;
+        }
+      }
       ret.put("locked", locked);
     } else {
       ret.put("locked", false);
