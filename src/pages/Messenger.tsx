@@ -47,6 +47,13 @@ import { MessengerSettingsWithTheme } from '@/components/messenger/MessengerSett
 
 type MessengerTab = 'chats' | 'groups' | 'calls' | 'contacts' | 'settings';
 
+type PendingCall = {
+  recipientId: string;
+  recipientName: string;
+  recipientImage: string | null;
+  callType: 'voice' | 'video';
+};
+
 function MessengerContent() {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
@@ -145,6 +152,25 @@ function MessengerContent() {
       fetchCallLogs();
       // Load persisted pins
       fetchPinnedChats().then(setPinnedChats);
+
+      // Auto-start a call if an admin page requested it
+      try {
+        const raw = sessionStorage.getItem('pendingCall');
+        if (raw) {
+          const pending = JSON.parse(raw) as PendingCall;
+          sessionStorage.removeItem('pendingCall');
+          setActiveTab('calls');
+          callService
+            .startCall(pending.recipientId, pending.recipientName, pending.recipientImage, pending.callType)
+            .catch((err) => {
+              console.error('Failed to start pending call:', err);
+              toast.error(isArabic ? 'فشل بدء المكالمة' : 'Failed to start call');
+            });
+        }
+      } catch (e) {
+        console.warn('Invalid pendingCall payload:', e);
+        sessionStorage.removeItem('pendingCall');
+      }
     }
   }, [user?.id, fetchConversations, fetchGroups, fetchCallLogs, fetchPinnedChats]);
 

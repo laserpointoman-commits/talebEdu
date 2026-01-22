@@ -1,6 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useStudents } from '@/contexts/StudentsContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -12,14 +14,17 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, Edit, Trash2, MapPin, Clock, Users, Bus, ChevronRight, Eye, X, Search } from 'lucide-react';
+import { Plus, Edit, Trash2, MapPin, Clock, Users, Bus, ChevronRight, Eye, X, Search, Phone, Video } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { callService } from '@/services/callService';
 
 interface Driver {
   id: string;
+  profileId: string;
   name: string;
   nameAr: string;
+  profileImage?: string | null;
 }
 
 interface BusData {
@@ -60,11 +65,13 @@ export interface Route {
 export default function RoutesManagement() {
   const { t, language } = useLanguage();
   const { students } = useStudents();
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [routes, setRoutes] = useState<Route[]>([]);
   const [drivers, setDrivers] = useState<(Driver & { currentBusId?: string; currentBusNumber?: string })[]>([]);
   const [buses, setBuses] = useState<BusData[]>([]);
   const [teachers, setTeachers] = useState<Teacher[]>([]);
-  const [supervisors, setSupervisors] = useState<{ id: string; name: string; nameAr: string; currentBusId?: string; currentBusNumber?: string }[]>([]);
+  const [supervisors, setSupervisors] = useState<{ id: string; name: string; nameAr: string; profileImage?: string | null; currentBusId?: string; currentBusNumber?: string }[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -171,7 +178,7 @@ export default function RoutesManagement() {
           .select(`
             id,
             profile_id,
-            profiles:profile_id (full_name, full_name_ar)
+            profiles:profile_id (full_name, full_name_ar, profile_image)
           `);
 
         // Fetch buses (also includes which driver is currently assigned)
@@ -193,12 +200,14 @@ export default function RoutesManagement() {
 
               return {
                 id: d.id,
+                profileId: d.profile_id,
                 name:
                   ((d.profiles as any)?.full_name || 'Unknown') +
                   (currentBusNumber ? ` (${currentBusNumber})` : ''),
                 nameAr:
                   ((d.profiles as any)?.full_name_ar || (d.profiles as any)?.full_name || 'غير معروف') +
                   (currentBusNumber ? ` (${currentBusNumber})` : ''),
+                profileImage: (d.profiles as any)?.profile_image || null,
                 currentBusId: assignedBus?.busId,
                 currentBusNumber,
               };
@@ -238,6 +247,7 @@ export default function RoutesManagement() {
             id, 
             full_name, 
             full_name_ar,
+            profile_image,
             supervisors:supervisors(bus_id, buses:bus_id(bus_number))
           `)
           .eq('role', 'supervisor');
@@ -251,6 +261,7 @@ export default function RoutesManagement() {
               id: s.id,
               name: s.full_name + (currentBusNumber ? ` (${currentBusNumber})` : ''),
               nameAr: (s.full_name_ar || s.full_name) + (currentBusNumber ? ` (${currentBusNumber})` : ''),
+              profileImage: (s as any).profile_image || null,
               currentBusId,
               currentBusNumber,
             };
@@ -265,6 +276,58 @@ export default function RoutesManagement() {
 
     fetchData();
   }, []);
+
+  useEffect(() => {
+    if (user?.id) callService.initialize(user.id);
+  }, [user?.id]);
+
+  const driverById = useMemo(() => new Map(drivers.map(d => [d.id, d])), [drivers]);
+  const supervisorById = useMemo(() => new Map(supervisors.map(s => [s.id, s])), [supervisors]);
+
+  const requestCallViaMessenger = (payload: { recipientId: string; recipientName: string; recipientImage: string | null; callType: 'voice' | 'video' }) => {
+    try {
+      sessionStorage.setItem('pendingCall', JSON.stringify(payload));
+      navigate('/dashboard/messenger');
+    } catch (e) {
+      console.error('Failed to set pending call:', e);
+      toast({
+        variant: 'destructive',
+        title: language === 'ar' ? 'خطأ' : 'Error',
+        description: language === 'ar' ? 'تعذر بدء المكالمة' : 'Could not start call',
+      });
+    }
+  };
+
+  const callRouteDevice = (route: Route, callType: 'voice' | 'video') => {
+    // Prefer supervisor (usually the CM30 account), fallback to driver
+    const supervisor = route.supervisorId ? supervisorById.get(route.supervisorId) : undefined;
+    if (supervisor) {
+      requestCallViaMessenger({
+        recipientId: supervisor.id,
+        recipientName: language === 'ar' ? supervisor.nameAr : supervisor.name,
+        recipientImage: supervisor.profileImage || null,
+        callType,
+      });
+      return;
+    }
+
+    const driver = route.driverId ? driverById.get(route.driverId) : undefined;
+    if (driver?.profileId) {
+      requestCallViaMessenger({
+        recipientId: driver.profileId,
+        recipientName: language === 'ar' ? driver.nameAr : driver.name,
+        recipientImage: driver.profileImage || null,
+        callType,
+      });
+      return;
+    }
+
+    toast({
+      variant: 'destructive',
+      title: language === 'ar' ? 'لا يوجد حساب' : 'No account',
+      description: language === 'ar' ? 'لا يوجد سائق/مشرف مُعيّن لهذه الحافلة' : 'No driver/supervisor assigned to this bus',
+    });
+  };
 
   const handleAddRoute = async () => {
     const newRoute: Route = {
@@ -817,6 +880,24 @@ export default function RoutesManagement() {
                   {language === 'en' ? route.name : route.nameAr}
                 </CardTitle>
                 <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => callRouteDevice(route, 'voice')}
+                      title={language === 'ar' ? 'اتصال صوتي' : 'Voice call'}
+                    >
+                      <Phone className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => callRouteDevice(route, 'video')}
+                      title={language === 'ar' ? 'اتصال مرئي' : 'Video call'}
+                    >
+                      <Video className="h-4 w-4" />
+                    </Button>
+                  </div>
                   <Badge className={route.status === 'active' ? 'bg-success/10 text-success' : 'bg-muted text-muted-foreground'}>
                     {route.status === 'active' ? (language === 'ar' ? 'نشط' : 'Active') : (language === 'ar' ? 'غير نشط' : 'Inactive')}
                   </Badge>
