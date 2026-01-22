@@ -20,6 +20,9 @@ interface CallScreenProps {
   isArabic?: boolean;
 }
 
+// Check if we're on a CM30 device page (kiosk mode) - no controls allowed
+const isDevicePage = () => window.location.pathname.startsWith('/device/');
+
 export function CallScreen({ isArabic }: CallScreenProps) {
   const [callState, setCallState] = useState<CallState>(callService.getState());
   const [isMuted, setIsMuted] = useState(false);
@@ -254,153 +257,167 @@ export function CallScreen({ isArabic }: CallScreenProps) {
           </motion.div>
         </div>
 
-        {/* Call Controls */}
-        <div 
-          className="relative z-30 pb-12 pt-6 px-6"
-          style={{ paddingBottom: 'max(3rem, env(safe-area-inset-bottom))' }}
-        >
-          {/* Incoming call: Accept/Reject */}
-          {callState.status === 'ringing' && callState.isIncoming && (
-            <div className="flex items-center justify-center gap-16">
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                className="flex flex-col items-center gap-2"
-              >
-                <Button
-                  size="lg"
-                  className="h-16 w-16 rounded-full bg-red-500 hover:bg-red-600 shadow-lg"
-                  onClick={handleReject}
-                >
-                  <PhoneOff className="h-7 w-7 text-white" />
-                </Button>
-                <span className="text-white/70 text-sm">
-                  {isArabic ? 'رفض' : 'Decline'}
-                </span>
-              </motion.div>
-
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.1 }}
-                className="flex flex-col items-center gap-2"
-              >
-                <Button
-                  size="lg"
-                  className="h-16 w-16 rounded-full shadow-lg"
-                  style={{ backgroundColor: WHATSAPP_COLORS.accent }}
-                  onClick={handleAccept}
-                >
-                  {isVideoCall ? (
-                    <Video className="h-7 w-7 text-white" />
-                  ) : (
-                    <Phone className="h-7 w-7 text-white" />
-                  )}
-                </Button>
-                <span className="text-white/70 text-sm">
-                  {isArabic ? 'قبول' : 'Accept'}
-                </span>
-              </motion.div>
-            </div>
-          )}
-
-          {/* Active call controls */}
-          {(callState.status === 'calling' || callState.status === 'connected') && (
-            <div className="flex items-center justify-center gap-6">
-              {/* Mute */}
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                className="flex flex-col items-center gap-2"
-              >
-                <Button
-                  size="lg"
-                  variant="ghost"
-                  className={`h-14 w-14 rounded-full ${isMuted ? 'bg-white' : 'bg-white/20'}`}
-                  onClick={handleToggleMute}
-                >
-                  {isMuted ? (
-                    <MicOff className="h-6 w-6 text-black" />
-                  ) : (
-                    <Mic className="h-6 w-6 text-white" />
-                  )}
-                </Button>
-                <span className="text-white/70 text-xs">
-                  {isMuted ? (isArabic ? 'إلغاء الكتم' : 'Unmute') : (isArabic ? 'كتم' : 'Mute')}
-                </span>
-              </motion.div>
-
-              {/* Video toggle (for video calls) */}
-              {isVideoCall && (
+        {/* Call Controls - Hidden on CM30 device pages */}
+        {!isDevicePage() && (
+          <div 
+            className="relative z-30 pb-12 pt-6 px-6"
+            style={{ paddingBottom: 'max(3rem, env(safe-area-inset-bottom))' }}
+          >
+            {/* Incoming call: Accept/Reject */}
+            {callState.status === 'ringing' && callState.isIncoming && (
+              <div className="flex items-center justify-center gap-16">
                 <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
-                  transition={{ delay: 0.05 }}
+                  className="flex flex-col items-center gap-2"
+                >
+                  <Button
+                    size="lg"
+                    className="h-16 w-16 rounded-full bg-destructive hover:bg-destructive/90 shadow-lg"
+                    onClick={handleReject}
+                  >
+                    <PhoneOff className="h-7 w-7 text-white" />
+                  </Button>
+                  <span className="text-white/70 text-sm">
+                    {isArabic ? 'رفض' : 'Decline'}
+                  </span>
+                </motion.div>
+
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.1 }}
+                  className="flex flex-col items-center gap-2"
+                >
+                  <Button
+                    size="lg"
+                    className="h-16 w-16 rounded-full shadow-lg"
+                    style={{ backgroundColor: WHATSAPP_COLORS.accent }}
+                    onClick={handleAccept}
+                  >
+                    {isVideoCall ? (
+                      <Video className="h-7 w-7 text-white" />
+                    ) : (
+                      <Phone className="h-7 w-7 text-white" />
+                    )}
+                  </Button>
+                  <span className="text-white/70 text-sm">
+                    {isArabic ? 'قبول' : 'Accept'}
+                  </span>
+                </motion.div>
+              </div>
+            )}
+
+            {/* Active call controls */}
+            {(callState.status === 'calling' || callState.status === 'connected') && (
+              <div className="flex items-center justify-center gap-6">
+                {/* Mute */}
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
                   className="flex flex-col items-center gap-2"
                 >
                   <Button
                     size="lg"
                     variant="ghost"
-                    className={`h-14 w-14 rounded-full ${isVideoOff ? 'bg-white' : 'bg-white/20'}`}
-                    onClick={handleToggleVideo}
+                    className={`h-14 w-14 rounded-full ${isMuted ? 'bg-white' : 'bg-white/20'}`}
+                    onClick={handleToggleMute}
                   >
-                    {isVideoOff ? (
-                      <VideoOff className="h-6 w-6 text-black" />
+                    {isMuted ? (
+                      <MicOff className="h-6 w-6 text-black" />
                     ) : (
-                      <Video className="h-6 w-6 text-white" />
+                      <Mic className="h-6 w-6 text-white" />
                     )}
                   </Button>
                   <span className="text-white/70 text-xs">
-                    {isVideoOff ? (isArabic ? 'إظهار' : 'Show') : (isArabic ? 'إخفاء' : 'Hide')}
+                    {isMuted ? (isArabic ? 'إلغاء الكتم' : 'Unmute') : (isArabic ? 'كتم' : 'Mute')}
                   </span>
                 </motion.div>
-              )}
 
-              {/* Speaker */}
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.1 }}
-                className="flex flex-col items-center gap-2"
-              >
-                <Button
-                  size="lg"
-                  variant="ghost"
-                  className={`h-14 w-14 rounded-full ${isSpeakerOn ? 'bg-white' : 'bg-white/20'}`}
-                  onClick={handleToggleSpeaker}
-                >
-                  {isSpeakerOn ? (
-                    <Volume2 className="h-6 w-6 text-black" />
-                  ) : (
-                    <VolumeX className="h-6 w-6 text-white" />
-                  )}
-                </Button>
-                <span className="text-white/70 text-xs">
-                  {isArabic ? 'مكبر الصوت' : 'Speaker'}
-                </span>
-              </motion.div>
+                {/* Video toggle (for video calls) */}
+                {isVideoCall && (
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: 0.05 }}
+                    className="flex flex-col items-center gap-2"
+                  >
+                    <Button
+                      size="lg"
+                      variant="ghost"
+                      className={`h-14 w-14 rounded-full ${isVideoOff ? 'bg-white' : 'bg-white/20'}`}
+                      onClick={handleToggleVideo}
+                    >
+                      {isVideoOff ? (
+                        <VideoOff className="h-6 w-6 text-black" />
+                      ) : (
+                        <Video className="h-6 w-6 text-white" />
+                      )}
+                    </Button>
+                    <span className="text-white/70 text-xs">
+                      {isVideoOff ? (isArabic ? 'إظهار' : 'Show') : (isArabic ? 'إخفاء' : 'Hide')}
+                    </span>
+                  </motion.div>
+                )}
 
-              {/* End Call */}
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.15 }}
-                className="flex flex-col items-center gap-2"
-              >
-                <Button
-                  size="lg"
-                  className="h-14 w-14 rounded-full bg-red-500 hover:bg-red-600 shadow-lg"
-                  onClick={handleEndCall}
+                {/* Speaker */}
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.1 }}
+                  className="flex flex-col items-center gap-2"
                 >
-                  <PhoneOff className="h-6 w-6 text-white" />
-                </Button>
-                <span className="text-white/70 text-xs">
-                  {isArabic ? 'إنهاء' : 'End'}
-                </span>
-              </motion.div>
+                  <Button
+                    size="lg"
+                    variant="ghost"
+                    className={`h-14 w-14 rounded-full ${isSpeakerOn ? 'bg-white' : 'bg-white/20'}`}
+                    onClick={handleToggleSpeaker}
+                  >
+                    {isSpeakerOn ? (
+                      <Volume2 className="h-6 w-6 text-black" />
+                    ) : (
+                      <VolumeX className="h-6 w-6 text-white" />
+                    )}
+                  </Button>
+                  <span className="text-white/70 text-xs">
+                    {isArabic ? 'مكبر الصوت' : 'Speaker'}
+                  </span>
+                </motion.div>
+
+                {/* End Call */}
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.15 }}
+                  className="flex flex-col items-center gap-2"
+                >
+                  <Button
+                    size="lg"
+                    className="h-14 w-14 rounded-full bg-destructive hover:bg-destructive/90 shadow-lg"
+                    onClick={handleEndCall}
+                  >
+                    <PhoneOff className="h-6 w-6 text-white" />
+                  </Button>
+                  <span className="text-white/70 text-xs">
+                    {isArabic ? 'إنهاء' : 'End'}
+                  </span>
+                </motion.div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* CM30 Device Mode: Minimal indicator with no controls */}
+        {isDevicePage() && callState.status === 'connected' && (
+          <div className="relative z-30 pb-12 pt-6 px-6 text-center">
+            <div className="flex items-center justify-center gap-3">
+              <div className="h-3 w-3 rounded-full bg-green-500 animate-pulse" />
+              <span className="text-white/80 text-lg font-medium">
+                {isArabic ? 'مكالمة نشطة - يتحكم المشرف' : 'Call Active - Admin Control'}
+              </span>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </motion.div>
     </AnimatePresence>
   );
