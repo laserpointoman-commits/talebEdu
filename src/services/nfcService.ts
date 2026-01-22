@@ -50,6 +50,7 @@ class NFCService {
    */
   reset(): void {
     console.log('NFC: Resetting service state');
+    // Fire-and-forget hard stop; callers often can't await (e.g. logout).
     this.stopScanning().catch(() => {});
     this.scanning = false;
     this.scanCallback = null;
@@ -427,8 +428,10 @@ class NFCService {
   }
 
   async stopScanning(): Promise<void> {
-    if (!this.scanning) return;
-
+    // IMPORTANT:
+    // Do not early-return based on this.scanning.
+    // Native NFC sessions can remain active even if our JS flag is out of sync,
+    // which forces users to restart the app to scan again.
     this.scanning = false;
     this.scanCallback = null;
 
@@ -457,18 +460,32 @@ class NFCService {
       throw new Error("NFC is not supported on this device");
     }
 
-    if (this.scanning) {
-      throw new Error("NFC scanning already active");
+    // Ensure any stale native scanning session is stopped before starting a new one.
+    // This prevents the "Card scan failed" loop that only clears after app restart.
+    try {
+      await this.stopScanning();
+    } catch {
+      // ignore
     }
 
     this.scanning = true;
     try {
       if (Capacitor.isNativePlatform() && NfcPlugin && typeof NfcPlugin.readOnce === 'function') {
-        const result = await NfcPlugin.readOnce();
-        const message = (result?.message ?? '') as string;
+        const attemptRead = async (): Promise<string> => {
+          const result = await NfcPlugin!.readOnce!();
+          return ((result?.message ?? '') as string) || '';
+        };
+
+        let message = await attemptRead();
         if (!message) {
-          throw new Error("No NFC data read");
+          // One retry: some devices/plugins occasionally return an empty payload.
+          // We hard-stop then re-attempt without requiring an app restart.
+          try { await this.stopScanning(); } catch {}
+          await new Promise((r) => setTimeout(r, 150));
+          message = await attemptRead();
         }
+
+        if (!message) throw new Error("No NFC data read");
 
         const data = this.parseTagMessage(message);
         await this.hapticSuccess();
@@ -493,6 +510,12 @@ class NFCService {
       });
     } finally {
       this.scanning = false;
+      // Always attempt to close any underlying native scanning session.
+      try {
+        await this.stopScanning();
+      } catch {
+        // ignore
+      }
     }
   }
 }
