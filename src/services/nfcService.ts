@@ -166,12 +166,21 @@ class NFCService {
           .replace(/^NFC\s*:\s*/i, '')
           .trim();
 
-      // If it looks like a raw UID (often returned as hex, sometimes with separators),
-      // canonicalize it so backend lookups are consistent.
-      const compact = cleaned.replace(/[^0-9a-fA-F]/g, '');
-      const looksLikeHexUid = compact.length >= 8 && compact.length <= 32 && /^[0-9a-fA-F]+$/.test(compact);
-      if (looksLikeHexUid) {
-        cleaned = compact.toUpperCase();
+      // IMPORTANT:
+      // Do NOT treat application IDs like "NFC-STD-000000001" as hex UIDs.
+      // Previous logic stripped non-hex chars and could transform valid IDs into something like
+      // "FCD000000001", which breaks student lookup.
+      //
+      // Only canonicalize as a raw UID when the entire string is composed of hex characters
+      // plus common UID separators (":" / "-" / spaces).
+      const isKnownAppId = /^(NFC-|STD-|TCH-|EMP-|DRV-|SUP-)/i.test(cleaned) || /^NFC\d+$/i.test(cleaned);
+      if (!isKnownAppId) {
+        const uidLike = /^[0-9a-fA-F:\-\s.]+$/.test(cleaned);
+        const compact = cleaned.replace(/[^0-9a-fA-F]/g, '');
+        const looksLikeHexUid = uidLike && compact.length >= 8 && compact.length <= 32 && /^[0-9a-fA-F]+$/.test(compact);
+        if (looksLikeHexUid) {
+          cleaned = compact.toUpperCase();
+        }
       }
 
       return cleaned;
