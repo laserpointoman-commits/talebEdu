@@ -1,4 +1,4 @@
-import { ReactNode, useRef, useState } from 'react';
+import { ReactNode, useRef, useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -24,6 +24,16 @@ import { cn } from '@/lib/utils';
 import { usePreventIOSScrollBounce } from '@/hooks/use-ios-scroll-bounce';
 import Footer from './Footer';
 
+// Hook to add/remove dashboard-active class for scroll locking on native platforms
+function useDashboardScrollLock() {
+  useEffect(() => {
+    document.documentElement.classList.add('dashboard-active');
+    return () => {
+      document.documentElement.classList.remove('dashboard-active');
+    };
+  }, []);
+}
+
 interface DashboardLayoutProps {
   children: ReactNode;
 }
@@ -36,6 +46,9 @@ function DashboardLayout({ children }: DashboardLayoutProps) {
   const isMobile = useIsMobile();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+
+  // Lock document scroll on native platforms when inside dashboard
+  useDashboardScrollLock();
 
   const mainScrollRef = useRef<HTMLElement | null>(null);
   usePreventIOSScrollBounce(mainScrollRef);

@@ -44,21 +44,32 @@ body {
   height: 100%;
 }
 
-/* Lock document scrolling only for native iOS builds */
-html.native-ios body {
+/*
+  IMPORTANT: We use a class-based approach for scroll locking.
+  The DashboardLayout adds 'dashboard-active' to <html> when mounted,
+  and we only lock document scroll for native apps when inside the dashboard.
+  This allows landing pages (Index, Auth, etc.) to scroll normally.
+*/
+
+/* Lock document scrolling only for native iOS builds INSIDE dashboard */
+html.native-ios.dashboard-active body {
   position: fixed;
   height: 100%;
   overflow: hidden;
 }
 
-/*
-  Android WebView/CM30: ensure the document itself does NOT scroll.
-  Nested scroll containers (e.g. DashboardLayout <main>) become unreliable when the document is scrollable.
-*/
-html.native-android,
-html.native-android body {
+/* Android WebView/CM30: lock only inside dashboard */
+html.native-android.dashboard-active,
+html.native-android.dashboard-active body {
   height: 100%;
   overflow: hidden;
+}
+
+/* For non-dashboard pages on native, allow normal scrolling */
+html.native-ios body,
+html.native-android body {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Native iOS Button Feel */
