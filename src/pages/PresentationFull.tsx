@@ -102,6 +102,7 @@ const PresentationFull = () => {
   );
 
   return (
+    <div className="h-[100dvh] overflow-y-auto overscroll-none" style={{ WebkitOverflowScrolling: 'touch' }}>
     <div className="min-h-screen bg-background text-foreground" dir={isArabic ? 'rtl' : 'ltr'}>
       {/* Control Bar - Hidden in print */}
       <div className="fixed top-4 right-4 z-50 flex items-center gap-4 no-print bg-white dark:bg-gray-900 p-4 rounded-lg shadow-lg">
@@ -496,6 +497,7 @@ const PresentationFull = () => {
           }
         }
       `}</style>
+    </div>
     </div>
   );
 };

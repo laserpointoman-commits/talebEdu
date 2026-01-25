@@ -87,6 +87,7 @@ const PresentationManual = () => {
         }
       `}</style>
       
+      <div className="h-[100dvh] overflow-y-auto overscroll-none" style={{ WebkitOverflowScrolling: 'touch' }}>
       <div className={`min-h-screen bg-gradient-to-br from-background via-primary/5 to-background ${isArabic ? 'rtl' : 'ltr'}`}>
       {/* Control Bar - Hidden in Print */}
       <div className="no-print fixed top-4 right-4 z-50 flex gap-2 bg-card/95 backdrop-blur-lg p-3 rounded-2xl shadow-elegant border border-border/50">
@@ -1355,6 +1356,7 @@ const PresentationManual = () => {
           <div className="h-1 w-32 mx-auto bg-gradient-primary rounded-full"></div>
         </div>
       </section>
+    </div>
     </div>
     </>
   );

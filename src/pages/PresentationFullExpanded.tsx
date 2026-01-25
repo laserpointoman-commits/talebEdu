@@ -138,6 +138,7 @@ export default function PresentationFullExpanded() {
   };
 
   return (
+    <div className="h-[100dvh] overflow-y-auto overscroll-none" style={{ WebkitOverflowScrolling: 'touch' }}>
     <div className="min-h-screen bg-background text-foreground" dir={isArabic ? 'rtl' : 'ltr'}>
       {/* Control Bar */}
       <div className="no-print fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-b p-4 flex justify-between items-center">
@@ -550,6 +551,7 @@ export default function PresentationFullExpanded() {
           }
         }
       `}</style>
+    </div>
     </div>
   );
 }
