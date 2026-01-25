@@ -13,6 +13,7 @@ const Presentation = () => {
   };
 
   return (
+    <div className="h-[100dvh] overflow-y-auto overscroll-none" style={{ WebkitOverflowScrolling: 'touch' }}>
     <div className="min-h-screen bg-background print:bg-white">
       {/* Control Bar - Hidden in Print */}
       <div className="fixed top-4 right-4 z-50 flex gap-2 print:hidden">
@@ -1308,6 +1309,7 @@ const Presentation = () => {
           }
         }
       `}</style>
+    </div>
     </div>
   );
 };

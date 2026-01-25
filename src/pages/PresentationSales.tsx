@@ -22,6 +22,7 @@ export default function PresentationSales() {
   };
 
   return (
+    <div className="h-[100dvh] overflow-y-auto overscroll-none" style={{ WebkitOverflowScrolling: 'touch' }}>
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
       {/* Control Bar - Hidden in Print */}
       <div className="no-print fixed top-4 right-4 z-50 flex gap-2">
@@ -1420,6 +1421,7 @@ export default function PresentationSales() {
           background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' width='32' height='32' fill='none' stroke='rgb(255 255 255 / 0.05)'%3e%3cpath d='M0 .5H31.5V32'/%3e%3c/svg%3e");
         }
       `}</style>
+    </div>
     </div>
   );
 }

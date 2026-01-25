@@ -178,6 +178,7 @@ const Index = () => {
   ];
 
   return (
+    <div className="h-[100dvh] overflow-y-auto overscroll-none" style={{ WebkitOverflowScrolling: 'touch' }}>
     <div className={`min-h-screen bg-background ${dir === 'rtl' ? 'font-cairo' : ''}`} dir={dir}>
       {/* Header */}
       <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
@@ -458,6 +459,7 @@ const Index = () => {
           </div>
         </div>
       </footer>
+    </div>
     </div>
   );
 };
