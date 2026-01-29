@@ -395,7 +395,7 @@ export default function BusAttendanceDevice() {
       const prev = studentStatus.current.get(studentId);
       const nextAction: 'board' | 'exit' = prev === 'board' ? 'exit' : 'board';
 
-      // Record bus boarding
+      // Record bus boarding - use snake_case for edge function parameters
       await supabase.functions.invoke('record-bus-activity', {
         body: {
           studentId,
@@ -403,7 +403,8 @@ export default function BusAttendanceDevice() {
           action: nextAction,
           location: busData?.bus_number || 'Bus',
           deviceId,
-          nfcVerified
+          nfc_verified: nfcVerified,
+          manual_entry: false
         }
       });
 
