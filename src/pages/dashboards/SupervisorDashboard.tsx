@@ -509,10 +509,16 @@ export default function SupervisorDashboard() {
   const attemptEndTrip = () => {
     const studentsOnBus = students.filter(s => s.status === 'boarded');
     if (studentsOnBus.length > 0) {
+      // Block ending trip if students still on bus
+      toast.error(
+        language === 'ar' 
+          ? `لا يمكن إنهاء الرحلة! لا يزال ${studentsOnBus.length} طالب على متن الحافلة`
+          : `Cannot end trip! ${studentsOnBus.length} student(s) still on bus`
+      );
       setShowEndTripWarning(true);
-    } else {
-      endTrip();
+      return;
     }
+    endTrip();
   };
 
   const endTrip = async () => {
@@ -926,15 +932,22 @@ export default function SupervisorDashboard() {
         <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/95 backdrop-blur border-t safe-area-inset-bottom">
           <Button 
             size="lg" 
-            variant={onBusCount > 0 ? "outline" : "destructive"}
-            className="w-full h-14"
+            className={`w-full h-14 font-semibold text-white ${
+              onBusCount > 0 
+                ? 'bg-red-500 hover:bg-red-600 border-red-600' 
+                : 'bg-green-500 hover:bg-green-600 border-green-600'
+            }`}
             onClick={attemptEndTrip}
+            disabled={onBusCount > 0}
           >
             <Square className="mr-2 h-5 w-5" />
-            {language === 'ar' ? 'إنهاء الرحلة' : 'End Trip'}
+            {onBusCount > 0 
+              ? (language === 'ar' ? 'انتظر نزول الطلاب' : 'Wait for Students to Exit')
+              : (language === 'ar' ? 'إنهاء الرحلة ✓' : 'End Trip ✓')
+            }
             {onBusCount > 0 && (
-              <Badge variant="secondary" className="ml-2">
-                {onBusCount} {language === 'ar' ? 'على متن' : 'still on bus'}
+              <Badge variant="secondary" className="ml-2 bg-white/20 text-white border-0">
+                {onBusCount} {language === 'ar' ? 'على متن' : 'on bus'}
               </Badge>
             )}
           </Button>
@@ -1042,34 +1055,34 @@ function StudentRow({ student, language, onCheckIn, onCheckOut, onMarkAbsent, is
       layout
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`p-3 rounded-xl border flex items-center gap-3 mb-2 ${getBgColor()}`}
+      className={`p-3 rounded-xl border flex items-center gap-2 mb-2 ${getBgColor()}`}
     >
-      <div className="w-9 h-9 rounded-full bg-background flex items-center justify-center border">
+      <div className="w-8 h-8 rounded-full bg-background flex items-center justify-center border shrink-0">
         {getIcon()}
       </div>
       
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0 overflow-hidden">
         <p className="font-medium text-sm truncate">
           {language === 'ar' ? student.nameAr : student.name}
         </p>
-        <p className="text-[10px] text-muted-foreground">{student.class}</p>
+        <p className="text-[10px] text-muted-foreground truncate">{student.class}</p>
       </div>
 
       {/* Action Buttons */}
-      <div className="flex gap-1">
+      <div className="flex gap-1 shrink-0">
         {variant === 'waiting' && (
           <>
             <Button 
               size="sm" 
-              className="h-9 px-3 bg-green-500 hover:bg-green-600"
+              className="h-8 px-2 text-xs bg-green-500 hover:bg-green-600"
               onClick={onCheckIn}
               disabled={isProcessing}
             >
               {isProcessing ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <Loader2 className="h-3 w-3 animate-spin" />
               ) : (
                 <>
-                  <ArrowUpFromLine className="h-4 w-4 mr-1" />
+                  <ArrowUpFromLine className="h-3 w-3 mr-0.5" />
                   {language === 'ar' ? 'صعود' : 'In'}
                 </>
               )}
@@ -1077,11 +1090,11 @@ function StudentRow({ student, language, onCheckIn, onCheckOut, onMarkAbsent, is
             <Button 
               size="sm" 
               variant="outline"
-              className="h-9 px-2 text-red-500 border-red-300 hover:bg-red-50"
+              className="h-8 w-8 p-0 text-red-500 border-red-300 hover:bg-red-50"
               onClick={onMarkAbsent}
               disabled={isProcessing}
             >
-              <UserX className="h-4 w-4" />
+              <UserX className="h-3 w-3" />
             </Button>
           </>
         )}
@@ -1089,15 +1102,15 @@ function StudentRow({ student, language, onCheckIn, onCheckOut, onMarkAbsent, is
         {variant === 'onbus' && (
           <Button 
             size="sm" 
-            className="h-9 px-3 bg-blue-500 hover:bg-blue-600"
+            className="h-8 px-2 text-xs bg-blue-500 hover:bg-blue-600"
             onClick={onCheckOut}
             disabled={isProcessing}
           >
             {isProcessing ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <Loader2 className="h-3 w-3 animate-spin" />
             ) : (
               <>
-                <ArrowDownToLine className="h-4 w-4 mr-1" />
+                <ArrowDownToLine className="h-3 w-3 mr-0.5" />
                 {language === 'ar' ? 'نزول' : 'Out'}
               </>
             )}

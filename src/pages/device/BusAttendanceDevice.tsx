@@ -306,13 +306,32 @@ export default function BusAttendanceDevice() {
       const candidates = buildNfcCandidates(nfcData.id);
       console.log('NFC scan - trying candidates:', candidates);
       
-      // Find student by any matching NFC ID candidate
-      const { data: student, error } = await supabase
+      // Find student by any matching NFC ID candidate (case-insensitive)
+      // Try direct match first
+      let { data: student, error } = await supabase
         .from('students')
         .select('id, first_name, last_name, first_name_ar, last_name_ar, class, nfc_id')
         .in('nfc_id', candidates)
         .limit(1)
         .maybeSingle();
+      
+      // If not found, try case-insensitive search with ILIKE
+      if (!student && !error) {
+        for (const candidate of candidates) {
+          const { data: foundStudent } = await supabase
+            .from('students')
+            .select('id, first_name, last_name, first_name_ar, last_name_ar, class, nfc_id')
+            .ilike('nfc_id', candidate)
+            .limit(1)
+            .maybeSingle();
+          
+          if (foundStudent) {
+            student = foundStudent;
+            console.log('Found student with case-insensitive match:', candidate);
+            break;
+          }
+        }
+      }
 
       if (error || !student) {
         console.log('Student not found for candidates:', candidates);
