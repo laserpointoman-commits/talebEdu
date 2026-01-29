@@ -360,10 +360,11 @@ export default function SupervisorDashboard() {
       return;
     }
 
-    await processStudentAction(student);
+    // Pass isNfcScan=true to indicate this came from an NFC scan
+    await processStudentAction(student, undefined, true);
   };
 
-  const processStudentAction = async (student: StudentStatus, action?: 'board' | 'exit' | 'absent') => {
+  const processStudentAction = async (student: StudentStatus, action?: 'board' | 'exit' | 'absent', isNfcScan: boolean = false) => {
     if (processingStudent) return;
     
     setProcessingStudent(student.id);
@@ -391,9 +392,9 @@ export default function SupervisorDashboard() {
           busId: busData?.id,
           action: finalAction,
           location: busData?.bus_number || 'Bus',
-          nfc_verified: false,
-          manual_entry: true,
-          manual_entry_by: user?.id
+          nfc_verified: isNfcScan,
+          manual_entry: !isNfcScan,
+          manual_entry_by: !isNfcScan ? user?.id : undefined
         }
       });
 
