@@ -49,7 +49,7 @@ export default function EmailConfirmationPending() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-secondary/10 p-4">
+    <div className="h-[100dvh] overflow-y-auto overscroll-none flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-secondary/10 p-4" style={{ WebkitOverflowScrolling: 'touch' }}>
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <Mail className="w-16 h-16 mx-auto mb-4 text-primary animate-pulse" />

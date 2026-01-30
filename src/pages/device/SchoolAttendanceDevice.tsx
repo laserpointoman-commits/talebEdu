@@ -639,7 +639,7 @@ export default function SchoolAttendanceDevice() {
         window.location.href = '/device/login?type=school_gate';
       }}
     >
-      <div className="min-h-screen bg-gradient-to-br from-primary/5 to-secondary/5 p-4" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+      <div className="h-[100dvh] overflow-y-auto overscroll-none bg-gradient-to-br from-primary/5 to-secondary/5 p-4" dir={language === 'ar' ? 'rtl' : 'ltr'} style={{ WebkitOverflowScrolling: 'touch' }}>
         <div className="max-w-4xl mx-auto space-y-4">
         {/* Header */}
         <Card>

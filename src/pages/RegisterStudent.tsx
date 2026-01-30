@@ -153,7 +153,7 @@ export default function RegisterStudent() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 py-12">
+    <div className="h-[100dvh] overflow-y-auto overscroll-none bg-gradient-to-br from-primary/5 via-background to-secondary/5 py-12" style={{ WebkitOverflowScrolling: 'touch' }}>
       <div className="container max-w-4xl mx-auto px-4">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
