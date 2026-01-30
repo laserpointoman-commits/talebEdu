@@ -327,9 +327,17 @@ const InvestorPresentation = () => {
             initial={{ y: 30, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.5, duration: 0.6 }}
-            className="text-2xl md:text-3xl text-muted-foreground mb-8"
+            className="text-2xl md:text-3xl text-muted-foreground mb-4"
           >
             مستقبل الإدارة المدرسية الذكية
+          </motion.p>
+          <motion.p
+            initial={{ y: 30, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.6, duration: 0.6 }}
+            className="text-xl md:text-2xl text-primary font-semibold mb-8"
+          >
+            نظام أمّان الطلاب
           </motion.p>
           {/* Decorative animated icons */}
           <motion.div
