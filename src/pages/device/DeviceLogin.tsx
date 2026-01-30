@@ -364,7 +364,7 @@ export default function DeviceLogin() {
   if (session) {
     return (
       <KioskExitGesture onExit={() => (window.location.href = '/landing')}>
-        <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center p-4" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+        <div className="h-[100dvh] overflow-y-auto overscroll-none bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center p-4" dir={language === 'ar' ? 'rtl' : 'ltr'} style={{ WebkitOverflowScrolling: 'touch' }}>
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             <div className="flex justify-end mb-2">
@@ -414,7 +414,7 @@ export default function DeviceLogin() {
 
   return (
     <KioskExitGesture onExit={() => (window.location.href = '/landing')}>
-      <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center p-4" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+      <div className="h-[100dvh] overflow-y-auto overscroll-none bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center p-4" dir={language === 'ar' ? 'rtl' : 'ltr'} style={{ WebkitOverflowScrolling: 'touch' }}>
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex justify-end mb-2">

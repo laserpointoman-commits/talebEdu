@@ -174,7 +174,7 @@ export default function ParentRegistration() {
   // Language Selection Screen
   if (!selectedLanguage) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 to-secondary/10 p-4">
+      <div className="h-[100dvh] overflow-y-auto overscroll-none flex items-center justify-center bg-gradient-to-br from-primary/10 to-secondary/10 p-4" style={{ WebkitOverflowScrolling: 'touch' }}>
         <Card className="w-full max-w-md">
           <CardHeader>
             <div className="flex justify-center mb-4">
@@ -222,7 +222,7 @@ export default function ParentRegistration() {
 
   if (validating) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 to-secondary/10" dir={selectedLanguage === "ar" ? "rtl" : "ltr"}>
+      <div className="h-[100dvh] overflow-y-auto overscroll-none flex items-center justify-center bg-gradient-to-br from-primary/10 to-secondary/10" dir={selectedLanguage === "ar" ? "rtl" : "ltr"} style={{ WebkitOverflowScrolling: 'touch' }}>
         <Card className="w-full max-w-md">
           <CardContent className="pt-6">
             <div className="flex flex-col items-center gap-4">
@@ -239,7 +239,7 @@ export default function ParentRegistration() {
 
   if (!tokenValid) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 to-secondary/10 p-4" dir={selectedLanguage === "ar" ? "rtl" : "ltr"}>
+      <div className="h-[100dvh] overflow-y-auto overscroll-none flex items-center justify-center bg-gradient-to-br from-primary/10 to-secondary/10 p-4" dir={selectedLanguage === "ar" ? "rtl" : "ltr"} style={{ WebkitOverflowScrolling: 'touch' }}>
         <Card className="w-full max-w-md">
           <CardHeader>
             <div className="flex justify-center mb-4">
@@ -277,7 +277,7 @@ export default function ParentRegistration() {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 to-secondary/10 p-4" dir={selectedLanguage === "ar" ? "rtl" : "ltr"}>
+      <div className="h-[100dvh] overflow-y-auto overscroll-none flex items-center justify-center bg-gradient-to-br from-primary/10 to-secondary/10 p-4" dir={selectedLanguage === "ar" ? "rtl" : "ltr"} style={{ WebkitOverflowScrolling: 'touch' }}>
         <Card className="w-full max-w-md">
           <CardHeader>
             <div className="flex justify-center mb-4">
@@ -352,7 +352,7 @@ export default function ParentRegistration() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10 p-4" dir={selectedLanguage === "ar" ? "rtl" : "ltr"}>
+    <div className="h-[100dvh] overflow-y-auto overscroll-none bg-gradient-to-br from-primary/10 to-secondary/10 p-4" dir={selectedLanguage === "ar" ? "rtl" : "ltr"} style={{ WebkitOverflowScrolling: 'touch' }}>
       <div className="max-w-4xl mx-auto py-8">
         <Card className={selectedLanguage === "ar" ? "rtl" : ""}>
           <CardHeader className={selectedLanguage === "ar" ? "text-right" : "text-left"}>

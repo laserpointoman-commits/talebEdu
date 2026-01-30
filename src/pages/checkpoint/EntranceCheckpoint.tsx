@@ -303,7 +303,7 @@ export default function EntranceCheckpoint() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 to-secondary/5 p-4">
+    <div className="h-[100dvh] overflow-y-auto overscroll-none bg-gradient-to-br from-primary/5 to-secondary/5 p-4" style={{ WebkitOverflowScrolling: 'touch' }}>
       {/* Header */}
       <div className="mb-6">
         <Card className="p-4">

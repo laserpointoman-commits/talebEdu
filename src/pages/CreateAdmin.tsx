@@ -77,7 +77,7 @@ export default function CreateAdmin() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+    <div className="h-[100dvh] overflow-y-auto overscroll-none flex items-center justify-center bg-background p-4" style={{ WebkitOverflowScrolling: 'touch' }}>
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>{t('Create Admin Account', 'إنشاء حساب المسؤول', 'एडमिन अकाउंट बनाएं')}</CardTitle>

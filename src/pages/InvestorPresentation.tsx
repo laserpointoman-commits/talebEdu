@@ -293,6 +293,7 @@ const InvestorPresentation = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [showIntro, setShowIntro] = useState(true);
 
+  // Wrap entire page in scroll container for native platforms
   const slides = [
     // Slide 1: Cover
     {
@@ -795,7 +796,7 @@ const InvestorPresentation = () => {
   };
 
   return (
-    <>
+    <div className="h-[100dvh] overflow-y-auto overscroll-none" style={{ WebkitOverflowScrolling: 'touch' }}>
       {/* Intro Animation */}
       <AnimatePresence>
         {showIntro && (
@@ -860,7 +861,7 @@ const InvestorPresentation = () => {
         </div>
       </div>
       </div>
-    </>
+    </div>
   );
 };
 

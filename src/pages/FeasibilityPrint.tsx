@@ -151,7 +151,7 @@ const FeasibilityPrint = () => {
   `;
 
   return (
-    <>
+    <div className="h-[100dvh] overflow-y-auto overscroll-none" style={{ WebkitOverflowScrolling: 'touch' }}>
       <style>{printStyles}</style>
       <div
         className="min-h-screen bg-gray-200 print:bg-white print-container"
@@ -1120,7 +1120,7 @@ const FeasibilityPrint = () => {
       </div>
 
     </div>
-    </>
+    </div>
   );
 };
 

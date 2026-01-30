@@ -536,7 +536,7 @@ export default function BusAttendanceDevice() {
         window.location.href = '/device/login?type=bus';
       }}
     >
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950/20 dark:to-cyan-950/20 p-4" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+      <div className="h-[100dvh] overflow-y-auto overscroll-none bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950/20 dark:to-cyan-950/20 p-4" dir={language === 'ar' ? 'rtl' : 'ltr'} style={{ WebkitOverflowScrolling: 'touch' }}>
         <ScanFeedbackOverlay state={feedback} />
       <div className="max-w-4xl mx-auto space-y-4">
         {/* Header */}

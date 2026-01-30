@@ -132,7 +132,7 @@ export default function ParentSelfSignup() {
 
   if (step === 'language') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-secondary/10 p-4">
+      <div className="h-[100dvh] overflow-y-auto overscroll-none flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-secondary/10 p-4" style={{ WebkitOverflowScrolling: 'touch' }}>
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             <Globe className="w-16 h-16 mx-auto mb-4 text-primary" />
@@ -176,7 +176,7 @@ export default function ParentSelfSignup() {
 
   if (step === 'validating') {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="h-[100dvh] overflow-y-auto overscroll-none flex items-center justify-center" style={{ WebkitOverflowScrolling: 'touch' }}>
         <div className="text-center">
           <Loader2 className="w-12 h-12 animate-spin mx-auto mb-4 text-primary" />
           <p className="text-muted-foreground">
@@ -189,7 +189,7 @@ export default function ParentSelfSignup() {
 
   if (step === 'success') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-secondary/10 p-4">
+      <div className="h-[100dvh] overflow-y-auto overscroll-none flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-secondary/10 p-4" style={{ WebkitOverflowScrolling: 'touch' }}>
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             <CheckCircle2 className="w-16 h-16 mx-auto mb-4 text-green-500" />
@@ -215,7 +215,7 @@ export default function ParentSelfSignup() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-secondary/10 p-4">
+    <div className="h-[100dvh] overflow-y-auto overscroll-none flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-secondary/10 p-4" style={{ WebkitOverflowScrolling: 'touch' }}>
       <Card className="w-full max-w-2xl">
         <CardHeader>
           <CardTitle className="text-2xl">

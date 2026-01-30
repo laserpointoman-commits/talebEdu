@@ -54,7 +54,7 @@ export default function NFCKiosk() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="h-[100dvh] overflow-y-auto overscroll-none flex items-center justify-center" style={{ WebkitOverflowScrolling: 'touch' }}>
         {t('Loading device configuration...', 'جاري تحميل تكوين الجهاز...', 'उपकरण कॉन्फ़िगरेशन लोड हो रहा है...')}
       </div>
     );
