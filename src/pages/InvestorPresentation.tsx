@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   ChevronLeft, 
@@ -292,6 +292,7 @@ const IntroAnimation = ({ onComplete }: { onComplete: () => void }) => {
 const InvestorPresentation = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [showIntro, setShowIntro] = useState(true);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   // Wrap entire page in scroll container for native platforms
   const slides = [
@@ -784,27 +785,31 @@ const InvestorPresentation = () => {
     }
   ];
 
+  const scrollToTop = () => {
+    scrollContainerRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const nextSlide = () => {
     if (currentSlide < slides.length - 1) {
       setCurrentSlide(currentSlide + 1);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      scrollToTop();
     }
   };
 
   const prevSlide = () => {
     if (currentSlide > 0) {
       setCurrentSlide(currentSlide - 1);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      scrollToTop();
     }
   };
 
   const goToSlide = (index: number) => {
     setCurrentSlide(index);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    scrollToTop();
   };
 
   return (
-    <div className="h-[100dvh] overflow-y-auto overscroll-none" style={{ WebkitOverflowScrolling: 'touch' }}>
+    <div ref={scrollContainerRef} className="h-[100dvh] overflow-y-auto overscroll-none" style={{ WebkitOverflowScrolling: 'touch' }}>
       {/* Intro Animation */}
       <AnimatePresence>
         {showIntro && (
