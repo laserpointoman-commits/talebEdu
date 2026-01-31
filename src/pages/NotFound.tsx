@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Home } from "lucide-react";
 import { useLanguage } from '@/contexts/LanguageContext';
 import { getText } from '@/utils/i18n';
+import PageHeader from '@/components/layouts/PageHeader';
 
 const NotFound = () => {
   const location = useLocation();
@@ -23,19 +24,22 @@ const NotFound = () => {
   }, [location.pathname, navigate]);
 
   return (
-    <div className="h-[100dvh] overflow-y-auto overscroll-none flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-secondary/5" style={{ WebkitOverflowScrolling: 'touch' }}>
-      <div className="text-center space-y-6 p-8">
-        <h1 className="text-6xl font-bold text-primary">404</h1>
-        <p className="text-2xl font-semibold">
-          {t('Page Not Found', 'الصفحة غير موجودة', 'पृष्ठ नहीं मिला')}
-        </p>
-        <p className="text-muted-foreground">
-          {t('Redirecting to home in 3 seconds...', 'إعادة التوجيه للرئيسية في 3 ثوانٍ...', '3 सेकंड में होम पर रीडायरेक्ट हो रहा है...')}
-        </p>
-        <Button onClick={() => navigate('/', { replace: true })} className="gap-2">
-          <Home className="h-4 w-4" />
-          {t('Go Home Now', 'الذهاب للرئيسية الآن', 'अभी होम जाएं')}
-        </Button>
+    <div className="h-[100dvh] overflow-y-auto overscroll-none bg-gradient-to-br from-primary/5 via-background to-secondary/5" style={{ WebkitOverflowScrolling: 'touch' }}>
+      <PageHeader title={t('Page Not Found', 'الصفحة غير موجودة', 'पृष्ठ नहीं मिला')} />
+      <div className="pt-16 flex items-center justify-center min-h-[calc(100dvh-3rem)]">
+        <div className="text-center space-y-6 p-8">
+          <h1 className="text-6xl font-bold text-primary">404</h1>
+          <p className="text-2xl font-semibold">
+            {t('Page Not Found', 'الصفحة غير موجودة', 'पृष्ठ नहीं मिला')}
+          </p>
+          <p className="text-muted-foreground">
+            {t('Redirecting to home in 3 seconds...', 'إعادة التوجيه للرئيسية في 3 ثوانٍ...', '3 सेकंड में होम पर रीडायरेक्ट हो रहा है...')}
+          </p>
+          <Button onClick={() => navigate('/', { replace: true })} className="gap-2">
+            <Home className="h-4 w-4" />
+            {t('Go Home Now', 'الذهاب للرئيسية الآن', 'अभी होम जाएं')}
+          </Button>
+        </div>
       </div>
     </div>
   );
