@@ -366,18 +366,35 @@ export default function SchoolAttendanceDevice() {
       const candidates = buildNfcCandidates(nfcData.id);
       console.log('School NFC scan - trying candidates:', candidates);
       
-      // Find student by any matching NFC ID candidate
-      const { data: student, error } = await supabase
+      // Find student by any matching NFC ID candidate (direct match first)
+      let { data: student, error } = await supabase
         .from('students')
         .select('id, student_id, first_name, last_name, first_name_ar, last_name_ar, class, nfc_id, parent_id')
         .in('nfc_id', candidates)
         .limit(1)
         .maybeSingle();
 
+      // If not found, try case-insensitive search with ILIKE
+      if (!student && !error) {
+        for (const candidate of candidates) {
+          const { data: foundStudent } = await supabase
+            .from('students')
+            .select('id, student_id, first_name, last_name, first_name_ar, last_name_ar, class, nfc_id, parent_id')
+            .ilike('nfc_id', candidate)
+            .limit(1)
+            .maybeSingle();
+          
+          if (foundStudent) {
+            student = foundStudent;
+            console.log('Found student with case-insensitive match:', candidate);
+            break;
+          }
+        }
+      }
+
       if (error || !student) {
         console.log('Student not found for candidates:', candidates);
         // Persist what the scanner actually returned so we can debug CM30 format mismatches.
-        // This runs best-effort and must never block scanning.
         try {
           const nowIso = new Date().toISOString();
           await supabase.from('checkpoint_logs').insert({
@@ -398,7 +415,6 @@ export default function SchoolAttendanceDevice() {
           await supabase.from('error_logs').insert({
             error_message: 'Student not found',
             error_type: 'nfc_student_lookup',
-            function_name: 'SchoolAttendanceDevice',
             metadata: {
               device_id: deviceId,
               raw_id: nfcData.id,
