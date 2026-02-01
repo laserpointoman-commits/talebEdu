@@ -72,14 +72,12 @@ export default function StudentBusTracking() {
       setBusAssignment(assignment);
 
       if (assignment?.bus_id) {
-        // Check for active trip (robust against multiple rows)
-        const today = new Date().toISOString().split('T')[0];
+        // Check for active trip - no date restriction to show any in-progress trip
         const { data: trip } = await supabase
           .from('bus_trips')
           .select('*')
           .eq('bus_id', assignment.bus_id)
           .eq('status', 'in_progress')
-          .gte('created_at', `${today}T00:00:00`)
           .order('created_at', { ascending: false })
           .limit(1)
           .maybeSingle();
