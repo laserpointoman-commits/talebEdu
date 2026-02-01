@@ -40,6 +40,8 @@ interface ScannedStudent {
   scanTime: string;
   action: 'board' | 'exit';
   nfcVerified: boolean;
+  latitude?: number;
+  longitude?: number;
 }
 
 interface ManualEntry {
@@ -395,6 +397,24 @@ export default function BusAttendanceDevice() {
       const prev = studentStatus.current.get(studentId);
       const nextAction: 'board' | 'exit' = prev === 'board' ? 'exit' : 'board';
 
+      // Get current GPS location if available
+      let latitude: number | undefined;
+      let longitude: number | undefined;
+      
+      try {
+        const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, {
+            enableHighAccuracy: true,
+            timeout: 3000,
+            maximumAge: 10000
+          });
+        });
+        latitude = position.coords.latitude;
+        longitude = position.coords.longitude;
+      } catch (geoError) {
+        console.log('Could not get GPS location:', geoError);
+      }
+
       // Record bus boarding - use snake_case for edge function parameters
       await supabase.functions.invoke('record-bus-activity', {
         body: {
@@ -403,6 +423,8 @@ export default function BusAttendanceDevice() {
           action: nextAction,
           location: busData?.bus_number || 'Bus',
           deviceId,
+          latitude,
+          longitude,
           nfc_verified: nfcVerified,
           manual_entry: false
         }
@@ -418,7 +440,9 @@ export default function BusAttendanceDevice() {
         class: '',
         scanTime: now.toLocaleTimeString(),
         action: nextAction,
-        nfcVerified
+        nfcVerified,
+        latitude,
+        longitude
       };
 
       setScannedStudents(prev => [newStudent, ...prev]);
@@ -715,7 +739,7 @@ export default function BusAttendanceDevice() {
                 ) : (
                   scannedStudents.map((student, idx) => (
                     <motion.div
-                      key={student.id}
+                      key={`${student.id}-${idx}`}
                       initial={idx === 0 ? { opacity: 0, x: -20, backgroundColor: 'hsl(var(--primary) / 0.2)' } : { opacity: 1 }}
                       animate={{ opacity: 1, x: 0, backgroundColor: 'transparent' }}
                       className="p-3 rounded-lg border bg-card flex items-center justify-between"
@@ -726,10 +750,29 @@ export default function BusAttendanceDevice() {
                           <p className="font-medium">
                             {language === 'ar' ? student.nameAr : student.name}
                           </p>
-                          <p className="text-xs text-muted-foreground">{student.class}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {student.action === 'board' 
+                              ? (language === 'ar' ? 'صعد' : 'Boarded')
+                              : (language === 'ar' ? 'نزل' : 'Exited')
+                            }
+                          </p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
+                        {student.latitude && student.longitude && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0"
+                            onClick={() => {
+                              const url = `https://www.google.com/maps?q=${student.latitude},${student.longitude}`;
+                              window.open(url, '_blank');
+                            }}
+                            title={language === 'ar' ? 'فتح الموقع' : 'Open Location'}
+                          >
+                            <MapPin className="h-4 w-4 text-primary" />
+                          </Button>
+                        )}
                         {!student.nfcVerified && (
                           <Badge variant="outline" className="text-orange-500">
                             <AlertTriangle className="h-3 w-3 mr-1" />

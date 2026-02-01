@@ -3,8 +3,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { LogIn, LogOut, Clock, MapPin } from 'lucide-react';
+import { LogIn, LogOut, Clock, MapPin, Navigation } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface BoardingHistoryProps {
@@ -19,6 +20,8 @@ interface BoardingLog {
   location: string;
   timestamp: string;
   bus_id: string;
+  latitude?: number;
+  longitude?: number;
   nfc_verified?: boolean;
   manual_entry?: boolean;
 }
@@ -198,12 +201,28 @@ export default function BoardingHistory({ studentId, busId, daysToShow = 7 }: Bo
                             </span>
                           </div>
                           
-                          {log.location && (
-                            <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                              <MapPin className="h-3 w-3" />
-                              {log.location}
-                            </div>
-                          )}
+                          <div className="flex items-center justify-between">
+                            {log.location && (
+                              <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                                <MapPin className="h-3 w-3" />
+                                {log.location}
+                              </div>
+                            )}
+                            {log.latitude && log.longitude && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-7 px-2 text-xs"
+                                onClick={() => {
+                                  const url = `https://www.google.com/maps?q=${log.latitude},${log.longitude}`;
+                                  window.open(url, '_blank');
+                                }}
+                              >
+                                <Navigation className="h-3 w-3 mr-1" />
+                                {language === 'ar' ? 'الموقع' : language === 'hi' ? 'स्थान' : 'Location'}
+                              </Button>
+                            )}
+                          </div>
                         </div>
                       </div>
                     ))}
