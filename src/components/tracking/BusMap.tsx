@@ -134,7 +134,6 @@ export default function BusMap({ busId, studentLocation }: BusMapProps) {
               longitude: payload.new.longitude as number,
             };
             setBusLocation(newLocation);
-            updateBusMarker(newLocation);
           }
         }
       )
@@ -144,6 +143,16 @@ export default function BusMap({ busId, studentLocation }: BusMapProps) {
       supabase.removeChannel(channel);
     };
   }, [busId]);
+
+  // Ensure the marker is placed even if the location loads before the map finishes initializing.
+  // (Race condition: fetch resolves fast, map init resolves slower -> marker never created.)
+  useEffect(() => {
+    if (!busLocation) return;
+    if (mapStatus !== 'ready') return;
+    if (!map.current) return;
+    updateBusMarker(busLocation);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [busLocation, mapStatus]);
 
   // Update student marker when location changes
   useEffect(() => {
@@ -185,7 +194,6 @@ export default function BusMap({ busId, studentLocation }: BusMapProps) {
           longitude: data.longitude,
         };
         setBusLocation(location);
-        updateBusMarker(location);
       }
     } catch (error) {
       console.error('Error loading bus location:', error);
