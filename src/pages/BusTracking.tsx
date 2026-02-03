@@ -52,13 +52,48 @@ export default function BusTracking() {
         if (error) throw error;
         setBuses(data || []);
       } else if (effectiveRole === 'parent') {
-        const { data, error } = await supabase
+        // IMPORTANT: parents' permissions + bus location visibility are based on the
+        // active assignment table (student_bus_assignments), not students.bus_id.
+        const { data: students, error: studentsError } = await supabase
           .from('students')
-          .select('*, buses:bus_id(*)')
+          .select('*')
           .eq('parent_id', user.id);
 
-        if (error) throw error;
-        setChildren(data || []);
+        if (studentsError) throw studentsError;
+
+        const studentIds = (students || []).map((s) => s.id).filter(Boolean);
+
+        // Attach active bus assignment (and bus details) to each child.
+        // Note: some datasets may contain multiple active assignments; we pick the most recent.
+        let assignmentsByStudent = new Map<string, any>();
+        if (studentIds.length > 0) {
+          const { data: assignments, error: assignError } = await supabase
+            .from('student_bus_assignments')
+            .select('student_id, bus_id, created_at, buses(*)')
+            .eq('is_active', true)
+            .in('student_id', studentIds)
+            .order('created_at', { ascending: false });
+
+          if (assignError) throw assignError;
+
+          assignmentsByStudent = new Map();
+          for (const a of assignments || []) {
+            if (!assignmentsByStudent.has(a.student_id)) {
+              assignmentsByStudent.set(a.student_id, a);
+            }
+          }
+        }
+
+        const enrichedChildren = (students || []).map((child) => {
+          const assignment = assignmentsByStudent.get(child.id);
+          return {
+            ...child,
+            bus_id: assignment?.bus_id ?? null,
+            buses: assignment?.buses ?? null,
+          };
+        });
+
+        setChildren(enrichedChildren);
       } else if (effectiveRole === 'student') {
         const { data, error } = await supabase
           .from('students')
