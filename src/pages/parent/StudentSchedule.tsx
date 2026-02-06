@@ -93,7 +93,7 @@ export default function StudentSchedule() {
   }, {} as Record<string, ScheduleItem[]>);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="h-[100dvh] overflow-y-auto overscroll-none bg-background" style={{ WebkitOverflowScrolling: 'touch' }}>
       <PageHeader />
       <div className="h-12" style={{ marginTop: 'env(safe-area-inset-top, 0px)' }} />
 

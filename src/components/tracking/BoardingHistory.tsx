@@ -8,10 +8,18 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { LogIn, LogOut, Clock, MapPin, Navigation } from 'lucide-react';
 import { format } from 'date-fns';
 
+interface StopLocation {
+  name: string;
+  lat: number;
+  lng: number;
+}
+
 interface BoardingHistoryProps {
   studentId: string;
   busId?: string;
   daysToShow?: number; // Default 7 days
+  pickupStop?: StopLocation | null;
+  dropoffStop?: StopLocation | null;
 }
 
 interface BoardingLog {
@@ -26,7 +34,7 @@ interface BoardingLog {
   manual_entry?: boolean;
 }
 
-export default function BoardingHistory({ studentId, busId, daysToShow = 7 }: BoardingHistoryProps) {
+export default function BoardingHistory({ studentId, busId, daysToShow = 7, pickupStop, dropoffStop }: BoardingHistoryProps) {
   const { language } = useLanguage();
   const [logs, setLogs] = useState<BoardingLog[]>([]);
   const [loading, setLoading] = useState(true);
@@ -201,27 +209,57 @@ export default function BoardingHistory({ studentId, busId, daysToShow = 7 }: Bo
                             </span>
                           </div>
                           
-                          <div className="flex items-center justify-between">
+                          <div className="flex items-center flex-wrap gap-1">
                             {log.location && (
                               <div className="flex items-center gap-1 text-sm text-muted-foreground">
                                 <MapPin className="h-3 w-3" />
                                 {log.location}
                               </div>
                             )}
-                            {log.latitude && log.longitude && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-7 px-2 text-xs"
-                                onClick={() => {
-                                  const url = `https://www.google.com/maps?q=${log.latitude},${log.longitude}`;
-                                  window.open(url, '_blank');
-                                }}
-                              >
-                                <Navigation className="h-3 w-3 mr-1" />
-                                {language === 'ar' ? 'الموقع' : language === 'hi' ? 'स्थान' : 'Location'}
-                              </Button>
-                            )}
+                            <div className="flex items-center gap-1 ml-auto">
+                              {log.latitude && log.longitude && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-7 px-2 text-xs"
+                                  onClick={() => {
+                                    const url = `https://www.google.com/maps?q=${log.latitude},${log.longitude}`;
+                                    window.open(url, '_blank');
+                                  }}
+                                >
+                                  <Navigation className="h-3 w-3 mr-1" />
+                                  {language === 'ar' ? 'الموقع' : language === 'hi' ? 'स्थान' : 'GPS'}
+                                </Button>
+                              )}
+                              {(log.action === 'boarded' || log.action === 'board') && pickupStop && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-7 px-2 text-xs"
+                                  onClick={() => {
+                                    const url = `https://www.google.com/maps?q=${pickupStop.lat},${pickupStop.lng}`;
+                                    window.open(url, '_blank');
+                                  }}
+                                >
+                                  <MapPin className="h-3 w-3 mr-1 text-green-600" />
+                                  {language === 'ar' ? 'نقطة الصعود' : language === 'hi' ? 'पिकअप' : 'Pickup'}
+                                </Button>
+                              )}
+                              {(log.action === 'exited' || log.action === 'alight' || log.action === 'alighted') && dropoffStop && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-7 px-2 text-xs"
+                                  onClick={() => {
+                                    const url = `https://www.google.com/maps?q=${dropoffStop.lat},${dropoffStop.lng}`;
+                                    window.open(url, '_blank');
+                                  }}
+                                >
+                                  <MapPin className="h-3 w-3 mr-1 text-orange-600" />
+                                  {language === 'ar' ? 'نقطة النزول' : language === 'hi' ? 'ड्रॉपऑफ' : 'Drop-off'}
+                                </Button>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </div>
