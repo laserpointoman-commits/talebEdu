@@ -27,6 +27,8 @@ export default function StudentBusTracking() {
   const [busAssignment, setBusAssignment] = useState<any>(null);
   const [activeTrip, setActiveTrip] = useState<any>(null);
   const [lastLocation, setLastLocation] = useState<any>(null);
+  const [pickupStop, setPickupStop] = useState<{ name: string; lat: number; lng: number } | null>(null);
+  const [dropoffStop, setDropoffStop] = useState<{ name: string; lat: number; lng: number } | null>(null);
 
   useEffect(() => {
     if (studentId && user) {
@@ -94,9 +96,40 @@ export default function StudentBusTracking() {
           .maybeSingle();
 
         setLastLocation(location);
+
+        // Load route stops to resolve pickup/dropoff coordinates
+        if (assignment.route_id) {
+          const { data: route } = await supabase
+            .from('bus_routes')
+            .select('stops')
+            .eq('id', assignment.route_id)
+            .maybeSingle();
+
+          if (route?.stops && Array.isArray(route.stops)) {
+            const stops = route.stops as Array<{ name: string; name_ar?: string; lat: number; lng: number }>;
+            // Match pickup stop name to route stop for coordinates
+            if (assignment.pickup_stop && stops.length > 0) {
+              const matched = stops.find(s => 
+                s.name.toLowerCase().includes(assignment.pickup_stop.toLowerCase()) ||
+                assignment.pickup_stop.toLowerCase().includes(s.name.toLowerCase())
+              );
+              setPickupStop(matched ? { name: matched.name, lat: matched.lat, lng: matched.lng } : { name: stops[0].name, lat: stops[0].lat, lng: stops[0].lng });
+            }
+            // Match dropoff stop name to route stop for coordinates
+            if (assignment.dropoff_stop && stops.length > 0) {
+              const matched = stops.find(s => 
+                s.name.toLowerCase().includes(assignment.dropoff_stop.toLowerCase()) ||
+                assignment.dropoff_stop.toLowerCase().includes(s.name.toLowerCase())
+              );
+              setDropoffStop(matched ? { name: matched.name, lat: matched.lat, lng: matched.lng } : { name: stops[stops.length - 1].name, lat: stops[stops.length - 1].lat, lng: stops[stops.length - 1].lng });
+            }
+          }
+        }
       } else {
         setActiveTrip(null);
         setLastLocation(null);
+        setPickupStop(null);
+        setDropoffStop(null);
       }
     } catch (error) {
       console.error('Error loading data:', error);
@@ -335,6 +368,8 @@ export default function StudentBusTracking() {
           studentId={studentId} 
           busId={busAssignment?.bus_id}
           daysToShow={7}
+          pickupStop={pickupStop}
+          dropoffStop={dropoffStop}
         />
       )}
 

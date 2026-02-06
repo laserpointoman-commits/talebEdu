@@ -9,6 +9,7 @@ import { Progress } from '@/components/ui/progress';
 import { GraduationCap, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import LogoLoader from '@/components/LogoLoader';
+import PageHeader from '@/components/layouts/PageHeader';
 
 interface Grade {
   id: string;
@@ -104,7 +105,10 @@ export default function StudentGrades() {
   };
 
   return (
-    <div className="space-y-6 p-4 md:p-6 max-w-4xl mx-auto pb-24">
+    <div className="h-[100dvh] overflow-y-auto overscroll-none bg-background" style={{ WebkitOverflowScrolling: 'touch' }}>
+      <PageHeader />
+      <div className="h-12" style={{ marginTop: 'env(safe-area-inset-top, 0px)' }} />
+      <div className="space-y-6 p-4 md:p-6 max-w-4xl mx-auto" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 6rem)' }}>
       {/* Header */}
       <div className="flex items-center gap-4">
         <div className="flex-1">
@@ -181,6 +185,7 @@ export default function StudentGrades() {
             );
           })
         )}
+      </div>
       </div>
     </div>
   );
