@@ -10,6 +10,9 @@ const getTransitionType = (pathname: string): TransitionType => {
   if (pathname === '/' || pathname === '/auth') return 'fade';
   if (pathname.startsWith('/dashboard')) return 'slideUp';
   if (pathname.startsWith('/admin')) return 'slide';
+  // Use fade (opacity-only) for standalone pages like /student/* to avoid
+  // CSS transforms creating a containing block that breaks mobile touch scrolling.
+  if (pathname.startsWith('/student')) return 'fade';
   return 'scale';
 };
 
