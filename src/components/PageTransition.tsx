@@ -57,7 +57,14 @@ export default function PageTransition({ children }: { children: React.ReactNode
   const transitionType = getTransitionType(location.pathname);
   const variant = transitionVariants[transitionType];
 
+  // Standalone pages (e.g. /student/*) manage their own h-[100dvh] scroll
+  // container. Wrapping them in a motion.div risks adding will-change /
+  // transform styles that create a containing block and break mobile touch
+  // scrolling. Skip the animation wrapper for these routes entirely.
+  const isStandalonePage = location.pathname.startsWith('/student');
+
   useEffect(() => {
+    if (isStandalonePage) return; // no loader flash for standalone pages
     setPageLoading(true);
     setShowLoader(true);
 
@@ -70,29 +77,10 @@ export default function PageTransition({ children }: { children: React.ReactNode
       clearTimeout(timer);
       setPageLoading(false);
     };
-  }, [location.pathname, setPageLoading]);
+  }, [location.pathname, setPageLoading, isStandalonePage]);
 
-  if (isNativeAndroid) {
-    return (
-      <>
-        <AnimatePresence mode="wait">
-          {showLoader && (
-            <motion.div
-              key="loader"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm"
-            >
-              <LogoLoader size="medium" text={false} />
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        <div className="min-h-[100dvh]">{children}</div>
-      </>
-    );
+  if (isNativeAndroid || isStandalonePage) {
+    return <div className="min-h-[100dvh]">{children}</div>;
   }
 
   return (
