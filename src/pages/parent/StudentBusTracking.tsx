@@ -230,13 +230,15 @@ export default function StudentBusTracking() {
         </CardContent>
       </Card>
 
-      {/* Live Map */}
-      {activeTrip && busAssignment?.bus_id && (
+      {/* Bus Map - always show when bus is assigned */}
+      {busAssignment?.bus_id && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <MapPin className="h-5 w-5" />
-              {language === 'ar' ? 'الموقع المباشر' : 'Live Location'}
+              {activeTrip
+                ? (language === 'ar' ? 'الموقع المباشر' : 'Live Location')
+                : (language === 'ar' ? 'آخر موقع معروف' : 'Last Known Location')}
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
@@ -249,47 +251,29 @@ export default function StudentBusTracking() {
                 } : undefined}
               />
               {/* Current stop overlay */}
-              <div className="absolute bottom-4 left-4 right-4">
-                <div className="bg-background/90 backdrop-blur p-4 rounded-lg shadow-lg">
-                  <div className="flex items-center gap-2 text-sm">
-                    <MapPin className="h-4 w-4 text-primary" />
-                    <span className="font-medium">
-                      {activeTrip.current_stop || lastLocation?.current_stop || 
-                        (language === 'ar' ? 'في الطريق' : 'On Route')}
-                    </span>
+              {(activeTrip || lastLocation) && (
+                <div className="absolute bottom-4 left-4 right-4">
+                  <div className="bg-background/90 backdrop-blur p-4 rounded-lg shadow-lg">
+                    <div className="flex items-center gap-2 text-sm">
+                      <MapPin className="h-4 w-4 text-primary" />
+                      <span className="font-medium">
+                        {activeTrip?.current_stop || lastLocation?.current_stop || 
+                          (language === 'ar' ? 'في الطريق' : 'On Route')}
+                      </span>
+                    </div>
+                    {activeTrip?.next_stop && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {language === 'ar' ? 'التالي:' : 'Next:'} {activeTrip.next_stop}
+                      </p>
+                    )}
+                    {!activeTrip && lastLocation && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {new Date(lastLocation.timestamp).toLocaleString()}
+                      </p>
+                    )}
                   </div>
-                  {activeTrip.next_stop && (
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {language === 'ar' ? 'التالي:' : 'Next:'} {activeTrip.next_stop}
-                    </p>
-                  )}
                 </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Last Known Location (when no active trip) */}
-      {!activeTrip && lastLocation && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <MapPin className="h-5 w-5" />
-              {language === 'ar' ? 'آخر موقع معروف' : 'Last Known Location'}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-4">
-              <MapPin className="h-8 w-8 text-muted-foreground" />
-              <div>
-                <p className="font-medium">
-                  {lastLocation.current_stop || (language === 'ar' ? 'غير معروف' : 'Unknown')}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  {new Date(lastLocation.timestamp).toLocaleString()}
-                </p>
-              </div>
+              )}
             </div>
           </CardContent>
         </Card>
