@@ -29,6 +29,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import LogoLoader from "@/components/LogoLoader";
 import { nfcService, NFCData } from "@/services/nfcService";
+import { useBusLocationTracking } from "@/hooks/use-bus-location-tracking";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Dialog,
@@ -78,6 +79,9 @@ export default function SupervisorDashboard() {
   const [currentTrip, setCurrentTrip] = useState<any>(null);
   const [lastScanned, setLastScanned] = useState<string | null>(null);
   const [tripType, setTripType] = useState<TripType>(getAutoTripType());
+
+  // Send live GPS while a trip is active
+  useBusLocationTracking({ enabled: isTripActive, busId: busData?.id ?? null });
   const [searchQuery, setSearchQuery] = useState('');
   const [processingStudent, setProcessingStudent] = useState<string | null>(null);
   const [showEndTripWarning, setShowEndTripWarning] = useState(false);
