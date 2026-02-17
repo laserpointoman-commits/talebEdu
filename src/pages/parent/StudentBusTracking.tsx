@@ -139,6 +139,35 @@ export default function StudentBusTracking() {
   };
 
   const setupRealtimeSubscription = (busId: string) => {
+    // Polling fallback for when realtime fails silently
+    let pollTimer: ReturnType<typeof setTimeout> | null = null;
+    let pollInterval = 5000;
+    let cancelled = false;
+
+    const pollLatestLocation = async () => {
+      if (cancelled) return;
+      try {
+        const { data } = await supabase
+          .from('bus_locations')
+          .select('*')
+          .eq('bus_id', busId)
+          .order('timestamp', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (data && !cancelled) {
+          setLastLocation((prev: any) => {
+            if (prev?.id === data.id) return prev;
+            return data;
+          });
+        }
+      } catch { /* ignore */ }
+      if (!cancelled) {
+        pollTimer = setTimeout(pollLatestLocation, pollInterval);
+      }
+    };
+
+    pollTimer = setTimeout(pollLatestLocation, pollInterval);
+
     const channel = supabase
       .channel(`bus-tracking-${busId}`)
       .on(
@@ -150,7 +179,6 @@ export default function StudentBusTracking() {
           filter: `bus_id=eq.${busId}`,
         },
         () => {
-          // When a trip starts/ends, refresh to show/hide the live map
           loadData();
         }
       )
@@ -163,12 +191,18 @@ export default function StudentBusTracking() {
           filter: `bus_id=eq.${busId}`,
         },
         (payload) => {
-          if (payload.new) setLastLocation(payload.new);
+          if (payload.new) {
+            setLastLocation(payload.new);
+            // Reset poll interval when realtime works
+            pollInterval = 10000;
+          }
         }
       )
       .subscribe();
 
     return () => {
+      cancelled = true;
+      if (pollTimer) clearTimeout(pollTimer);
       supabase.removeChannel(channel);
     };
   };
@@ -245,6 +279,8 @@ export default function StudentBusTracking() {
             <div className="h-[350px] relative">
               <BusMap 
                 busId={busAssignment.bus_id}
+                busNumber={busAssignment.buses?.bus_number}
+                isLive={!!activeTrip}
                 studentLocation={student?.home_latitude && student?.home_longitude ? {
                   lat: student.home_latitude,
                   lng: student.home_longitude

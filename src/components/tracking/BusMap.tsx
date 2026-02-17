@@ -9,10 +9,12 @@ import { useLanguage } from '@/contexts/LanguageContext';
 
 interface BusMapProps {
   busId: string;
+  busNumber?: string;
+  isLive?: boolean;
   studentLocation?: { lat: number; lng: number };
 }
 
-export default function BusMap({ busId, studentLocation }: BusMapProps) {
+export default function BusMap({ busId, busNumber, isLive, studentLocation }: BusMapProps) {
   const { language } = useLanguage();
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
@@ -205,23 +207,62 @@ export default function BusMap({ busId, studentLocation }: BusMapProps) {
     if (!map.current) return;
 
     if (!busMarker.current) {
-      // Root is zero-size; anchor='center' means GPS point is exactly at (0,0)
-      const root = document.createElement('div');
-      root.className = 'bus-marker-root';
-      root.style.position = 'relative';
-      root.style.width = '0';
-      root.style.height = '0';
+      // Build a marker matching the admin AllBusesMap style
+      const container = document.createElement('div');
+      container.className = 'bus-marker';
+      container.style.display = 'flex';
+      container.style.flexDirection = 'column';
+      container.style.alignItems = 'center';
 
-      // Visible marker positioned above the anchor point
-      const wrapper = document.createElement('div');
-      wrapper.style.position = 'absolute';
-      wrapper.style.left = '50%';
-      wrapper.style.bottom = '0';
-      wrapper.style.transform = 'translateX(-50%)';
-      wrapper.style.display = 'flex';
-      wrapper.style.flexDirection = 'column';
-      wrapper.style.alignItems = 'center';
+      // Label above pin
+      const labelWrap = document.createElement('div');
+      labelWrap.style.marginBottom = '6px';
+      labelWrap.style.display = 'flex';
+      labelWrap.style.flexDirection = 'column';
+      labelWrap.style.alignItems = 'center';
+      labelWrap.style.pointerEvents = 'none';
 
+      if (busNumber) {
+        const label = document.createElement('div');
+        label.textContent = `${language === 'ar' ? 'حافلة' : 'Bus'} ${busNumber}`;
+        label.style.background = 'hsl(var(--card))';
+        label.style.color = 'hsl(var(--card-foreground))';
+        label.style.padding = '5px 8px';
+        label.style.borderRadius = '6px';
+        label.style.fontSize = '12px';
+        label.style.fontWeight = '700';
+        label.style.whiteSpace = 'nowrap';
+        label.style.border = '1px solid hsl(var(--border))';
+        label.style.boxShadow = '0 4px 12px hsl(var(--foreground) / 0.15)';
+
+        const labelArrow = document.createElement('div');
+        labelArrow.style.width = '0';
+        labelArrow.style.height = '0';
+        labelArrow.style.borderLeft = '5px solid transparent';
+        labelArrow.style.borderRight = '5px solid transparent';
+        labelArrow.style.borderTop = '5px solid hsl(var(--card))';
+        labelArrow.style.marginTop = '-1px';
+
+        labelWrap.appendChild(label);
+        labelWrap.appendChild(labelArrow);
+      }
+
+      if (isLive) {
+        const tag = document.createElement('div');
+        tag.textContent = language === 'ar' ? 'مباشر' : 'LIVE';
+        tag.style.marginTop = '2px';
+        tag.style.padding = '2px 6px';
+        tag.style.borderRadius = '4px';
+        tag.style.fontSize = '9px';
+        tag.style.fontWeight = '600';
+        tag.style.background = 'hsl(142 71% 45%)';
+        tag.style.color = '#fff';
+        tag.style.textTransform = 'uppercase';
+        tag.style.letterSpacing = '0.5px';
+        labelWrap.appendChild(tag);
+      }
+
+      // Pin circle
       const pinSize = 36;
       const pinWrap = document.createElement('div');
       pinWrap.style.position = 'relative';
@@ -250,6 +291,7 @@ export default function BusMap({ busId, studentLocation }: BusMapProps) {
       pin.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M4 16c0 .88.39 1.67 1 2.22V20c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h8v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1.78c.61-.55 1-1.34 1-2.22V6c0-3.5-3.58-4-8-4s-8 .5-8 4v10zm3.5 1c-.83 0-1.5-.67-1.5-1.5S6.67 14 7.5 14s1.5.67 1.5 1.5S8.33 17 7.5 17zm9 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM18 11H6V6h12v5z"/></svg>`;
       pinWrap.appendChild(pin);
 
+      // Pointer triangle
       const pointer = document.createElement('div');
       pointer.style.width = '0';
       pointer.style.height = '0';
@@ -258,19 +300,9 @@ export default function BusMap({ busId, studentLocation }: BusMapProps) {
       pointer.style.borderTop = '10px solid hsl(var(--primary))';
       pointer.style.marginTop = '-1px';
 
-      const dot = document.createElement('div');
-      dot.style.width = '10px';
-      dot.style.height = '10px';
-      dot.style.borderRadius = '9999px';
-      dot.style.background = 'hsl(var(--background))';
-      dot.style.border = '2px solid hsl(var(--primary))';
-      dot.style.boxShadow = '0 1px 3px hsl(var(--foreground) / 0.3)';
-      dot.style.marginTop = '-1px';
-
-      wrapper.appendChild(pinWrap);
-      wrapper.appendChild(pointer);
-      wrapper.appendChild(dot);
-      root.appendChild(wrapper);
+      container.appendChild(labelWrap);
+      container.appendChild(pinWrap);
+      container.appendChild(pointer);
 
       // Add pulse animation keyframes if not present
       if (!document.getElementById('bus-marker-pulse-style')) {
@@ -285,9 +317,8 @@ export default function BusMap({ busId, studentLocation }: BusMapProps) {
         document.head.appendChild(style);
       }
 
-      busMarker.current = new mapboxgl.Marker({ element: root, anchor: 'center' })
+      busMarker.current = new mapboxgl.Marker({ element: container, anchor: 'bottom' })
         .setLngLat([location.longitude, location.latitude])
-        .setPopup(new mapboxgl.Popup().setText(language === 'ar' ? 'موقع الحافلة' : language === 'hi' ? 'बस स्थान' : 'Bus Location'))
         .addTo(map.current);
     } else {
       busMarker.current.setLngLat([location.longitude, location.latitude]);
