@@ -171,47 +171,56 @@ const FeasibilityPrint = () => {
   );
 
   // Styled table for dark theme
-  const DarkTable = ({ headers, rows, highlightLastRow = false }: { headers: string[]; rows: string[][]; highlightLastRow?: boolean }) => (
-    <table style={{ width: "100%", borderCollapse: "separate", borderSpacing: "0 4px", fontSize: "12px" }}>
-      <thead>
-        <tr>
-          {headers.map((h, j) => (
-            <th key={j} style={{
-              padding: "10px 12px",
-              textAlign: "center",
-              background: "linear-gradient(135deg, #3b82f6, #2563eb)",
-              color: "white",
-              fontWeight: "bold",
-              borderRadius: j === 0 ? "8px 0 0 8px" : j === headers.length - 1 ? "0 8px 8px 0" : "0",
-            }}>{h}</th>
-          ))}
-        </tr>
-      </thead>
-      <tbody>
-        {rows.map((row, i) => {
-          const isLast = highlightLastRow && i === rows.length - 1;
-          return (
-            <tr key={i}>
-              {row.map((cell, j) => (
-                <td key={j} style={{
-                  padding: "9px 12px",
+  const DarkTable = ({ headers, rows, highlightLastRow = false, compact = false }: { headers: string[]; rows: string[][]; highlightLastRow?: boolean; compact?: boolean }) => {
+    const cellPad = compact ? "6px 5px" : "10px 12px";
+    const dataPad = compact ? "5px 5px" : "9px 12px";
+    const fontSize = compact ? "10px" : "12px";
+    return (
+      <div style={{ width: "100%", overflowX: "auto" }}>
+        <table style={{ width: "100%", borderCollapse: "separate", borderSpacing: "0 4px", fontSize, minWidth: compact ? "680px" : undefined }}>
+          <thead>
+            <tr>
+              {headers.map((h, j) => (
+                <th key={j} style={{
+                  padding: cellPad,
                   textAlign: "center",
-                  background: isLast
-                    ? "linear-gradient(135deg, #3b82f6, #2563eb)"
-                    : i % 2 === 0
-                      ? "rgba(255,255,255,0.05)"
-                      : "rgba(255,255,255,0.02)",
-                  color: isLast ? "white" : j === 0 ? "#93c5fd" : "#e2e8f0",
-                  fontWeight: isLast || j === 0 || j === row.length - 1 ? "bold" : "normal",
-                  borderRadius: j === 0 ? "8px 0 0 8px" : j === row.length - 1 ? "0 8px 8px 0" : "0",
-                }}>{cell}</td>
+                  background: "linear-gradient(135deg, #3b82f6, #2563eb)",
+                  color: "white",
+                  fontWeight: "bold",
+                  whiteSpace: "nowrap",
+                  borderRadius: j === 0 ? "8px 0 0 8px" : j === headers.length - 1 ? "0 8px 8px 0" : "0",
+                }}>{h}</th>
               ))}
             </tr>
-          );
-        })}
-      </tbody>
-    </table>
-  );
+          </thead>
+          <tbody>
+            {rows.map((row, i) => {
+              const isLast = highlightLastRow && i === rows.length - 1;
+              return (
+                <tr key={i}>
+                  {row.map((cell, j) => (
+                    <td key={j} style={{
+                      padding: dataPad,
+                      textAlign: "center",
+                      whiteSpace: "nowrap",
+                      background: isLast
+                        ? "linear-gradient(135deg, #3b82f6, #2563eb)"
+                        : i % 2 === 0
+                          ? "rgba(255,255,255,0.05)"
+                          : "rgba(255,255,255,0.02)",
+                      color: isLast ? "white" : j === 0 ? "#93c5fd" : "#e2e8f0",
+                      fontWeight: isLast || j === 0 || j === row.length - 1 ? "bold" : "normal",
+                      borderRadius: j === 0 ? "8px 0 0 8px" : j === row.length - 1 ? "0 8px 8px 0" : "0",
+                    }}>{cell}</td>
+                  ))}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    );
+  };
 
   // Feature item with icon
   const FeatureItem = ({ title, desc, isRtl = false }: { title: string; desc: string; isRtl?: boolean }) => (
@@ -551,6 +560,7 @@ const FeasibilityPrint = () => {
                 </h3>
 
                 <DarkTable
+                  compact
                   headers={["السنة", "الطلاب", "المدارس", "اشتراك الطالب", "الباصات", "NFC", "القرطاسية", "الإجمالي"]}
                   rows={[
                     ["1", "25,000", "50", "625,000", "30,000", "42,500", "312,500", "1,010,000"],
@@ -982,6 +992,7 @@ const FeasibilityPrint = () => {
               </h3>
 
               <DarkTable
+                compact
                 headers={["Year", "Students", "Schools", "Subscriptions", "Buses", "NFC", "Stationery", "Total"]}
                 rows={[
                   ["1", "25,000", "50", "625,000", "30,000", "42,500", "312,500", "1,010,000"],
