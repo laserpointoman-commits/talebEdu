@@ -181,8 +181,8 @@ const FeasibilityStudy = () => {
   );
 
   return (
-    <div className="h-[100dvh] overflow-y-auto overscroll-none" style={{ WebkitOverflowScrolling: 'touch' }}>
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900" dir="rtl">
+    <div className="min-h-[100dvh] overflow-y-auto overscroll-none" style={{ WebkitOverflowScrolling: 'touch' }}>
+    <div className="min-h-screen w-full bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900" dir="rtl">
       {/* Hidden Arabic PDF Content */}
       <div style={{ position: "fixed", insetInlineStart: "-9999px", top: 0, overflow: "hidden", pointerEvents: "none" }}>
         <div ref={arabicPdfRef} dir="rtl" style={{ fontFamily: "Geeza Pro, Noto Naskh Arabic, Arial, sans-serif", backgroundColor: "white" }}>
