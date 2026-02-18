@@ -36,9 +36,17 @@ const FeasibilityPrint = () => {
         const originalZoom = page.style.zoom;
         page.style.zoom = '1';
         
+        // Temporarily boost font sizes for PDF readability
         const allElements = page.querySelectorAll('*');
+        const originalFontSizes: string[] = [];
         allElements.forEach((el) => {
           const htmlEl = el as HTMLElement;
+          const computed = window.getComputedStyle(htmlEl);
+          originalFontSizes.push(htmlEl.style.fontSize);
+          const currentSize = parseFloat(computed.fontSize);
+          if (currentSize > 0) {
+            htmlEl.style.fontSize = `${currentSize * 1.4}px`;
+          }
           htmlEl.style.letterSpacing = 'normal';
           htmlEl.style.wordWrap = 'normal';
           htmlEl.style.fontFeatureSettings = '"liga" 0';
@@ -53,9 +61,12 @@ const FeasibilityPrint = () => {
           logging: false,
         });
         
+        // Restore original styles
         page.style.zoom = originalZoom;
+        let idx = 0;
         allElements.forEach((el) => {
           const htmlEl = el as HTMLElement;
+          htmlEl.style.fontSize = originalFontSizes[idx++];
           htmlEl.style.letterSpacing = '';
           htmlEl.style.wordWrap = '';
           htmlEl.style.fontFeatureSettings = '';
