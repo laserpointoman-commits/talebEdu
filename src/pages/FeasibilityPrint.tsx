@@ -1,14 +1,17 @@
 import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Download } from "lucide-react";
+import { ArrowRight, Download, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import talebEduLogo from "@/assets/talebedu-app-icon.jpg";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 
 const PHONE_NUMBER = "+968 9656 4540";
 
 const FeasibilityPrint = () => {
   const navigate = useNavigate();
   const [language, setLanguage] = useState<"ar" | "en">("ar");
+  const [isGenerating, setIsGenerating] = useState(false);
   const [screenWidth, setScreenWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1024);
 
   useEffect(() => {
@@ -18,60 +21,64 @@ const FeasibilityPrint = () => {
     return () => window.removeEventListener("resize", updateWidth);
   }, []);
 
-  const handleDownloadPDF = () => {
-    // Temporarily fix DOM for printing: remove height constraints
-    const root = document.getElementById('feasibility-print-root');
-    const rootDiv = document.getElementById('root');
-    
-    // Save original styles
-    const originalRootStyle = root?.getAttribute('style') || '';
-    const originalRootClass = root?.className || '';
-    const originalBodyOverflow = document.body.style.overflow;
-    const originalHtmlOverflow = document.documentElement.style.overflow;
-    const originalRootDivOverflow = rootDiv?.style.overflow || '';
-    const originalRootDivHeight = rootDiv?.style.height || '';
-    
-    // Override all height constraints
-    if (root) {
-      root.style.height = 'auto';
-      root.style.overflow = 'visible';
-      root.style.maxHeight = 'none';
-      root.className = root.className.replace('h-[100dvh]', '').replace('overflow-y-auto', '').replace('overscroll-none', '');
-    }
-    if (rootDiv) {
-      rootDiv.style.overflow = 'visible';
-      rootDiv.style.height = 'auto';
-    }
-    document.body.style.overflow = 'visible';
-    document.documentElement.style.overflow = 'visible';
-    
-    // Reset zoom on all print pages
-    const pages = document.querySelectorAll('.print-page') as NodeListOf<HTMLElement>;
-    const originalZooms: string[] = [];
-    pages.forEach((page, i) => {
-      originalZooms[i] = page.style.zoom || '';
-      page.style.zoom = '1';
-    });
+  const handleDownloadPDF = async () => {
+    setIsGenerating(true);
+    try {
+      const pages = document.querySelectorAll('.print-page');
+      if (pages.length === 0) return;
 
-    // Print
-    setTimeout(() => {
-      window.print();
-      
-      // Restore everything
-      if (root) {
-        root.setAttribute('style', originalRootStyle);
-        root.className = originalRootClass;
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      const pdfWidth = 210;
+      const pdfHeight = 297;
+
+      for (let i = 0; i < pages.length; i++) {
+        const page = pages[i] as HTMLElement;
+        
+        // Temporarily reset zoom for accurate capture
+        const originalZoom = page.style.zoom;
+        page.style.zoom = '1';
+        
+        // Apply Arabic text fixes for html2canvas
+        const allElements = page.querySelectorAll('*');
+        allElements.forEach((el) => {
+          const htmlEl = el as HTMLElement;
+          htmlEl.style.letterSpacing = 'normal';
+          htmlEl.style.wordWrap = 'normal';
+          htmlEl.style.fontFeatureSettings = '"liga" 0';
+        });
+        
+        const canvas = await html2canvas(page, {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: null,
+          width: 794,
+          height: 1123,
+          logging: false,
+        });
+        
+        // Restore zoom
+        page.style.zoom = originalZoom;
+        
+        // Remove the temporary fixes (they'll be re-applied from CSS)
+        allElements.forEach((el) => {
+          const htmlEl = el as HTMLElement;
+          htmlEl.style.letterSpacing = '';
+          htmlEl.style.wordWrap = '';
+          htmlEl.style.fontFeatureSettings = '';
+        });
+
+        const imgData = canvas.toDataURL('image/jpeg', 0.95);
+        
+        if (i > 0) pdf.addPage();
+        pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
       }
-      if (rootDiv) {
-        rootDiv.style.overflow = originalRootDivOverflow;
-        rootDiv.style.height = originalRootDivHeight;
-      }
-      document.body.style.overflow = originalBodyOverflow;
-      document.documentElement.style.overflow = originalHtmlOverflow;
-      pages.forEach((page, i) => {
-        page.style.zoom = originalZooms[i];
-      });
-    }, 100);
+
+      pdf.save(language === 'ar' ? 'دراسة_جدوى_TalebEdu.pdf' : 'TalebEdu_Feasibility_Study.pdf');
+    } catch (error) {
+      console.error('PDF generation error:', error);
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const pageWidthPx = 794; // 210mm ≈ 794px
@@ -255,9 +262,9 @@ const FeasibilityPrint = () => {
               </button>
             </div>
 
-            <Button onClick={handleDownloadPDF} className="bg-green-600 hover:bg-green-700 text-white">
-              <Download className="w-5 h-5 ml-2" />
-              {language === 'ar' ? 'تحميل PDF' : 'Download PDF'}
+            <Button onClick={handleDownloadPDF} disabled={isGenerating} className="bg-green-600 hover:bg-green-700 text-white">
+              {isGenerating ? <Loader2 className="w-5 h-5 ml-2 animate-spin" /> : <Download className="w-5 h-5 ml-2" />}
+              {isGenerating ? (language === 'ar' ? 'جاري التحميل...' : 'Generating...') : (language === 'ar' ? 'تحميل PDF' : 'Download PDF')}
             </Button>
           </div>
         </div>
