@@ -31,49 +31,51 @@ const FeasibilityPrint = () => {
       const pdfWidth = 210;
       const pdfHeight = 297;
 
-      const zoomFactor = 1.8;
-      const captureW = Math.round(794 * zoomFactor);
-      const captureH = Math.round(1123 * zoomFactor);
-
       for (let i = 0; i < pages.length; i++) {
         const page = pages[i] as HTMLElement;
         const originalZoom = page.style.zoom;
-        const originalWidth = page.style.width;
-        const originalHeight = page.style.height;
-        const originalMinHeight = page.style.minHeight;
-        const originalMaxHeight = page.style.maxHeight;
-
-        // Zoom up content so fonts are larger relative to A4
-        page.style.zoom = String(zoomFactor);
-        page.style.width = `${captureW}px`;
-        page.style.height = `${captureH}px`;
-        page.style.minHeight = `${captureH}px`;
-        page.style.maxHeight = `${captureH}px`;
+        page.style.zoom = '1';
         
+        // Temporarily boost all font sizes for PDF readability
+        const fontMap = new Map<HTMLElement, string>();
         const allElements = page.querySelectorAll('*');
         allElements.forEach((el) => {
           const htmlEl = el as HTMLElement;
+          const computed = window.getComputedStyle(htmlEl);
+          const currentSize = parseFloat(computed.fontSize);
+          if (currentSize > 0) {
+            fontMap.set(htmlEl, htmlEl.style.fontSize);
+            htmlEl.style.fontSize = `${Math.round(currentSize * 1.45)}px`;
+          }
           htmlEl.style.letterSpacing = 'normal';
           htmlEl.style.wordWrap = 'normal';
           htmlEl.style.fontFeatureSettings = '"liga" 0';
         });
         
+        // Also boost the page root font
+        const origPageFont = page.style.fontSize;
+        const pageComputed = window.getComputedStyle(page);
+        const pageFontSize = parseFloat(pageComputed.fontSize);
+        if (pageFontSize > 0) {
+          page.style.fontSize = `${Math.round(pageFontSize * 1.45)}px`;
+        }
+        
         const canvas = await html2canvas(page, {
           scale: 2,
           useCORS: true,
           backgroundColor: null,
-          width: captureW,
-          height: captureH,
+          width: 794,
+          height: 1123,
           logging: false,
         });
         
+        // Restore everything
         page.style.zoom = originalZoom;
-        page.style.width = originalWidth;
-        page.style.height = originalHeight;
-        page.style.minHeight = originalMinHeight;
-        page.style.maxHeight = originalMaxHeight;
+        page.style.fontSize = origPageFont;
         allElements.forEach((el) => {
           const htmlEl = el as HTMLElement;
+          const origFont = fontMap.get(htmlEl);
+          htmlEl.style.fontSize = origFont || '';
           htmlEl.style.letterSpacing = '';
           htmlEl.style.wordWrap = '';
           htmlEl.style.fontFeatureSettings = '';
