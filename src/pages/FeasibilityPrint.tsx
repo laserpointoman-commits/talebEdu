@@ -1,14 +1,17 @@
 import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Download } from "lucide-react";
+import { ArrowRight, Download, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import talebEduLogo from "@/assets/talebedu-app-icon.jpg";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 
 const PHONE_NUMBER = "+968 9656 4540";
 
 const FeasibilityPrint = () => {
   const navigate = useNavigate();
   const [language, setLanguage] = useState<"ar" | "en">("ar");
+  const [isGenerating, setIsGenerating] = useState(false);
   const [screenWidth, setScreenWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1024);
 
   useEffect(() => {
@@ -18,8 +21,47 @@ const FeasibilityPrint = () => {
     return () => window.removeEventListener("resize", updateWidth);
   }, []);
 
-  const handleDownloadPDF = () => {
-    window.print();
+  const handleDownloadPDF = async () => {
+    setIsGenerating(true);
+    try {
+      const pages = document.querySelectorAll('.print-page');
+      if (pages.length === 0) return;
+
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      const pdfWidth = 210;
+      const pdfHeight = 297;
+
+      for (let i = 0; i < pages.length; i++) {
+        const page = pages[i] as HTMLElement;
+        
+        // Temporarily reset zoom for accurate capture
+        const originalZoom = page.style.zoom;
+        page.style.zoom = '1';
+        
+        const canvas = await html2canvas(page, {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: null,
+          width: 794,  // 210mm in px
+          height: 1123, // 297mm in px
+          logging: false,
+        });
+        
+        // Restore zoom
+        page.style.zoom = originalZoom;
+
+        const imgData = canvas.toDataURL('image/jpeg', 0.95);
+        
+        if (i > 0) pdf.addPage();
+        pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+      }
+
+      pdf.save(language === 'ar' ? 'دراسة_جدوى_TalebEdu.pdf' : 'TalebEdu_Feasibility_Study.pdf');
+    } catch (error) {
+      console.error('PDF generation error:', error);
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const pageWidthPx = 794; // 210mm ≈ 794px
@@ -203,9 +245,9 @@ const FeasibilityPrint = () => {
               </button>
             </div>
 
-            <Button onClick={handleDownloadPDF} className="bg-green-600 hover:bg-green-700 text-white">
-              <Download className="w-5 h-5 ml-2" />
-              {language === 'ar' ? 'تحميل PDF' : 'Download PDF'}
+            <Button onClick={handleDownloadPDF} disabled={isGenerating} className="bg-green-600 hover:bg-green-700 text-white">
+              {isGenerating ? <Loader2 className="w-5 h-5 ml-2 animate-spin" /> : <Download className="w-5 h-5 ml-2" />}
+              {isGenerating ? (language === 'ar' ? 'جاري التحميل...' : 'Generating...') : (language === 'ar' ? 'تحميل PDF' : 'Download PDF')}
             </Button>
           </div>
         </div>
