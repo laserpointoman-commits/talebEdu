@@ -368,13 +368,13 @@ const FeasibilityPrint = () => {
                       marginBottom: "8px",
                       borderRadius: "6px",
                       display: "flex",
-                      flexDirection: "row-reverse",
                       alignItems: "center",
                       gap: "10px",
+                      direction: "rtl",
                     }}
                   >
-                    <span style={{ fontWeight: "bold", color: "#1e293b", flex: 1, textAlign: "right" }}>{title}</span>
-                    <span style={{ color: "#6b7280", fontSize: "13px", flexShrink: 0 }}>{desc}</span>
+                    <span style={{ fontWeight: "bold", color: "#1e293b", whiteSpace: "nowrap" }}>{title}</span>
+                    <span style={{ flex: 1, color: "#6b7280", fontSize: "13px" }}>{desc}</span>
                     <span style={{ color: "#10b981", flexShrink: 0 }}>✓</span>
                   </div>
                 ))}
