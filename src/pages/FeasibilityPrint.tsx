@@ -286,7 +286,7 @@ const FeasibilityPrint = () => {
               <LogoImage size="120px" style={{ marginBottom: "30px" }} />
               <GlowingTitle size="52px" />
               <h2 style={{ fontSize: "28px", marginBottom: "20px", color: "#60a5fa" }}>دراسة جدوى</h2>
-              <p style={{ fontSize: "16px", marginBottom: "10px" }}>تطبيق شامل لإدارة المدارس</p>
+              <p style={{ fontSize: "16px", marginBottom: "10px" }}>نظام آمان و متابعة الطلاب الذكي للمدارس و اولياء الامور</p>
               <p style={{ fontSize: "14px", color: "#94a3b8" }}>المحفظة الإلكترونية | البوابات الذكية | المتجر الرقمي</p>
 
               <div
