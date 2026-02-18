@@ -546,7 +546,7 @@ const FeasibilityPrint = () => {
               </div>
 
               <div style={{ textAlign: "right" }}>
-                <h3 style={{ fontSize: "16px", fontWeight: "bold", marginBottom: "14px", color: "#60a5fa", textAlign: "right", direction: "rtl" }}>
+                <h3 style={{ fontSize: "16px", fontWeight: "bold", marginBottom: "14px", color: "#60a5fa", textAlign: "right", direction: "rtl", paddingLeft: "8px", paddingRight: "8px", wordBreak: "break-word" as const }}>
                   أ) الإيرادات السنوية - المدارس الخاصة فقط (ر.ع)
                 </h3>
 
