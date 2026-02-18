@@ -27,6 +27,18 @@ const FeasibilityPrint = () => {
       const pagesWrapper = document.querySelector('.print-pages-wrapper');
       if (!pagesWrapper) return;
 
+      // Ensure Arabic font is loaded before rendering
+      const fontLink = document.createElement('link');
+      fontLink.href = 'https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@400;700&display=swap';
+      fontLink.rel = 'stylesheet';
+      document.head.appendChild(fontLink);
+      await new Promise(r => setTimeout(r, 500));
+      // Wait for font to be ready
+      try {
+        await document.fonts.load('16px "Noto Naskh Arabic"');
+        await document.fonts.ready;
+      } catch (_) { /* font API may not be available */ }
+
       const container = document.createElement('div');
       container.style.position = 'fixed';
       container.style.left = '0';
@@ -35,15 +47,26 @@ const FeasibilityPrint = () => {
       container.style.zIndex = '999999';
       container.style.background = 'white';
       container.style.overflow = 'visible';
+      container.style.fontFamily = "'Noto Naskh Arabic', 'Geeza Pro', Arial, sans-serif";
 
       const clone = pagesWrapper.cloneNode(true) as HTMLElement;
       clone.style.padding = '0';
       clone.style.margin = '0';
+      clone.style.fontFamily = "'Noto Naskh Arabic', 'Geeza Pro', Arial, sans-serif";
       const pages = clone.querySelectorAll('.print-page');
       pages.forEach((page: Element) => {
         (page as HTMLElement).style.zoom = '1';
         (page as HTMLElement).style.margin = '0 auto';
         (page as HTMLElement).style.boxShadow = 'none';
+        (page as HTMLElement).style.fontFamily = "'Noto Naskh Arabic', 'Geeza Pro', Arial, sans-serif";
+      });
+      // Force all text elements to use the Arabic font
+      const allElements = clone.querySelectorAll('*');
+      allElements.forEach((el: Element) => {
+        const htmlEl = el as HTMLElement;
+        if (htmlEl.style) {
+          htmlEl.style.fontFamily = "'Noto Naskh Arabic', 'Geeza Pro', Arial, sans-serif";
+        }
       });
       container.appendChild(clone);
       document.body.appendChild(container);
@@ -54,7 +77,7 @@ const FeasibilityPrint = () => {
         img.onload = () => resolve();
         img.onerror = () => resolve();
       })));
-      await new Promise(r => setTimeout(r, 300));
+      await new Promise(r => setTimeout(r, 500));
 
       const filename = language === 'ar'
         ? 'TalebEdu_Feasibility_Study_AR_2026.pdf'
@@ -65,13 +88,14 @@ const FeasibilityPrint = () => {
         filename,
         image: { type: 'png' as const, quality: 1 },
         html2canvas: {
-          scale: 3,
+          scale: 2,
           useCORS: true,
           logging: false,
           allowTaint: true,
           backgroundColor: '#ffffff',
           windowWidth: 794,
           windowHeight: 1123,
+          letterRendering: true,
         },
         jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const },
         pagebreak: { mode: ['css'] as const },
@@ -79,6 +103,7 @@ const FeasibilityPrint = () => {
 
       await html2pdf().set(opt).from(clone).save();
       if (container.parentNode) container.parentNode.removeChild(container);
+      fontLink.remove();
     } catch (error) {
       console.error('PDF generation failed:', error);
     } finally {
