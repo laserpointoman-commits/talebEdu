@@ -999,8 +999,8 @@ const FeasibilityPrint = () => {
                 <span style={{ fontSize: "20px", fontWeight: "bold", color: "#93c5fd" }}>Project Scope</span>
               </div>
 
-              <div style={glassCard}>
-                <table style={{ width: "100%", borderCollapse: "separate", borderSpacing: "0 6px" }}>
+              <div style={{ ...glassCard, padding: "14px", marginBottom: "12px" }}>
+                <table style={{ width: "100%", borderCollapse: "separate", borderSpacing: "0 4px", fontSize: "12px" }}>
                   <tbody>
                     {[
                       ["Target Segment", "Private Schools + Government Schools"],
@@ -1012,25 +1012,25 @@ const FeasibilityPrint = () => {
                       ["Canteen per School", "1 canteen"],
                     ].map(([label, value], i) => (
                       <tr key={i}>
-                        <td style={{ padding: "10px 14px", fontWeight: "bold", color: "#60a5fa", background: "rgba(255,255,255,0.04)", borderRadius: "8px 0 0 8px" }}>{label}</td>
-                        <td style={{ padding: "10px 14px", color: "#e2e8f0", background: "rgba(255,255,255,0.04)", borderRadius: "0 8px 8px 0" }}>{value}</td>
+                        <td style={{ padding: "7px 10px", fontWeight: "bold", color: "#60a5fa", background: "rgba(255,255,255,0.04)", borderRadius: "8px 0 0 8px" }}>{label}</td>
+                        <td style={{ padding: "7px 10px", color: "#e2e8f0", background: "rgba(255,255,255,0.04)", borderRadius: "0 8px 8px 0" }}>{value}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
 
-              <h3 style={{ fontSize: "17px", fontWeight: "bold", marginBottom: "14px", color: "#93c5fd" }}>Services Offered:</h3>
-              <div style={glassCard}>
+              <h3 style={{ fontSize: "15px", fontWeight: "bold", marginBottom: "10px", color: "#93c5fd" }}>Services Offered:</h3>
+              <div style={{ ...glassCard, padding: "14px" }}>
                 {[
                   "Annual student subscription (Bus, Gate, Canteen, Wallet, Grade tracking)",
                   "Sale of additional NFC wristbands",
                   "Private label stationery store",
-                  "Internal messaging system for communication between parents, teachers, and administration",
+                  "Internal messaging for parents, teachers & administration",
                 ].map((text, i) => (
-                  <div key={i} style={{ marginBottom: "10px", display: "flex", alignItems: "flex-start", gap: "10px" }}>
-                    <span style={{ color: "#3b82f6", fontWeight: "bold", fontSize: "14px" }}>{i + 1}.</span>
-                    <span style={{ flex: 1, color: "#e2e8f0", fontSize: "14px" }}>{text}</span>
+                  <div key={i} style={{ marginBottom: "6px", display: "flex", alignItems: "flex-start", gap: "8px" }}>
+                    <span style={{ color: "#3b82f6", fontWeight: "bold", fontSize: "12px" }}>{i + 1}.</span>
+                    <span style={{ flex: 1, color: "#e2e8f0", fontSize: "12px" }}>{text}</span>
                   </div>
                 ))}
               </div>
@@ -1269,13 +1269,13 @@ const FeasibilityPrint = () => {
             >
               <div style={{ position: "absolute", top: "-40px", left: "-40px", width: "160px", height: "160px", borderRadius: "50%", background: "rgba(16,185,129,0.06)" }} />
 
-              <div style={{ textAlign: "center", marginBottom: "28px" }}>
-                <LogoImage size="80px" style={{ marginBottom: "16px" }} />
-                <h1 style={{ fontSize: "28px", fontWeight: "bold", marginBottom: "8px", color: "#93c5fd" }}>Conclusion & Recommendation</h1>
+              <div style={{ textAlign: "center", marginBottom: "20px" }}>
+                <LogoImage size="70px" style={{ marginBottom: "12px" }} />
+                <h1 style={{ fontSize: "24px", fontWeight: "bold", marginBottom: "6px", color: "#93c5fd" }}>Conclusion & Recommendation</h1>
                 <div style={accentLine} />
               </div>
 
-              <div style={{ ...glassCard, marginBottom: "24px" }}>
+              <div style={{ ...glassCard, padding: "16px", marginBottom: "18px" }}>
                 {[
                   "TalebEdu is an innovative and unique project in Oman",
                   "Capable of generating stable income covering the loan",
@@ -1284,8 +1284,8 @@ const FeasibilityPrint = () => {
                   "First-mover advantage in smart school management",
                   "Sustainable recurring revenue model",
                 ].map((point, i) => (
-                  <p key={i} style={{ fontSize: "15px", marginBottom: "10px", display: "flex", alignItems: "center", gap: "10px" }}>
-                    <span style={{ background: "linear-gradient(135deg, #10b981, #059669)", borderRadius: "50%", width: "22px", height: "22px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: "12px" }}>✓</span>
+                  <p key={i} style={{ fontSize: "13px", marginBottom: "7px", display: "flex", alignItems: "center", gap: "8px" }}>
+                    <span style={{ background: "linear-gradient(135deg, #10b981, #059669)", borderRadius: "50%", width: "18px", height: "18px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: "10px" }}>✓</span>
                     <span style={{ color: "#e2e8f0" }}>{point}</span>
                   </p>
                 ))}
@@ -1293,21 +1293,21 @@ const FeasibilityPrint = () => {
 
               <div style={{
                 background: "linear-gradient(135deg, #10b981, #059669)",
-                padding: "24px",
+                padding: "18px",
                 borderRadius: "16px",
                 textAlign: "center",
-                marginBottom: "30px",
+                marginBottom: "24px",
                 boxShadow: "0 8px 32px rgba(16,185,129,0.3)",
               }}>
-                <h2 style={{ fontSize: "22px", fontWeight: "bold", marginBottom: "12px" }}>Recommendation</h2>
-                <p style={{ fontSize: "15px" }}>Approve project funding to support this comprehensive educational and digital security solution</p>
+                <h2 style={{ fontSize: "20px", fontWeight: "bold", marginBottom: "8px" }}>Recommendation</h2>
+                <p style={{ fontSize: "13px" }}>Approve project funding to support this comprehensive educational and digital security solution</p>
               </div>
 
-              <div style={{ textAlign: "center", marginTop: "30px" }}>
-                <GlowingTitle size="32px" />
-                <p style={{ fontSize: "14px", marginTop: "12px", color: "#94a3b8" }}>Mazen Khanfar</p>
-                <p style={{ fontSize: "14px", marginTop: "6px", color: "#94a3b8" }}>Phone: {PHONE_NUMBER}</p>
-                <p style={{ fontSize: "13px", color: "#475569", marginTop: "10px" }}>Muscat, Sultanate of Oman - 2026</p>
+              <div style={{ textAlign: "center", marginTop: "20px" }}>
+                <GlowingTitle size="28px" />
+                <p style={{ fontSize: "13px", marginTop: "10px", color: "#94a3b8" }}>Mazen Khanfar</p>
+                <p style={{ fontSize: "13px", marginTop: "5px", color: "#94a3b8" }}>Phone: {PHONE_NUMBER}</p>
+                <p style={{ fontSize: "12px", color: "#475569", marginTop: "8px" }}>Muscat, Sultanate of Oman - 2026</p>
               </div>
             </div>
           </>
