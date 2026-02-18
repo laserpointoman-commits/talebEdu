@@ -86,7 +86,7 @@ const FeasibilityPrint = () => {
     height: "297mm",
     minHeight: "297mm",
     maxHeight: "297mm",
-    padding: "12mm 15mm",
+    padding: "10mm 12mm",
     boxSizing: "border-box",
     background: "linear-gradient(160deg, #0f172a 0%, #1e3a5f 50%, #0f172a 100%)",
     color: "white",
@@ -306,7 +306,7 @@ const FeasibilityPrint = () => {
       .print-pages-wrapper { padding: 0 !important; margin: 0 !important; }
       .print-page {
         width: 210mm !important; height: 297mm !important;
-        margin: 0 !important; padding: 12mm 15mm !important;
+        margin: 0 !important; padding: 10mm 12mm !important;
         box-sizing: border-box !important; box-shadow: none !important;
         page-break-after: always !important; page-break-inside: avoid !important;
         overflow: visible !important; display: block !important; zoom: 1 !important;
@@ -906,48 +906,48 @@ const FeasibilityPrint = () => {
                 <span style={{ fontSize: "20px", fontWeight: "bold", color: "#93c5fd" }}>Executive Summary</span>
               </div>
 
-              <div style={{ lineHeight: "1.6" }}>
-                <p style={{ fontSize: "14px", fontWeight: "bold", color: "#60a5fa", marginBottom: "10px" }}>
+              <div style={{ lineHeight: "1.5" }}>
+                <p style={{ fontSize: "13px", fontWeight: "bold", color: "#60a5fa", marginBottom: "8px" }}>
                   TalebEdu is the ONLY application in the world combining:
                 </p>
 
-                <div style={{ ...glassCard, padding: "14px", marginBottom: "12px" }}>
+                <div style={{ ...glassCard, padding: "12px", marginBottom: "10px" }}>
                   {[
                     "School Management: Attendance, Grades, Homework, Schedules",
                     "Bus Management: 6+ buses per school with real-time tracking",
                     "Smart Gates & Canteen with NFC technology",
-                    "Student Electronic Wallet - Purchase from canteen & online store",
+                    "Student Electronic Wallet - canteen & online store purchases",
                     "Digital Store: NFC wristbands + Private Label stationery",
                     "Integrated Communication: Messages, Voice/Video calls, File sharing",
                   ].map((text, i) => (
-                    <div key={i} style={{ marginBottom: "5px", display: "flex", alignItems: "center", gap: "8px" }}>
-                      <span style={{ background: "linear-gradient(135deg, #10b981, #059669)", borderRadius: "50%", width: "18px", height: "18px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: "10px" }}>✓</span>
-                      <span style={{ color: "#e2e8f0", fontSize: "12px" }}>{text}</span>
+                    <div key={i} style={{ marginBottom: "4px", display: "flex", alignItems: "center", gap: "6px" }}>
+                      <span style={{ background: "linear-gradient(135deg, #10b981, #059669)", borderRadius: "50%", width: "16px", height: "16px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: "9px" }}>✓</span>
+                      <span style={{ color: "#e2e8f0", fontSize: "11px" }}>{text}</span>
                     </div>
                   ))}
                 </div>
 
-                <p style={{ fontSize: "14px", fontWeight: "bold", color: "#10b981", marginBottom: "8px" }}>Unique Advantages:</p>
+                <p style={{ fontSize: "13px", fontWeight: "bold", color: "#10b981", marginBottom: "6px" }}>Unique Advantages:</p>
 
-                <div style={{ ...glassCard, padding: "14px", marginBottom: "12px" }}>
+                <div style={{ ...glassCard, padding: "12px", marginBottom: "10px" }}>
                   {[
-                    "Smart Wristband: Resistant to all elements except fire, no charging needed",
+                    "Smart Wristband: Resistant to all elements except fire, no charging",
                     "Multi-language Support: Arabic, English, Hindi",
                     "Complete safety for students and parents",
-                    "Local and international expansion capability (GCC in Year 3)",
-                    "Integrated financial management: All subscriptions via the wallet",
+                    "Local & international expansion capability (GCC in Year 3)",
+                    "Integrated financial management: All subscriptions via wallet",
                   ].map((text, i) => (
-                    <div key={i} style={{ marginBottom: "5px", display: "flex", alignItems: "center", gap: "8px" }}>
-                      <span style={{ color: "#10b981", flexShrink: 0, fontSize: "13px" }}>✓</span>
-                      <span style={{ color: "#e2e8f0", fontSize: "12px" }}>{text}</span>
+                    <div key={i} style={{ marginBottom: "4px", display: "flex", alignItems: "center", gap: "6px" }}>
+                      <span style={{ color: "#10b981", flexShrink: 0, fontSize: "12px" }}>✓</span>
+                      <span style={{ color: "#e2e8f0", fontSize: "11px" }}>{text}</span>
                     </div>
                   ))}
                 </div>
 
                 <HighlightBox color="green">
-                  <p style={{ fontSize: "13px", fontWeight: "bold", color: "#10b981", marginBottom: "4px" }}>Project Goal:</p>
-                  <p style={{ fontSize: "12px", color: "#a7f3d0" }}>
-                    Create a reliable and comprehensive platform to solve school management, safety, communication, and digital purchasing in a sustainable way.
+                  <p style={{ fontSize: "12px", fontWeight: "bold", color: "#10b981", marginBottom: "3px" }}>Project Goal:</p>
+                  <p style={{ fontSize: "11px", color: "#a7f3d0" }}>
+                    Create a reliable platform to solve school management, safety, communication, and digital purchasing sustainably.
                   </p>
                 </HighlightBox>
               </div>
