@@ -107,28 +107,24 @@ const FeasibilityPrint = () => {
       }
       
       @page {
-        size: 210mm 297mm;
+        size: A4;
         margin: 0;
       }
       
-      html, body {
+      html, body, #root, #root > div, .h-\\[100dvh\\] {
         margin: 0 !important;
         padding: 0 !important;
-        width: 210mm !important;
         height: auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
         overflow: visible !important;
-      }
-      
-      .h-\\[100dvh\\] {
-        height: auto !important;
-        overflow: visible !important;
+        width: auto !important;
       }
       
       .print-container {
         padding: 0 !important;
         margin: 0 !important;
         background: white !important;
-        width: 210mm !important;
       }
       
       .print-pages-wrapper {
@@ -138,35 +134,26 @@ const FeasibilityPrint = () => {
       
       .print-page {
         width: 210mm !important;
-        height: 297mm !important;
         min-height: 297mm !important;
-        max-height: 297mm !important;
+        height: 297mm !important;
         margin: 0 !important;
         padding: 15mm !important;
         box-sizing: border-box !important;
         box-shadow: none !important;
         page-break-after: always !important;
-        page-break-before: auto !important;
         page-break-inside: avoid !important;
-        break-after: page !important;
-        break-inside: avoid !important;
-        overflow: hidden !important;
+        overflow: visible !important;
         position: relative !important;
         display: block !important;
         zoom: 1 !important;
       }
       
       .print-page:last-child {
-        page-break-after: avoid !important;
-        break-after: avoid !important;
+        page-break-after: auto !important;
       }
       
       .print\\:hidden {
         display: none !important;
-        visibility: hidden !important;
-        height: 0 !important;
-        width: 0 !important;
-        overflow: hidden !important;
       }
     }
 
