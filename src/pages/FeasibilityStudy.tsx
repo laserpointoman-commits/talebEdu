@@ -1103,7 +1103,7 @@ const FeasibilityStudy = () => {
             <img src={talebEduBlueLogo} alt="TalebEdu" className="w-16 h-16 sm:w-24 sm:h-24 rounded-2xl shadow-lg" />
           </div>
           <h1 className="text-2xl sm:text-4xl md:text-5xl font-bold text-white mb-3 sm:mb-4">دراسة جدوى TalebEdu</h1>
-          <p className="text-base sm:text-xl text-blue-200">تطبيق إدارة المدارس الذكية الشامل</p>
+          <p className="text-base sm:text-xl text-blue-200">تطبيق آمان و متابعة الطلاب الذكي للمدارس</p>
         </motion.div>
 
         {/* Key Highlights */}
