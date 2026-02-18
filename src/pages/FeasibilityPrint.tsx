@@ -440,11 +440,11 @@ const FeasibilityPrint = () => {
                   }}
                 >
                   <p style={{ fontSize: "14px", fontWeight: "bold", color: "#1e40af", marginBottom: "8px" }}>ملاحظات:</p>
-                  <ul style={{ fontSize: "13px", color: "#1e40af", paddingRight: "15px", textAlign: "right", direction: "rtl", listStylePosition: "inside" }}>
-                    <li style={{ textAlign: "right", direction: "rtl" }}>اشتراك الطالب: 25 ر.ع سنوياً</li>
-                    <li style={{ textAlign: "right", direction: "rtl" }}>رسوم الباص: 100 ر.ع لكل باص سنوياً</li>
-                    <li style={{ textAlign: "right", direction: "rtl" }}>سوار NFC: 2 ر.ع للقطعة (سعر البيع)</li>
-                    <li style={{ textAlign: "right", direction: "rtl" }}>القرطاسية: 50 ر.ع متوسط إنفاق الطالب سنوياً</li>
+                  <ul style={{ fontSize: "13px", color: "#1e40af", paddingRight: "15px", textAlign: "right", listStyle: "none" }}>
+                    <li style={{ textAlign: "right", marginBottom: "4px" }}>• اشتراك الطالب: <span dir="ltr">25</span> ر.ع سنوياً</li>
+                    <li style={{ textAlign: "right", marginBottom: "4px" }}>• رسوم الباص: <span dir="ltr">100</span> ر.ع لكل باص سنوياً</li>
+                    <li style={{ textAlign: "right", marginBottom: "4px" }}>• سوار <span dir="ltr">NFC</span>: <span dir="ltr">2</span> ر.ع للقطعة (سعر البيع)</li>
+                    <li style={{ textAlign: "right", marginBottom: "4px" }}>• القرطاسية: <span dir="ltr">50</span> ر.ع متوسط إنفاق الطالب سنوياً</li>
                   </ul>
                 </div>
               </div>
