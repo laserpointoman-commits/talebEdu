@@ -1,8 +1,9 @@
 import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Printer } from "lucide-react";
+import { ArrowRight, Download } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import talebEduLogo from "@/assets/talebedu-app-icon.jpg";
+import html2pdf from "html2pdf.js";
 
 const PHONE_NUMBER = "+968 9656 4540";
 
@@ -18,8 +19,71 @@ const FeasibilityPrint = () => {
     return () => window.removeEventListener("resize", updateWidth);
   }, []);
 
-  const handlePrint = () => {
-    window.print();
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  const handleDownloadPDF = async () => {
+    setIsGenerating(true);
+    try {
+      const pagesWrapper = document.querySelector('.print-pages-wrapper');
+      if (!pagesWrapper) return;
+
+      const container = document.createElement('div');
+      container.style.position = 'fixed';
+      container.style.left = '0';
+      container.style.top = '0';
+      container.style.width = '210mm';
+      container.style.zIndex = '999999';
+      container.style.background = 'white';
+      container.style.overflow = 'visible';
+
+      const clone = pagesWrapper.cloneNode(true) as HTMLElement;
+      clone.style.padding = '0';
+      clone.style.margin = '0';
+      const pages = clone.querySelectorAll('.print-page');
+      pages.forEach((page: Element) => {
+        (page as HTMLElement).style.zoom = '1';
+        (page as HTMLElement).style.margin = '0 auto';
+        (page as HTMLElement).style.boxShadow = 'none';
+      });
+      container.appendChild(clone);
+      document.body.appendChild(container);
+
+      const images = Array.from(container.querySelectorAll('img')) as HTMLImageElement[];
+      await Promise.all(images.map(img => new Promise<void>(resolve => {
+        if (img.complete) return resolve();
+        img.onload = () => resolve();
+        img.onerror = () => resolve();
+      })));
+      await new Promise(r => setTimeout(r, 300));
+
+      const filename = language === 'ar'
+        ? 'TalebEdu_Feasibility_Study_AR_2026.pdf'
+        : 'TalebEdu_Feasibility_Study_EN_2026.pdf';
+
+      const opt = {
+        margin: 0,
+        filename,
+        image: { type: 'png' as const, quality: 1 },
+        html2canvas: {
+          scale: 3,
+          useCORS: true,
+          logging: false,
+          allowTaint: true,
+          backgroundColor: '#ffffff',
+          windowWidth: 794,
+          windowHeight: 1123,
+        },
+        jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const },
+        pagebreak: { mode: ['css'] as const },
+      };
+
+      await html2pdf().set(opt).from(clone).save();
+      if (container.parentNode) container.parentNode.removeChild(container);
+    } catch (error) {
+      console.error('PDF generation failed:', error);
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const pageWidthPx = 794; // 210mm ≈ 794px
@@ -210,9 +274,18 @@ const FeasibilityPrint = () => {
               </button>
             </div>
 
-            <Button onClick={handlePrint} className="bg-green-600 hover:bg-green-700 text-white">
-              <Printer className="w-5 h-5 ml-2" />
-              طباعة / Print
+            <Button onClick={handleDownloadPDF} disabled={isGenerating} className="bg-green-600 hover:bg-green-700 text-white">
+              {isGenerating ? (
+                <div className="flex items-center gap-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  {language === 'ar' ? 'جاري التحميل...' : 'Generating...'}
+                </div>
+              ) : (
+                <>
+                  <Download className="w-5 h-5 ml-2" />
+                  {language === 'ar' ? 'تحميل PDF' : 'Download PDF'}
+                </>
+              )}
             </Button>
           </div>
         </div>
