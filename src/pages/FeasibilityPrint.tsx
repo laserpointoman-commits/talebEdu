@@ -31,7 +31,7 @@ const FeasibilityPrint = () => {
       const pdfWidth = 210;
       const pdfHeight = 297;
 
-      const zoomFactor = 1.35;
+      const zoomFactor = 1.8;
       const captureW = Math.round(794 * zoomFactor);
       const captureH = Math.round(1123 * zoomFactor);
 
