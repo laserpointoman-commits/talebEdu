@@ -253,23 +253,37 @@ const FeasibilityPrint = () => {
                   TalebEdu هو التطبيق الوحيد في العالم الذي يجمع في منصة واحدة:
                 </p>
 
-                <ul style={{ fontSize: "14px", paddingRight: "20px", marginBottom: "20px" }}>
-                  <li style={{ marginBottom: "8px" }}>✓ إدارة المدرسة: الحضور، الدرجات، الواجبات، الجداول</li>
-                  <li style={{ marginBottom: "8px" }}>✓ إدارة الباصات: 6 باصات كحد أدنى لكل مدرسة مع تتبع مباشر</li>
-                  <li style={{ marginBottom: "8px" }}>✓ البوابات الذكية والمقصف بتقنية NFC</li>
-                  <li style={{ marginBottom: "8px" }}>✓ المحفظة الإلكترونية للطلاب</li>
-                  <li style={{ marginBottom: "8px" }}>✓ المتجر الرقمي: أساور NFC + قرطاسية بعلامة تجارية خاصة</li>
-                  <li style={{ marginBottom: "8px" }}>✓ نظام تواصل متكامل: رسائل، مكالمات صوتية ومرئية، مشاركة ملفات</li>
+                <ul style={{ fontSize: "14px", paddingRight: "20px", marginBottom: "20px", listStyle: "none" }}>
+                  {[
+                    "إدارة المدرسة: الحضور، الدرجات، الواجبات، الجداول",
+                    "إدارة الباصات: 6 باصات كحد أدنى لكل مدرسة مع تتبع مباشر",
+                    "البوابات الذكية والمقصف بتقنية NFC",
+                    "المحفظة الإلكترونية للطلاب",
+                    "المتجر الرقمي: أساور NFC + قرطاسية بعلامة تجارية خاصة",
+                    "نظام تواصل متكامل: رسائل، مكالمات صوتية ومرئية، مشاركة ملفات",
+                  ].map((text, i) => (
+                    <li key={i} style={{ marginBottom: "8px", display: "flex", alignItems: "center", gap: "8px" }}>
+                      <span style={{ flex: 1 }}>{text}</span>
+                      <span style={{ color: "#10b981", flexShrink: 0 }}>✓</span>
+                    </li>
+                  ))}
                 </ul>
 
                 <p style={{ fontSize: "16px", fontWeight: "bold", color: "#10b981", marginBottom: "15px" }}>المزايا الفريدة:</p>
 
-                <ul style={{ fontSize: "14px", paddingRight: "20px", marginBottom: "20px" }}>
-                  <li style={{ marginBottom: "8px" }}>✓ السوار الذكي: مقاوم لجميع العوامل عدا النار، لا يحتاج شحن</li>
-                  <li style={{ marginBottom: "8px" }}>✓ دعم متعدد اللغات: العربية، الإنجليزية، الهندية</li>
-                  <li style={{ marginBottom: "8px" }}>✓ أمان كامل للطلاب وأولياء الأمور</li>
-                  <li style={{ marginBottom: "8px" }}>✓ قابلية التوسع المحلي والدولي (دول الخليج في السنة 3)</li>
-                  <li style={{ marginBottom: "8px" }}>✓ إدارة مالية متكاملة: جميع الاشتراكات عبر المحفظة</li>
+                <ul style={{ fontSize: "14px", paddingRight: "20px", marginBottom: "20px", listStyle: "none" }}>
+                  {[
+                    "السوار الذكي: مقاوم لجميع العوامل عدا النار، لا يحتاج شحن",
+                    "دعم متعدد اللغات: العربية، الإنجليزية، الهندية",
+                    "أمان كامل للطلاب وأولياء الأمور",
+                    "قابلية التوسع المحلي والدولي (دول الخليج في السنة 3)",
+                    "إدارة مالية متكاملة: جميع الاشتراكات عبر المحفظة",
+                  ].map((text, i) => (
+                    <li key={i} style={{ marginBottom: "8px", display: "flex", alignItems: "center", gap: "8px" }}>
+                      <span style={{ flex: 1 }}>{text}</span>
+                      <span style={{ color: "#10b981", flexShrink: 0 }}>✓</span>
+                    </li>
+                  ))}
                 </ul>
 
                 <div
@@ -358,8 +372,9 @@ const FeasibilityPrint = () => {
                       alignItems: "center",
                     }}
                   >
-                    <span style={{ color: "#10b981", fontWeight: "bold" }}>✓ {title}</span>
+                    <span style={{ color: "#10b981", fontWeight: "bold" }}>{title}</span>
                     <span style={{ color: "#6b7280", fontSize: "13px" }}>{desc}</span>
+                    <span style={{ color: "#10b981", flexShrink: 0 }}>✓</span>
                   </div>
                 ))}
               </div>
@@ -739,8 +754,9 @@ const FeasibilityPrint = () => {
                   "ميزة الريادة في إدارة المدارس الذكية",
                   "نموذج إيرادات مستدام ومتكرر",
                 ].map((point, i) => (
-                  <p key={i} style={{ fontSize: "16px", marginBottom: "12px", paddingRight: "20px" }}>
-                    ✓ {point}
+                  <p key={i} style={{ fontSize: "16px", marginBottom: "12px", paddingRight: "20px", display: "flex", alignItems: "center", gap: "8px" }}>
+                    <span style={{ flex: 1 }}>{point}</span>
+                    <span style={{ color: "#10b981", flexShrink: 0 }}>✓</span>
                   </p>
                 ))}
               </div>
