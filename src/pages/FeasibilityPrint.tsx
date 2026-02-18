@@ -539,7 +539,7 @@ const FeasibilityPrint = () => {
             </div>
 
             {/* ===== AR PAGE 5: Revenue ===== */}
-            <div className="print-page" dir="rtl" style={{ ...pageStyle, direction: "rtl" }}>
+            <div className="print-page" dir="rtl" style={{ ...pageStyle, direction: "rtl", display: "flex", flexDirection: "column", justifyContent: "center" }}>
               <div style={sectionHeader}>
                 <span style={{ fontSize: "20px", fontWeight: "bold", color: "#93c5fd" }}>الدراسة المالية - الإيرادات</span>
                 <HeaderLogo />
