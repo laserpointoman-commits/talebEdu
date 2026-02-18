@@ -1107,18 +1107,12 @@ const FeasibilityStudy = () => {
         </motion.div>
 
         {/* Key Highlights */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-8 sm:mb-12">
-          {[
-            { icon: Users, title: "100,000 طالب", subtitle: "بحلول السنة الثالثة" },
-            { icon: TrendingUp, title: "4.3 مليون ر.ع", subtitle: "إجمالي الأرباح" },
-            { icon: Shield, title: "أول تطبيق", subtitle: "في سلطنة عمان" },
-          ].map((item, i) => (
-            <Card key={i} className="bg-white/10 backdrop-blur-sm border-white/20 p-4 sm:p-6 text-center">
-              <item.icon className="w-8 h-8 sm:w-12 sm:h-12 text-blue-400 mx-auto mb-2 sm:mb-4" />
-              <h3 className="text-xl sm:text-2xl font-bold text-white">{item.title}</h3>
-              <p className="text-sm sm:text-base text-blue-200">{item.subtitle}</p>
-            </Card>
-          ))}
+        <div className="flex justify-center mb-8 sm:mb-12">
+          <Card className="bg-white/10 backdrop-blur-sm border-white/20 p-4 sm:p-6 text-center w-full max-w-xs">
+            <Shield className="w-8 h-8 sm:w-12 sm:h-12 text-blue-400 mx-auto mb-2 sm:mb-4" />
+            <h3 className="text-xl sm:text-2xl font-bold text-white">أول تطبيق</h3>
+            <p className="text-sm sm:text-base text-blue-200">في سلطنة عمان</p>
+          </Card>
         </div>
 
         {/* Features */}
