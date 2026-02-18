@@ -906,12 +906,12 @@ const FeasibilityPrint = () => {
                 <span style={{ fontSize: "20px", fontWeight: "bold", color: "#93c5fd" }}>Executive Summary</span>
               </div>
 
-              <div style={{ lineHeight: "1.8" }}>
-                <p style={{ fontSize: "15px", fontWeight: "bold", color: "#60a5fa", marginBottom: "14px" }}>
+              <div style={{ lineHeight: "1.6" }}>
+                <p style={{ fontSize: "14px", fontWeight: "bold", color: "#60a5fa", marginBottom: "10px" }}>
                   TalebEdu is the ONLY application in the world combining:
                 </p>
 
-                <div style={glassCard}>
+                <div style={{ ...glassCard, padding: "14px", marginBottom: "12px" }}>
                   {[
                     "School Management: Attendance, Grades, Homework, Schedules",
                     "Bus Management: 6+ buses per school with real-time tracking",
@@ -920,16 +920,16 @@ const FeasibilityPrint = () => {
                     "Digital Store: NFC wristbands + Private Label stationery",
                     "Integrated Communication: Messages, Voice/Video calls, File sharing",
                   ].map((text, i) => (
-                    <div key={i} style={{ marginBottom: "8px", display: "flex", alignItems: "center", gap: "10px" }}>
-                      <span style={{ background: "linear-gradient(135deg, #10b981, #059669)", borderRadius: "50%", width: "20px", height: "20px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: "11px" }}>✓</span>
-                      <span style={{ color: "#e2e8f0", fontSize: "13px" }}>{text}</span>
+                    <div key={i} style={{ marginBottom: "5px", display: "flex", alignItems: "center", gap: "8px" }}>
+                      <span style={{ background: "linear-gradient(135deg, #10b981, #059669)", borderRadius: "50%", width: "18px", height: "18px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: "10px" }}>✓</span>
+                      <span style={{ color: "#e2e8f0", fontSize: "12px" }}>{text}</span>
                     </div>
                   ))}
                 </div>
 
-                <p style={{ fontSize: "15px", fontWeight: "bold", color: "#10b981", marginBottom: "12px" }}>Unique Advantages:</p>
+                <p style={{ fontSize: "14px", fontWeight: "bold", color: "#10b981", marginBottom: "8px" }}>Unique Advantages:</p>
 
-                <div style={glassCard}>
+                <div style={{ ...glassCard, padding: "14px", marginBottom: "12px" }}>
                   {[
                     "Smart Wristband: Resistant to all elements except fire, no charging needed",
                     "Multi-language Support: Arabic, English, Hindi",
@@ -937,16 +937,16 @@ const FeasibilityPrint = () => {
                     "Local and international expansion capability (GCC in Year 3)",
                     "Integrated financial management: All subscriptions via the wallet",
                   ].map((text, i) => (
-                    <div key={i} style={{ marginBottom: "8px", display: "flex", alignItems: "center", gap: "10px" }}>
-                      <span style={{ color: "#10b981", flexShrink: 0, fontSize: "14px" }}>✓</span>
-                      <span style={{ color: "#e2e8f0", fontSize: "13px" }}>{text}</span>
+                    <div key={i} style={{ marginBottom: "5px", display: "flex", alignItems: "center", gap: "8px" }}>
+                      <span style={{ color: "#10b981", flexShrink: 0, fontSize: "13px" }}>✓</span>
+                      <span style={{ color: "#e2e8f0", fontSize: "12px" }}>{text}</span>
                     </div>
                   ))}
                 </div>
 
                 <HighlightBox color="green">
-                  <p style={{ fontSize: "14px", fontWeight: "bold", color: "#10b981", marginBottom: "4px" }}>Project Goal:</p>
-                  <p style={{ fontSize: "13px", color: "#a7f3d0" }}>
+                  <p style={{ fontSize: "13px", fontWeight: "bold", color: "#10b981", marginBottom: "4px" }}>Project Goal:</p>
+                  <p style={{ fontSize: "12px", color: "#a7f3d0" }}>
                     Create a reliable and comprehensive platform to solve school management, safety, communication, and digital purchasing in a sustainable way.
                   </p>
                 </HighlightBox>
