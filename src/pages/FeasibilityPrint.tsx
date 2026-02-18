@@ -388,8 +388,8 @@ const FeasibilityPrint = () => {
                 <HeaderLogo />
               </div>
 
-              <div style={{ color: "#1e293b" }}>
-                <h3 style={{ fontSize: "18px", fontWeight: "bold", marginBottom: "15px" }}>
+              <div style={{ color: "#1e293b", textAlign: "right" }}>
+                <h3 style={{ fontSize: "18px", fontWeight: "bold", marginBottom: "15px", textAlign: "right" }}>
                   أ) الإيرادات السنوية - المدارس الخاصة فقط (ر.ع)
                 </h3>
 
