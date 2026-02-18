@@ -230,7 +230,7 @@ const FeasibilityPrint = () => {
                 }}
               >
                 <p style={{ fontSize: "14px", marginBottom: "5px" }}>مقدم إلى</p>
-                <p style={{ fontSize: "20px", fontWeight: "bold" }}>الى الجهة المستثمرة</p>
+                <p style={{ fontSize: "20px", fontWeight: "bold" }}>الجهة المستثمرة</p>
               </div>
 
               <p style={{ fontSize: "14px" }}>مقدم من: مازن خنفر - TalebEdu</p>
