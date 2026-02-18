@@ -82,22 +82,21 @@ const FeasibilityPrint = () => {
 
   // Dark themed page style
   const pageStyle: React.CSSProperties = {
-    width: `${pageWidthPx}px`,
-    height: `${pageHeightPx}px`,
-    minHeight: `${pageHeightPx}px`,
-    maxHeight: `${pageHeightPx}px`,
+    width: "210mm",
+    height: "297mm",
+    minHeight: "297mm",
+    maxHeight: "297mm",
     padding: "12mm 15mm",
     boxSizing: "border-box",
     background: "linear-gradient(160deg, #0f172a 0%, #1e3a5f 50%, #0f172a 100%)",
     color: "white",
     margin: "0 auto",
-    marginBottom: pageScale < 1 ? `${-(pageHeightPx * (1 - pageScale)) + 20}px` : "20px",
+    marginBottom: "20px",
     boxShadow: "0 8px 32px rgba(0, 0, 0, 0.4)",
     overflow: "hidden",
     display: "block",
     position: "relative",
-    transform: pageScale < 1 ? `scale(${pageScale})` : undefined,
-    transformOrigin: "top center",
+    zoom: pageScale < 1 ? pageScale : undefined,
   };
 
   // Glass card style for sections
@@ -310,7 +309,7 @@ const FeasibilityPrint = () => {
         margin: 0 !important; padding: 12mm 15mm !important;
         box-sizing: border-box !important; box-shadow: none !important;
         page-break-after: always !important; page-break-inside: avoid !important;
-        overflow: visible !important; display: block !important; transform: none !important; margin-bottom: 0 !important;
+        overflow: visible !important; display: block !important; zoom: 1 !important;
       }
       .print-page:last-child { page-break-after: auto !important; }
       .no-print { display: none !important; }
