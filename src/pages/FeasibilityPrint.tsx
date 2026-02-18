@@ -236,15 +236,7 @@ const FeasibilityPrint = () => {
       >
       {/* Controls - Hidden when printing */}
       <div className="no-print sticky top-0 z-50 bg-slate-900 p-3 sm:p-4 shadow-lg">
-        <div className="container mx-auto flex flex-wrap items-center justify-between gap-2 sm:gap-4">
-          <Button
-            variant="ghost"
-            onClick={() => navigate("/feasibility")}
-            className="text-white hover:bg-white/10 text-sm sm:text-base"
-          >
-            <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-1 sm:ml-2" />
-            العودة
-          </Button>
+        <div className="container mx-auto flex flex-wrap items-center justify-end gap-2 sm:gap-4">
 
           <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
             <div className="flex bg-slate-800 rounded-lg p-1">
