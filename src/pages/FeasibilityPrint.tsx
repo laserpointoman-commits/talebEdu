@@ -153,10 +153,7 @@ const FeasibilityPrint = () => {
         style={{
           fontSize: size,
           fontWeight: "bold",
-          background: "linear-gradient(90deg, #3b82f6, #60a5fa, #93c5fd, #60a5fa, #3b82f6)",
-          WebkitBackgroundClip: "text",
-          WebkitTextFillColor: "transparent",
-          backgroundClip: "text",
+          color: "#60a5fa",
           letterSpacing: "3px",
         }}
       >
