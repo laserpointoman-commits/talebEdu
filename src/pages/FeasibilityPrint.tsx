@@ -440,11 +440,11 @@ const FeasibilityPrint = () => {
                   }}
                 >
                   <p style={{ fontSize: "14px", fontWeight: "bold", color: "#1e40af", marginBottom: "8px" }}>ملاحظات:</p>
-                  <ul style={{ fontSize: "13px", color: "#1e40af", paddingRight: "15px", textAlign: "right" }}>
-                    <li style={{ textAlign: "right" }}>اشتراك الطالب: 25 ر.ع سنوياً</li>
-                    <li style={{ textAlign: "right" }}>رسوم الباص: 100 ر.ع لكل باص سنوياً</li>
-                    <li style={{ textAlign: "right" }}>سوار NFC: 2 ر.ع للقطعة (سعر البيع)</li>
-                    <li style={{ textAlign: "right" }}>القرطاسية: 50 ر.ع متوسط إنفاق الطالب سنوياً</li>
+                  <ul style={{ fontSize: "13px", color: "#1e40af", paddingRight: "15px", textAlign: "right", direction: "rtl", listStylePosition: "inside" }}>
+                    <li style={{ textAlign: "right", direction: "rtl" }}>اشتراك الطالب: 25 ر.ع سنوياً</li>
+                    <li style={{ textAlign: "right", direction: "rtl" }}>رسوم الباص: 100 ر.ع لكل باص سنوياً</li>
+                    <li style={{ textAlign: "right", direction: "rtl" }}>سوار NFC: 2 ر.ع للقطعة (سعر البيع)</li>
+                    <li style={{ textAlign: "right", direction: "rtl" }}>القرطاسية: 50 ر.ع متوسط إنفاق الطالب سنوياً</li>
                   </ul>
                 </div>
               </div>
