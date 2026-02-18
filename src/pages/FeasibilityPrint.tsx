@@ -428,12 +428,12 @@ const FeasibilityPrint = () => {
                 <HeaderLogo />
               </div>
 
-              <div style={{ lineHeight: "1.8", textAlign: "right" }}>
-                <p style={{ fontSize: "15px", fontWeight: "bold", color: "#60a5fa", marginBottom: "14px" }}>
+              <div style={{ lineHeight: "1.6", textAlign: "right" }}>
+                <p style={{ fontSize: "14px", fontWeight: "bold", color: "#60a5fa", marginBottom: "10px" }}>
                   TalebEdu هو التطبيق الوحيد في العالم الذي يجمع في منصة واحدة:
                 </p>
 
-                <div style={glassCard}>
+                <div style={{ ...glassCard, padding: "14px", marginBottom: "12px" }}>
                   {[
                     "إدارة المدرسة: الحضور، الدرجات، الواجبات، الجداول",
                     "إدارة الباصات: 6 باصات كحد أدنى لكل مدرسة مع تتبع مباشر",
@@ -442,16 +442,16 @@ const FeasibilityPrint = () => {
                     "المتجر الرقمي: أساور NFC + قرطاسية بعلامة تجارية خاصة",
                     "نظام تواصل متكامل: رسائل، مكالمات صوتية ومرئية، مشاركة ملفات",
                   ].map((text, i) => (
-                    <div key={i} style={{ marginBottom: "8px", display: "flex", flexDirection: "row-reverse", alignItems: "center", gap: "10px" }}>
-                      <span style={{ flex: 1, textAlign: "right", color: "#e2e8f0", fontSize: "13px" }}>{text}</span>
-                      <span style={{ background: "linear-gradient(135deg, #10b981, #059669)", borderRadius: "50%", width: "20px", height: "20px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: "11px" }}>✓</span>
+                    <div key={i} style={{ marginBottom: "5px", display: "flex", flexDirection: "row-reverse", alignItems: "center", gap: "8px" }}>
+                      <span style={{ flex: 1, textAlign: "right", color: "#e2e8f0", fontSize: "12px" }}>{text}</span>
+                      <span style={{ background: "linear-gradient(135deg, #10b981, #059669)", borderRadius: "50%", width: "18px", height: "18px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: "10px" }}>✓</span>
                     </div>
                   ))}
                 </div>
 
-                <p style={{ fontSize: "15px", fontWeight: "bold", color: "#10b981", marginBottom: "12px" }}>المزايا الفريدة:</p>
+                <p style={{ fontSize: "14px", fontWeight: "bold", color: "#10b981", marginBottom: "8px" }}>المزايا الفريدة:</p>
 
-                <div style={glassCard}>
+                <div style={{ ...glassCard, padding: "14px", marginBottom: "12px" }}>
                   {[
                     "السوار الذكي: مقاوم لجميع العوامل عدا النار، لا يحتاج شحن",
                     "دعم متعدد اللغات: العربية، الإنجليزية، الهندية",
@@ -459,16 +459,16 @@ const FeasibilityPrint = () => {
                     "قابلية التوسع المحلي والدولي (دول الخليج في السنة 3)",
                     "إدارة مالية متكاملة: جميع الاشتراكات عبر المحفظة",
                   ].map((text, i) => (
-                    <div key={i} style={{ marginBottom: "8px", display: "flex", flexDirection: "row-reverse", alignItems: "center", gap: "10px" }}>
-                      <span style={{ flex: 1, textAlign: "right", color: "#e2e8f0", fontSize: "13px" }}>{text}</span>
-                      <span style={{ color: "#10b981", flexShrink: 0, fontSize: "14px" }}>✓</span>
+                    <div key={i} style={{ marginBottom: "5px", display: "flex", flexDirection: "row-reverse", alignItems: "center", gap: "8px" }}>
+                      <span style={{ flex: 1, textAlign: "right", color: "#e2e8f0", fontSize: "12px" }}>{text}</span>
+                      <span style={{ color: "#10b981", flexShrink: 0, fontSize: "13px" }}>✓</span>
                     </div>
                   ))}
                 </div>
 
                 <HighlightBox color="green">
-                  <p style={{ fontSize: "14px", fontWeight: "bold", color: "#10b981", marginBottom: "4px" }}>هدف المشروع:</p>
-                  <p style={{ fontSize: "13px", color: "#a7f3d0" }}>
+                  <p style={{ fontSize: "13px", fontWeight: "bold", color: "#10b981", marginBottom: "4px" }}>هدف المشروع:</p>
+                  <p style={{ fontSize: "12px", color: "#a7f3d0" }}>
                     إنشاء منصة موثوقة وشاملة لحل مشاكل إدارة المدارس والأمان والتواصل والشراء الرقمي بطريقة مستدامة.
                   </p>
                 </HighlightBox>
