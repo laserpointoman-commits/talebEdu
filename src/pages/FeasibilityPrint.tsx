@@ -840,7 +840,7 @@ const FeasibilityPrint = () => {
                 marginBottom: "40px",
               }}>
                 <p style={{ fontSize: "13px", marginBottom: "5px", color: "#93c5fd" }}>Presented to</p>
-                <p style={{ fontSize: "22px", fontWeight: "bold" }}>Oman Development Bank</p>
+                <p style={{ fontSize: "22px", fontWeight: "bold" }}>The Investor</p>
               </div>
 
               <p style={{ fontSize: "14px", color: "#94a3b8" }}>Presented by: Mazen Khanfar - TalebEdu</p>
@@ -865,9 +865,9 @@ const FeasibilityPrint = () => {
                     "School Management: Attendance, Grades, Homework, Schedules",
                     "Bus Management: 6+ buses per school with real-time tracking",
                     "Smart Gates & Canteen with NFC technology",
-                    "Electronic Wallet for students",
+                    "Student Electronic Wallet - Purchase from canteen & online store",
                     "Digital Store: NFC wristbands + Private Label stationery",
-                    "Integrated Communication: Messages, Voice/Video calls",
+                    "Integrated Communication: Messages, Voice/Video calls, File sharing",
                   ].map((text, i) => (
                     <div key={i} style={{ marginBottom: "8px", display: "flex", alignItems: "center", gap: "10px" }}>
                       <span style={{ background: "linear-gradient(135deg, #10b981, #059669)", borderRadius: "50%", width: "20px", height: "20px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: "11px" }}>✓</span>
@@ -876,10 +876,27 @@ const FeasibilityPrint = () => {
                   ))}
                 </div>
 
+                <p style={{ fontSize: "15px", fontWeight: "bold", color: "#10b981", marginBottom: "12px" }}>Unique Advantages:</p>
+
+                <div style={glassCard}>
+                  {[
+                    "Smart Wristband: Resistant to all elements except fire, no charging needed",
+                    "Multi-language Support: Arabic, English, Hindi",
+                    "Complete safety for students and parents",
+                    "Local and international expansion capability (GCC in Year 3)",
+                    "Integrated financial management: All subscriptions via the wallet",
+                  ].map((text, i) => (
+                    <div key={i} style={{ marginBottom: "8px", display: "flex", alignItems: "center", gap: "10px" }}>
+                      <span style={{ color: "#10b981", flexShrink: 0, fontSize: "14px" }}>✓</span>
+                      <span style={{ color: "#e2e8f0", fontSize: "13px" }}>{text}</span>
+                    </div>
+                  ))}
+                </div>
+
                 <HighlightBox color="green">
                   <p style={{ fontSize: "14px", fontWeight: "bold", color: "#10b981", marginBottom: "4px" }}>Project Goal:</p>
                   <p style={{ fontSize: "13px", color: "#a7f3d0" }}>
-                    Create a reliable platform solving school management, security, and digital purchasing sustainably.
+                    Create a reliable and comprehensive platform to solve school management, safety, communication, and digital purchasing in a sustainable way.
                   </p>
                 </HighlightBox>
               </div>
@@ -902,6 +919,7 @@ const FeasibilityPrint = () => {
                       ["Avg Students/School", "500 students"],
                       ["Buses per School", "6 buses"],
                       ["Gates per School", "2 gates"],
+                      ["Canteen per School", "1 canteen"],
                     ].map(([label, value], i) => (
                       <tr key={i}>
                         <td style={{ padding: "10px 14px", fontWeight: "bold", color: "#60a5fa", background: "rgba(255,255,255,0.04)", borderRadius: "8px 0 0 8px" }}>{label}</td>
@@ -910,6 +928,21 @@ const FeasibilityPrint = () => {
                     ))}
                   </tbody>
                 </table>
+              </div>
+
+              <h3 style={{ fontSize: "17px", fontWeight: "bold", marginBottom: "14px", color: "#93c5fd" }}>Services Offered:</h3>
+              <div style={glassCard}>
+                {[
+                  "Annual student subscription (Bus, Gate, Canteen, Wallet, Grade tracking)",
+                  "Sale of additional NFC wristbands",
+                  "Private label stationery store",
+                  "Internal messaging system for communication between parents, teachers, and administration",
+                ].map((text, i) => (
+                  <div key={i} style={{ marginBottom: "10px", display: "flex", alignItems: "flex-start", gap: "10px" }}>
+                    <span style={{ color: "#3b82f6", fontWeight: "bold", fontSize: "14px" }}>{i + 1}.</span>
+                    <span style={{ flex: 1, color: "#e2e8f0", fontSize: "14px" }}>{text}</span>
+                  </div>
+                ))}
               </div>
             </div>
 
@@ -928,6 +961,10 @@ const FeasibilityPrint = () => {
                 ["Digital Marketplace", "Wristbands + private label stationery"],
                 ["Multi-language Support", "Arabic, English, Hindi"],
                 ["GCC Expansion Ready", "Scalable regional infrastructure"],
+                ["Complete Student Safety", "Real-time tracking & secure entry"],
+                ["First in Oman", "Smart wristband as digital school ID"],
+                ["E-Wallet Pioneer", "Student allowance via wristband"],
+                ["Direct Payment System", "Fees paid directly via the wallet"],
               ].map(([title, desc], i) => (
                 <FeatureItem key={i} title={title} desc={desc} />
               ))}
@@ -940,6 +977,10 @@ const FeasibilityPrint = () => {
                 <span style={{ fontSize: "20px", fontWeight: "bold", color: "#93c5fd" }}>Financial Study - Revenue</span>
               </div>
 
+              <h3 style={{ fontSize: "16px", fontWeight: "bold", marginBottom: "14px", color: "#60a5fa", paddingLeft: "8px", paddingRight: "8px", wordBreak: "break-word" as const }}>
+                A) Annual Revenue - Private Schools Only (OMR)
+              </h3>
+
               <DarkTable
                 headers={["Year", "Students", "Schools", "Subscriptions", "Buses", "NFC", "Stationery", "Total"]}
                 rows={[
@@ -948,16 +989,29 @@ const FeasibilityPrint = () => {
                   ["3", "100,000", "200", "2,500,000", "120,000", "170,000", "1,250,000", "4,040,000"],
                 ]}
               />
+
+              <div style={{ marginTop: "20px" }}>
+                <HighlightBox color="blue">
+                  <p style={{ fontSize: "13px", fontWeight: "bold", color: "#93c5fd", marginBottom: "8px" }}>Notes:</p>
+                  <div style={{ fontSize: "12px", color: "#93c5fd" }}>
+                    <p style={{ marginBottom: "4px" }}>• Student subscription: 25 OMR annually</p>
+                    <p style={{ marginBottom: "4px" }}>• Bus fees: 150 OMR per bus annually</p>
+                    <p style={{ marginBottom: "4px" }}>• NFC Wristband: 2 OMR per unit (sale price)</p>
+                    <p>• Stationery: 50 OMR average student spend annually</p>
+                  </div>
+                </HighlightBox>
+              </div>
             </div>
 
-            {/* ===== EN PAGE 6: Costs ===== */}
+            {/* ===== EN PAGE 6: CAPEX ===== */}
             <div className="print-page" style={pageStyle}>
               <div style={sectionHeader}>
                 <HeaderLogo />
                 <span style={{ fontSize: "20px", fontWeight: "bold", color: "#93c5fd" }}>Financial Study - Costs</span>
               </div>
 
-              <h3 style={{ fontSize: "15px", fontWeight: "bold", marginBottom: "14px", color: "#60a5fa" }}>CAPEX (OMR)</h3>
+              <h3 style={{ fontSize: "15px", fontWeight: "bold", marginBottom: "14px", color: "#60a5fa" }}>B) Capital Expenditure CAPEX (OMR)</h3>
+
               <div style={glassCard}>
                 <table style={{ width: "100%", borderCollapse: "separate", borderSpacing: "0 4px", fontSize: "13px" }}>
                   <tbody>
@@ -998,6 +1052,30 @@ const FeasibilityPrint = () => {
               </div>
             </div>
 
+            {/* ===== EN PAGE 6b: OPEX ===== */}
+            <div className="print-page" style={pageStyle}>
+              <div style={sectionHeader}>
+                <HeaderLogo />
+                <span style={{ fontSize: "20px", fontWeight: "bold", color: "#93c5fd" }}>Financial Study - Operating Costs</span>
+              </div>
+
+              <h3 style={{ fontSize: "15px", fontWeight: "bold", marginBottom: "14px", color: "#60a5fa" }}>C) Operating Expenditure OPEX (OMR/Year)</h3>
+
+              <DarkTable
+                headers={["Item", "Year 1", "Year 2", "Year 3"]}
+                rows={[
+                  ["Salaries", "180,000", "250,000", "350,000"],
+                  ["Servers", "24,000", "36,000", "48,000"],
+                  ["Marketing", "50,000", "75,000", "100,000"],
+                  ["Wristband Cost", "25,500", "51,000", "102,000"],
+                  ["Stationery Cost", "187,500", "375,000", "750,000"],
+                  ["Administrative Expenses", "30,000", "40,000", "50,000"],
+                  ["Total", "497,000", "827,000", "1,400,000"],
+                ]}
+                highlightLastRow
+              />
+            </div>
+
             {/* ===== EN PAGE 7: Profitability ===== */}
             <div className="print-page" style={pageStyle}>
               <div style={sectionHeader}>
@@ -1024,7 +1102,8 @@ const FeasibilityPrint = () => {
                   textAlign: "center",
                 }}>
                   <h4 style={{ fontSize: "18px", fontWeight: "bold", color: "#fbbf24", marginBottom: "10px" }}>Total 3-Year Profit:</h4>
-                  <p style={{ fontSize: "36px", fontWeight: "bold", color: "#fbbf24" }}>4,346,000 OMR</p>
+                  <p style={{ fontSize: "36px", fontWeight: "bold", color: "#fbbf24", marginBottom: "8px" }}>4,346,000 OMR</p>
+                  <p style={{ fontSize: "13px", color: "#fcd34d" }}>(After deducting all operating costs)</p>
                 </div>
               </div>
             </div>
@@ -1043,8 +1122,7 @@ const FeasibilityPrint = () => {
                     {[
                       ["Loan Amount", "420,000 OMR"],
                       ["Repayment Period", "3 years"],
-                      ["Interest Rate", "5%"],
-                      ["Annual Payment", "~154,000 OMR"],
+                      ["Annual Payment", "140,000 OMR"],
                     ].map(([label, value], i) => (
                       <tr key={i}>
                         <td style={{ padding: "6px 0", fontWeight: "bold", color: "#93c5fd" }}>{label}</td>
@@ -1054,6 +1132,26 @@ const FeasibilityPrint = () => {
                   </tbody>
                 </table>
               </HighlightBox>
+
+              <h3 style={{ fontSize: "16px", fontWeight: "bold", marginTop: "20px", marginBottom: "14px", color: "#60a5fa" }}>Repayment Schedule:</h3>
+
+              <DarkTable
+                headers={["Year", "Net Profit", "Payment", "Remaining After Payment"]}
+                rows={[
+                  ["1", "513,000", "140,000", "373,000"],
+                  ["2", "1,193,000", "140,000", "1,053,000"],
+                  ["3", "2,640,000", "140,000", "2,500,000"],
+                ]}
+              />
+
+              <div style={{ marginTop: "20px" }}>
+                <HighlightBox color="green">
+                  <p style={{ fontSize: "14px", color: "#a7f3d0", display: "flex", alignItems: "center", gap: "8px" }}>
+                    <span style={{ background: "linear-gradient(135deg, #10b981, #059669)", borderRadius: "50%", width: "22px", height: "22px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: "12px" }}>✓</span>
+                    <span>Ability to fully repay the loan from Year 1 profits alone</span>
+                  </p>
+                </HighlightBox>
+              </div>
             </div>
 
             {/* ===== EN PAGE 9: Risk Analysis ===== */}
@@ -1063,11 +1161,11 @@ const FeasibilityPrint = () => {
                 <span style={{ fontSize: "20px", fontWeight: "bold", color: "#93c5fd" }}>Risk Analysis & Mitigation</span>
               </div>
 
-              <RiskItem risk="Delayed School Adoption" mitigation="Free pilot program + strategic partnerships" icon="⚠️" />
-              <RiskItem risk="New Competition" mitigation="First-mover advantage + unique wristband tech" icon="🛡️" />
-              <RiskItem risk="Technical Failures" mitigation="24/7 support + backup servers + offline mode" icon="🔧" />
-              <RiskItem risk="Price Changes" mitigation="Supplier contracts + diversified sources" icon="📊" />
-              <RiskItem risk="Regulatory Changes" mitigation="Privacy compliance + government partnerships" icon="📋" />
+              <RiskItem risk="Delayed School Adoption" mitigation="Free pilot program + strategic partnerships with Ministry of Education" icon="⚠️" />
+              <RiskItem risk="New Competition" mitigation="First-mover advantage + unique wristband technology + long-term contracts" icon="🛡️" />
+              <RiskItem risk="Technical Failures" mitigation="24/7 support team + backup servers + offline system" icon="🔧" />
+              <RiskItem risk="Price Changes" mitigation="Supplier contracts + diversified sources + strategic inventory" icon="📊" />
+              <RiskItem risk="Regulatory Changes" mitigation="Full compliance with privacy standards + government partnerships" icon="📋" />
             </div>
 
             {/* ===== EN PAGE 10: Conclusion ===== */}
@@ -1111,7 +1209,7 @@ const FeasibilityPrint = () => {
                 boxShadow: "0 8px 32px rgba(16,185,129,0.3)",
               }}>
                 <h2 style={{ fontSize: "22px", fontWeight: "bold", marginBottom: "12px" }}>Recommendation</h2>
-                <p style={{ fontSize: "15px" }}>Approve project funding to support this comprehensive educational and security solution</p>
+                <p style={{ fontSize: "15px" }}>Approve project funding to support this comprehensive educational and digital security solution</p>
               </div>
 
               <div style={{ textAlign: "center", marginTop: "30px" }}>
