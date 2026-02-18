@@ -248,8 +248,8 @@ const FeasibilityPrint = () => {
                 <HeaderLogo />
               </div>
 
-              <div style={{ color: "#1e293b", lineHeight: "1.8" }}>
-                <p style={{ fontSize: "16px", fontWeight: "bold", color: "#3b82f6", marginBottom: "15px" }}>
+              <div style={{ color: "#1e293b", lineHeight: "1.8", textAlign: "right" }}>
+                <p style={{ fontSize: "16px", fontWeight: "bold", color: "#3b82f6", marginBottom: "15px", textAlign: "right" }}>
                   TalebEdu هو التطبيق الوحيد في العالم الذي يجمع في منصة واحدة:
                 </p>
 
@@ -309,7 +309,7 @@ const FeasibilityPrint = () => {
                 <HeaderLogo />
               </div>
 
-              <div style={{ color: "#1e293b" }}>
+              <div style={{ color: "#1e293b", textAlign: "right" }}>
                 <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "30px" }}>
                   <tbody>
                     {[
@@ -330,11 +330,11 @@ const FeasibilityPrint = () => {
                 </table>
 
                 <h3 style={{ fontSize: "18px", fontWeight: "bold", marginBottom: "15px", color: "#1e293b" }}>الخدمات المقدمة:</h3>
-                <ol style={{ fontSize: "14px", paddingRight: "20px" }}>
-                  <li style={{ marginBottom: "10px" }}>اشتراك سنوي للطالب (الباص، البوابة، المقصف، المحفظة، متابعة الدرجات)</li>
-                  <li style={{ marginBottom: "10px" }}>بيع أساور NFC إضافية</li>
-                  <li style={{ marginBottom: "10px" }}>متجر قرطاسية بعلامة تجارية خاصة</li>
-                  <li style={{ marginBottom: "10px" }}>نظام مراسلة داخلي للتواصل بين الأهل والمعلمين والإدارة</li>
+                <ol style={{ fontSize: "14px", paddingRight: "20px", textAlign: "right" }}>
+                  <li style={{ marginBottom: "10px", textAlign: "right" }}>اشتراك سنوي للطالب (الباص، البوابة، المقصف، المحفظة، متابعة الدرجات)</li>
+                  <li style={{ marginBottom: "10px", textAlign: "right" }}>بيع أساور NFC إضافية</li>
+                  <li style={{ marginBottom: "10px", textAlign: "right" }}>متجر قرطاسية بعلامة تجارية خاصة</li>
+                  <li style={{ marginBottom: "10px", textAlign: "right" }}>نظام مراسلة داخلي للتواصل بين الأهل والمعلمين والإدارة</li>
                 </ol>
               </div>
             </div>
@@ -346,7 +346,7 @@ const FeasibilityPrint = () => {
                 <HeaderLogo />
               </div>
 
-              <div style={{ color: "#1e293b" }}>
+              <div style={{ color: "#1e293b", textAlign: "right" }}>
                 {[
                   ["تقنية السوار الذكي", "لا يحتاج شحن أو صيانة"],
                   ["متابعة شاملة", "الدرجات، الواجبات، الحضور في مكان واحد"],
@@ -440,11 +440,11 @@ const FeasibilityPrint = () => {
                   }}
                 >
                   <p style={{ fontSize: "14px", fontWeight: "bold", color: "#1e40af", marginBottom: "8px" }}>ملاحظات:</p>
-                  <ul style={{ fontSize: "13px", color: "#1e40af", paddingRight: "15px" }}>
-                    <li>اشتراك الطالب: 25 ر.ع سنوياً</li>
-                    <li>رسوم الباص: 100 ر.ع لكل باص سنوياً</li>
-                    <li>سوار NFC: 1.7 ر.ع للقطعة (سعر البيع)</li>
-                    <li>القرطاسية: 12.5 ر.ع متوسط إنفاق الطالب سنوياً</li>
+                  <ul style={{ fontSize: "13px", color: "#1e40af", paddingRight: "15px", textAlign: "right" }}>
+                    <li style={{ textAlign: "right" }}>اشتراك الطالب: 25 ر.ع سنوياً</li>
+                    <li style={{ textAlign: "right" }}>رسوم الباص: 100 ر.ع لكل باص سنوياً</li>
+                    <li style={{ textAlign: "right" }}>سوار NFC: 1.7 ر.ع للقطعة (سعر البيع)</li>
+                    <li style={{ textAlign: "right" }}>القرطاسية: 12.5 ر.ع متوسط إنفاق الطالب سنوياً</li>
                   </ul>
                 </div>
               </div>
@@ -457,7 +457,7 @@ const FeasibilityPrint = () => {
                 <HeaderLogo />
               </div>
 
-              <div style={{ color: "#1e293b" }}>
+              <div style={{ color: "#1e293b", textAlign: "right" }}>
                 <h3 style={{ fontSize: "16px", fontWeight: "bold", marginBottom: "15px" }}>ب) التكاليف التأسيسية CAPEX (ر.ع)</h3>
 
                 <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "25px", fontSize: "13px" }}>
@@ -533,7 +533,7 @@ const FeasibilityPrint = () => {
                 <HeaderLogo />
               </div>
 
-              <div style={{ color: "#1e293b" }}>
+              <div style={{ color: "#1e293b", textAlign: "right" }}>
                 <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "30px", fontSize: "14px" }}>
                   <thead>
                     <tr style={{ backgroundColor: "#8b5cf6", color: "white" }}>
@@ -599,7 +599,7 @@ const FeasibilityPrint = () => {
                 <HeaderLogo />
               </div>
 
-              <div style={{ color: "#1e293b" }}>
+              <div style={{ color: "#1e293b", textAlign: "right" }}>
                 <div
                   style={{
                     backgroundColor: "#eff6ff",
@@ -672,8 +672,9 @@ const FeasibilityPrint = () => {
                     marginTop: "20px",
                   }}
                 >
-                  <p style={{ fontSize: "14px", color: "#166534" }}>
-                    ✓ القدرة على سداد القرض بالكامل من أرباح السنة الأولى فقط
+                  <p style={{ fontSize: "14px", color: "#166534", display: "flex", flexDirection: "row-reverse", alignItems: "center", gap: "8px" }}>
+                    <span style={{ flex: 1, textAlign: "right" }}>القدرة على سداد القرض بالكامل من أرباح السنة الأولى فقط</span>
+                    <span style={{ color: "#10b981", flexShrink: 0 }}>✓</span>
                   </p>
                 </div>
               </div>
@@ -686,7 +687,7 @@ const FeasibilityPrint = () => {
                 <HeaderLogo />
               </div>
 
-              <div style={{ color: "#1e293b" }}>
+              <div style={{ color: "#1e293b", textAlign: "right" }}>
                 {[
                   {
                     risk: "تأخر اعتماد المدارس",
@@ -723,8 +724,8 @@ const FeasibilityPrint = () => {
                       marginBottom: "12px",
                     }}
                   >
-                    <p style={{ fontSize: "14px", fontWeight: "bold", marginBottom: "5px" }}>⚠️ {item.risk}</p>
-                    <p style={{ fontSize: "13px" }}>التخفيف: {item.mitigation}</p>
+                    <p style={{ fontSize: "14px", fontWeight: "bold", marginBottom: "5px", textAlign: "right" }}>⚠️ {item.risk}</p>
+                    <p style={{ fontSize: "13px", textAlign: "right" }}>التخفيف: {item.mitigation}</p>
                   </div>
                 ))}
               </div>
