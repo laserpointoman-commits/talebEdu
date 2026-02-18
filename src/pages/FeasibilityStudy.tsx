@@ -1110,8 +1110,8 @@ const FeasibilityStudy = () => {
         <div className="flex justify-center mb-8 sm:mb-12">
           <Card className="bg-white/10 backdrop-blur-sm border-white/20 p-4 sm:p-6 text-center w-full max-w-xs">
             <Shield className="w-8 h-8 sm:w-12 sm:h-12 text-blue-400 mx-auto mb-2 sm:mb-4" />
-            <h3 className="text-xl sm:text-2xl font-bold text-white">أول تطبيق</h3>
-            <p className="text-sm sm:text-base text-blue-200">في سلطنة عمان</p>
+            <h3 className="text-xl sm:text-2xl font-bold text-white">اول تطبيق آمان</h3>
+            <p className="text-sm sm:text-base text-blue-200">بميزات فريدة في العالم</p>
           </Card>
         </div>
 
