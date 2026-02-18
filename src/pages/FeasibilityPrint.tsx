@@ -511,6 +511,17 @@ const FeasibilityPrint = () => {
                   </tbody>
                 </table>
 
+              </div>
+            </div>
+
+            {/* Arabic Page 6b: OPEX */}
+            <div className="print-page" dir="rtl" style={{ ...pageStyle, backgroundColor: "white", direction: "rtl" }}>
+              <div style={headerStyle}>
+                <span style={{ fontSize: "20px", fontWeight: "bold" }}>الدراسة المالية - التكاليف التشغيلية</span>
+                <HeaderLogo />
+              </div>
+
+              <div style={{ color: "#1e293b", textAlign: "right" }}>
                 <h3 style={{ fontSize: "16px", fontWeight: "bold", marginBottom: "15px" }}>ج) التكاليف التشغيلية OPEX (ر.ع/سنة)</h3>
 
                 <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
