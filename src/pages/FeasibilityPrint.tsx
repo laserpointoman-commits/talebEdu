@@ -253,7 +253,7 @@ const FeasibilityPrint = () => {
                   TalebEdu هو التطبيق الوحيد في العالم الذي يجمع في منصة واحدة:
                 </p>
 
-                <ul style={{ fontSize: "14px", paddingRight: "20px", marginBottom: "20px", listStyle: "none" }}>
+                <ul style={{ fontSize: "14px", listStyle: "none", padding: 0, margin: 0, marginBottom: "20px", textAlign: "right" }}>
                   {[
                     "إدارة المدرسة: الحضور، الدرجات، الواجبات، الجداول",
                     "إدارة الباصات: 6 باصات كحد أدنى لكل مدرسة مع تتبع مباشر",
@@ -262,8 +262,8 @@ const FeasibilityPrint = () => {
                     "المتجر الرقمي: أساور NFC + قرطاسية بعلامة تجارية خاصة",
                     "نظام تواصل متكامل: رسائل، مكالمات صوتية ومرئية، مشاركة ملفات",
                   ].map((text, i) => (
-                    <li key={i} style={{ marginBottom: "8px", display: "flex", alignItems: "center", gap: "8px" }}>
-                      <span style={{ flex: 1 }}>{text}</span>
+                    <li key={i} style={{ marginBottom: "8px", display: "flex", flexDirection: "row-reverse", alignItems: "center", gap: "8px" }}>
+                      <span style={{ flex: 1, textAlign: "right" }}>{text}</span>
                       <span style={{ color: "#10b981", flexShrink: 0 }}>✓</span>
                     </li>
                   ))}
@@ -271,7 +271,7 @@ const FeasibilityPrint = () => {
 
                 <p style={{ fontSize: "16px", fontWeight: "bold", color: "#10b981", marginBottom: "15px" }}>المزايا الفريدة:</p>
 
-                <ul style={{ fontSize: "14px", paddingRight: "20px", marginBottom: "20px", listStyle: "none" }}>
+                <ul style={{ fontSize: "14px", marginBottom: "20px", listStyle: "none", padding: 0, textAlign: "right" }}>
                   {[
                     "السوار الذكي: مقاوم لجميع العوامل عدا النار، لا يحتاج شحن",
                     "دعم متعدد اللغات: العربية، الإنجليزية، الهندية",
@@ -279,8 +279,8 @@ const FeasibilityPrint = () => {
                     "قابلية التوسع المحلي والدولي (دول الخليج في السنة 3)",
                     "إدارة مالية متكاملة: جميع الاشتراكات عبر المحفظة",
                   ].map((text, i) => (
-                    <li key={i} style={{ marginBottom: "8px", display: "flex", alignItems: "center", gap: "8px" }}>
-                      <span style={{ flex: 1 }}>{text}</span>
+                    <li key={i} style={{ marginBottom: "8px", display: "flex", flexDirection: "row-reverse", alignItems: "center", gap: "8px" }}>
+                      <span style={{ flex: 1, textAlign: "right" }}>{text}</span>
                       <span style={{ color: "#10b981", flexShrink: 0 }}>✓</span>
                     </li>
                   ))}
@@ -368,12 +368,13 @@ const FeasibilityPrint = () => {
                       marginBottom: "8px",
                       borderRadius: "6px",
                       display: "flex",
-                      justifyContent: "space-between",
+                      flexDirection: "row-reverse",
                       alignItems: "center",
+                      gap: "10px",
                     }}
                   >
-                    <span style={{ color: "#10b981", fontWeight: "bold" }}>{title}</span>
-                    <span style={{ color: "#6b7280", fontSize: "13px" }}>{desc}</span>
+                    <span style={{ fontWeight: "bold", color: "#1e293b", flex: 1, textAlign: "right" }}>{title}</span>
+                    <span style={{ color: "#6b7280", fontSize: "13px", flexShrink: 0 }}>{desc}</span>
                     <span style={{ color: "#10b981", flexShrink: 0 }}>✓</span>
                   </div>
                 ))}
@@ -754,8 +755,8 @@ const FeasibilityPrint = () => {
                   "ميزة الريادة في إدارة المدارس الذكية",
                   "نموذج إيرادات مستدام ومتكرر",
                 ].map((point, i) => (
-                  <p key={i} style={{ fontSize: "16px", marginBottom: "12px", paddingRight: "20px", display: "flex", alignItems: "center", gap: "8px" }}>
-                    <span style={{ flex: 1 }}>{point}</span>
+                  <p key={i} style={{ fontSize: "16px", marginBottom: "12px", display: "flex", flexDirection: "row-reverse", alignItems: "center", gap: "8px" }}>
+                    <span style={{ flex: 1, textAlign: "right" }}>{point}</span>
                     <span style={{ color: "#10b981", flexShrink: 0 }}>✓</span>
                   </p>
                 ))}
