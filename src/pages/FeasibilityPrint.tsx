@@ -683,7 +683,7 @@ const FeasibilityPrint = () => {
             {/* Arabic Page 9: Risk Analysis */}
             <div className="print-page" dir="rtl" style={{ ...pageStyle, backgroundColor: "white", direction: "rtl" }}>
               <div style={headerStyle}>
-                <span style={{ fontSize: "20px", fontWeight: "bold" }}>تحليل المخاطر والتخفيف</span>
+                <span style={{ fontSize: "20px", fontWeight: "bold" }}>تحليل المخاطر والحلول</span>
                 <HeaderLogo />
               </div>
 
@@ -725,7 +725,7 @@ const FeasibilityPrint = () => {
                     }}
                   >
                     <p style={{ fontSize: "14px", fontWeight: "bold", marginBottom: "5px", textAlign: "right" }}>⚠️ {item.risk}</p>
-                    <p style={{ fontSize: "13px", textAlign: "right" }}>التخفيف: {item.mitigation}</p>
+                    <p style={{ fontSize: "13px", textAlign: "right" }}>الحلول: {item.mitigation}</p>
                   </div>
                 ))}
               </div>
