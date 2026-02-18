@@ -309,7 +309,7 @@ const FeasibilityPrint = () => {
                     ].map(([label, value], i) => (
                       <tr key={i} style={{ backgroundColor: i % 2 === 0 ? "#f0f9ff" : "white" }}>
                         <td style={{ padding: "12px 15px", fontWeight: "bold", color: "#3b82f6" }}>{label}</td>
-                        <td style={{ padding: "12px 15px", textAlign: "left" }}>{value}</td>
+                        <td style={{ padding: "12px 15px" }}>{value}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -465,7 +465,7 @@ const FeasibilityPrint = () => {
                         }}
                       >
                         <td style={{ padding: "12px 15px", fontWeight: i === 8 ? "bold" : "normal" }}>{label}</td>
-                        <td style={{ padding: "12px 15px", textAlign: "left", fontWeight: "bold" }}>{value}</td>
+                        <td style={{ padding: "12px 15px", fontWeight: "bold" }}>{value}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -605,7 +605,7 @@ const FeasibilityPrint = () => {
                       ].map(([label, value], i) => (
                         <tr key={i}>
                           <td style={{ padding: "8px 0", fontWeight: "bold" }}>{label}</td>
-                          <td style={{ padding: "8px 0", textAlign: "left" }}>{value}</td>
+                          <td style={{ padding: "8px 0" }}>{value}</td>
                         </tr>
                       ))}
                     </tbody>
