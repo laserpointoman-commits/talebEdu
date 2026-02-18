@@ -475,6 +475,47 @@ const FeasibilityPrint = () => {
               </div>
             </div>
 
+            {/* ===== AR PAGE 2b: Market Size ===== */}
+            <div className="print-page" dir="rtl" style={{ ...pageStyle, direction: "rtl" }}>
+              <div style={sectionHeader}>
+                <span style={{ fontSize: "20px", fontWeight: "bold", color: "#93c5fd" }}>حجم السوق العماني – 2025/2026</span>
+                <HeaderLogo />
+              </div>
+
+              <div style={{ textAlign: "right" }}>
+                <p style={{ fontSize: "14px", color: "#e2e8f0", marginBottom: "20px", lineHeight: "1.8" }}>
+                  يوضح الجدول التالي حجم السوق التعليمي في سلطنة عمان من حيث عدد المدارس والطلاب حسب النوع:
+                </p>
+
+                <DarkTable
+                  headers={["النوع", "عدد المدارس", "عدد الطلاب"]}
+                  rows={[
+                    ["المدارس الحكومية", "1,241", "~683,600"],
+                    ["المدارس الخاصة", "994", "~170,900"],
+                    ["الإجمالي", "2,235", "854,540"],
+                  ]}
+                  highlightLastRow
+                />
+
+                <div style={{ marginTop: "24px" }}>
+                  <HighlightBox color="blue">
+                    <p style={{ fontSize: "12px", color: "#93c5fd" }}>
+                      المصادر: وزارة التربية والتعليم / تقارير المركز الوطني للإحصاء والمعلومات (NCSI) 2025 وتقديرات الاتجاه
+                    </p>
+                  </HighlightBox>
+                </div>
+
+                <div style={{ marginTop: "24px" }}>
+                  <HighlightBox color="green">
+                    <p style={{ fontSize: "14px", fontWeight: "bold", color: "#10b981", marginBottom: "8px" }}>الفرصة:</p>
+                    <p style={{ fontSize: "13px", color: "#a7f3d0" }}>
+                      أكثر من 854,000 طالب في أكثر من 2,200 مدرسة – سوق ضخم وغير مخدوم بنظام متكامل للأمان والإدارة الذكية.
+                    </p>
+                  </HighlightBox>
+                </div>
+              </div>
+            </div>
+
             {/* ===== AR PAGE 3: Project Scope ===== */}
             <div className="print-page" dir="rtl" style={{ ...pageStyle, direction: "rtl" }}>
               <div style={sectionHeader}>
@@ -907,6 +948,45 @@ const FeasibilityPrint = () => {
                   <p style={{ fontSize: "14px", fontWeight: "bold", color: "#10b981", marginBottom: "4px" }}>Project Goal:</p>
                   <p style={{ fontSize: "13px", color: "#a7f3d0" }}>
                     Create a reliable and comprehensive platform to solve school management, safety, communication, and digital purchasing in a sustainable way.
+                  </p>
+                </HighlightBox>
+              </div>
+            </div>
+
+            {/* ===== EN PAGE 2b: Market Size ===== */}
+            <div className="print-page" style={pageStyle}>
+              <div style={sectionHeader}>
+                <HeaderLogo />
+                <span style={{ fontSize: "20px", fontWeight: "bold", color: "#93c5fd" }}>Oman Market Size – 2025/2026</span>
+              </div>
+
+              <p style={{ fontSize: "14px", color: "#e2e8f0", marginBottom: "20px", lineHeight: "1.8" }}>
+                The following table outlines the Omani education market by school type and student population:
+              </p>
+
+              <DarkTable
+                headers={["Type", "Schools", "Students"]}
+                rows={[
+                  ["Government Schools", "1,241", "~683,600"],
+                  ["Private Schools", "994", "~170,900"],
+                  ["Total", "2,235", "854,540"],
+                ]}
+                highlightLastRow
+              />
+
+              <div style={{ marginTop: "24px" }}>
+                <HighlightBox color="blue">
+                  <p style={{ fontSize: "12px", color: "#93c5fd" }}>
+                    Sources: Ministry of Education / NCSI (National Centre for Statistics & Information) reports 2025 and trend estimates
+                  </p>
+                </HighlightBox>
+              </div>
+
+              <div style={{ marginTop: "24px" }}>
+                <HighlightBox color="green">
+                  <p style={{ fontSize: "14px", fontWeight: "bold", color: "#10b981", marginBottom: "8px" }}>The Opportunity:</p>
+                  <p style={{ fontSize: "13px", color: "#a7f3d0" }}>
+                    Over 854,000 students across 2,200+ schools – a massive and underserved market for an integrated safety and smart management system.
                   </p>
                 </HighlightBox>
               </div>
