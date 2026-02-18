@@ -111,14 +111,17 @@ const FeasibilityPrint = () => {
         margin: 0;
       }
       
-      html, body, #root, #root > div, .h-\\[100dvh\\] {
+      html, body, #root {
         margin: 0 !important;
         padding: 0 !important;
         height: auto !important;
-        min-height: 0 !important;
-        max-height: none !important;
         overflow: visible !important;
-        width: auto !important;
+      }
+      
+      #feasibility-print-root {
+        height: auto !important;
+        overflow: visible !important;
+        max-height: none !important;
       }
       
       .print-container {
@@ -134,7 +137,6 @@ const FeasibilityPrint = () => {
       
       .print-page {
         width: 210mm !important;
-        min-height: 297mm !important;
         height: 297mm !important;
         margin: 0 !important;
         padding: 15mm !important;
@@ -143,7 +145,6 @@ const FeasibilityPrint = () => {
         page-break-after: always !important;
         page-break-inside: avoid !important;
         overflow: visible !important;
-        position: relative !important;
         display: block !important;
         zoom: 1 !important;
       }
@@ -152,7 +153,7 @@ const FeasibilityPrint = () => {
         page-break-after: auto !important;
       }
       
-      .print\\:hidden {
+      .no-print {
         display: none !important;
       }
     }
@@ -167,7 +168,7 @@ const FeasibilityPrint = () => {
 
 
   return (
-    <div className="h-[100dvh] overflow-y-auto overscroll-none" style={{ WebkitOverflowScrolling: 'touch' }}>
+    <div id="feasibility-print-root" className="h-[100dvh] overflow-y-auto overscroll-none" style={{ WebkitOverflowScrolling: 'touch' }}>
       <style>{printStyles}</style>
       <div
         className="min-h-screen bg-gray-200 print:bg-white print-container"
@@ -175,7 +176,7 @@ const FeasibilityPrint = () => {
         style={{ fontFamily: language === "ar" ? "'Noto Naskh Arabic', 'Geeza Pro', 'Arial', sans-serif" : "Arial, sans-serif" }}
       >
       {/* Controls - Hidden when printing */}
-      <div className="print:hidden sticky top-0 z-50 bg-slate-900 p-3 sm:p-4 shadow-lg">
+      <div className="no-print sticky top-0 z-50 bg-slate-900 p-3 sm:p-4 shadow-lg">
         <div className="container mx-auto flex flex-wrap items-center justify-between gap-2 sm:gap-4">
           <Button
             variant="ghost"
