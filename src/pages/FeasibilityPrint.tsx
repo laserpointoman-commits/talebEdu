@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect } from "react"; // mobile fix
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Printer } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -10,9 +10,30 @@ const FeasibilityPrint = () => {
   const navigate = useNavigate();
   const [language, setLanguage] = useState<"ar" | "en">("ar");
 
+  // Calculate scale for mobile
+  const [pageScale, setPageScale] = useState(1);
+
+  useEffect(() => {
+    const updateScale = () => {
+      const screenWidth = window.innerWidth;
+      const pageWidthPx = 794;
+      if (screenWidth < pageWidthPx + 40) {
+        setPageScale(Math.max(0.3, (screenWidth - 16) / pageWidthPx));
+      } else {
+        setPageScale(1);
+      }
+    };
+    updateScale();
+    window.addEventListener("resize", updateScale);
+    return () => window.removeEventListener("resize", updateScale);
+  }, []);
+
   const handlePrint = () => {
     window.print();
   };
+
+  const pageWidthPx = 794; // 210mm ≈ 794px
+  const pageHeightPx = 1123; // 297mm ≈ 1123px
 
   const pageStyle: React.CSSProperties = {
     width: "210mm",
@@ -28,7 +49,12 @@ const FeasibilityPrint = () => {
     overflow: "hidden",
     display: "block",
     position: "relative",
-    transformOrigin: "top center",
+    ...(pageScale < 1 ? {
+      transformOrigin: "top left",
+      transform: `scale(${pageScale})`,
+      marginLeft: `${(window.innerWidth - pageWidthPx * pageScale) / 2}px`,
+      marginBottom: `${-pageHeightPx * (1 - pageScale) + 16}px`,
+    } : {}),
   };
 
   const headerStyle: React.CSSProperties = {
@@ -152,37 +178,15 @@ const FeasibilityPrint = () => {
 
     /* Mobile responsive scaling */
     @media screen and (max-width: 850px) {
-      .print-page {
-        transform: scale(var(--page-scale, 1));
-        transform-origin: top center;
-        margin-bottom: calc(-297mm * (1 - var(--page-scale, 1)) + 16px) !important;
-      }
       .print-pages-wrapper {
         overflow-x: hidden;
       }
     }
   `;
 
-  // Calculate scale for mobile
-  const [pageScale, setPageScale] = useState(1);
-
-  useEffect(() => {
-    const updateScale = () => {
-      const screenWidth = window.innerWidth;
-      const pageWidthPx = 794; // 210mm ≈ 794px
-      if (screenWidth < pageWidthPx + 40) {
-        setPageScale(Math.max(0.3, (screenWidth - 16) / pageWidthPx));
-      } else {
-        setPageScale(1);
-      }
-    };
-    updateScale();
-    window.addEventListener("resize", updateScale);
-    return () => window.removeEventListener("resize", updateScale);
-  }, []);
 
   return (
-    <div className="h-[100dvh] overflow-y-auto overscroll-none" style={{ WebkitOverflowScrolling: 'touch', ['--page-scale' as string]: pageScale }}>
+    <div className="h-[100dvh] overflow-y-auto overscroll-none" style={{ WebkitOverflowScrolling: 'touch' }}>
       <style>{printStyles}</style>
       <div
         className="min-h-screen bg-gray-200 print:bg-white print-container"
