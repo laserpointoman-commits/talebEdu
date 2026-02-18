@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"; // mobile fix
+import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Printer } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -9,23 +9,13 @@ const PHONE_NUMBER = "+968 9656 4540";
 const FeasibilityPrint = () => {
   const navigate = useNavigate();
   const [language, setLanguage] = useState<"ar" | "en">("ar");
-
-  // Calculate scale for mobile
-  const [pageScale, setPageScale] = useState(1);
+  const [screenWidth, setScreenWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1024);
 
   useEffect(() => {
-    const updateScale = () => {
-      const screenWidth = window.innerWidth;
-      const pageWidthPx = 794;
-      if (screenWidth < pageWidthPx + 40) {
-        setPageScale(Math.max(0.3, (screenWidth - 16) / pageWidthPx));
-      } else {
-        setPageScale(1);
-      }
-    };
-    updateScale();
-    window.addEventListener("resize", updateScale);
-    return () => window.removeEventListener("resize", updateScale);
+    const updateWidth = () => setScreenWidth(window.innerWidth);
+    updateWidth();
+    window.addEventListener("resize", updateWidth);
+    return () => window.removeEventListener("resize", updateWidth);
   }, []);
 
   const handlePrint = () => {
@@ -34,6 +24,9 @@ const FeasibilityPrint = () => {
 
   const pageWidthPx = 794; // 210mm ≈ 794px
   const pageHeightPx = 1123; // 297mm ≈ 1123px
+  const pageScale = screenWidth < pageWidthPx + 40
+    ? Math.max(0.3, (screenWidth - 16) / pageWidthPx)
+    : 1;
 
   const pageStyle: React.CSSProperties = {
     width: "210mm",
@@ -49,12 +42,7 @@ const FeasibilityPrint = () => {
     overflow: "hidden",
     display: "block",
     position: "relative",
-    ...(pageScale < 1 ? {
-      transformOrigin: "top left",
-      transform: `scale(${pageScale})`,
-      marginLeft: `${(window.innerWidth - pageWidthPx * pageScale) / 2}px`,
-      marginBottom: `${-pageHeightPx * (1 - pageScale) + 16}px`,
-    } : {}),
+    zoom: pageScale < 1 ? pageScale : undefined,
   };
 
   const headerStyle: React.CSSProperties = {
@@ -160,6 +148,7 @@ const FeasibilityPrint = () => {
         overflow: hidden !important;
         position: relative !important;
         display: block !important;
+        zoom: 1 !important;
       }
       
       .print-page:last-child {
