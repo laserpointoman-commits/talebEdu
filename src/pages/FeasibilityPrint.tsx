@@ -172,7 +172,7 @@ const FeasibilityPrint = () => {
 
   // Styled table for dark theme
   const DarkTable = ({ headers, rows, highlightLastRow = false }: { headers: string[]; rows: string[][]; highlightLastRow?: boolean }) => (
-    <table style={{ width: "100%", borderCollapse: "separate", borderSpacing: "0 4px", fontSize: "12px", direction: "ltr" }}>
+    <table style={{ width: "100%", borderCollapse: "separate", borderSpacing: "0 4px", fontSize: "12px" }}>
       <thead>
         <tr>
           {headers.map((h, j) => (
