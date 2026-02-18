@@ -31,10 +31,24 @@ const FeasibilityPrint = () => {
       const pdfWidth = 210;
       const pdfHeight = 297;
 
+      const zoomFactor = 1.35;
+      const captureW = Math.round(794 * zoomFactor);
+      const captureH = Math.round(1123 * zoomFactor);
+
       for (let i = 0; i < pages.length; i++) {
         const page = pages[i] as HTMLElement;
         const originalZoom = page.style.zoom;
-        page.style.zoom = '1';
+        const originalWidth = page.style.width;
+        const originalHeight = page.style.height;
+        const originalMinHeight = page.style.minHeight;
+        const originalMaxHeight = page.style.maxHeight;
+
+        // Zoom up content so fonts are larger relative to A4
+        page.style.zoom = String(zoomFactor);
+        page.style.width = `${captureW}px`;
+        page.style.height = `${captureH}px`;
+        page.style.minHeight = `${captureH}px`;
+        page.style.maxHeight = `${captureH}px`;
         
         const allElements = page.querySelectorAll('*');
         allElements.forEach((el) => {
@@ -48,12 +62,16 @@ const FeasibilityPrint = () => {
           scale: 2,
           useCORS: true,
           backgroundColor: null,
-          width: 794,
-          height: 1123,
+          width: captureW,
+          height: captureH,
           logging: false,
         });
         
         page.style.zoom = originalZoom;
+        page.style.width = originalWidth;
+        page.style.height = originalHeight;
+        page.style.minHeight = originalMinHeight;
+        page.style.maxHeight = originalMaxHeight;
         allElements.forEach((el) => {
           const htmlEl = el as HTMLElement;
           htmlEl.style.letterSpacing = '';
