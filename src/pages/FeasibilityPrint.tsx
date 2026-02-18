@@ -28,6 +28,7 @@ const FeasibilityPrint = () => {
     overflow: "hidden",
     display: "block",
     position: "relative",
+    transformOrigin: "top center",
   };
 
   const headerStyle: React.CSSProperties = {
@@ -148,10 +149,40 @@ const FeasibilityPrint = () => {
         overflow: hidden !important;
       }
     }
+
+    /* Mobile responsive scaling */
+    @media screen and (max-width: 850px) {
+      .print-page {
+        transform: scale(var(--page-scale, 1));
+        transform-origin: top center;
+        margin-bottom: calc(-297mm * (1 - var(--page-scale, 1)) + 16px) !important;
+      }
+      .print-pages-wrapper {
+        overflow-x: hidden;
+      }
+    }
   `;
 
+  // Calculate scale for mobile
+  const [pageScale, setPageScale] = useState(1);
+
+  useEffect(() => {
+    const updateScale = () => {
+      const screenWidth = window.innerWidth;
+      const pageWidthPx = 794; // 210mm ≈ 794px
+      if (screenWidth < pageWidthPx + 40) {
+        setPageScale(Math.max(0.3, (screenWidth - 16) / pageWidthPx));
+      } else {
+        setPageScale(1);
+      }
+    };
+    updateScale();
+    window.addEventListener("resize", updateScale);
+    return () => window.removeEventListener("resize", updateScale);
+  }, []);
+
   return (
-    <div className="h-[100dvh] overflow-y-auto overscroll-none" style={{ WebkitOverflowScrolling: 'touch' }}>
+    <div className="h-[100dvh] overflow-y-auto overscroll-none" style={{ WebkitOverflowScrolling: 'touch', ['--page-scale' as string]: pageScale }}>
       <style>{printStyles}</style>
       <div
         className="min-h-screen bg-gray-200 print:bg-white print-container"
@@ -159,28 +190,28 @@ const FeasibilityPrint = () => {
         style={{ fontFamily: language === "ar" ? "'Noto Naskh Arabic', 'Geeza Pro', 'Arial', sans-serif" : "Arial, sans-serif" }}
       >
       {/* Controls - Hidden when printing */}
-      <div className="print:hidden sticky top-0 z-50 bg-slate-900 p-4 shadow-lg">
-        <div className="container mx-auto flex flex-wrap items-center justify-between gap-4">
+      <div className="print:hidden sticky top-0 z-50 bg-slate-900 p-3 sm:p-4 shadow-lg">
+        <div className="container mx-auto flex flex-wrap items-center justify-between gap-2 sm:gap-4">
           <Button
             variant="ghost"
             onClick={() => navigate("/feasibility")}
-            className="text-white hover:bg-white/10"
+            className="text-white hover:bg-white/10 text-sm sm:text-base"
           >
-            <ArrowRight className="w-5 h-5 ml-2" />
+            <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-1 sm:ml-2" />
             العودة
           </Button>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
             <div className="flex bg-slate-800 rounded-lg p-1">
               <button
                 onClick={() => setLanguage("ar")}
-                className={`px-4 py-2 rounded-md transition-all ${language === "ar" ? "bg-blue-600 text-white" : "text-gray-400 hover:text-white"}`}
+                className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-md transition-all text-sm sm:text-base ${language === "ar" ? "bg-blue-600 text-white" : "text-gray-400 hover:text-white"}`}
               >
                 عربي
               </button>
               <button
                 onClick={() => setLanguage("en")}
-                className={`px-4 py-2 rounded-md transition-all ${language === "en" ? "bg-blue-600 text-white" : "text-gray-400 hover:text-white"}`}
+                className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-md transition-all text-sm sm:text-base ${language === "en" ? "bg-blue-600 text-white" : "text-gray-400 hover:text-white"}`}
               >
                 English
               </button>
