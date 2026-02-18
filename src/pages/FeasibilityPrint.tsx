@@ -36,24 +36,16 @@ const FeasibilityPrint = () => {
         const originalZoom = page.style.zoom;
         page.style.zoom = '1';
         
-        // Temporarily boost font sizes for PDF readability
         const allElements = page.querySelectorAll('*');
-        const originalFontSizes: string[] = [];
         allElements.forEach((el) => {
           const htmlEl = el as HTMLElement;
-          const computed = window.getComputedStyle(htmlEl);
-          originalFontSizes.push(htmlEl.style.fontSize);
-          const currentSize = parseFloat(computed.fontSize);
-          if (currentSize > 0) {
-            htmlEl.style.fontSize = `${currentSize * 2}px`;
-          }
           htmlEl.style.letterSpacing = 'normal';
           htmlEl.style.wordWrap = 'normal';
           htmlEl.style.fontFeatureSettings = '"liga" 0';
         });
         
         const canvas = await html2canvas(page, {
-          scale: 4,
+          scale: 3,
           useCORS: true,
           backgroundColor: null,
           width: 794,
@@ -61,20 +53,17 @@ const FeasibilityPrint = () => {
           logging: false,
         });
         
-        // Restore original styles
         page.style.zoom = originalZoom;
-        let idx = 0;
         allElements.forEach((el) => {
           const htmlEl = el as HTMLElement;
-          htmlEl.style.fontSize = originalFontSizes[idx++];
           htmlEl.style.letterSpacing = '';
           htmlEl.style.wordWrap = '';
           htmlEl.style.fontFeatureSettings = '';
         });
 
-        const imgData = canvas.toDataURL('image/jpeg', 0.95);
+        const imgData = canvas.toDataURL('image/png');
         if (i > 0) pdf.addPage();
-        pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
       }
 
       pdf.save(language === 'ar' ? 'دراسة_جدوى_TalebEdu.pdf' : 'TalebEdu_Feasibility_Study.pdf');
