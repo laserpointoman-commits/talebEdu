@@ -443,7 +443,7 @@ const FeasibilityPrint = () => {
                   <ul style={{ fontSize: "13px", color: "#1e40af", paddingRight: "15px", textAlign: "right" }}>
                     <li style={{ textAlign: "right" }}>اشتراك الطالب: 25 ر.ع سنوياً</li>
                     <li style={{ textAlign: "right" }}>رسوم الباص: 100 ر.ع لكل باص سنوياً</li>
-                    <li style={{ textAlign: "right" }}>سوار NFC: 1.7 ر.ع للقطعة (سعر البيع)</li>
+                    <li style={{ textAlign: "right" }}>سوار NFC: 2 ر.ع للقطعة (سعر البيع)</li>
                     <li style={{ textAlign: "right" }}>القرطاسية: 12.5 ر.ع متوسط إنفاق الطالب سنوياً</li>
                   </ul>
                 </div>
