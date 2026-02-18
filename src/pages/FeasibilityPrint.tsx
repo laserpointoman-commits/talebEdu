@@ -45,7 +45,7 @@ const FeasibilityPrint = () => {
         });
         
         const canvas = await html2canvas(page, {
-          scale: 2,
+          scale: 4,
           useCORS: true,
           backgroundColor: null,
           width: 794,
