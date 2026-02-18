@@ -528,7 +528,7 @@ const FeasibilityPrint = () => {
                   <table style={{ width: "100%", borderCollapse: "separate", borderSpacing: "0 6px" }}>
                     <tbody>
                       {[
-                        ["الشريحة المستهدفة", "المدارس الخاصة + شراكة حكومية"],
+                        ["الشريحة المستهدفة", "المدارس الخاصة + المدارس الحكومية"],
                         ["الموقع", "مسقط والداخلية"],
                         ["مدارس السنة الأولى", "50 مدرسة"],
                         ["متوسط الطلاب لكل مدرسة", "500 طالب"],
@@ -1003,7 +1003,7 @@ const FeasibilityPrint = () => {
                 <table style={{ width: "100%", borderCollapse: "separate", borderSpacing: "0 6px" }}>
                   <tbody>
                     {[
-                      ["Target Segment", "Private Schools + Government Partnership"],
+                      ["Target Segment", "Private Schools + Government Schools"],
                       ["Location", "Muscat & Dakhiliyah"],
                       ["Year 1 Schools", "50 schools"],
                       ["Avg Students/School", "500 students"],
