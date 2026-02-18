@@ -115,7 +115,12 @@ const FeasibilityPrint = () => {
         margin: 0 !important;
         padding: 0 !important;
         width: 210mm !important;
-        height: 297mm !important;
+        height: auto !important;
+        overflow: visible !important;
+      }
+      
+      .h-\\[100dvh\\] {
+        height: auto !important;
         overflow: visible !important;
       }
       
