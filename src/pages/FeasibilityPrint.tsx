@@ -45,7 +45,7 @@ const FeasibilityPrint = () => {
         });
         
         const canvas = await html2canvas(page, {
-          scale: 3,
+          scale: 2,
           useCORS: true,
           backgroundColor: null,
           width: 794,
@@ -61,9 +61,9 @@ const FeasibilityPrint = () => {
           htmlEl.style.fontFeatureSettings = '';
         });
 
-        const imgData = canvas.toDataURL('image/png');
+        const imgData = canvas.toDataURL('image/jpeg', 0.92);
         if (i > 0) pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+        pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
       }
 
       pdf.save(language === 'ar' ? 'دراسة_جدوى_TalebEdu.pdf' : 'TalebEdu_Feasibility_Study.pdf');
