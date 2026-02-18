@@ -15,7 +15,7 @@ const PHONE_NUMBER = "+968 9656 4540";
 const FeasibilityStudy = () => {
   return (
     <div className="h-[100dvh] overflow-y-auto overscroll-none" style={{ WebkitOverflowScrolling: 'touch' }}>
-    <div className="min-h-screen w-full bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900" dir="rtl">
+    <div className="min-h-screen w-full" dir="rtl" style={{ background: "linear-gradient(to bottom right, #0f172a, #1e3a8a, #0f172a)" }}>
 
       {/* Visible Page Content */}
       <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-4xl">
