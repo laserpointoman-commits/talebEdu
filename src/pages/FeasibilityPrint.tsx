@@ -45,7 +45,7 @@ const FeasibilityPrint = () => {
           originalFontSizes.push(htmlEl.style.fontSize);
           const currentSize = parseFloat(computed.fontSize);
           if (currentSize > 0) {
-            htmlEl.style.fontSize = `${currentSize * 1.4}px`;
+            htmlEl.style.fontSize = `${currentSize * 2}px`;
           }
           htmlEl.style.letterSpacing = 'normal';
           htmlEl.style.wordWrap = 'normal';
