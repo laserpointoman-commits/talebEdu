@@ -470,6 +470,17 @@ const FeasibilityStudy = () => {
                 </tbody>
               </table>
 
+            </div>
+          </div>
+
+          {/* Page 6b: OPEX */}
+          <div style={{ ...pageStyle, backgroundColor: "white" }}>
+            <div style={headerStyle}>
+              <span style={{ fontSize: "20px", fontWeight: "bold" }}>الدراسة المالية - التكاليف التشغيلية</span>
+              <HeaderLogo />
+            </div>
+
+            <div style={{ color: "#1e293b" }}>
               <h3 style={{ fontSize: "16px", fontWeight: "bold", marginBottom: "15px" }}>ج) التكاليف التشغيلية OPEX (ر.ع/سنة)</h3>
 
               <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
