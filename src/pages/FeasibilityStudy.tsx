@@ -231,28 +231,42 @@ const FeasibilityStudy = () => {
               <HeaderLogo />
             </div>
 
-            <div style={{ color: "#1e293b", lineHeight: "1.8" }}>
-              <p style={{ fontSize: "16px", fontWeight: "bold", color: "#3b82f6", marginBottom: "15px" }}>
+            <div style={{ color: "#1e293b", lineHeight: "1.8", textAlign: "right" }}>
+              <p style={{ fontSize: "16px", fontWeight: "bold", color: "#3b82f6", marginBottom: "15px", textAlign: "right" }}>
                 TalebEdu هو التطبيق الوحيد في العالم الذي يجمع في منصة واحدة:
               </p>
 
-              <ul style={{ fontSize: "14px", paddingRight: "20px", marginBottom: "20px" }}>
-                <li style={{ marginBottom: "8px" }}>✓ إدارة المدرسة: الحضور، الدرجات، الواجبات، الجداول</li>
-                <li style={{ marginBottom: "8px" }}>✓ إدارة الباصات: 6 باصات كحد أدنى لكل مدرسة مع تتبع مباشر</li>
-                <li style={{ marginBottom: "8px" }}>✓ البوابات الذكية والمقصف بتقنية NFC</li>
-                <li style={{ marginBottom: "8px" }}>✓ المحفظة الإلكترونية للطلاب</li>
-                <li style={{ marginBottom: "8px" }}>✓ المتجر الرقمي: أساور NFC + قرطاسية بعلامة تجارية خاصة</li>
-                <li style={{ marginBottom: "8px" }}>✓ نظام تواصل متكامل: رسائل، مكالمات صوتية ومرئية، مشاركة ملفات</li>
+              <ul style={{ fontSize: "14px", listStyle: "none", padding: 0, marginBottom: "20px", textAlign: "right" }}>
+                {[
+                  "إدارة المدرسة: الحضور، الدرجات، الواجبات، الجداول",
+                  "إدارة الباصات: 6 باصات كحد أدنى لكل مدرسة مع تتبع مباشر",
+                  "البوابات الذكية والمقصف بتقنية NFC",
+                  "المحفظة الإلكترونية للطلاب",
+                  "المتجر الرقمي: أساور NFC + قرطاسية بعلامة تجارية خاصة",
+                  "نظام تواصل متكامل: رسائل، مكالمات صوتية ومرئية، مشاركة ملفات",
+                ].map((text, i) => (
+                  <li key={i} style={{ marginBottom: "8px", display: "flex", flexDirection: "row-reverse", alignItems: "center", gap: "8px" }}>
+                    <span style={{ flex: 1, textAlign: "right" }}>{text}</span>
+                    <span style={{ color: "#10b981", flexShrink: 0 }}>✓</span>
+                  </li>
+                ))}
               </ul>
 
               <p style={{ fontSize: "16px", fontWeight: "bold", color: "#10b981", marginBottom: "15px" }}>المزايا الفريدة:</p>
 
-              <ul style={{ fontSize: "14px", paddingRight: "20px", marginBottom: "20px" }}>
-                <li style={{ marginBottom: "8px" }}>✓ السوار الذكي: مقاوم لجميع العوامل عدا النار، لا يحتاج شحن</li>
-                <li style={{ marginBottom: "8px" }}>✓ دعم متعدد اللغات: العربية، الإنجليزية، الهندية</li>
-                <li style={{ marginBottom: "8px" }}>✓ أمان كامل للطلاب وأولياء الأمور</li>
-                <li style={{ marginBottom: "8px" }}>✓ قابلية التوسع المحلي والدولي (دول الخليج في السنة 3)</li>
-                <li style={{ marginBottom: "8px" }}>✓ إدارة مالية متكاملة: جميع الاشتراكات عبر المحفظة</li>
+              <ul style={{ fontSize: "14px", listStyle: "none", padding: 0, marginBottom: "20px", textAlign: "right" }}>
+                {[
+                  "السوار الذكي: مقاوم لجميع العوامل عدا النار، لا يحتاج شحن",
+                  "دعم متعدد اللغات: العربية، الإنجليزية، الهندية",
+                  "أمان كامل للطلاب وأولياء الأمور",
+                  "قابلية التوسع المحلي والدولي (دول الخليج في السنة 3)",
+                  "إدارة مالية متكاملة: جميع الاشتراكات عبر المحفظة",
+                ].map((text, i) => (
+                  <li key={i} style={{ marginBottom: "8px", display: "flex", flexDirection: "row-reverse", alignItems: "center", gap: "8px" }}>
+                    <span style={{ flex: 1, textAlign: "right" }}>{text}</span>
+                    <span style={{ color: "#10b981", flexShrink: 0 }}>✓</span>
+                  </li>
+                ))}
               </ul>
 
               <div
@@ -278,7 +292,7 @@ const FeasibilityStudy = () => {
               <HeaderLogo />
             </div>
 
-            <div style={{ color: "#1e293b" }}>
+            <div style={{ color: "#1e293b", textAlign: "right" }}>
               <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "30px" }}>
                 <tbody>
                   {[
@@ -292,18 +306,18 @@ const FeasibilityStudy = () => {
                   ].map(([label, value], i) => (
                     <tr key={i} style={{ backgroundColor: i % 2 === 0 ? "#f0f9ff" : "white" }}>
                       <td style={{ padding: "12px 15px", fontWeight: "bold", color: "#3b82f6" }}>{label}</td>
-                      <td style={{ padding: "12px 15px", textAlign: "left" }}>{value}</td>
+                      <td style={{ padding: "12px 15px" }}>{value}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
 
               <h3 style={{ fontSize: "18px", fontWeight: "bold", marginBottom: "15px", color: "#1e293b" }}>الخدمات المقدمة:</h3>
-              <ol style={{ fontSize: "14px", paddingRight: "20px" }}>
-                <li style={{ marginBottom: "10px" }}>اشتراك سنوي للطالب (الباص، البوابة، المقصف، المحفظة، متابعة الدرجات)</li>
-                <li style={{ marginBottom: "10px" }}>بيع أساور NFC إضافية</li>
-                <li style={{ marginBottom: "10px" }}>متجر قرطاسية بعلامة تجارية خاصة</li>
-                <li style={{ marginBottom: "10px" }}>نظام مراسلة داخلي للتواصل بين الأهل والمعلمين والإدارة</li>
+              <ol style={{ fontSize: "14px", paddingRight: "20px", textAlign: "right" }}>
+                <li style={{ marginBottom: "10px", textAlign: "right" }}>اشتراك سنوي للطالب (الباص، البوابة، المقصف، المحفظة، متابعة الدرجات)</li>
+                <li style={{ marginBottom: "10px", textAlign: "right" }}>بيع أساور NFC إضافية</li>
+                <li style={{ marginBottom: "10px", textAlign: "right" }}>متجر قرطاسية بعلامة تجارية خاصة</li>
+                <li style={{ marginBottom: "10px", textAlign: "right" }}>نظام مراسلة داخلي للتواصل بين الأهل والمعلمين والإدارة</li>
               </ol>
             </div>
           </div>
@@ -315,7 +329,7 @@ const FeasibilityStudy = () => {
               <HeaderLogo />
             </div>
 
-            <div style={{ color: "#1e293b" }}>
+            <div style={{ color: "#1e293b", textAlign: "right" }}>
               {[
                 ["تقنية السوار الذكي", "لا يحتاج شحن أو صيانة"],
                 ["متابعة شاملة", "الدرجات، الواجبات، الحضور في مكان واحد"],
@@ -337,12 +351,14 @@ const FeasibilityStudy = () => {
                     marginBottom: "8px",
                     borderRadius: "6px",
                     display: "flex",
-                    justifyContent: "space-between",
+                    flexDirection: "row-reverse",
                     alignItems: "center",
+                    gap: "10px",
                   }}
                 >
-                  <span style={{ color: "#10b981", fontWeight: "bold" }}>✓ {title}</span>
-                  <span style={{ color: "#6b7280", fontSize: "13px" }}>{desc}</span>
+                  <span style={{ fontWeight: "bold", color: "#1e293b", flex: 1, textAlign: "right" }}>{title}</span>
+                  <span style={{ color: "#6b7280", fontSize: "13px", flexShrink: 0 }}>{desc}</span>
+                  <span style={{ color: "#10b981", flexShrink: 0 }}>✓</span>
                 </div>
               ))}
             </div>
@@ -407,11 +423,11 @@ const FeasibilityStudy = () => {
                 }}
               >
                 <p style={{ fontSize: "14px", fontWeight: "bold", color: "#1e40af", marginBottom: "8px" }}>ملاحظات:</p>
-                <ul style={{ fontSize: "13px", color: "#1e40af", paddingRight: "15px" }}>
-                  <li>اشتراك الطالب: 25 ر.ع سنوياً</li>
-                  <li>رسوم الباص: 100 ر.ع لكل باص سنوياً</li>
-                  <li>سوار NFC: 1.7 ر.ع للقطعة (سعر البيع)</li>
-                  <li>القرطاسية: 12.5 ر.ع متوسط إنفاق الطالب سنوياً</li>
+                <ul style={{ fontSize: "13px", color: "#1e40af", paddingRight: "15px", textAlign: "right" }}>
+                  <li style={{ textAlign: "right" }}>اشتراك الطالب: 25 ر.ع سنوياً</li>
+                  <li style={{ textAlign: "right" }}>رسوم الباص: 100 ر.ع لكل باص سنوياً</li>
+                  <li style={{ textAlign: "right" }}>سوار NFC: 1.7 ر.ع للقطعة (سعر البيع)</li>
+                  <li style={{ textAlign: "right" }}>القرطاسية: 12.5 ر.ع متوسط إنفاق الطالب سنوياً</li>
                 </ul>
               </div>
             </div>
@@ -448,7 +464,7 @@ const FeasibilityStudy = () => {
                       }}
                     >
                       <td style={{ padding: "12px 15px", fontWeight: i === 8 ? "bold" : "normal" }}>{label}</td>
-                      <td style={{ padding: "12px 15px", textAlign: "left", fontWeight: "bold" }}>{value}</td>
+                      <td style={{ padding: "12px 15px", fontWeight: "bold" }}>{value}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -588,7 +604,7 @@ const FeasibilityStudy = () => {
                     ].map(([label, value], i) => (
                       <tr key={i}>
                         <td style={{ padding: "8px 0", fontWeight: "bold" }}>{label}</td>
-                        <td style={{ padding: "8px 0", textAlign: "left" }}>{value}</td>
+                        <td style={{ padding: "8px 0" }}>{value}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -639,8 +655,9 @@ const FeasibilityStudy = () => {
                   marginTop: "20px",
                 }}
               >
-                <p style={{ fontSize: "14px", color: "#166534" }}>
-                  ✓ القدرة على سداد القرض بالكامل من أرباح السنة الأولى فقط
+                <p style={{ fontSize: "14px", color: "#166534", display: "flex", flexDirection: "row-reverse", alignItems: "center", gap: "8px" }}>
+                  <span style={{ flex: 1, textAlign: "right" }}>القدرة على سداد القرض بالكامل من أرباح السنة الأولى فقط</span>
+                  <span style={{ color: "#10b981", flexShrink: 0 }}>✓</span>
                 </p>
               </div>
             </div>
@@ -690,8 +707,8 @@ const FeasibilityStudy = () => {
                     marginBottom: "12px",
                   }}
                 >
-                  <p style={{ fontSize: "14px", fontWeight: "bold", marginBottom: "5px" }}>⚠️ {item.risk}</p>
-                  <p style={{ fontSize: "13px" }}>التخفيف: {item.mitigation}</p>
+                  <p style={{ fontSize: "14px", fontWeight: "bold", marginBottom: "5px", textAlign: "right" }}>⚠️ {item.risk}</p>
+                  <p style={{ fontSize: "13px", textAlign: "right" }}>التخفيف: {item.mitigation}</p>
                 </div>
               ))}
             </div>
@@ -720,8 +737,9 @@ const FeasibilityStudy = () => {
                 "ميزة الريادة في إدارة المدارس الذكية",
                 "نموذج إيرادات مستدام ومتكرر",
               ].map((point, i) => (
-                <p key={i} style={{ fontSize: "16px", marginBottom: "12px", paddingRight: "20px" }}>
-                  ✓ {point}
+                <p key={i} style={{ fontSize: "16px", marginBottom: "12px", display: "flex", flexDirection: "row-reverse", alignItems: "center", gap: "8px" }}>
+                  <span style={{ flex: 1, textAlign: "right" }}>{point}</span>
+                  <span style={{ color: "#10b981", flexShrink: 0 }}>✓</span>
                 </p>
               ))}
             </div>
