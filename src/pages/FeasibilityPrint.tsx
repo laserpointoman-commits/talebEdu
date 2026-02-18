@@ -155,7 +155,7 @@ const FeasibilityPrint = () => {
       <style>{printStyles}</style>
       <div
         className="min-h-screen bg-gray-200 print:bg-white print-container"
-        dir="ltr"
+        dir={language === "ar" ? "rtl" : "ltr"}
         style={{ fontFamily: language === "ar" ? "'Noto Naskh Arabic', 'Geeza Pro', 'Arial', sans-serif" : "Arial, sans-serif" }}
       >
       {/* Controls - Hidden when printing */}
