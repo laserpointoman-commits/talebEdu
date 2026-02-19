@@ -34,25 +34,20 @@ const FeasibilityPrint = () => {
       for (let i = 0; i < pages.length; i++) {
         const page = pages[i] as HTMLElement;
         const originalZoom = page.style.zoom;
-        page.style.zoom = '1';
+        const originalTransform = page.style.transform;
+        const originalTransformOrigin = page.style.transformOrigin;
+        const originalWidth = page.style.width;
+        const originalMinWidth = page.style.minWidth;
         
-        // Boost small fonts more, leave large fonts alone
-        const fontMap = new Map<HTMLElement, string>();
+        // Reset zoom and apply uniform scale for slightly larger text
+        page.style.zoom = '1';
+        page.style.transform = 'scale(1.12)';
+        page.style.transformOrigin = 'top center';
+        
+        // Fix RTL alignment during capture
         const allElements = page.querySelectorAll('*');
         allElements.forEach((el) => {
           const htmlEl = el as HTMLElement;
-          if (htmlEl.style.fontSize) {
-            const size = parseFloat(htmlEl.style.fontSize);
-            if (size > 0) {
-              fontMap.set(htmlEl, htmlEl.style.fontSize);
-              let factor: number;
-              if (size <= 13) factor = 1.5;
-              else if (size <= 16) factor = 1.35;
-              else if (size <= 22) factor = 1.2;
-              else factor = 1.0; // large headings stay as-is
-              htmlEl.style.fontSize = `${Math.round(size * factor)}px`;
-            }
-          }
           htmlEl.style.letterSpacing = 'normal';
           htmlEl.style.wordWrap = 'normal';
           htmlEl.style.fontFeatureSettings = '"liga" 0';
@@ -69,11 +64,12 @@ const FeasibilityPrint = () => {
         
         // Restore everything
         page.style.zoom = originalZoom;
-        // page font restored via fontMap if it was set
+        page.style.transform = originalTransform;
+        page.style.transformOrigin = originalTransformOrigin;
+        page.style.width = originalWidth;
+        page.style.minWidth = originalMinWidth || '';
         allElements.forEach((el) => {
           const htmlEl = el as HTMLElement;
-          const origFont = fontMap.get(htmlEl);
-          htmlEl.style.fontSize = origFont || '';
           htmlEl.style.letterSpacing = '';
           htmlEl.style.wordWrap = '';
           htmlEl.style.fontFeatureSettings = '';
