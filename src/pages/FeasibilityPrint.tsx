@@ -34,27 +34,29 @@ const FeasibilityPrint = () => {
       for (let i = 0; i < pages.length; i++) {
         const page = pages[i] as HTMLElement;
         const originalZoom = page.style.zoom;
-        const originalTransform = page.style.transform;
-        const originalTransformOrigin = page.style.transformOrigin;
-        const originalWidth = page.style.width;
-        const originalMinWidth = page.style.minWidth;
-        
-        // Reset zoom and apply uniform scale for slightly larger text
         page.style.zoom = '1';
-        page.style.transform = 'scale(1.12)';
-        page.style.transformOrigin = 'top center';
         
-        // Fix RTL alignment during capture
+        // Scale fonts on LEAF text elements only to avoid compounding
+        const fontMap = new Map<HTMLElement, string>();
         const allElements = page.querySelectorAll('*');
         allElements.forEach((el) => {
           const htmlEl = el as HTMLElement;
+          // Only scale leaf elements (no child elements) that contain text
+          const isLeaf = htmlEl.children.length === 0 && htmlEl.textContent?.trim();
+          if (isLeaf && htmlEl.style.fontSize) {
+            const size = parseFloat(htmlEl.style.fontSize);
+            if (size > 0) {
+              fontMap.set(htmlEl, htmlEl.style.fontSize);
+              htmlEl.style.fontSize = `${Math.round(size * 1.3)}px`;
+            }
+          }
           htmlEl.style.letterSpacing = 'normal';
           htmlEl.style.wordWrap = 'normal';
           htmlEl.style.fontFeatureSettings = '"liga" 0';
         });
         
         const canvas = await html2canvas(page, {
-          scale: 2,
+          scale: 3,
           useCORS: true,
           backgroundColor: null,
           width: 794,
@@ -64,12 +66,10 @@ const FeasibilityPrint = () => {
         
         // Restore everything
         page.style.zoom = originalZoom;
-        page.style.transform = originalTransform;
-        page.style.transformOrigin = originalTransformOrigin;
-        page.style.width = originalWidth;
-        page.style.minWidth = originalMinWidth || '';
         allElements.forEach((el) => {
           const htmlEl = el as HTMLElement;
+          const origFont = fontMap.get(htmlEl);
+          if (origFont !== undefined) htmlEl.style.fontSize = origFont;
           htmlEl.style.letterSpacing = '';
           htmlEl.style.wordWrap = '';
           htmlEl.style.fontFeatureSettings = '';
