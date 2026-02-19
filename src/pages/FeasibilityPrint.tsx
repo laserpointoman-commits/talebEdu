@@ -112,7 +112,9 @@ const FeasibilityPrint = () => {
     marginBottom: "20px",
     boxShadow: "0 8px 32px rgba(0, 0, 0, 0.4)",
     overflow: "hidden",
-    display: "block",
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "center",
     position: "relative",
     zoom: pageScale < 1 ? pageScale : undefined,
   };
