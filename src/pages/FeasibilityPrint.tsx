@@ -27,37 +27,17 @@ const FeasibilityPrint = () => {
       const pages = document.querySelectorAll('.print-page');
       if (pages.length === 0) return;
 
-      const pdfWidth = 210;
-      const pdfHeight = 297;
-      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-
-      // Inject CSS to boost all font sizes via !important (overrides inline styles)
-      const boostStyle = document.createElement('style');
-      boostStyle.textContent = `
-        .print-page *[style*="font-size: 10px"] { font-size: 14px !important; }
-        .print-page *[style*="font-size: 11px"] { font-size: 15px !important; }
-        .print-page *[style*="font-size: 12px"] { font-size: 16px !important; }
-        .print-page *[style*="font-size: 13px"] { font-size: 17px !important; }
-        .print-page *[style*="font-size: 14px"] { font-size: 18px !important; }
-        .print-page *[style*="font-size: 15px"] { font-size: 19px !important; }
-        .print-page *[style*="font-size: 16px"] { font-size: 20px !important; }
-        .print-page *[style*="font-size: 17px"] { font-size: 21px !important; }
-      `;
-      document.head.appendChild(boostStyle);
+      // Use a smaller custom page size so the same content appears bigger on screen
+      const pw = 160; // mm
+      const ph = 226; // mm (same aspect ratio as A4: 297/210 ≈ 1.414)
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: [pw, ph] });
 
       for (let i = 0; i < pages.length; i++) {
         const page = pages[i] as HTMLElement;
         const originalZoom = page.style.zoom;
+        // Reset zoom to 1 so html2canvas captures at native size
         page.style.zoom = '1';
-        
-        const allElements = page.querySelectorAll('*');
-        allElements.forEach((el) => {
-          const htmlEl = el as HTMLElement;
-          htmlEl.style.letterSpacing = 'normal';
-          htmlEl.style.wordWrap = 'normal';
-          htmlEl.style.fontFeatureSettings = '"liga" 0';
-        });
-        
+
         const canvas = await html2canvas(page, {
           scale: 2,
           useCORS: true,
@@ -66,22 +46,13 @@ const FeasibilityPrint = () => {
           height: 1123,
           logging: false,
         });
-        
+
         page.style.zoom = originalZoom;
-        allElements.forEach((el) => {
-          const htmlEl = el as HTMLElement;
-          htmlEl.style.letterSpacing = '';
-          htmlEl.style.wordWrap = '';
-          htmlEl.style.fontFeatureSettings = '';
-        });
 
         const imgData = canvas.toDataURL('image/jpeg', 0.92);
         if (i > 0) pdf.addPage();
-        pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+        pdf.addImage(imgData, 'JPEG', 0, 0, pw, ph);
       }
-
-      // Remove the font boost style
-      boostStyle.remove();
 
       pdf.save(language === 'ar' ? 'دراسة_جدوى_TalebEdu.pdf' : 'TalebEdu_Feasibility_Study.pdf');
 
@@ -424,9 +395,10 @@ const FeasibilityPrint = () => {
                 borderRadius: "16px",
                 marginTop: "40px",
                 marginBottom: "40px",
+                textAlign: "center",
               }}>
-                <p style={{ fontSize: "13px", marginBottom: "5px", color: "#93c5fd" }}>مقدم إلى</p>
-                <p style={{ fontSize: "22px", fontWeight: "bold" }}>الجهة المستثمرة</p>
+                <p style={{ fontSize: "13px", marginBottom: "5px", color: "#93c5fd", textAlign: "center" }}>مقدم إلى</p>
+                <p style={{ fontSize: "22px", fontWeight: "bold", textAlign: "center" }}>الجهة المستثمرة</p>
               </div>
 
               <p style={{ fontSize: "14px", color: "#94a3b8" }}>مقدم من: مازن خنفر - TalebEdu</p>
