@@ -36,29 +36,23 @@ const FeasibilityPrint = () => {
         const originalZoom = page.style.zoom;
         page.style.zoom = '1';
         
-        // Temporarily boost all font sizes for PDF readability
+        // Only boost elements with explicit inline fontSize to avoid compounding
         const fontMap = new Map<HTMLElement, string>();
         const allElements = page.querySelectorAll('*');
         allElements.forEach((el) => {
           const htmlEl = el as HTMLElement;
-          const computed = window.getComputedStyle(htmlEl);
-          const currentSize = parseFloat(computed.fontSize);
-          if (currentSize > 0) {
-            fontMap.set(htmlEl, htmlEl.style.fontSize);
-            htmlEl.style.fontSize = `${Math.round(currentSize * 1.45)}px`;
+          // Only scale if the element has an explicit inline font-size
+          if (htmlEl.style.fontSize) {
+            const currentSize = parseFloat(htmlEl.style.fontSize);
+            if (currentSize > 0) {
+              fontMap.set(htmlEl, htmlEl.style.fontSize);
+              htmlEl.style.fontSize = `${Math.round(currentSize * 1.4)}px`;
+            }
           }
           htmlEl.style.letterSpacing = 'normal';
           htmlEl.style.wordWrap = 'normal';
           htmlEl.style.fontFeatureSettings = '"liga" 0';
         });
-        
-        // Also boost the page root font
-        const origPageFont = page.style.fontSize;
-        const pageComputed = window.getComputedStyle(page);
-        const pageFontSize = parseFloat(pageComputed.fontSize);
-        if (pageFontSize > 0) {
-          page.style.fontSize = `${Math.round(pageFontSize * 1.45)}px`;
-        }
         
         const canvas = await html2canvas(page, {
           scale: 2,
@@ -71,7 +65,7 @@ const FeasibilityPrint = () => {
         
         // Restore everything
         page.style.zoom = originalZoom;
-        page.style.fontSize = origPageFont;
+        // page font restored via fontMap if it was set
         allElements.forEach((el) => {
           const htmlEl = el as HTMLElement;
           const origFont = fontMap.get(htmlEl);
