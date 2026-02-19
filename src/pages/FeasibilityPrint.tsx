@@ -36,17 +36,21 @@ const FeasibilityPrint = () => {
         const originalZoom = page.style.zoom;
         page.style.zoom = '1';
         
-        // Only boost elements with explicit inline fontSize to avoid compounding
+        // Boost small fonts more, leave large fonts alone
         const fontMap = new Map<HTMLElement, string>();
         const allElements = page.querySelectorAll('*');
         allElements.forEach((el) => {
           const htmlEl = el as HTMLElement;
-          // Only scale if the element has an explicit inline font-size
           if (htmlEl.style.fontSize) {
-            const currentSize = parseFloat(htmlEl.style.fontSize);
-            if (currentSize > 0) {
+            const size = parseFloat(htmlEl.style.fontSize);
+            if (size > 0) {
               fontMap.set(htmlEl, htmlEl.style.fontSize);
-              htmlEl.style.fontSize = `${Math.round(currentSize * 1.4)}px`;
+              let factor: number;
+              if (size <= 13) factor = 1.5;
+              else if (size <= 16) factor = 1.35;
+              else if (size <= 22) factor = 1.2;
+              else factor = 1.0; // large headings stay as-is
+              htmlEl.style.fontSize = `${Math.round(size * factor)}px`;
             }
           }
           htmlEl.style.letterSpacing = 'normal';
