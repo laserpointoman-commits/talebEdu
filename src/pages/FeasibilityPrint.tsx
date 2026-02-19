@@ -46,10 +46,10 @@ const FeasibilityPrint = () => {
             if (size > 0) {
               fontMap.set(htmlEl, htmlEl.style.fontSize);
               let factor: number;
-              if (size <= 13) factor = 1.7;
-              else if (size <= 16) factor = 1.5;
-              else if (size <= 22) factor = 1.3;
-              else factor = 1.05;
+              if (size <= 13) factor = 1.9;
+              else if (size <= 16) factor = 1.65;
+              else if (size <= 22) factor = 1.4;
+              else factor = 1.1;
               htmlEl.style.fontSize = `${Math.round(size * factor)}px`;
             }
           }
