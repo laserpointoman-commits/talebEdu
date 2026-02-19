@@ -27,17 +27,37 @@ const FeasibilityPrint = () => {
       const pages = document.querySelectorAll('.print-page');
       if (pages.length === 0) return;
 
-      // Use a smaller custom page size so the same content appears bigger on screen
-      const pw = 160; // mm
-      const ph = 226; // mm (same aspect ratio as A4: 297/210 ≈ 1.414)
-      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: [pw, ph] });
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      const pdfWidth = 210;
+      const pdfHeight = 297;
 
       for (let i = 0; i < pages.length; i++) {
         const page = pages[i] as HTMLElement;
         const originalZoom = page.style.zoom;
-        // Reset zoom to 1 so html2canvas captures at native size
         page.style.zoom = '1';
-
+        
+        // Boost small fonts more, leave large fonts alone
+        const fontMap = new Map<HTMLElement, string>();
+        const allElements = page.querySelectorAll('*');
+        allElements.forEach((el) => {
+          const htmlEl = el as HTMLElement;
+          if (htmlEl.style.fontSize) {
+            const size = parseFloat(htmlEl.style.fontSize);
+            if (size > 0) {
+              fontMap.set(htmlEl, htmlEl.style.fontSize);
+              let factor: number;
+              if (size <= 13) factor = 1.5;
+              else if (size <= 16) factor = 1.35;
+              else if (size <= 22) factor = 1.2;
+              else factor = 1.0; // large headings stay as-is
+              htmlEl.style.fontSize = `${Math.round(size * factor)}px`;
+            }
+          }
+          htmlEl.style.letterSpacing = 'normal';
+          htmlEl.style.wordWrap = 'normal';
+          htmlEl.style.fontFeatureSettings = '"liga" 0';
+        });
+        
         const canvas = await html2canvas(page, {
           scale: 2,
           useCORS: true,
@@ -46,16 +66,25 @@ const FeasibilityPrint = () => {
           height: 1123,
           logging: false,
         });
-
+        
+        // Restore everything
         page.style.zoom = originalZoom;
+        // page font restored via fontMap if it was set
+        allElements.forEach((el) => {
+          const htmlEl = el as HTMLElement;
+          const origFont = fontMap.get(htmlEl);
+          htmlEl.style.fontSize = origFont || '';
+          htmlEl.style.letterSpacing = '';
+          htmlEl.style.wordWrap = '';
+          htmlEl.style.fontFeatureSettings = '';
+        });
 
         const imgData = canvas.toDataURL('image/jpeg', 0.92);
         if (i > 0) pdf.addPage();
-        pdf.addImage(imgData, 'JPEG', 0, 0, pw, ph);
+        pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
       }
 
       pdf.save(language === 'ar' ? 'دراسة_جدوى_TalebEdu.pdf' : 'TalebEdu_Feasibility_Study.pdf');
-
     } catch (error) {
       console.error('PDF generation error:', error);
     } finally {
@@ -75,7 +104,7 @@ const FeasibilityPrint = () => {
     height: "297mm",
     minHeight: "297mm",
     maxHeight: "297mm",
-    padding: "14mm 14mm",
+    padding: "10mm 12mm",
     boxSizing: "border-box",
     background: "linear-gradient(160deg, #0f172a 0%, #1e3a5f 50%, #0f172a 100%)",
     color: "white",
@@ -158,9 +187,9 @@ const FeasibilityPrint = () => {
 
   // Styled table for dark theme
   const DarkTable = ({ headers, rows, highlightLastRow = false, compact = false }: { headers: string[]; rows: string[][]; highlightLastRow?: boolean; compact?: boolean }) => {
-    const cellPad = compact ? "8px 7px" : "12px 14px";
-    const dataPad = compact ? "7px 7px" : "11px 14px";
-    const fontSize = compact ? "14px" : "16px";
+    const cellPad = compact ? "6px 5px" : "10px 12px";
+    const dataPad = compact ? "5px 5px" : "9px 12px";
+    const fontSize = compact ? "10px" : "12px";
     return (
       <div style={{ width: "100%", overflowX: "auto" }}>
         <table style={{ width: "100%", borderCollapse: "separate", borderSpacing: "0 4px", fontSize, minWidth: compact ? "680px" : undefined }}>
@@ -230,10 +259,10 @@ const FeasibilityPrint = () => {
         alignItems: "center",
         justifyContent: "center",
         flexShrink: 0,
-        fontSize: "15px",
+        fontSize: "12px",
       }}>✓</span>
-      <span style={{ fontWeight: "bold", color: "#93c5fd", whiteSpace: "nowrap", fontSize: "16px" }}>{title}</span>
-      <span style={{ flex: 1, color: "#94a3b8", fontSize: "15px" }}>{desc}</span>
+      <span style={{ fontWeight: "bold", color: "#93c5fd", whiteSpace: "nowrap", fontSize: "13px" }}>{title}</span>
+      <span style={{ flex: 1, color: "#94a3b8", fontSize: "12px" }}>{desc}</span>
     </div>
   );
 
@@ -247,8 +276,8 @@ const FeasibilityPrint = () => {
       marginBottom: "10px",
       direction: isRtl ? "rtl" : "ltr",
     }}>
-      <p style={{ fontSize: "17px", fontWeight: "bold", marginBottom: "4px", color: "#fbbf24" }}>{icon} {risk}</p>
-      <p style={{ fontSize: "15px", color: "#94a3b8" }}>{isRtl ? "الحلول: " : "Mitigation: "}{mitigation}</p>
+      <p style={{ fontSize: "14px", fontWeight: "bold", marginBottom: "4px", color: "#fbbf24" }}>{icon} {risk}</p>
+      <p style={{ fontSize: "12px", color: "#94a3b8" }}>{isRtl ? "الحلول: " : "Mitigation: "}{mitigation}</p>
     </div>
   );
 
@@ -395,10 +424,9 @@ const FeasibilityPrint = () => {
                 borderRadius: "16px",
                 marginTop: "40px",
                 marginBottom: "40px",
-                textAlign: "center",
               }}>
-                <p style={{ fontSize: "13px", marginBottom: "5px", color: "#93c5fd", textAlign: "center" }}>مقدم إلى</p>
-                <p style={{ fontSize: "22px", fontWeight: "bold", textAlign: "center" }}>الجهة المستثمرة</p>
+                <p style={{ fontSize: "13px", marginBottom: "5px", color: "#93c5fd" }}>مقدم إلى</p>
+                <p style={{ fontSize: "22px", fontWeight: "bold" }}>الجهة المستثمرة</p>
               </div>
 
               <p style={{ fontSize: "14px", color: "#94a3b8" }}>مقدم من: مازن خنفر - TalebEdu</p>
