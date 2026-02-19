@@ -31,49 +31,43 @@ const FeasibilityPrint = () => {
       const pdfWidth = 210;
       const pdfHeight = 297;
 
+      const scaleFactor = 1.3; // uniform zoom for readability
+
       for (let i = 0; i < pages.length; i++) {
         const page = pages[i] as HTMLElement;
         const originalZoom = page.style.zoom;
-        page.style.zoom = '1';
+        const originalOverflow = page.style.overflow;
+
+        // Apply uniform zoom — scales fonts, spacing, and positions equally
+        page.style.zoom = String(scaleFactor);
+        page.style.overflow = 'hidden';
         
-        // Boost small fonts more, leave large fonts alone
-        const fontMap = new Map<HTMLElement, string>();
         const allElements = page.querySelectorAll('*');
         allElements.forEach((el) => {
           const htmlEl = el as HTMLElement;
-          if (htmlEl.style.fontSize) {
-            const size = parseFloat(htmlEl.style.fontSize);
-            if (size > 0) {
-              fontMap.set(htmlEl, htmlEl.style.fontSize);
-              let factor: number;
-              if (size <= 13) factor = 1.9;
-              else if (size <= 16) factor = 1.65;
-              else if (size <= 22) factor = 1.4;
-              else factor = 1.1;
-              htmlEl.style.fontSize = `${Math.round(size * factor)}px`;
-            }
-          }
           htmlEl.style.letterSpacing = 'normal';
           htmlEl.style.wordWrap = 'normal';
           htmlEl.style.fontFeatureSettings = '"liga" 0';
         });
+
+        // Capture at zoomed visual size
+        const captureW = Math.round(794 * scaleFactor);
+        const captureH = Math.round(1123 * scaleFactor);
         
         const canvas = await html2canvas(page, {
           scale: 2,
           useCORS: true,
           backgroundColor: null,
-          width: 794,
-          height: 1123,
+          width: captureW,
+          height: captureH,
           logging: false,
         });
         
-        // Restore everything
+        // Restore
         page.style.zoom = originalZoom;
-        // page font restored via fontMap if it was set
+        page.style.overflow = originalOverflow;
         allElements.forEach((el) => {
           const htmlEl = el as HTMLElement;
-          const origFont = fontMap.get(htmlEl);
-          htmlEl.style.fontSize = origFont || '';
           htmlEl.style.letterSpacing = '';
           htmlEl.style.wordWrap = '';
           htmlEl.style.fontFeatureSettings = '';
