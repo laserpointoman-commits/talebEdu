@@ -27,20 +27,16 @@ const FeasibilityPrint = () => {
       const pages = document.querySelectorAll('.print-page');
       if (pages.length === 0) return;
 
-      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-      const pdfWidth = 210;
-      const pdfHeight = 297;
-
-      const scaleFactor = 1.3; // uniform zoom for readability
+      // Use smaller page size so text appears larger on phone screens
+      // Content stays untouched = perfect alignment
+      const customW = 148; // mm (A5-ish width)
+      const customH = 209; // mm (A5-ish height, same ratio as A4)
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: [customW, customH] });
 
       for (let i = 0; i < pages.length; i++) {
         const page = pages[i] as HTMLElement;
         const originalZoom = page.style.zoom;
-        const originalOverflow = page.style.overflow;
-
-        // Apply uniform zoom — scales fonts, spacing, and positions equally
-        page.style.zoom = String(scaleFactor);
-        page.style.overflow = 'hidden';
+        page.style.zoom = '1';
         
         const allElements = page.querySelectorAll('*');
         allElements.forEach((el) => {
@@ -49,23 +45,17 @@ const FeasibilityPrint = () => {
           htmlEl.style.wordWrap = 'normal';
           htmlEl.style.fontFeatureSettings = '"liga" 0';
         });
-
-        // Capture at zoomed visual size
-        const captureW = Math.round(794 * scaleFactor);
-        const captureH = Math.round(1123 * scaleFactor);
         
         const canvas = await html2canvas(page, {
           scale: 2,
           useCORS: true,
           backgroundColor: null,
-          width: captureW,
-          height: captureH,
+          width: 794,
+          height: 1123,
           logging: false,
         });
         
-        // Restore
         page.style.zoom = originalZoom;
-        page.style.overflow = originalOverflow;
         allElements.forEach((el) => {
           const htmlEl = el as HTMLElement;
           htmlEl.style.letterSpacing = '';
@@ -75,7 +65,7 @@ const FeasibilityPrint = () => {
 
         const imgData = canvas.toDataURL('image/jpeg', 0.92);
         if (i > 0) pdf.addPage();
-        pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+        pdf.addImage(imgData, 'JPEG', 0, 0, customW, customH);
       }
 
       pdf.save(language === 'ar' ? 'دراسة_جدوى_TalebEdu.pdf' : 'TalebEdu_Feasibility_Study.pdf');
