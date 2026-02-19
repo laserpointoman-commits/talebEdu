@@ -27,11 +27,23 @@ const FeasibilityPrint = () => {
       const pages = document.querySelectorAll('.print-page');
       if (pages.length === 0) return;
 
-      // Use smaller page size so text appears larger on phone screens
-      // Content stays untouched = perfect alignment
-      const customW = 148; // mm (A5-ish width)
-      const customH = 209; // mm (A5-ish height, same ratio as A4)
-      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: [customW, customH] });
+      const pdfWidth = 210;
+      const pdfHeight = 297;
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+      // Inject CSS to boost all font sizes via !important (overrides inline styles)
+      const boostStyle = document.createElement('style');
+      boostStyle.textContent = `
+        .print-page *[style*="font-size: 10px"] { font-size: 14px !important; }
+        .print-page *[style*="font-size: 11px"] { font-size: 15px !important; }
+        .print-page *[style*="font-size: 12px"] { font-size: 16px !important; }
+        .print-page *[style*="font-size: 13px"] { font-size: 17px !important; }
+        .print-page *[style*="font-size: 14px"] { font-size: 18px !important; }
+        .print-page *[style*="font-size: 15px"] { font-size: 19px !important; }
+        .print-page *[style*="font-size: 16px"] { font-size: 20px !important; }
+        .print-page *[style*="font-size: 17px"] { font-size: 21px !important; }
+      `;
+      document.head.appendChild(boostStyle);
 
       for (let i = 0; i < pages.length; i++) {
         const page = pages[i] as HTMLElement;
@@ -65,10 +77,14 @@ const FeasibilityPrint = () => {
 
         const imgData = canvas.toDataURL('image/jpeg', 0.92);
         if (i > 0) pdf.addPage();
-        pdf.addImage(imgData, 'JPEG', 0, 0, customW, customH);
+        pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
       }
 
+      // Remove the font boost style
+      boostStyle.remove();
+
       pdf.save(language === 'ar' ? 'دراسة_جدوى_TalebEdu.pdf' : 'TalebEdu_Feasibility_Study.pdf');
+
     } catch (error) {
       console.error('PDF generation error:', error);
     } finally {
@@ -171,9 +187,9 @@ const FeasibilityPrint = () => {
 
   // Styled table for dark theme
   const DarkTable = ({ headers, rows, highlightLastRow = false, compact = false }: { headers: string[]; rows: string[][]; highlightLastRow?: boolean; compact?: boolean }) => {
-    const cellPad = compact ? "6px 5px" : "10px 12px";
-    const dataPad = compact ? "5px 5px" : "9px 12px";
-    const fontSize = compact ? "10px" : "12px";
+    const cellPad = compact ? "8px 7px" : "12px 14px";
+    const dataPad = compact ? "7px 7px" : "11px 14px";
+    const fontSize = compact ? "14px" : "16px";
     return (
       <div style={{ width: "100%", overflowX: "auto" }}>
         <table style={{ width: "100%", borderCollapse: "separate", borderSpacing: "0 4px", fontSize, minWidth: compact ? "680px" : undefined }}>
@@ -243,10 +259,10 @@ const FeasibilityPrint = () => {
         alignItems: "center",
         justifyContent: "center",
         flexShrink: 0,
-        fontSize: "12px",
+        fontSize: "15px",
       }}>✓</span>
-      <span style={{ fontWeight: "bold", color: "#93c5fd", whiteSpace: "nowrap", fontSize: "13px" }}>{title}</span>
-      <span style={{ flex: 1, color: "#94a3b8", fontSize: "12px" }}>{desc}</span>
+      <span style={{ fontWeight: "bold", color: "#93c5fd", whiteSpace: "nowrap", fontSize: "16px" }}>{title}</span>
+      <span style={{ flex: 1, color: "#94a3b8", fontSize: "15px" }}>{desc}</span>
     </div>
   );
 
@@ -260,8 +276,8 @@ const FeasibilityPrint = () => {
       marginBottom: "10px",
       direction: isRtl ? "rtl" : "ltr",
     }}>
-      <p style={{ fontSize: "14px", fontWeight: "bold", marginBottom: "4px", color: "#fbbf24" }}>{icon} {risk}</p>
-      <p style={{ fontSize: "12px", color: "#94a3b8" }}>{isRtl ? "الحلول: " : "Mitigation: "}{mitigation}</p>
+      <p style={{ fontSize: "17px", fontWeight: "bold", marginBottom: "4px", color: "#fbbf24" }}>{icon} {risk}</p>
+      <p style={{ fontSize: "15px", color: "#94a3b8" }}>{isRtl ? "الحلول: " : "Mitigation: "}{mitigation}</p>
     </div>
   );
 
