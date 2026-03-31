@@ -809,7 +809,7 @@ const InvestorPresentation = () => {
   };
 
   return (
-    <div ref={scrollContainerRef} className="h-[100dvh] overflow-y-auto overscroll-none" style={{ WebkitOverflowScrolling: 'touch' }}>
+    <div ref={scrollContainerRef} className="h-[100dvh] overflow-y-auto overscroll-none investor-presentation" style={{ WebkitOverflowScrolling: 'touch', fontFamily: "'Plus Jakarta Sans', 'Cairo', sans-serif" }}>
       {/* Intro Animation */}
       <AnimatePresence>
         {showIntro && (
