@@ -122,12 +122,12 @@ function App() {
                         <Route path="/landing" element={<Index />} />
                         <Route path="/auth" element={<Auth />} />
                         <Route path="/email-confirmation-pending" element={<EmailConfirmationPending />} />
-                        {/* Public parent onboarding */}
-                        <Route path="/register" element={<ParentSelfSignup />} />
-                        <Route path="/parent-self-signup" element={<ParentSelfSignup />} />
-                        <Route path="/parent-registration" element={<ParentRegistration />} />
-                        <Route path="/register-student" element={<RegisterStudent />} />
-                        <Route path="/dashboard/register-student" element={<StudentRegistrationWizard />} />
+                        {/* Public parent onboarding - disabled, admin registers students */}
+                        <Route path="/register" element={<Navigate to="/dashboard" replace />} />
+                        <Route path="/parent-self-signup" element={<Navigate to="/dashboard" replace />} />
+                        <Route path="/parent-registration" element={<Navigate to="/dashboard" replace />} />
+                        <Route path="/register-student" element={<Navigate to="/dashboard" replace />} />
+                        <Route path="/dashboard/register-student" element={<Navigate to="/dashboard" replace />} />
                         <Route path="/admin/parent-invitations" element={<ParentInvitationsDashboard />} />
                         <Route path="/admin/student-approvals" element={<StudentApprovalDashboard />} />
                         <Route path="/dashboard/*" element={<Dashboard />} />
