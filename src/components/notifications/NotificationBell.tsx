@@ -132,7 +132,7 @@ export default function NotificationBell() {
         </div>
 
         {/* Notifications List */}
-        <ScrollArea className="max-h-80">
+        <ScrollArea className="max-h-[60vh] overflow-y-auto touch-pan-y [-webkit-overflow-scrolling:touch]">
           {notifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-10 text-muted-foreground">
               <Bell className="h-8 w-8 mb-2 opacity-30" />
