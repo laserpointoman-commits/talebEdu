@@ -10,7 +10,7 @@ interface BusActivityRequest {
   studentNfcId?: string;
   studentId?: string;
   busId: string;
-  action: 'board' | 'exit';
+  action: 'board' | 'exit' | 'auto';
   location: string;
   latitude?: number;
   longitude?: number;
@@ -60,7 +60,6 @@ serve(async (req) => {
     }
 
     const today = new Date().toISOString().split('T')[0];
-    const dbAction = action === 'board' ? 'boarded' : 'exited';
 
     // Check last action
     const { data: lastActivity } = await supabase
@@ -73,8 +72,13 @@ serve(async (req) => {
       .limit(1)
       .single();
 
+    const resolvedAction = action === 'auto'
+      ? (lastActivity?.action === 'boarded' ? 'exit' : 'board')
+      : action;
+    const dbAction = resolvedAction === 'board' ? 'boarded' : 'exited';
+
     if (lastActivity?.action === dbAction) {
-      return new Response(JSON.stringify({ error: `Already ${dbAction}`, suggestion: action === 'board' ? 'exit' : 'board' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return new Response(JSON.stringify({ error: `Already ${dbAction}`, suggestion: resolvedAction === 'board' ? 'exit' : 'board' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     const { data: log, error } = await supabase
@@ -104,10 +108,10 @@ serve(async (req) => {
         body: {
           parentId: student.parent_id,
           studentId: student.id,
-          type: action === 'board' ? 'bus_boarding' : 'bus_exit',
-          title: action === 'board' ? 'Student Boarded Bus' : 'Student Exited Bus',
+          type: resolvedAction === 'board' ? 'bus_boarding' : 'bus_exit',
+          title: resolvedAction === 'board' ? 'Student Boarded Bus' : 'Student Exited Bus',
           message: `${studentName} ${dbAction} the bus at ${location}`,
-          data: { busId, location, action, timestamp: log.timestamp }
+          data: { busId, location, action: resolvedAction, timestamp: log.timestamp }
         }
       }).catch(e => console.error('Notification failed:', e));
     }
