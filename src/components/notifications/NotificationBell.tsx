@@ -194,8 +194,14 @@ export default function NotificationBell() {
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
   const { language } = useLanguage();
   const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
 
   const getText = (en: string, ar: string) => (language === 'ar' ? ar : en);
+
+  const handleNavigate = (route: string) => {
+    setOpen(false);
+    navigate(route);
+  };
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
