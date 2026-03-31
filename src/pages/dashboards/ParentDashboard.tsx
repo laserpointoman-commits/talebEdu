@@ -7,7 +7,6 @@ import {
   Wallet, 
   GraduationCap, 
   TrendingUp,
-  UserPlus,
   Clock,
   ChevronRight
 } from "lucide-react";
