@@ -184,7 +184,7 @@ const IntroAnimation = ({ onComplete }: { onComplete: () => void }) => {
         <motion.div className="relative mb-4" dir="ltr">
           <motion.h1
             className="text-5xl md:text-7xl font-extrabold"
-            style={{ fontFamily: "'Playfair Display', 'Cairo', serif" }}
+            style={{ fontFamily: "'Outfit', 'Cairo', sans-serif" }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 1.2 }}
