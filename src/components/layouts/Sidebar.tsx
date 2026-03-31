@@ -156,7 +156,7 @@ const navItems: NavItem[] = [
     title: 'dashboard.messages',
     href: '/dashboard/messages',
     icon: MessageSquare,
-    roles: ['admin', 'teacher', 'parent', 'developer', 'supervisor'],
+    roles: ['admin', 'teacher', 'parent', 'developer'],
   },
   {
     title: 'dashboard.reports',
