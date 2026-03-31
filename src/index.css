@@ -658,3 +658,23 @@ input[inputmode="numeric"] {
   direction: ltr !important;
   text-align: left !important;
 }
+
+/* Investor Presentation Premium Typography */
+.investor-presentation h1,
+.investor-presentation h2,
+.investor-presentation h3 {
+  font-family: 'Playfair Display', 'Cairo', serif;
+  letter-spacing: -0.02em;
+}
+
+.investor-presentation h1 {
+  font-weight: 800;
+}
+
+.investor-presentation h2 {
+  font-weight: 700;
+}
+
+.investor-presentation h3 {
+  font-weight: 600;
+}

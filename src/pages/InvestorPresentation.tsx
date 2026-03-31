@@ -73,6 +73,7 @@ const IntroAnimation = ({ onComplete }: { onComplete: () => void }) => {
   return (
     <motion.div
       className="fixed inset-0 z-[9999] bg-gradient-to-br from-background via-background to-primary/5 flex items-center justify-center overflow-hidden"
+      style={{ fontFamily: "'Plus Jakarta Sans', 'Cairo', sans-serif" }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.8 }}
     >
@@ -182,7 +183,8 @@ const IntroAnimation = ({ onComplete }: { onComplete: () => void }) => {
         {/* Title with letter-by-letter animation */}
         <motion.div className="relative mb-4" dir="ltr">
           <motion.h1
-            className="text-5xl md:text-7xl font-bold"
+            className="text-5xl md:text-7xl font-extrabold"
+            style={{ fontFamily: "'Playfair Display', 'Cairo', serif" }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 1.2 }}
@@ -809,7 +811,7 @@ const InvestorPresentation = () => {
   };
 
   return (
-    <div ref={scrollContainerRef} className="h-[100dvh] overflow-y-auto overscroll-none" style={{ WebkitOverflowScrolling: 'touch' }}>
+    <div ref={scrollContainerRef} className="h-[100dvh] overflow-y-auto overscroll-none investor-presentation" style={{ WebkitOverflowScrolling: 'touch', fontFamily: "'Plus Jakarta Sans', 'Cairo', sans-serif" }}>
       {/* Intro Animation */}
       <AnimatePresence>
         {showIntro && (
