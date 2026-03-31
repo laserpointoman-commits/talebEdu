@@ -1074,20 +1074,20 @@ function StudentRow({ student, language, onCheckIn, onCheckOut, onMarkAbsent, is
       </div>
 
       {/* Action Buttons */}
-      <div className="flex gap-1 shrink-0">
+      <div className="flex gap-1.5 shrink-0 ml-2">
         {variant === 'waiting' && (
           <>
             <Button 
               size="sm" 
-              className="h-8 px-2 text-xs bg-green-500 hover:bg-green-600"
+              className="h-8 px-3 text-xs bg-green-500 hover:bg-green-600 whitespace-nowrap"
               onClick={onCheckIn}
               disabled={isProcessing}
             >
               {isProcessing ? (
-                <Loader2 className="h-3 w-3 animate-spin" />
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
               ) : (
                 <>
-                  <ArrowUpFromLine className="h-3 w-3 mr-0.5" />
+                  <ArrowUpFromLine className="h-3.5 w-3.5 mr-1" />
                   {language === 'ar' ? 'صعود' : 'In'}
                 </>
               )}
@@ -1099,7 +1099,7 @@ function StudentRow({ student, language, onCheckIn, onCheckOut, onMarkAbsent, is
               onClick={onMarkAbsent}
               disabled={isProcessing}
             >
-              <UserX className="h-3 w-3" />
+              <UserX className="h-3.5 w-3.5" />
             </Button>
           </>
         )}
@@ -1107,15 +1107,15 @@ function StudentRow({ student, language, onCheckIn, onCheckOut, onMarkAbsent, is
         {variant === 'onbus' && (
           <Button 
             size="sm" 
-            className="h-8 px-2 text-xs bg-blue-500 hover:bg-blue-600"
+            className="h-8 px-3 text-xs bg-blue-500 hover:bg-blue-600 whitespace-nowrap"
             onClick={onCheckOut}
             disabled={isProcessing}
           >
             {isProcessing ? (
-              <Loader2 className="h-3 w-3 animate-spin" />
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
             ) : (
               <>
-                <ArrowDownToLine className="h-3 w-3 mr-0.5" />
+                <ArrowDownToLine className="h-3.5 w-3.5 mr-1" />
                 {language === 'ar' ? 'نزول' : 'Out'}
               </>
             )}
