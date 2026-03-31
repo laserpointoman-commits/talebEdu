@@ -98,31 +98,44 @@ export default function StudentBusTracking() {
         setLastLocation(location);
 
         // Load route stops to resolve pickup/dropoff coordinates
+        // Try by route_id first, then fallback to bus_id
+        let routeData: any = null;
         if (assignment.route_id) {
-          const { data: route } = await supabase
+          const { data } = await supabase
             .from('bus_routes')
             .select('stops')
             .eq('id', assignment.route_id)
             .maybeSingle();
+          routeData = data;
+        }
+        if (!routeData && assignment.bus_id) {
+          const { data } = await supabase
+            .from('bus_routes')
+            .select('stops')
+            .eq('bus_id', assignment.bus_id)
+            .eq('is_active', true)
+            .limit(1)
+            .maybeSingle();
+          routeData = data;
+        }
 
-          if (route?.stops && Array.isArray(route.stops)) {
-            const stops = route.stops as Array<{ name: string; name_ar?: string; lat: number; lng: number }>;
-            // Match pickup stop name to route stop for coordinates
-            if (assignment.pickup_stop && stops.length > 0) {
-              const matched = stops.find(s => 
-                s.name.toLowerCase().includes(assignment.pickup_stop.toLowerCase()) ||
-                assignment.pickup_stop.toLowerCase().includes(s.name.toLowerCase())
-              );
-              setPickupStop(matched ? { name: matched.name, lat: matched.lat, lng: matched.lng } : { name: stops[0].name, lat: stops[0].lat, lng: stops[0].lng });
-            }
-            // Match dropoff stop name to route stop for coordinates
-            if (assignment.dropoff_stop && stops.length > 0) {
-              const matched = stops.find(s => 
-                s.name.toLowerCase().includes(assignment.dropoff_stop.toLowerCase()) ||
-                assignment.dropoff_stop.toLowerCase().includes(s.name.toLowerCase())
-              );
-              setDropoffStop(matched ? { name: matched.name, lat: matched.lat, lng: matched.lng } : { name: stops[stops.length - 1].name, lat: stops[stops.length - 1].lat, lng: stops[stops.length - 1].lng });
-            }
+        if (routeData?.stops && Array.isArray(routeData.stops)) {
+          const stops = routeData.stops as Array<{ name: string; name_ar?: string; lat: number; lng: number }>;
+          // Match pickup stop name to route stop for coordinates
+          if (assignment.pickup_stop && stops.length > 0) {
+            const matched = stops.find(s => 
+              s.name.toLowerCase().includes(assignment.pickup_stop.toLowerCase()) ||
+              assignment.pickup_stop.toLowerCase().includes(s.name.toLowerCase())
+            );
+            setPickupStop(matched ? { name: matched.name, lat: matched.lat, lng: matched.lng } : { name: stops[0].name, lat: stops[0].lat, lng: stops[0].lng });
+          }
+          // Match dropoff stop name to route stop for coordinates
+          if (assignment.dropoff_stop && stops.length > 0) {
+            const matched = stops.find(s => 
+              s.name.toLowerCase().includes(assignment.dropoff_stop.toLowerCase()) ||
+              assignment.dropoff_stop.toLowerCase().includes(s.name.toLowerCase())
+            );
+            setDropoffStop(matched ? { name: matched.name, lat: matched.lat, lng: matched.lng } : { name: stops[stops.length - 1].name, lat: stops[stops.length - 1].lat, lng: stops[stops.length - 1].lng });
           }
         }
       } else {
