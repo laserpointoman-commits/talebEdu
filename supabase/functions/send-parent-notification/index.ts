@@ -53,6 +53,36 @@ serve(async (req) => {
 
     console.log('Notification created successfully:', notification.id);
 
+    // Also send push notification to the parent's devices
+    try {
+      const pushResponse = await fetch(`${supabaseUrl}/functions/v1/send-push-notification`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${supabaseKey}`,
+        },
+        body: JSON.stringify({
+          user_ids: [parentId],
+          title: title,
+          body: message,
+          data: {
+            type: type,
+            student_id: studentId || '',
+            notification_id: notification.id,
+            ...(data || {}),
+          },
+          sound: 'default',
+          badge: 1,
+        }),
+      });
+
+      const pushResult = await pushResponse.json();
+      console.log('Push notification result:', JSON.stringify(pushResult));
+    } catch (pushError) {
+      // Don't fail the whole request if push fails — in-app notification is already saved
+      console.error('Push notification failed (non-fatal):', pushError);
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
