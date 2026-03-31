@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Bell, Check, CheckCheck } from 'lucide-react';
+import { Bell, CheckCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Popover,
@@ -26,10 +26,49 @@ const typeIcons: Record<string, string> = {
   exam_schedule: '📋',
   attendance_alerts: '⏰',
   bus_arrival: '🚍',
+  bus_boarding: '🚌',
+  bus_exit: '🚌',
   wallet_transactions: '💳',
   school_announcements: '🏫',
   payment_received: '✅',
 };
+
+// Arabic translation map for notification titles
+const titleTranslations: Record<string, string> = {
+  'Student Boarded Bus': 'الطالب صعد الحافلة',
+  'Student Exited Bus': 'الطالب نزل من الحافلة',
+  'Student Entered School': 'الطالب دخل المدرسة',
+  'Student Exited School': 'الطالب خرج من المدرسة',
+  'Grade Updated': 'تحديث الدرجة',
+  'New Homework': 'واجب جديد',
+  'Payment Received': 'تم استلام الدفعة',
+  'Payment Reminder': 'تذكير بالدفع',
+  'System Announcement': 'إعلان النظام',
+  'School Announcement': 'إعلان المدرسة',
+  'Attendance Alert': 'تنبيه الحضور',
+  'Bus Arrival': 'وصول الحافلة',
+  'Wallet Transaction': 'عملية المحفظة',
+  'Exam Schedule': 'جدول الاختبارات',
+};
+
+function translateMessage(message: string, language: string): string {
+  if (language !== 'ar') return message;
+  
+  // Translate common patterns in messages
+  let translated = message;
+  translated = translated.replace(/boarded the bus at/g, 'صعد الحافلة في');
+  translated = translated.replace(/exited the bus at/g, 'نزل من الحافلة في');
+  translated = translated.replace(/entered school at/g, 'دخل المدرسة في');
+  translated = translated.replace(/exited school at/g, 'خرج من المدرسة في');
+  translated = translated.replace(/Bus (\d+)/g, 'الحافلة $1');
+  
+  return translated;
+}
+
+function translateTitle(title: string, language: string): string {
+  if (language !== 'ar') return title;
+  return titleTranslations[title] || title;
+}
 
 function getTimeAgo(dateStr: string, language: string) {
   try {
@@ -58,20 +97,21 @@ function NotificationItem({
         'w-full text-start p-3 border-b border-border last:border-0 transition-colors hover:bg-muted/50',
         !notification.read && 'bg-primary/5'
       )}
+      dir={language === 'ar' ? 'rtl' : 'ltr'}
     >
       <div className="flex items-start gap-2.5">
         <span className="text-lg mt-0.5 shrink-0">{icon}</span>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <p className={cn('text-sm font-medium truncate', !notification.read && 'text-primary')}>
-              {notification.title}
+              {translateTitle(notification.title, language)}
             </p>
             {!notification.read && (
               <span className="h-2 w-2 rounded-full bg-primary shrink-0" />
             )}
           </div>
           <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
-            {notification.message}
+            {translateMessage(notification.message, language)}
           </p>
           <p className="text-[10px] text-muted-foreground/70 mt-1">
             {getTimeAgo(notification.created_at, language)}
@@ -101,9 +141,9 @@ export default function NotificationBell() {
           <Bell className="h-4 w-4 md:h-5 md:w-5" />
           {unreadCount > 0 && (
             <Badge
-              className="absolute -top-1 -right-1 h-4 min-w-4 px-1 text-[10px] bg-red-500 text-white border-0 flex items-center justify-center rounded-full"
+              className="absolute -top-1 -right-1 h-4 min-w-4 px-1 text-[10px] bg-destructive text-destructive-foreground border-0 flex items-center justify-center rounded-full"
             >
-              {unreadCount > 9 ? '9+' : unreadCount}
+              {unreadCount > 99 ? '99+' : unreadCount}
             </Badge>
           )}
         </Button>
@@ -112,6 +152,7 @@ export default function NotificationBell() {
         className="w-80 md:w-96 p-0 bg-background shadow-xl border-border"
         align="end"
         sideOffset={8}
+        dir={language === 'ar' ? 'rtl' : 'ltr'}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-border">
@@ -125,7 +166,7 @@ export default function NotificationBell() {
               className="h-7 text-xs text-primary hover:text-primary/80"
               onClick={markAllAsRead}
             >
-              <CheckCheck className="h-3.5 w-3.5 mr-1" />
+              <CheckCheck className="h-3.5 w-3.5 ltr:mr-1 rtl:ml-1" />
               {getText('Mark all read', 'تحديد الكل كمقروء')}
             </Button>
           )}
