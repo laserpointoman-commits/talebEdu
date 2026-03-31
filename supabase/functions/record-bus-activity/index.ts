@@ -60,7 +60,7 @@ serve(async (req) => {
     }
 
     const today = new Date().toISOString().split('T')[0];
-    const requestedDbAction = action === 'board' ? 'boarded' : 'exited';
+    const dbAction = action === 'board' ? 'boarded' : 'exited';
 
     // Check last action
     const { data: lastActivity } = await supabase
@@ -73,12 +73,7 @@ serve(async (req) => {
       .limit(1)
       .single();
 
-    const isNfcScan = nfc_verified && !manual_entry;
-    const dbAction = isNfcScan
-      ? (lastActivity?.action === 'boarded' ? 'exited' : 'boarded')
-      : requestedDbAction;
-
-    if (!isNfcScan && lastActivity?.action === dbAction) {
+    if (lastActivity?.action === dbAction) {
       return new Response(JSON.stringify({ error: `Already ${dbAction}`, suggestion: action === 'board' ? 'exit' : 'board' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
@@ -109,10 +104,10 @@ serve(async (req) => {
         body: {
           parentId: student.parent_id,
           studentId: student.id,
-           type: dbAction === 'boarded' ? 'bus_boarding' : 'bus_exit',
-           title: dbAction === 'boarded' ? 'Student Boarded Bus' : 'Student Exited Bus',
+          type: action === 'board' ? 'bus_boarding' : 'bus_exit',
+          title: action === 'board' ? 'Student Boarded Bus' : 'Student Exited Bus',
           message: `${studentName} ${dbAction} the bus at ${location}`,
-           data: { busId, location, action: dbAction === 'boarded' ? 'board' : 'exit', timestamp: log.timestamp }
+          data: { busId, location, action, timestamp: log.timestamp }
         }
       }).catch(e => console.error('Notification failed:', e));
     }

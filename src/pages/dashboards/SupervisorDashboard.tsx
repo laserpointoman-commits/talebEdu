@@ -93,8 +93,6 @@ export default function SupervisorDashboard() {
   const shouldContinueScanning = useRef(false);
   const locationWatchId = useRef<number | null>(null);
   const studentsRef = useRef<StudentStatus[]>([]);
-  const processingRef = useRef(false);
-  const lastNfcScanRef = useRef<{ id: string; timestamp: number } | null>(null);
 
   useEffect(() => {
     studentsRef.current = students;
@@ -365,16 +363,6 @@ export default function SupervisorDashboard() {
 
   const handleNfcScan = async (nfcData: NFCData) => {
     const normalizedScanId = nfcData.id.trim().toLowerCase();
-
-    if (
-      lastNfcScanRef.current?.id === normalizedScanId &&
-      Date.now() - lastNfcScanRef.current.timestamp < 1800
-    ) {
-      return;
-    }
-
-    lastNfcScanRef.current = { id: normalizedScanId, timestamp: Date.now() };
-
     const student = studentsRef.current.find(
       (s) => s.nfcId?.trim().toLowerCase() === normalizedScanId,
     );
@@ -389,9 +377,8 @@ export default function SupervisorDashboard() {
   };
 
   const processStudentAction = async (student: StudentStatus, action?: 'board' | 'exit' | 'absent', isNfcScan: boolean = false) => {
-    if (processingRef.current) return;
+    if (processingStudent) return;
     
-    processingRef.current = true;
     setProcessingStudent(student.id);
 
     try {
@@ -424,43 +411,21 @@ export default function SupervisorDashboard() {
       });
 
       if (error || data?.error) {
-        const errorMessage = data?.error || error?.message || 'Failed to record';
-
-        if (typeof errorMessage === 'string' && errorMessage.startsWith('Already ')) {
-          const currentTime = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-          const syncedStudents = studentsRef.current.map((s) =>
-            s.id === student.id
-              ? {
-                  ...s,
-                  status: newStatus,
-                  ...(finalAction === 'board' ? { boardTime: currentTime } : { exitTime: currentTime }),
-                }
-              : s,
-          );
-
-          studentsRef.current = syncedStudents;
-          setStudents(syncedStudents);
-          return;
-        }
-
-        throw new Error(errorMessage);
+        throw new Error(data?.error || 'Failed to record');
       }
 
       const currentTime = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
       const studentName = language === 'ar' ? student.nameAr : student.name;
-
-      const updatedStudents = studentsRef.current.map((s) =>
-        s.id === student.id
-          ? {
-              ...s,
-              status: newStatus,
-              ...(finalAction === 'board' ? { boardTime: currentTime } : { exitTime: currentTime }),
+      
+      setStudents(prev => prev.map(s => 
+        s.id === student.id 
+          ? { 
+              ...s, 
+              status: newStatus, 
+              ...(finalAction === 'board' ? { boardTime: currentTime } : { exitTime: currentTime })
             }
-          : s,
-      );
-
-      studentsRef.current = updatedStudents;
-      setStudents(updatedStudents);
+          : s
+      ));
 
       setLastScanned(studentName);
       setTimeout(() => setLastScanned(null), 2000);
@@ -477,7 +442,6 @@ export default function SupervisorDashboard() {
       // Refresh to get correct state
       if (busData?.id) loadBusStudents(busData.id);
     } finally {
-      processingRef.current = false;
       setProcessingStudent(null);
     }
   };
