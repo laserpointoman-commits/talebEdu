@@ -290,17 +290,6 @@ export default function ParentDashboard() {
         <h2 className="text-lg font-semibold">
           {language === 'ar' ? 'أطفالي' : language === 'hi' ? 'मेरे बच्चे' : 'My Children'}
         </h2>
-        {profile?.expected_students_count && profile.registered_students_count < profile.expected_students_count && (
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={() => navigate('/dashboard/register-student')}
-            className="text-primary gap-1"
-          >
-            <UserPlus className="h-4 w-4" />
-            {language === 'ar' ? 'إضافة' : language === 'hi' ? 'जोड़ें' : 'Add'}
-          </Button>
-        )}
       </motion.div>
 
       {/* Pending Students */}
