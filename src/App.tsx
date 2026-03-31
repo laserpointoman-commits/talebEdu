@@ -5,7 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { LoadingProvider } from "@/contexts/LoadingContext";
@@ -122,12 +122,12 @@ function App() {
                         <Route path="/landing" element={<Index />} />
                         <Route path="/auth" element={<Auth />} />
                         <Route path="/email-confirmation-pending" element={<EmailConfirmationPending />} />
-                        {/* Public parent onboarding */}
-                        <Route path="/register" element={<ParentSelfSignup />} />
-                        <Route path="/parent-self-signup" element={<ParentSelfSignup />} />
-                        <Route path="/parent-registration" element={<ParentRegistration />} />
-                        <Route path="/register-student" element={<RegisterStudent />} />
-                        <Route path="/dashboard/register-student" element={<StudentRegistrationWizard />} />
+                        {/* Public parent onboarding - disabled, admin registers students */}
+                        <Route path="/register" element={<Navigate to="/dashboard" replace />} />
+                        <Route path="/parent-self-signup" element={<Navigate to="/dashboard" replace />} />
+                        <Route path="/parent-registration" element={<Navigate to="/dashboard" replace />} />
+                        <Route path="/register-student" element={<Navigate to="/dashboard" replace />} />
+                        <Route path="/dashboard/register-student" element={<Navigate to="/dashboard" replace />} />
                         <Route path="/admin/parent-invitations" element={<ParentInvitationsDashboard />} />
                         <Route path="/admin/student-approvals" element={<StudentApprovalDashboard />} />
                         <Route path="/dashboard/*" element={<Dashboard />} />
