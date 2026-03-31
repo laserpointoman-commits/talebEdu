@@ -73,6 +73,7 @@ const IntroAnimation = ({ onComplete }: { onComplete: () => void }) => {
   return (
     <motion.div
       className="fixed inset-0 z-[9999] bg-gradient-to-br from-background via-background to-primary/5 flex items-center justify-center overflow-hidden"
+      style={{ fontFamily: "'Plus Jakarta Sans', 'Cairo', sans-serif" }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.8 }}
     >
