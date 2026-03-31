@@ -259,7 +259,9 @@ export default function NotificationBell() {
                 key={n.id}
                 notification={n}
                 onRead={markAsRead}
+                onNavigate={handleNavigate}
                 language={language}
+              />
               />
             ))
           )}
