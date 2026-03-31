@@ -85,9 +85,18 @@ export function useNotifications() {
 
           // Play notification sound
           try {
-            const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdH2JkZqTi4J8eXx/goiOj42KhoKAgH+Bg4eLjY+PjouIhYKBgIGDhYiLjY+PjouIhYOBgIGDhYiKjI6OjIqHhYOBgYKEhoiKjI2MioiGhIOCgoOFh4mLjIyLiYeGhIODhIWHiYqLi4qIh4WEhIOEhYeJiouLioiHhYSEhISGh4iKi4qJiIaFhISEhYaHiYqKiomHhoWEhISFhoeJioqJiIeGhYSEhYaHiImKiYiHhoWFhIWFhoiJiYmIh4aFhYWFhoaIiYmIiIeGhYWFhYaHiIiJiIeHhoWFhYWGh4iIiIiHhoaFhYWGhoeIiIiHh4aGhYWFhoeHiIiIh4eGhoWFhYaGh4iIh4eHhoaFhYaGh4eIiIeHh4aGhYWGhoeHiIeHh4eGhoaGhoeHiIeHh4eGhoaGhoeHh4eHh4eHhoaGhoeHh4eHh4eHhoaGhoeHh4eHh4eHh4aGhoeHh4eHh4eHhoaGh4eHh4eHh4eHhoaHh4eHh4eHh4eHhoaHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eH');
-            audio.volume = 0.5;
-            audio.play().catch(() => {});
+            const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            oscillator.frequency.setValueAtTime(880, audioCtx.currentTime);
+            oscillator.frequency.setValueAtTime(1100, audioCtx.currentTime + 0.1);
+            oscillator.frequency.setValueAtTime(880, audioCtx.currentTime + 0.2);
+            gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+            oscillator.start(audioCtx.currentTime);
+            oscillator.stop(audioCtx.currentTime + 0.4);
           } catch (e) {}
 
           // Show browser notification if permitted
