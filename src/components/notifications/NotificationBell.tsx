@@ -80,23 +80,90 @@ function getTimeAgo(dateStr: string, language: string) {
   }
 }
 
+// Map notification types to their target routes
+function getNotificationRoute(notification: AppNotification): string | null {
+  const type = notification.notification_type;
+  const data = notification.data as Record<string, any> | null;
+
+  switch (type) {
+    case 'bus_boarding':
+    case 'bus_exit':
+    case 'bus_arrival':
+    case 'child_bus_location':
+      // Navigate to bus tracking — if student_id is available, go to student-specific tracking
+      if (data?.student_id) {
+        return `/dashboard/student/${data.student_id}/bus-tracking`;
+      }
+      return '/dashboard/tracking';
+
+    case 'child_attendance':
+    case 'attendance_alerts':
+      if (data?.student_id) {
+        return `/dashboard/student/${data.student_id}/attendance`;
+      }
+      return '/dashboard/attendance';
+
+    case 'child_grades':
+    case 'grade_updates':
+      if (data?.student_id) {
+        return `/dashboard/student/${data.student_id}/grades`;
+      }
+      return '/dashboard/grades';
+
+    case 'child_homework':
+    case 'homework_assigned':
+      return '/dashboard/homework';
+
+    case 'payment_reminders':
+    case 'payment_received':
+    case 'wallet_transactions':
+      if (data?.student_id) {
+        return `/dashboard/student/${data.student_id}/fees`;
+      }
+      return '/dashboard/finance';
+
+    case 'exam_schedule':
+      return '/dashboard/exams';
+
+    case 'system_announcements':
+    case 'school_announcements':
+      return '/dashboard';
+
+    default:
+      return null;
+  }
+}
+
 function NotificationItem({
   notification,
   onRead,
+  onNavigate,
   language,
 }: {
   notification: AppNotification;
   onRead: (id: string) => void;
+  onNavigate: (route: string) => void;
   language: string;
 }) {
   const icon = typeIcons[notification.notification_type] || '🔔';
+  const route = getNotificationRoute(notification);
+
+  const handleClick = () => {
+    if (!notification.read) {
+      onRead(notification.id);
+    }
+    if (route) {
+      onNavigate(route);
+    }
+  };
 
   return (
     <button
-      onClick={() => !notification.read && onRead(notification.id)}
+      onClick={handleClick}
       className={cn(
         'w-full text-start p-3 border-b border-border last:border-0 transition-colors hover:bg-muted/50',
-        !notification.read && 'bg-primary/5'
+        !notification.read && 'bg-primary/5',
+        route && 'cursor-pointer'
       )}
       dir={language === 'ar' ? 'rtl' : 'ltr'}
     >
