@@ -248,10 +248,7 @@ export default function BoardingHistory({ studentId, busId, daysToShow = 7, pick
                                   variant="outline"
                                   size="sm"
                                   className="h-7 px-2 text-xs"
-                                  onClick={() => {
-                                    const url = `https://www.google.com/maps?q=${pickupStop.lat},${pickupStop.lng}`;
-                                    window.open(url, '_blank');
-                                  }}
+                                  onClick={() => openMapLocation(pickupStop.lat, pickupStop.lng)}
                                 >
                                   <MapPin className="h-3 w-3 mr-1 text-green-600" />
                                   {language === 'ar' ? 'نقطة الصعود' : language === 'hi' ? 'पिकअप' : 'Pickup'}
@@ -262,10 +259,7 @@ export default function BoardingHistory({ studentId, busId, daysToShow = 7, pick
                                   variant="outline"
                                   size="sm"
                                   className="h-7 px-2 text-xs"
-                                  onClick={() => {
-                                    const url = `https://www.google.com/maps?q=${dropoffStop.lat},${dropoffStop.lng}`;
-                                    window.open(url, '_blank');
-                                  }}
+                                  onClick={() => openMapLocation(dropoffStop.lat, dropoffStop.lng)}
                                 >
                                   <MapPin className="h-3 w-3 mr-1 text-orange-600" />
                                   {language === 'ar' ? 'نقطة النزول' : language === 'hi' ? 'ड्रॉपऑफ' : 'Drop-off'}
