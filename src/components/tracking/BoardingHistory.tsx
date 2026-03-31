@@ -7,6 +7,21 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { LogIn, LogOut, Clock, MapPin, Navigation } from 'lucide-react';
 import { format } from 'date-fns';
+import { Capacitor } from '@capacitor/core';
+
+const openMapLocation = (lat: number, lng: number) => {
+  const platform = Capacitor.getPlatform();
+  if (platform === 'ios') {
+    // iOS: try Apple Maps first, fallback to Google Maps
+    window.location.href = `maps://maps.apple.com/?q=${lat},${lng}`;
+  } else if (platform === 'android') {
+    // Android: use geo intent
+    window.location.href = `geo:${lat},${lng}?q=${lat},${lng}`;
+  } else {
+    // Web: open Google Maps in new tab
+    window.open(`https://www.google.com/maps?q=${lat},${lng}`, '_blank');
+  }
+};
 
 interface StopLocation {
   name: string;
