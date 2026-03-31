@@ -7,7 +7,6 @@ import {
   Wallet, 
   GraduationCap, 
   TrendingUp,
-  UserPlus,
   Clock,
   ChevronRight
 } from "lucide-react";
@@ -291,17 +290,6 @@ export default function ParentDashboard() {
         <h2 className="text-lg font-semibold">
           {language === 'ar' ? 'أطفالي' : language === 'hi' ? 'मेरे बच्चे' : 'My Children'}
         </h2>
-        {profile?.expected_students_count && profile.registered_students_count < profile.expected_students_count && (
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={() => navigate('/dashboard/register-student')}
-            className="text-primary gap-1"
-          >
-            <UserPlus className="h-4 w-4" />
-            {language === 'ar' ? 'إضافة' : language === 'hi' ? 'जोड़ें' : 'Add'}
-          </Button>
-        )}
       </motion.div>
 
       {/* Pending Students */}
@@ -348,23 +336,15 @@ export default function ParentDashboard() {
                   <GraduationCap className="h-10 w-10 text-white" />
                 </div>
                 <h3 className="text-xl font-semibold mb-2">
-                  {language === 'ar' ? 'سجل طالبك الأول' : language === 'hi' ? 'अपने पहले छात्र को पंजीकृत करें' : 'Register Your First Student'}
+                  {language === 'ar' ? 'لا يوجد طلاب مسجلون بعد' : language === 'hi' ? 'अभी तक कोई छात्र पंजीकृत नहीं है' : 'No Students Registered Yet'}
                 </h3>
-                <p className="text-muted-foreground mb-6 text-center text-sm max-w-sm">
+                <p className="text-muted-foreground text-center text-sm max-w-sm">
                   {language === 'ar' 
-                    ? 'ابدأ بإضافة معلومات طفلك للوصول إلى جميع خدمات المدرسة'
+                    ? 'سيقوم مسؤول المدرسة بتسجيل طلابك وربطهم بحسابك. يرجى التواصل مع إدارة المدرسة لمزيد من المعلومات.'
                     : language === 'hi'
-                    ? 'सभी स्कूल सेवाओं तक पहुंचने के लिए अपने बच्चे की जानकारी जोड़कर शुरू करें'
-                    : 'Start by adding your child\'s information to access all school services'}
+                    ? 'स्कूल प्रशासक आपके छात्रों को पंजीकृत करेगा और उन्हें आपके खाते से जोड़ेगा। अधिक जानकारी के लिए स्कूल प्रशासन से संपर्क करें।'
+                    : 'The school administrator will register your students and link them to your account. Please contact the school administration for more information.'}
                 </p>
-                <Button 
-                  size="lg" 
-                  onClick={() => navigate('/dashboard/register-student')}
-                  className="gap-2 shadow-lg bg-gradient-to-r from-sky-500 to-primary hover:from-sky-600 hover:to-primary/90"
-                >
-                  <UserPlus className="h-5 w-5" />
-                  {language === 'ar' ? 'تسجيل طالب' : language === 'hi' ? 'छात्र पंजीकृत करें' : 'Register Student'}
-                </Button>
               </div>
             </div>
           </motion.div>
