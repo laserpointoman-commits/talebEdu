@@ -92,6 +92,11 @@ export default function SupervisorDashboard() {
   const scanningRef = useRef(false);
   const shouldContinueScanning = useRef(false);
   const locationWatchId = useRef<number | null>(null);
+  const studentsRef = useRef<StudentStatus[]>([]);
+
+  useEffect(() => {
+    studentsRef.current = students;
+  }, [students]);
 
   // Send GPS location to backend
   const sendLocationUpdate = useCallback(async (position: GeolocationPosition) => {
@@ -357,7 +362,10 @@ export default function SupervisorDashboard() {
   };
 
   const handleNfcScan = async (nfcData: NFCData) => {
-    const student = students.find(s => s.nfcId === nfcData.id);
+    const normalizedScanId = nfcData.id.trim().toLowerCase();
+    const student = studentsRef.current.find(
+      (s) => s.nfcId?.trim().toLowerCase() === normalizedScanId,
+    );
     
     if (!student) {
       toast.error(language === 'ar' ? 'الطالب غير موجود' : 'Student not found');
@@ -1060,80 +1068,83 @@ function StudentRow({ student, language, onCheckIn, onCheckOut, onMarkAbsent, is
       layout
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`p-3 rounded-xl border flex items-center gap-2 mb-2 ${getBgColor()}`}
+      className={`mb-2 rounded-xl border p-3 ${getBgColor()}`}
     >
-      <div className="w-8 h-8 rounded-full bg-background flex items-center justify-center border shrink-0">
-        {getIcon()}
-      </div>
-      
-      <div className="flex-1 min-w-0 overflow-hidden">
-        <p className="font-medium text-sm truncate">
-          {language === 'ar' ? student.nameAr : student.name}
-        </p>
-        <p className="text-[10px] text-muted-foreground truncate">{student.class}</p>
-      </div>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="flex min-w-0 flex-1 items-center gap-2">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border bg-background">
+            {getIcon()}
+          </div>
 
-      {/* Action Buttons */}
-      <div className="flex gap-1.5 shrink-0 ml-2">
-        {variant === 'waiting' && (
-          <>
-            <Button 
-              size="sm" 
-              className="h-8 px-3 text-xs bg-green-500 hover:bg-green-600 whitespace-nowrap"
-              onClick={onCheckIn}
+          <div className="min-w-0 flex-1 overflow-hidden">
+            <p className="truncate text-sm font-medium">
+              {language === 'ar' ? student.nameAr : student.name}
+            </p>
+            <p className="truncate text-[10px] text-muted-foreground">{student.class}</p>
+          </div>
+        </div>
+
+        <div className="flex w-full flex-wrap gap-1.5 sm:w-auto sm:flex-nowrap sm:justify-end">
+          {variant === 'waiting' && (
+            <>
+              <Button
+                size="sm"
+                className="h-8 flex-1 whitespace-nowrap bg-green-500 px-3 text-xs hover:bg-green-600 sm:flex-none"
+                onClick={onCheckIn}
+                disabled={isProcessing}
+              >
+                {isProcessing ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <>
+                    <ArrowUpFromLine className="mr-1 h-3.5 w-3.5" />
+                    {language === 'ar' ? 'صعود' : 'In'}
+                  </>
+                )}
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-8 min-w-8 shrink-0 px-2 text-red-500 border-red-300 hover:bg-red-50"
+                onClick={onMarkAbsent}
+                disabled={isProcessing}
+              >
+                <UserX className="h-3.5 w-3.5" />
+              </Button>
+            </>
+          )}
+
+          {variant === 'onbus' && (
+            <Button
+              size="sm"
+              className="h-8 flex-1 whitespace-nowrap bg-blue-500 px-3 text-xs hover:bg-blue-600 sm:flex-none"
+              onClick={onCheckOut}
               disabled={isProcessing}
             >
               {isProcessing ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
               ) : (
                 <>
-                  <ArrowUpFromLine className="h-3.5 w-3.5 mr-1" />
-                  {language === 'ar' ? 'صعود' : 'In'}
+                  <ArrowDownToLine className="mr-1 h-3.5 w-3.5" />
+                  {language === 'ar' ? 'نزول' : 'Out'}
                 </>
               )}
             </Button>
-            <Button 
-              size="sm" 
-              variant="outline"
-              className="h-8 w-8 p-0 text-red-500 border-red-300 hover:bg-red-50"
-              onClick={onMarkAbsent}
-              disabled={isProcessing}
-            >
-              <UserX className="h-3.5 w-3.5" />
-            </Button>
-          </>
-        )}
-        
-        {variant === 'onbus' && (
-          <Button 
-            size="sm" 
-            className="h-8 px-3 text-xs bg-blue-500 hover:bg-blue-600 whitespace-nowrap"
-            onClick={onCheckOut}
-            disabled={isProcessing}
-          >
-            {isProcessing ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            ) : (
-              <>
-                <ArrowDownToLine className="h-3.5 w-3.5 mr-1" />
-                {language === 'ar' ? 'نزول' : 'Out'}
-              </>
-            )}
-          </Button>
-        )}
+          )}
 
-        {variant === 'completed' && (
-          <div className="text-right text-[10px]">
-            <p className="text-green-600">{student.boardTime}</p>
-            <p className="text-blue-600 font-medium">{student.exitTime}</p>
-          </div>
-        )}
+          {variant === 'completed' && (
+            <div className="w-full text-right text-[10px] sm:w-auto">
+              <p className="text-green-600">{student.boardTime}</p>
+              <p className="font-medium text-blue-600">{student.exitTime}</p>
+            </div>
+          )}
 
-        {variant === 'absent' && (
-          <Badge variant="outline" className="bg-red-500/10 text-red-600 border-red-300 text-[10px]">
-            {language === 'ar' ? 'غائب' : 'Absent'}
-          </Badge>
-        )}
+          {variant === 'absent' && (
+            <Badge variant="outline" className="border-red-300 bg-red-500/10 text-[10px] text-red-600">
+              {language === 'ar' ? 'غائب' : 'Absent'}
+            </Badge>
+          )}
+        </div>
       </div>
     </motion.div>
   );
