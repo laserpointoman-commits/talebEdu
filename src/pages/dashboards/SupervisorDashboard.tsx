@@ -388,25 +388,22 @@ export default function SupervisorDashboard() {
     try {
       // Determine action based on current status
       let finalAction: 'board' | 'exit' = action as any;
-      let newStatus: 'boarded' | 'exited';
 
       if (!finalAction) {
         if (currentStudent.status === 'boarded') {
           finalAction = 'exit';
-          newStatus = 'exited';
         } else {
           finalAction = 'board';
-          newStatus = 'boarded';
         }
-      } else {
-        newStatus = finalAction === 'board' ? 'boarded' : 'exited';
       }
+
+      const requestedAction: 'board' | 'exit' | 'auto' = isNfcScan && !action ? 'auto' : finalAction;
 
       const { data, error } = await supabase.functions.invoke('record-bus-activity', {
         body: {
           studentId: student.id,
           busId: busData?.id,
-          action: finalAction,
+          action: requestedAction,
           location: busData?.bus_number || 'Bus',
           nfc_verified: isNfcScan,
           manual_entry: !isNfcScan,
@@ -420,6 +417,8 @@ export default function SupervisorDashboard() {
 
       const currentTime = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
       const studentName = language === 'ar' ? currentStudent.nameAr : currentStudent.name;
+      const recordedAction: 'board' | 'exit' = data?.boarding?.action === 'exited' ? 'exit' : 'board';
+      const newStatus: 'boarded' | 'exited' = recordedAction === 'exit' ? 'exited' : 'boarded';
       
       setStudents(prev => {
         const nextStudents = prev.map(s => 
@@ -427,7 +426,7 @@ export default function SupervisorDashboard() {
             ? {
                 ...s,
                 status: newStatus,
-                ...(finalAction === 'board'
+                ...(recordedAction === 'board'
                   ? { boardTime: currentTime }
                   : { exitTime: currentTime })
               }
@@ -441,7 +440,7 @@ export default function SupervisorDashboard() {
       setLastScanned(studentName);
       setTimeout(() => setLastScanned(null), 2000);
 
-      const actionText = finalAction === 'board' 
+      const actionText = recordedAction === 'board' 
         ? (language === 'ar' ? '✓ صعد' : '✓ Boarded')
         : (language === 'ar' ? '✓ نزل' : '✓ Exited');
 
