@@ -90,23 +90,22 @@ function getNotificationRoute(notification: AppNotification): string | null {
     case 'bus_exit':
     case 'bus_arrival':
     case 'child_bus_location':
-      // Navigate to bus tracking — if student_id is available, go to student-specific tracking
       if (data?.student_id) {
-        return `/dashboard/student/${data.student_id}/bus-tracking`;
+        return `/student/${data.student_id}/bus`;
       }
-      return '/dashboard/tracking';
+      return '/dashboard/bus-tracking';
 
     case 'child_attendance':
     case 'attendance_alerts':
       if (data?.student_id) {
-        return `/dashboard/student/${data.student_id}/attendance`;
+        return `/student/${data.student_id}/attendance`;
       }
-      return '/dashboard/attendance';
+      return '/dashboard/nfc-attendance';
 
     case 'child_grades':
     case 'grade_updates':
       if (data?.student_id) {
-        return `/dashboard/student/${data.student_id}/grades`;
+        return `/student/${data.student_id}/grades`;
       }
       return '/dashboard/grades';
 
@@ -118,11 +117,14 @@ function getNotificationRoute(notification: AppNotification): string | null {
     case 'payment_received':
     case 'wallet_transactions':
       if (data?.student_id) {
-        return `/dashboard/student/${data.student_id}/fees`;
+        return `/student/${data.student_id}/fees`;
       }
       return '/dashboard/finance';
 
     case 'exam_schedule':
+      if (data?.student_id) {
+        return `/student/${data.student_id}/exams`;
+      }
       return '/dashboard/exams';
 
     case 'system_announcements':
