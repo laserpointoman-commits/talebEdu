@@ -162,7 +162,7 @@ const navItems: NavItem[] = [
     title: 'dashboard.reports',
     href: '/dashboard/reports',
     icon: FileText,
-    roles: ['admin', 'driver', 'finance', 'developer', 'supervisor'],
+    roles: ['admin', 'driver', 'finance', 'developer'],
   },
   {
     title: 'dashboard.userManagement',
