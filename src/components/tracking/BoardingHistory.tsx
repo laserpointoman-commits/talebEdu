@@ -237,10 +237,7 @@ export default function BoardingHistory({ studentId, busId, daysToShow = 7, pick
                                   variant="ghost"
                                   size="sm"
                                   className="h-7 px-2 text-xs"
-                                  onClick={() => {
-                                    const url = `https://www.google.com/maps?q=${log.latitude},${log.longitude}`;
-                                    window.open(url, '_blank');
-                                  }}
+                                  onClick={() => openMapLocation(log.latitude!, log.longitude!)}
                                 >
                                   <Navigation className="h-3 w-3 mr-1" />
                                   {language === 'ar' ? 'الموقع' : language === 'hi' ? 'स्थान' : 'GPS'}
