@@ -93,6 +93,7 @@ export default function SupervisorDashboard() {
   const shouldContinueScanning = useRef(false);
   const locationWatchId = useRef<number | null>(null);
   const studentsRef = useRef<StudentStatus[]>([]);
+  const processingStudentRef = useRef<string | null>(null);
 
   useEffect(() => {
     studentsRef.current = students;
@@ -377,8 +378,11 @@ export default function SupervisorDashboard() {
   };
 
   const processStudentAction = async (student: StudentStatus, action?: 'board' | 'exit' | 'absent', isNfcScan: boolean = false) => {
-    if (processingStudent) return;
-    
+    if (processingStudentRef.current) return;
+
+    const currentStudent = studentsRef.current.find((s) => s.id === student.id) ?? student;
+
+    processingStudentRef.current = currentStudent.id;
     setProcessingStudent(student.id);
 
     try {
@@ -387,7 +391,7 @@ export default function SupervisorDashboard() {
       let newStatus: 'boarded' | 'exited';
 
       if (!finalAction) {
-        if (student.status === 'boarded') {
+        if (currentStudent.status === 'boarded') {
           finalAction = 'exit';
           newStatus = 'exited';
         } else {
@@ -415,17 +419,24 @@ export default function SupervisorDashboard() {
       }
 
       const currentTime = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-      const studentName = language === 'ar' ? student.nameAr : student.name;
+      const studentName = language === 'ar' ? currentStudent.nameAr : currentStudent.name;
       
-      setStudents(prev => prev.map(s => 
-        s.id === student.id 
-          ? { 
-              ...s, 
-              status: newStatus, 
-              ...(finalAction === 'board' ? { boardTime: currentTime } : { exitTime: currentTime })
-            }
-          : s
-      ));
+      setStudents(prev => {
+        const nextStudents = prev.map(s => 
+          s.id === currentStudent.id
+            ? {
+                ...s,
+                status: newStatus,
+                ...(finalAction === 'board'
+                  ? { boardTime: currentTime }
+                  : { exitTime: currentTime })
+              }
+            : s
+        );
+
+        studentsRef.current = nextStudents;
+        return nextStudents;
+      });
 
       setLastScanned(studentName);
       setTimeout(() => setLastScanned(null), 2000);
@@ -442,6 +453,7 @@ export default function SupervisorDashboard() {
       // Refresh to get correct state
       if (busData?.id) loadBusStudents(busData.id);
     } finally {
+      processingStudentRef.current = null;
       setProcessingStudent(null);
     }
   };
