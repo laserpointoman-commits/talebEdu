@@ -83,6 +83,13 @@ export function useNotifications() {
           setNotifications(prev => [newNotif, ...prev].slice(0, 50));
           setUnreadCount(prev => prev + 1);
 
+          // Play notification sound
+          try {
+            const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdH2JkZqTi4J8eXx/goiOj42KhoKAgH+Bg4eLjY+PjouIhYKBgIGDhYiLjY+PjouIhYOBgIGDhYiKjI6OjIqHhYOBgYKEhoiKjI2MioiGhIOCgoOFh4mLjIyLiYeGhIODhIWHiYqLi4qIh4WEhIOEhYeJiouLioiHhYSEhISGh4iKi4qJiIaFhISEhYaHiYqKiomHhoWEhISFhoeJioqJiIeGhYSEhYaHiImKiYiHhoWFhIWFhoiJiYmIh4aFhYWFhoaIiYmIiIeGhYWFhYaHiIiJiIeHhoWFhYWGh4iIiIiHhoaFhYWGhoeIiIiHh4aGhYWFhoeHiIiIh4eGhoWFhYaGh4iIh4eHhoaFhYaGh4eIiIeHh4aGhYWGhoeHiIeHh4eGhoaGhoeHiIeHh4eGhoaGhoeHh4eHh4eHhoaGhoeHh4eHh4eHhoaGhoeHh4eHh4eHh4aGhoeHh4eHh4eHhoaGh4eHh4eHh4eHhoaHh4eHh4eHh4eHhoaHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eH');
+            audio.volume = 0.5;
+            audio.play().catch(() => {});
+          } catch (e) {}
+
           // Show browser notification if permitted
           if ('Notification' in window && Notification.permission === 'granted') {
             new Notification(newNotif.title, {
