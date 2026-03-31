@@ -96,13 +96,13 @@ const navItems: NavItem[] = [
     title: 'dashboard.tracking',
     href: '/dashboard/bus-tracking',
     icon: MapPin,
-    roles: ['parent', 'driver', 'admin', 'developer', 'supervisor'],
+    roles: ['parent', 'driver', 'admin', 'developer'],
   },
   {
     title: 'dashboard.transport',
     href: '/dashboard/transport',
     icon: Bus,
-    roles: ['admin', 'developer', 'supervisor'],
+    roles: ['admin', 'developer'],
   },
   {
     title: 'dashboard.finance',
@@ -156,13 +156,13 @@ const navItems: NavItem[] = [
     title: 'dashboard.messages',
     href: '/dashboard/messages',
     icon: MessageSquare,
-    roles: ['admin', 'teacher', 'parent', 'developer', 'supervisor'],
+    roles: ['admin', 'teacher', 'parent', 'developer'],
   },
   {
     title: 'dashboard.reports',
     href: '/dashboard/reports',
     icon: FileText,
-    roles: ['admin', 'driver', 'finance', 'developer', 'supervisor'],
+    roles: ['admin', 'driver', 'finance', 'developer'],
   },
   {
     title: 'dashboard.userManagement',
@@ -186,7 +186,7 @@ const navItems: NavItem[] = [
     title: 'dashboard.settings',
     href: '/dashboard/settings',
     icon: Settings,
-    roles: ['admin', 'developer', 'supervisor'],
+    roles: ['admin', 'developer'],
   },
 ];
 
