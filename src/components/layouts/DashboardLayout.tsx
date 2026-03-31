@@ -202,6 +202,9 @@ function DashboardLayout({ children }: DashboardLayoutProps) {
           
           {/* Language Switcher */}
           <LanguageSwitcher />
+
+          {/* Notification Bell */}
+          <NotificationBell />
         </div>
 
         {/* Right Section - Logo and User Menu */}
