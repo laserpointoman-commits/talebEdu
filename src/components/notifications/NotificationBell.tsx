@@ -262,7 +262,6 @@ export default function NotificationBell() {
                 onNavigate={handleNavigate}
                 language={language}
               />
-              />
             ))
           )}
         </ScrollArea>
