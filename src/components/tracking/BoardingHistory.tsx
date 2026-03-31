@@ -7,6 +7,21 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { LogIn, LogOut, Clock, MapPin, Navigation } from 'lucide-react';
 import { format } from 'date-fns';
+import { Capacitor } from '@capacitor/core';
+
+const openMapLocation = (lat: number, lng: number) => {
+  const platform = Capacitor.getPlatform();
+  if (platform === 'ios') {
+    // iOS: try Apple Maps first, fallback to Google Maps
+    window.location.href = `maps://maps.apple.com/?q=${lat},${lng}`;
+  } else if (platform === 'android') {
+    // Android: use geo intent
+    window.location.href = `geo:${lat},${lng}?q=${lat},${lng}`;
+  } else {
+    // Web: open Google Maps in new tab
+    window.open(`https://www.google.com/maps?q=${lat},${lng}`, '_blank');
+  }
+};
 
 interface StopLocation {
   name: string;
@@ -222,10 +237,7 @@ export default function BoardingHistory({ studentId, busId, daysToShow = 7, pick
                                   variant="ghost"
                                   size="sm"
                                   className="h-7 px-2 text-xs"
-                                  onClick={() => {
-                                    const url = `https://www.google.com/maps?q=${log.latitude},${log.longitude}`;
-                                    window.open(url, '_blank');
-                                  }}
+                                  onClick={() => openMapLocation(log.latitude!, log.longitude!)}
                                 >
                                   <Navigation className="h-3 w-3 mr-1" />
                                   {language === 'ar' ? 'الموقع' : language === 'hi' ? 'स्थान' : 'GPS'}
@@ -236,10 +248,7 @@ export default function BoardingHistory({ studentId, busId, daysToShow = 7, pick
                                   variant="outline"
                                   size="sm"
                                   className="h-7 px-2 text-xs"
-                                  onClick={() => {
-                                    const url = `https://www.google.com/maps?q=${pickupStop.lat},${pickupStop.lng}`;
-                                    window.open(url, '_blank');
-                                  }}
+                                  onClick={() => openMapLocation(pickupStop.lat, pickupStop.lng)}
                                 >
                                   <MapPin className="h-3 w-3 mr-1 text-green-600" />
                                   {language === 'ar' ? 'نقطة الصعود' : language === 'hi' ? 'पिकअप' : 'Pickup'}
@@ -250,10 +259,7 @@ export default function BoardingHistory({ studentId, busId, daysToShow = 7, pick
                                   variant="outline"
                                   size="sm"
                                   className="h-7 px-2 text-xs"
-                                  onClick={() => {
-                                    const url = `https://www.google.com/maps?q=${dropoffStop.lat},${dropoffStop.lng}`;
-                                    window.open(url, '_blank');
-                                  }}
+                                  onClick={() => openMapLocation(dropoffStop.lat, dropoffStop.lng)}
                                 >
                                   <MapPin className="h-3 w-3 mr-1 text-orange-600" />
                                   {language === 'ar' ? 'نقطة النزول' : language === 'hi' ? 'ड्रॉपऑफ' : 'Drop-off'}
