@@ -96,13 +96,13 @@ const navItems: NavItem[] = [
     title: 'dashboard.tracking',
     href: '/dashboard/bus-tracking',
     icon: MapPin,
-    roles: ['parent', 'driver', 'admin', 'developer', 'supervisor'],
+    roles: ['parent', 'driver', 'admin', 'developer'],
   },
   {
     title: 'dashboard.transport',
     href: '/dashboard/transport',
     icon: Bus,
-    roles: ['admin', 'developer', 'supervisor'],
+    roles: ['admin', 'developer'],
   },
   {
     title: 'dashboard.finance',
