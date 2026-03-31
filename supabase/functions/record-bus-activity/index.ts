@@ -98,22 +98,19 @@ serve(async (req) => {
 
     const studentName = `${student.first_name} ${student.last_name}`;
 
-    EdgeRuntime.waitUntil((async () => {
-      if (student.parent_id) {
-        try {
-          await supabase.functions.invoke('send-parent-notification', {
-            body: {
-              parentId: student.parent_id,
-              studentId: student.id,
-              type: action === 'board' ? 'bus_boarding' : 'bus_exit',
-              title: action === 'board' ? 'Student Boarded Bus' : 'Student Exited Bus',
-              message: `${studentName} ${dbAction} the bus at ${location}`,
-              data: { busId, location, action, timestamp: log.timestamp }
-            }
-          });
-        } catch (e) { console.error('Notification failed:', e); }
-      }
-    })());
+    // Fire-and-forget notification (don't block the response)
+    if (student.parent_id) {
+      supabase.functions.invoke('send-parent-notification', {
+        body: {
+          parentId: student.parent_id,
+          studentId: student.id,
+          type: action === 'board' ? 'bus_boarding' : 'bus_exit',
+          title: action === 'board' ? 'Student Boarded Bus' : 'Student Exited Bus',
+          message: `${studentName} ${dbAction} the bus at ${location}`,
+          data: { busId, location, action, timestamp: log.timestamp }
+        }
+      }).catch(e => console.error('Notification failed:', e));
+    }
 
     return new Response(JSON.stringify({
       success: true,
