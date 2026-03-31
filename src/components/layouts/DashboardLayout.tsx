@@ -19,6 +19,7 @@ import { Badge } from '@/components/ui/badge';
 import { LogOut, User, Settings, Menu, X, Home, Shield, School, Users, GraduationCap, Car, ArrowLeft } from 'lucide-react';
 import Sidebar from './Sidebar';
 import BottomNavigation from './BottomNavigation';
+import NotificationBell from '@/components/notifications/NotificationBell';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 import { usePreventIOSScrollBounce } from '@/hooks/use-ios-scroll-bounce';
@@ -201,6 +202,9 @@ function DashboardLayout({ children }: DashboardLayoutProps) {
           
           {/* Language Switcher */}
           <LanguageSwitcher />
+
+          {/* Notification Bell */}
+          <NotificationBell />
         </div>
 
         {/* Right Section - Logo and User Menu */}
