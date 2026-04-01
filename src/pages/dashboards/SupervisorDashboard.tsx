@@ -62,7 +62,7 @@ interface StudentStatus {
 
 type TripType = 'pickup' | 'dropoff';
 
-const NFC_SCAN_COOLDOWN_MS = 5000;
+const NFC_SCAN_COOLDOWN_MS = 1800;
 
 // Auto-detect trip type based on time of day
 const getAutoTripType = (): TripType => {
@@ -96,7 +96,7 @@ export default function SupervisorDashboard() {
   const locationWatchId = useRef<number | null>(null);
   const studentsRef = useRef<StudentStatus[]>([]);
   const processingStudentRef = useRef<string | null>(null);
-  const lastNfcScanRef = useRef<{ id: string; scannedAt: number } | null>(null);
+  const lastNfcScanRef = useRef<{ id: string; scannedAt: number; status: StudentStatus['status'] } | null>(null);
   const currentTripRef = useRef<any>(null);
   const busIdRef = useRef<string | null>(null);
 
@@ -435,15 +435,6 @@ export default function SupervisorDashboard() {
   const handleNfcScan = async (nfcData: NFCData) => {
     const normalizedScanId = nfcData.id.trim().toLowerCase();
     const now = Date.now();
-    const previousScan = lastNfcScanRef.current;
-
-    if (previousScan?.id === normalizedScanId && now - previousScan.scannedAt < NFC_SCAN_COOLDOWN_MS) {
-      console.log('Ignoring duplicate NFC scan', {
-        nfcId: normalizedScanId,
-        elapsedMs: now - previousScan.scannedAt,
-      });
-      return;
-    }
 
     const student = studentsRef.current.find(
       (s) => s.nfcId?.trim().toLowerCase() === normalizedScanId,
@@ -454,9 +445,25 @@ export default function SupervisorDashboard() {
       return;
     }
 
+    const previousScan = lastNfcScanRef.current;
+
+    if (
+      previousScan?.id === normalizedScanId &&
+      previousScan.status === student.status &&
+      now - previousScan.scannedAt < NFC_SCAN_COOLDOWN_MS
+    ) {
+      console.log('Ignoring duplicate NFC scan', {
+        nfcId: normalizedScanId,
+        status: student.status,
+        elapsedMs: now - previousScan.scannedAt,
+      });
+      return;
+    }
+
     lastNfcScanRef.current = {
       id: normalizedScanId,
       scannedAt: now,
+      status: student.status,
     };
 
     // Pass isNfcScan=true to indicate this came from an NFC scan
@@ -549,6 +556,12 @@ export default function SupervisorDashboard() {
               ? (language === 'ar' ? '✓ نزل' : '✓ Exited')
               : (language === 'ar' ? '✓ صعد' : '✓ Boarded');
 
+            lastNfcScanRef.current = {
+              id: refreshedStudent.nfcId.trim().toLowerCase(),
+              scannedAt: Date.now(),
+              status: refreshedStudent.status,
+            };
+
             setLastScanned(studentName);
             setTimeout(() => setLastScanned(null), 2000);
             toast.success(`${studentName} - ${duplicateActionText}`, { duration: 1500 });
@@ -595,6 +608,12 @@ export default function SupervisorDashboard() {
       const actionText = recordedAction === 'board' 
         ? (language === 'ar' ? '✓ صعد' : '✓ Boarded')
         : (language === 'ar' ? '✓ نزل' : '✓ Exited');
+
+      lastNfcScanRef.current = {
+        id: currentStudent.nfcId.trim().toLowerCase(),
+        scannedAt: Date.now(),
+        status: newStatus,
+      };
 
       await loadBusStudents(busData.id, currentTripRef.current?.id ?? null, { silent: true });
 
