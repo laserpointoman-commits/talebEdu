@@ -1327,6 +1327,12 @@ interface StudentRowProps {
 }
 
 function StudentRow({ student, language, onCheckIn, onCheckOut, onMarkAbsent, isProcessing, variant }: StudentRowProps) {
+  const labels = {
+    checkIn: language === 'ar' ? 'صعود' : 'In',
+    checkOut: language === 'ar' ? 'نزول' : 'Out',
+    absent: language === 'ar' ? 'غياب' : 'Absent',
+  };
+
   const getBgColor = () => {
     switch (variant) {
       case 'onbus': return 'bg-green-500/10 border-green-500/30';
@@ -1366,12 +1372,12 @@ function StudentRow({ student, language, onCheckIn, onCheckOut, onMarkAbsent, is
           </div>
         </div>
 
-        <div className="flex w-full flex-wrap gap-1.5 sm:w-auto sm:flex-nowrap sm:justify-end">
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:items-end">
           {variant === 'waiting' && (
-            <>
+            <div className="grid w-full grid-cols-2 gap-2 sm:w-auto sm:min-w-[12rem]">
               <Button
                 size="sm"
-                className="h-8 flex-1 whitespace-nowrap bg-green-500 px-3 text-xs hover:bg-green-600 sm:flex-none"
+                className="h-10 w-full justify-center gap-1.5 px-3 text-sm font-semibold whitespace-nowrap"
                 onClick={onCheckIn}
                 disabled={isProcessing}
               >
@@ -1379,27 +1385,34 @@ function StudentRow({ student, language, onCheckIn, onCheckOut, onMarkAbsent, is
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
                 ) : (
                   <>
-                    <ArrowUpFromLine className="mr-1 h-3.5 w-3.5" />
-                    {language === 'ar' ? 'صعود' : 'In'}
+                    <ArrowUpFromLine className="h-3.5 w-3.5" />
+                    <span>{labels.checkIn}</span>
                   </>
                 )}
               </Button>
               <Button
                 size="sm"
-                variant="outline"
-                className="h-8 min-w-8 shrink-0 px-2 text-red-500 border-red-300 hover:bg-red-50"
+                variant="destructive"
+                className="h-10 w-full justify-center gap-1.5 px-3 text-sm font-semibold whitespace-nowrap"
                 onClick={onMarkAbsent}
                 disabled={isProcessing}
               >
-                <UserX className="h-3.5 w-3.5" />
+                {isProcessing ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <>
+                    <UserX className="h-3.5 w-3.5" />
+                    <span>{labels.absent}</span>
+                  </>
+                )}
               </Button>
-            </>
+            </div>
           )}
 
           {variant === 'onbus' && (
             <Button
               size="sm"
-              className="h-8 flex-1 whitespace-nowrap bg-blue-500 px-3 text-xs hover:bg-blue-600 sm:flex-none"
+              className="h-10 w-full justify-center gap-1.5 px-3 text-sm font-semibold whitespace-nowrap sm:min-w-[7rem]"
               onClick={onCheckOut}
               disabled={isProcessing}
             >
@@ -1407,8 +1420,8 @@ function StudentRow({ student, language, onCheckIn, onCheckOut, onMarkAbsent, is
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
               ) : (
                 <>
-                  <ArrowDownToLine className="mr-1 h-3.5 w-3.5" />
-                  {language === 'ar' ? 'نزول' : 'Out'}
+                  <ArrowDownToLine className="h-3.5 w-3.5" />
+                  <span>{labels.checkOut}</span>
                 </>
               )}
             </Button>
