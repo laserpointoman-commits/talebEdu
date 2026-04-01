@@ -8,6 +8,7 @@ const corsHeaders = {
 
 interface RequestBody {
   busId?: string;
+  tripId?: string;
 }
 
 interface StudentStatus {
@@ -119,14 +120,19 @@ serve(async (req) => {
       });
     }
 
-    const { data: activeTrip, error: activeTripError } = await admin
+    let activeTripQuery = admin
       .from("bus_trips")
       .select("id, started_at")
       .eq("bus_id", bus.id)
-      .eq("status", "in_progress")
-      .order("started_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
+      .eq("status", "in_progress");
+
+    if (body.tripId) {
+      activeTripQuery = activeTripQuery.eq("id", body.tripId);
+    } else {
+      activeTripQuery = activeTripQuery.order("started_at", { ascending: false }).limit(1);
+    }
+
+    const { data: activeTrip, error: activeTripError } = await activeTripQuery.maybeSingle();
 
     if (activeTripError) {
       return new Response(JSON.stringify({ error: "Failed to load active trip" }), {

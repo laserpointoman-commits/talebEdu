@@ -10,6 +10,7 @@ interface BusActivityRequest {
   studentNfcId?: string;
   studentId?: string;
   busId: string;
+  tripId?: string;
   action: 'board' | 'exit' | 'auto';
   location: string;
   latitude?: number;
@@ -27,7 +28,7 @@ serve(async (req) => {
   const startTime = performance.now();
 
   try {
-    const { studentNfcId, studentId, busId, action, location, latitude, longitude, nfc_verified = true, manual_entry = false, manual_entry_by }: BusActivityRequest = await req.json();
+    const { studentNfcId, studentId, busId, tripId, action, location, latitude, longitude, nfc_verified = true, manual_entry = false, manual_entry_by }: BusActivityRequest = await req.json();
 
     const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
 
@@ -59,14 +60,19 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Student not found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    const { data: activeTrip, error: activeTripError } = await supabase
+    let activeTripQuery = supabase
       .from('bus_trips')
       .select('id, started_at')
       .eq('bus_id', busId)
-      .eq('status', 'in_progress')
-      .order('started_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
+      .eq('status', 'in_progress');
+
+    if (tripId) {
+      activeTripQuery = activeTripQuery.eq('id', tripId);
+    } else {
+      activeTripQuery = activeTripQuery.order('started_at', { ascending: false }).limit(1);
+    }
+
+    const { data: activeTrip, error: activeTripError } = await activeTripQuery.maybeSingle();
 
     if (activeTripError) {
       throw activeTripError;

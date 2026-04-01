@@ -62,7 +62,7 @@ interface StudentStatus {
 
 type TripType = 'pickup' | 'dropoff';
 
-const NFC_SCAN_COOLDOWN_MS = 1800;
+const NFC_SCAN_COOLDOWN_MS = 5000;
 
 // Auto-detect trip type based on time of day
 const getAutoTripType = (): TripType => {
@@ -495,6 +495,25 @@ export default function SupervisorDashboard() {
       }
 
       if (error || data?.error) {
+        const duplicateActionError = isNfcScan && typeof data?.error === 'string' && data.error.startsWith('Already ');
+
+        if (duplicateActionError) {
+          await loadBusStudents(busData.id, currentTripRef.current?.id ?? null);
+
+          const refreshedStudent = studentsRef.current.find((s) => s.id === currentStudent.id);
+          if (refreshedStudent?.status === 'boarded' || refreshedStudent?.status === 'exited') {
+            const studentName = language === 'ar' ? refreshedStudent.nameAr : refreshedStudent.name;
+            const duplicateActionText = refreshedStudent.status === 'exited'
+              ? (language === 'ar' ? '✓ نزل' : '✓ Exited')
+              : (language === 'ar' ? '✓ صعد' : '✓ Boarded');
+
+            setLastScanned(studentName);
+            setTimeout(() => setLastScanned(null), 2000);
+            toast.success(`${studentName} - ${duplicateActionText}`, { duration: 1500 });
+            return;
+          }
+        }
+
         console.error('Error recording bus activity', {
           studentId: currentStudent.id,
           busId: busData.id,
