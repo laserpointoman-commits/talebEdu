@@ -73,6 +73,7 @@ const getAutoTripType = (): TripType => {
 export default function SupervisorDashboard() {
   const { language } = useLanguage();
   const { user, session } = useAuth();
+  const [authReady, setAuthReady] = useState(false);
   const [loading, setLoading] = useState(true);
   const [busData, setBusData] = useState<any>(null);
   const [students, setStudents] = useState<StudentStatus[]>([]);
@@ -99,6 +100,7 @@ export default function SupervisorDashboard() {
   const lastNfcScanRef = useRef<{ id: string; scannedAt: number; status: StudentStatus['status'] } | null>(null);
   const currentTripRef = useRef<any>(null);
   const busIdRef = useRef<string | null>(null);
+  const accessTokenRef = useRef<string | null>(session?.access_token ?? null);
 
   useEffect(() => {
     studentsRef.current = students;
@@ -112,19 +114,77 @@ export default function SupervisorDashboard() {
     busIdRef.current = busData?.id ?? null;
   }, [busData]);
 
-  const getAuthHeaders = useCallback(async () => {
-    const accessToken = session?.access_token ?? (await supabase.auth.getSession()).data.session?.access_token;
+  useEffect(() => {
+    accessTokenRef.current = session?.access_token ?? null;
+  }, [session?.access_token]);
 
-    if (!accessToken) {
-      throw new Error('Missing authentication session');
+  useEffect(() => {
+    let cancelled = false;
+
+    const restoreAuth = async () => {
+      try {
+        const { data } = await supabase.auth.getSession();
+        if (cancelled) return;
+
+        accessTokenRef.current = data.session?.access_token ?? session?.access_token ?? null;
+        setAuthReady(true);
+      } catch (error) {
+        console.error('Failed to restore auth session:', error);
+        if (!cancelled) {
+          accessTokenRef.current = session?.access_token ?? null;
+          setAuthReady(true);
+        }
+      }
+    };
+
+    void restoreAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, nextSession) => {
+      accessTokenRef.current = nextSession?.access_token ?? null;
+
+      if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED' || event === 'SIGNED_OUT') {
+        setAuthReady(true);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+      subscription.unsubscribe();
+    };
+  }, [session?.access_token]);
+
+  const wait = useCallback(async (ms: number) => {
+    await new Promise((resolve) => setTimeout(resolve, ms));
+  }, []);
+
+  const getAccessToken = useCallback(async () => {
+    for (let attempt = 0; attempt < 4; attempt++) {
+      if (accessTokenRef.current) {
+        return accessTokenRef.current;
+      }
+
+      const { data } = await supabase.auth.getSession();
+      accessTokenRef.current = data.session?.access_token ?? null;
+
+      if (accessTokenRef.current) {
+        return accessTokenRef.current;
+      }
+
+      await wait(120 * (attempt + 1));
     }
+
+    throw new Error('Missing authentication session');
+  }, [wait]);
+
+  const getAuthHeaders = useCallback(async () => {
+    const accessToken = await getAccessToken();
 
     return {
       'Content-Type': 'application/json',
       apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
       Authorization: `Bearer ${accessToken}`,
     };
-  }, [session?.access_token]);
+  }, [getAccessToken]);
 
   const invokeFunctionWithSession = useCallback(
     async (functionName: string, body: Record<string, unknown>) => {
@@ -240,7 +300,7 @@ export default function SupervisorDashboard() {
   }, []);
 
   useEffect(() => {
-    if (user) {
+    if (user && authReady) {
       loadSupervisorData();
       const cleanup = setupRealtimeSubscriptions();
       return () => {
@@ -250,7 +310,7 @@ export default function SupervisorDashboard() {
         stopLocationTracking();
       };
     }
-  }, [user, stopLocationTracking]);
+  }, [authReady, user, stopLocationTracking]);
 
   // Start/stop location tracking based on trip status
   useEffect(() => {
@@ -472,6 +532,14 @@ export default function SupervisorDashboard() {
 
   const processStudentAction = async (student: StudentStatus, action?: 'board' | 'exit' | 'absent', isNfcScan: boolean = false) => {
     if (processingStudentRef.current) return;
+
+    if (!authReady) {
+      toast.error(language === 'ar' ? 'يرجى الانتظار حتى يكتمل تسجيل الدخول' : 'Please wait for authentication to finish');
+      if (isNfcScan) {
+        lastNfcScanRef.current = null;
+      }
+      return;
+    }
 
     if (!busData?.id) {
       toast.error(language === 'ar' ? 'بيانات الحافلة غير جاهزة' : 'Bus data is not ready yet');
@@ -784,7 +852,7 @@ export default function SupervisorDashboard() {
   const exitedStudents = filteredStudents.filter(s => s.status === 'exited');
   const absentStudents = filteredStudents.filter(s => s.status === 'absent');
 
-  if (loading) {
+  if (loading || !authReady) {
     return <LogoLoader fullScreen />;
   }
 
