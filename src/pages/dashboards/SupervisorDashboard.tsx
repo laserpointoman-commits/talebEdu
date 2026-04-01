@@ -62,6 +62,8 @@ interface StudentStatus {
 
 type TripType = 'pickup' | 'dropoff';
 
+const NFC_SCAN_COOLDOWN_MS = 1800;
+
 // Auto-detect trip type based on time of day
 const getAutoTripType = (): TripType => {
   const hour = new Date().getHours();
@@ -94,6 +96,7 @@ export default function SupervisorDashboard() {
   const locationWatchId = useRef<number | null>(null);
   const studentsRef = useRef<StudentStatus[]>([]);
   const processingStudentRef = useRef<string | null>(null);
+  const lastNfcScanRef = useRef<{ id: string; scannedAt: number } | null>(null);
 
   useEffect(() => {
     studentsRef.current = students;
@@ -278,7 +281,9 @@ export default function SupervisorDashboard() {
       return;
     }
 
-    setStudents((data?.students || []) as StudentStatus[]);
+    const nextStudents = (data?.students || []) as StudentStatus[];
+    studentsRef.current = nextStudents;
+    setStudents(nextStudents);
   };
 
   const setupRealtimeSubscriptions = () => {
@@ -364,6 +369,17 @@ export default function SupervisorDashboard() {
 
   const handleNfcScan = async (nfcData: NFCData) => {
     const normalizedScanId = nfcData.id.trim().toLowerCase();
+    const now = Date.now();
+    const previousScan = lastNfcScanRef.current;
+
+    if (previousScan?.id === normalizedScanId && now - previousScan.scannedAt < NFC_SCAN_COOLDOWN_MS) {
+      console.log('Ignoring duplicate NFC scan', {
+        nfcId: normalizedScanId,
+        elapsedMs: now - previousScan.scannedAt,
+      });
+      return;
+    }
+
     const student = studentsRef.current.find(
       (s) => s.nfcId?.trim().toLowerCase() === normalizedScanId,
     );
@@ -373,12 +389,25 @@ export default function SupervisorDashboard() {
       return;
     }
 
+    lastNfcScanRef.current = {
+      id: normalizedScanId,
+      scannedAt: now,
+    };
+
     // Pass isNfcScan=true to indicate this came from an NFC scan
     await processStudentAction(student, undefined, true);
   };
 
   const processStudentAction = async (student: StudentStatus, action?: 'board' | 'exit' | 'absent', isNfcScan: boolean = false) => {
     if (processingStudentRef.current) return;
+
+    if (!busData?.id) {
+      toast.error(language === 'ar' ? 'بيانات الحافلة غير جاهزة' : 'Bus data is not ready yet');
+      if (isNfcScan) {
+        lastNfcScanRef.current = null;
+      }
+      return;
+    }
 
     const currentStudent = studentsRef.current.find((s) => s.id === student.id) ?? student;
 
@@ -397,22 +426,56 @@ export default function SupervisorDashboard() {
         }
       }
 
-      const requestedAction: 'board' | 'exit' | 'auto' = isNfcScan && !action ? 'auto' : finalAction;
+      let requestedAction: 'board' | 'exit' | 'auto' = isNfcScan && !action ? 'auto' : finalAction;
+      const requestBody = {
+        studentId: currentStudent.id,
+        busId: busData.id,
+        action: requestedAction,
+        location: busData?.bus_number || 'Bus',
+        nfc_verified: isNfcScan,
+        manual_entry: !isNfcScan,
+        manual_entry_by: !isNfcScan ? user?.id : undefined,
+      };
 
-      const { data, error } = await supabase.functions.invoke('record-bus-activity', {
-        body: {
-          studentId: student.id,
-          busId: busData?.id,
-          action: requestedAction,
-          location: busData?.bus_number || 'Bus',
-          nfc_verified: isNfcScan,
-          manual_entry: !isNfcScan,
-          manual_entry_by: !isNfcScan ? user?.id : undefined
-        }
+      let { data, error } = await supabase.functions.invoke('record-bus-activity', {
+        body: requestBody
       });
 
+      if ((error || data?.error) && isNfcScan) {
+        console.warn('NFC record attempt failed, retrying once with refreshed state', {
+          studentId: currentStudent.id,
+          busId: busData.id,
+          requestedAction,
+          error,
+          data,
+        });
+
+        await loadBusStudents(busData.id);
+
+        const refreshedStudent = studentsRef.current.find((s) => s.id === currentStudent.id) ?? currentStudent;
+        requestedAction = refreshedStudent.status === 'boarded' ? 'exit' : 'board';
+
+        const retryResult = await supabase.functions.invoke('record-bus-activity', {
+          body: {
+            ...requestBody,
+            action: requestedAction,
+          }
+        });
+
+        data = retryResult.data;
+        error = retryResult.error;
+      }
+
       if (error || data?.error) {
-        throw new Error(data?.error || 'Failed to record');
+        console.error('Error recording bus activity', {
+          studentId: currentStudent.id,
+          busId: busData.id,
+          requestedAction,
+          isNfcScan,
+          error,
+          data,
+        });
+        throw new Error(data?.error || error?.message || 'Failed to record');
       }
 
       const currentTime = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
@@ -448,6 +511,9 @@ export default function SupervisorDashboard() {
 
     } catch (error) {
       console.error('Error processing action:', error);
+      if (isNfcScan) {
+        lastNfcScanRef.current = null;
+      }
       toast.error(language === 'ar' ? 'فشل التسجيل' : 'Failed to record');
       // Refresh to get correct state
       if (busData?.id) loadBusStudents(busData.id);
