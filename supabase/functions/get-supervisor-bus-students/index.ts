@@ -119,12 +119,27 @@ serve(async (req) => {
       });
     }
 
-    const today = new Date().toISOString().split("T")[0];
+    const { data: activeTrip, error: activeTripError } = await admin
+      .from("bus_trips")
+      .select("id, started_at")
+      .eq("bus_id", bus.id)
+      .eq("status", "in_progress")
+      .order("started_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (activeTripError) {
+      return new Response(JSON.stringify({ error: "Failed to load active trip" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const { data: logs } = await admin
       .from("bus_boarding_logs")
       .select("student_id, action, timestamp")
       .eq("bus_id", bus.id)
-      .gte("timestamp", `${today}T00:00:00`)
+      .gte("timestamp", activeTrip?.started_at ?? new Date().toISOString())
       .order("timestamp", { ascending: false });
 
     const students: StudentStatus[] = (studentsData ?? []).map((s) => {

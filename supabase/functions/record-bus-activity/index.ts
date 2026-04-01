@@ -59,15 +59,33 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Student not found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    const today = new Date().toISOString().split('T')[0];
+    const { data: activeTrip, error: activeTripError } = await supabase
+      .from('bus_trips')
+      .select('id, started_at')
+      .eq('bus_id', busId)
+      .eq('status', 'in_progress')
+      .order('started_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
-    // Check last action
+    if (activeTripError) {
+      throw activeTripError;
+    }
+
+    if (!activeTrip?.started_at) {
+      return new Response(JSON.stringify({ error: 'No active trip found' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Check last action within the active trip only
     const { data: lastActivity } = await supabase
       .from('bus_boarding_logs')
       .select('action')
       .eq('student_id', student.id)
       .eq('bus_id', busId)
-      .gte('timestamp', `${today}T00:00:00`)
+      .gte('timestamp', activeTrip.started_at)
       .order('timestamp', { ascending: false })
       .limit(1)
       .single();
