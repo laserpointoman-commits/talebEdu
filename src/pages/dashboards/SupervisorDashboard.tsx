@@ -252,14 +252,12 @@ export default function SupervisorDashboard() {
       setBusData(busInfo);
       busIdRef.current = busId;
 
-      const today = new Date().toISOString().split('T')[0];
       const { data: activeTrip, error: activeTripError } = await supabase
         .from('bus_trips')
         .select('*')
         .eq('bus_id', busId)
         .eq('status', 'in_progress')
-        .gte('created_at', `${today}T00:00:00`)
-        .order('created_at', { ascending: false })
+        .order('started_at', { ascending: false })
         .limit(1)
         .maybeSingle();
 
@@ -626,7 +624,12 @@ export default function SupervisorDashboard() {
       
       // Reset students status for new trip
       setStudents(prev => {
-        const nextStudents = prev.map(s => ({ ...s, status: 'waiting', boardTime: undefined, exitTime: undefined }));
+        const nextStudents = prev.map((s): StudentStatus => ({
+          ...s,
+          status: 'waiting',
+          boardTime: undefined,
+          exitTime: undefined,
+        }));
         studentsRef.current = nextStudents;
         return nextStudents;
       });
