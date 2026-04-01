@@ -44,6 +44,26 @@ class NFCService {
     this.initPromise = this.initializeNFC();
   }
 
+  private async wait(ms: number): Promise<void> {
+    await new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  private async hardStopNativeScanning(): Promise<void> {
+    if (!NfcPlugin || !Capacitor.isNativePlatform()) return;
+
+    for (let i = 0; i < 3; i++) {
+      try {
+        await NfcPlugin.stopScanning();
+      } catch {
+        // ignore
+      }
+
+      if (i < 2) {
+        await this.wait(50);
+      }
+    }
+  }
+
   /**
    * Reset NFC service state - call this after logout to ensure
    * the service is ready for a fresh login session (e.g. NFC PIN login).
@@ -61,15 +81,7 @@ class NFCService {
       this.listenerHandle = null;
     }
     
-    // Force stop native scanning session multiple times to ensure it's cleared
-    if (NfcPlugin && Capacitor.isNativePlatform()) {
-      for (let i = 0; i < 3; i++) {
-        try {
-          await NfcPlugin.stopScanning();
-        } catch {}
-        await new Promise(r => setTimeout(r, 50));
-      }
-    }
+    await this.hardStopNativeScanning();
     
     console.log('NFC: Reset complete');
   }
@@ -464,9 +476,7 @@ class NFCService {
         this.listenerHandle = null;
       }
 
-      if (NfcPlugin && Capacitor.isNativePlatform()) {
-        await NfcPlugin.stopScanning();
-      }
+      await this.hardStopNativeScanning();
     } catch (error) {
       console.error('Error stopping NFC scan:', error);
     }
@@ -504,7 +514,7 @@ class NFCService {
           // One retry: some devices/plugins occasionally return an empty payload.
           // We hard-stop then re-attempt without requiring an app restart.
           try { await this.stopScanning(); } catch {}
-          await new Promise((r) => setTimeout(r, 150));
+          await this.wait(150);
           message = await attemptRead();
         }
 
@@ -533,6 +543,7 @@ class NFCService {
       });
     } finally {
       this.scanning = false;
+      this.scanCallback = null;
       // Always attempt to close any underlying native scanning session.
       try {
         await this.stopScanning();
