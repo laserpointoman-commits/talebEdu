@@ -72,7 +72,7 @@ const getAutoTripType = (): TripType => {
 
 export default function SupervisorDashboard() {
   const { language } = useLanguage();
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const [loading, setLoading] = useState(true);
   const [busData, setBusData] = useState<any>(null);
   const [students, setStudents] = useState<StudentStatus[]>([]);
@@ -112,19 +112,65 @@ export default function SupervisorDashboard() {
     busIdRef.current = busData?.id ?? null;
   }, [busData]);
 
+  const getAuthHeaders = useCallback(async () => {
+    const accessToken = session?.access_token ?? (await supabase.auth.getSession()).data.session?.access_token;
+
+    if (!accessToken) {
+      throw new Error('Missing authentication session');
+    }
+
+    return {
+      'Content-Type': 'application/json',
+      apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+      Authorization: `Bearer ${accessToken}`,
+    };
+  }, [session?.access_token]);
+
+  const invokeFunctionWithSession = useCallback(
+    async (functionName: string, body: Record<string, unknown>) => {
+      try {
+        const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/${functionName}`, {
+          method: 'POST',
+          headers: await getAuthHeaders(),
+          body: JSON.stringify(body),
+        });
+
+        const rawBody = await response.text();
+        const data = rawBody ? JSON.parse(rawBody) : null;
+
+        if (!response.ok) {
+          return {
+            data,
+            error: new Error(
+              (data && typeof data === 'object' && 'error' in data && typeof data.error === 'string')
+                ? data.error
+                : `Request failed with status ${response.status}`,
+            ),
+          };
+        }
+
+        return { data, error: null };
+      } catch (error) {
+        return {
+          data: null,
+          error: error instanceof Error ? error : new Error('Request failed'),
+        };
+      }
+    },
+    [getAuthHeaders],
+  );
+
   // Send GPS location to backend
   const sendLocationUpdate = useCallback(async (position: GeolocationPosition) => {
     if (!busData?.id || !isTripActive) return;
     
     try {
-      const { error } = await supabase.functions.invoke('update-bus-location', {
-        body: {
-          busId: busData.id,
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-          speed: position.coords.speed || 0,
-          heading: position.coords.heading || 0,
-        }
+      const { error } = await invokeFunctionWithSession('update-bus-location', {
+        busId: busData.id,
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+        speed: position.coords.speed || 0,
+        heading: position.coords.heading || 0,
       });
       
       if (error) {
@@ -135,7 +181,7 @@ export default function SupervisorDashboard() {
     } catch (err) {
       console.error('Failed to send location update:', err);
     }
-  }, [busData?.id, isTripActive]);
+  }, [busData?.id, invokeFunctionWithSession, isTripActive]);
 
   // Start GPS tracking when trip is active
   const startLocationTracking = useCallback(() => {
@@ -284,17 +330,17 @@ export default function SupervisorDashboard() {
     }
   };
 
-  const loadBusStudents = async (busId: string, tripId?: string | null) => {
-    const { data, error: fnError } = await supabase.functions.invoke('get-supervisor-bus-students', {
-      body: {
-        busId,
-        tripId: tripId ?? undefined,
-      }
+  const loadBusStudents = async (busId: string, tripId?: string | null, options?: { silent?: boolean }) => {
+    const { data, error: fnError } = await invokeFunctionWithSession('get-supervisor-bus-students', {
+      busId,
+      tripId: tripId ?? undefined,
     });
 
     if (fnError) {
       console.error('get-supervisor-bus-students failed:', fnError);
-      toast.error(language === 'ar' ? 'تعذر تحميل الطلاب' : 'Failed to load students');
+      if (!options?.silent) {
+        toast.error(language === 'ar' ? 'تعذر تحميل الطلاب' : 'Failed to load students');
+      }
       studentsRef.current = [];
       setStudents([]);
       return;
@@ -314,7 +360,7 @@ export default function SupervisorDashboard() {
         table: 'bus_boarding_logs'
       }, () => {
         if (busIdRef.current) {
-          loadBusStudents(busIdRef.current, currentTripRef.current?.id ?? null);
+          void loadBusStudents(busIdRef.current, currentTripRef.current?.id ?? null, { silent: true });
         }
       })
       .subscribe();
@@ -465,9 +511,7 @@ export default function SupervisorDashboard() {
         manual_entry_by: !isNfcScan ? user?.id : undefined,
       };
 
-      let { data, error } = await supabase.functions.invoke('record-bus-activity', {
-        body: requestBody
-      });
+      let { data, error } = await invokeFunctionWithSession('record-bus-activity', requestBody);
 
       if ((error || data?.error) && isNfcScan) {
         console.warn('NFC record attempt failed, retrying once with refreshed state', {
@@ -478,16 +522,14 @@ export default function SupervisorDashboard() {
           data,
         });
 
-        await loadBusStudents(busData.id, currentTripRef.current?.id ?? null);
+        await loadBusStudents(busData.id, currentTripRef.current?.id ?? null, { silent: true });
 
         const refreshedStudent = studentsRef.current.find((s) => s.id === currentStudent.id) ?? currentStudent;
         requestedAction = refreshedStudent.status === 'boarded' ? 'exit' : 'board';
 
-        const retryResult = await supabase.functions.invoke('record-bus-activity', {
-          body: {
-            ...requestBody,
-            action: requestedAction,
-          }
+        const retryResult = await invokeFunctionWithSession('record-bus-activity', {
+          ...requestBody,
+          action: requestedAction,
         });
 
         data = retryResult.data;
@@ -498,7 +540,7 @@ export default function SupervisorDashboard() {
         const duplicateActionError = isNfcScan && typeof data?.error === 'string' && data.error.startsWith('Already ');
 
         if (duplicateActionError) {
-          await loadBusStudents(busData.id, currentTripRef.current?.id ?? null);
+          await loadBusStudents(busData.id, currentTripRef.current?.id ?? null, { silent: true });
 
           const refreshedStudent = studentsRef.current.find((s) => s.id === currentStudent.id);
           if (refreshedStudent?.status === 'boarded' || refreshedStudent?.status === 'exited') {
@@ -554,6 +596,8 @@ export default function SupervisorDashboard() {
         ? (language === 'ar' ? '✓ صعد' : '✓ Boarded')
         : (language === 'ar' ? '✓ نزل' : '✓ Exited');
 
+      await loadBusStudents(busData.id, currentTripRef.current?.id ?? null, { silent: true });
+
       toast.success(`${studentName} - ${actionText}`, { duration: 1500 });
 
     } catch (error) {
@@ -563,7 +607,9 @@ export default function SupervisorDashboard() {
       }
       toast.error(language === 'ar' ? 'فشل التسجيل' : 'Failed to record');
       // Refresh to get correct state
-      if (busData?.id) loadBusStudents(busData.id, currentTripRef.current?.id ?? null);
+      if (busData?.id) {
+        void loadBusStudents(busData.id, currentTripRef.current?.id ?? null, { silent: true });
+      }
     } finally {
       processingStudentRef.current = null;
       setProcessingStudent(null);
@@ -576,13 +622,11 @@ export default function SupervisorDashboard() {
     setProcessingStudent(selectedStudentForAbsent.id);
 
     try {
-      const { data, error } = await supabase.functions.invoke('mark-student-absent', {
-        body: {
-          studentId: selectedStudentForAbsent.id,
-          busId: busData?.id,
-          tripType: tripType,
-          supervisorId: user?.id,
-        }
+      const { data, error } = await invokeFunctionWithSession('mark-student-absent', {
+        studentId: selectedStudentForAbsent.id,
+        busId: busData?.id,
+        tripType: tripType,
+        supervisorId: user?.id,
       });
 
       if (error || data?.error) {
@@ -596,6 +640,10 @@ export default function SupervisorDashboard() {
           ? { ...s, status: 'absent' }
           : s
       ));
+
+      if (busData?.id) {
+        await loadBusStudents(busData.id, currentTripRef.current?.id ?? null, { silent: true });
+      }
 
       toast.warning(`${studentName} - ${language === 'ar' ? 'غائب' : 'Marked absent'}`, { duration: 2000 });
 
