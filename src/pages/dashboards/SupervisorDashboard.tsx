@@ -62,7 +62,7 @@ interface StudentStatus {
 
 type TripType = 'pickup' | 'dropoff';
 
-const NFC_SCAN_COOLDOWN_MS = 1800;
+const NFC_SCAN_COOLDOWN_MS = 5000;
 
 // Auto-detect trip type based on time of day
 const getAutoTripType = (): TripType => {
@@ -97,10 +97,20 @@ export default function SupervisorDashboard() {
   const studentsRef = useRef<StudentStatus[]>([]);
   const processingStudentRef = useRef<string | null>(null);
   const lastNfcScanRef = useRef<{ id: string; scannedAt: number } | null>(null);
+  const currentTripRef = useRef<any>(null);
+  const busIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     studentsRef.current = students;
   }, [students]);
+
+  useEffect(() => {
+    currentTripRef.current = currentTrip;
+  }, [currentTrip]);
+
+  useEffect(() => {
+    busIdRef.current = busData?.id ?? null;
+  }, [busData]);
 
   // Send GPS location to backend
   const sendLocationUpdate = useCallback(async (position: GeolocationPosition) => {
@@ -240,16 +250,14 @@ export default function SupervisorDashboard() {
       }
 
       setBusData(busInfo);
-      await loadBusStudents(busId);
+      busIdRef.current = busId;
 
-      const today = new Date().toISOString().split('T')[0];
       const { data: activeTrip, error: activeTripError } = await supabase
         .from('bus_trips')
         .select('*')
         .eq('bus_id', busId)
         .eq('status', 'in_progress')
-        .gte('created_at', `${today}T00:00:00`)
-        .order('created_at', { ascending: false })
+        .order('started_at', { ascending: false })
         .limit(1)
         .maybeSingle();
 
@@ -259,9 +267,16 @@ export default function SupervisorDashboard() {
 
       if (activeTrip) {
         setCurrentTrip(activeTrip);
+        currentTripRef.current = activeTrip;
         setIsTripActive(true);
         setTripType(activeTrip.trip_type === 'morning' ? 'pickup' : 'dropoff');
+      } else {
+        setCurrentTrip(null);
+        currentTripRef.current = null;
+        setIsTripActive(false);
       }
+
+      await loadBusStudents(busId, activeTrip?.id ?? null);
     } catch (error) {
       console.error('Error loading supervisor data:', error);
     } finally {
@@ -269,14 +284,18 @@ export default function SupervisorDashboard() {
     }
   };
 
-  const loadBusStudents = async (busId: string) => {
+  const loadBusStudents = async (busId: string, tripId?: string | null) => {
     const { data, error: fnError } = await supabase.functions.invoke('get-supervisor-bus-students', {
-      body: { busId }
+      body: {
+        busId,
+        tripId: tripId ?? undefined,
+      }
     });
 
     if (fnError) {
       console.error('get-supervisor-bus-students failed:', fnError);
       toast.error(language === 'ar' ? 'تعذر تحميل الطلاب' : 'Failed to load students');
+      studentsRef.current = [];
       setStudents([]);
       return;
     }
@@ -294,8 +313,8 @@ export default function SupervisorDashboard() {
         schema: 'public',
         table: 'bus_boarding_logs'
       }, () => {
-        if (busData?.id) {
-          loadBusStudents(busData.id);
+        if (busIdRef.current) {
+          loadBusStudents(busIdRef.current, currentTripRef.current?.id ?? null);
         }
       })
       .subscribe();
@@ -409,6 +428,14 @@ export default function SupervisorDashboard() {
       return;
     }
 
+    if (!currentTripRef.current?.id) {
+      toast.error(language === 'ar' ? 'ابدأ الرحلة أولاً' : 'Start the trip first');
+      if (isNfcScan) {
+        lastNfcScanRef.current = null;
+      }
+      return;
+    }
+
     const currentStudent = studentsRef.current.find((s) => s.id === student.id) ?? student;
 
     processingStudentRef.current = currentStudent.id;
@@ -430,6 +457,7 @@ export default function SupervisorDashboard() {
       const requestBody = {
         studentId: currentStudent.id,
         busId: busData.id,
+        tripId: currentTripRef.current.id,
         action: requestedAction,
         location: busData?.bus_number || 'Bus',
         nfc_verified: isNfcScan,
@@ -450,7 +478,7 @@ export default function SupervisorDashboard() {
           data,
         });
 
-        await loadBusStudents(busData.id);
+        await loadBusStudents(busData.id, currentTripRef.current?.id ?? null);
 
         const refreshedStudent = studentsRef.current.find((s) => s.id === currentStudent.id) ?? currentStudent;
         requestedAction = refreshedStudent.status === 'boarded' ? 'exit' : 'board';
@@ -467,6 +495,25 @@ export default function SupervisorDashboard() {
       }
 
       if (error || data?.error) {
+        const duplicateActionError = isNfcScan && typeof data?.error === 'string' && data.error.startsWith('Already ');
+
+        if (duplicateActionError) {
+          await loadBusStudents(busData.id, currentTripRef.current?.id ?? null);
+
+          const refreshedStudent = studentsRef.current.find((s) => s.id === currentStudent.id);
+          if (refreshedStudent?.status === 'boarded' || refreshedStudent?.status === 'exited') {
+            const studentName = language === 'ar' ? refreshedStudent.nameAr : refreshedStudent.name;
+            const duplicateActionText = refreshedStudent.status === 'exited'
+              ? (language === 'ar' ? '✓ نزل' : '✓ Exited')
+              : (language === 'ar' ? '✓ صعد' : '✓ Boarded');
+
+            setLastScanned(studentName);
+            setTimeout(() => setLastScanned(null), 2000);
+            toast.success(`${studentName} - ${duplicateActionText}`, { duration: 1500 });
+            return;
+          }
+        }
+
         console.error('Error recording bus activity', {
           studentId: currentStudent.id,
           busId: busData.id,
@@ -516,7 +563,7 @@ export default function SupervisorDashboard() {
       }
       toast.error(language === 'ar' ? 'فشل التسجيل' : 'Failed to record');
       // Refresh to get correct state
-      if (busData?.id) loadBusStudents(busData.id);
+      if (busData?.id) loadBusStudents(busData.id, currentTripRef.current?.id ?? null);
     } finally {
       processingStudentRef.current = null;
       setProcessingStudent(null);
@@ -566,6 +613,15 @@ export default function SupervisorDashboard() {
     if (!busData?.id) return;
 
     try {
+      await supabase
+        .from('bus_trips')
+        .update({
+          status: 'completed',
+          ended_at: new Date().toISOString(),
+        })
+        .eq('bus_id', busData.id)
+        .eq('status', 'in_progress');
+
       const { data: trip, error } = await supabase
         .from('bus_trips')
         .insert({
@@ -581,11 +637,21 @@ export default function SupervisorDashboard() {
       if (error) throw error;
 
       setCurrentTrip(trip);
+      currentTripRef.current = trip;
       setIsTripActive(true);
       setTripType(type);
       
       // Reset students status for new trip
-      setStudents(prev => prev.map(s => ({ ...s, status: 'waiting', boardTime: undefined, exitTime: undefined })));
+      setStudents(prev => {
+        const nextStudents = prev.map((s): StudentStatus => ({
+          ...s,
+          status: 'waiting',
+          boardTime: undefined,
+          exitTime: undefined,
+        }));
+        studentsRef.current = nextStudents;
+        return nextStudents;
+      });
       
       toast.success(language === 'ar' 
         ? (type === 'pickup' ? 'بدأت رحلة التوصيل للمدرسة' : 'بدأت رحلة العودة للمنزل')
@@ -624,10 +690,14 @@ export default function SupervisorDashboard() {
         .eq('id', currentTrip.id);
 
       setCurrentTrip(null);
+      currentTripRef.current = null;
       setIsTripActive(false);
       setTripType(getAutoTripType());
       stopScanning();
       setShowEndTripWarning(false);
+      if (busData?.id) {
+        void loadBusStudents(busData.id, null);
+      }
       toast.success(language === 'ar' ? 'انتهت الرحلة' : 'Trip ended');
     } catch (error) {
       console.error('Error ending trip:', error);
