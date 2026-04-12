@@ -59,7 +59,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    let splashTimer: NodeJS.Timeout | null = null;
+    
 
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
