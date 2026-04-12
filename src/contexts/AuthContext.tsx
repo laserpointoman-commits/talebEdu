@@ -2,7 +2,6 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User, Session } from '@supabase/supabase-js';
 import { toast } from 'sonner';
-import SplashScreen from '@/components/SplashScreen';
 import { nfcService } from '@/services/nfcService';
 interface Profile {
   id: string;
@@ -41,15 +40,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [showSplash, setShowSplash] = useState(() => {
-    // Only show splash on very first app load (not on refresh or navigation)
-    const hasShownInitialSplash = localStorage.getItem('hasShownInitialSplash');
-    if (!hasShownInitialSplash) {
-      localStorage.setItem('hasShownInitialSplash', 'true');
-      return true;
-    }
-    return false;
-  });
 
   const fetchProfile = async (userId: string) => {
     try {
@@ -69,7 +59,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    let splashTimer: NodeJS.Timeout | null = null;
+    
 
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -86,13 +76,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setProfile(null);
         }
 
-        // Show splash ONLY on actual sign in event (not on page load with existing session)
-        if (event === 'SIGNED_IN' && !loading) {
-          setShowSplash(true);
-          splashTimer = setTimeout(() => {
-            setShowSplash(false);
-          }, 1000); // 1 second
-        }
+        // Sign in handled - no splash delay
 
         // Handle sign out (splash is handled in logout function)
         if (event === 'SIGNED_OUT') {
@@ -114,16 +98,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoading(false);
     });
 
-    // Handle initial splash screen (only if it's the very first load)
-    if (showSplash) {
-      splashTimer = setTimeout(() => {
-        setShowSplash(false);
-      }, 1000); // 1 second
-    }
-
     return () => {
       subscription.unsubscribe();
-      if (splashTimer) clearTimeout(splashTimer);
     };
   }, []);
 
@@ -211,10 +187,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     loading,
     logout,
   };
-
-  if (showSplash) {
-    return <SplashScreen onComplete={() => setShowSplash(false)} />;
-  }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
