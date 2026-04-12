@@ -17,7 +17,7 @@ export default function LogoLoader({ size = 'medium', text = false, className, s
 
   const content = (
     <div className={`flex flex-col items-center justify-center gap-3 ${className || ''}`}>
-      <div className={`${s.logo} font-bold text-primary animate-pulse`}>t</div>
+      <div className={`${s.logo} font-bold text-primary`}>t</div>
       {shouldShowText && (
         <span className={`${s.text} text-muted-foreground`}>Loading...</span>
       )}
@@ -26,7 +26,7 @@ export default function LogoLoader({ size = 'medium', text = false, className, s
 
   if (fullScreen) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-background">
+      <div className="flex min-h-[40vh] w-full items-center justify-center bg-background">
         {content}
       </div>
     );

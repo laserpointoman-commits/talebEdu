@@ -1,6 +1,5 @@
 import React, { Suspense, useEffect } from "react";
 import { Capacitor } from "@capacitor/core";
-import LogoLoader from "./components/LogoLoader";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -107,7 +106,7 @@ function App() {
           <LanguageProvider>
             <LoadingProvider>
               <TooltipProvider>
-                <Suspense fallback={<LogoLoader size="large" text={true} fullScreen={true} />}>
+                <Suspense fallback={null}>
                   <Toaster />
                   <Sonner />
                   <OfflineIndicator />
