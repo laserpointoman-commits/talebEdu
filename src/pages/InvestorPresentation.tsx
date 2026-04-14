@@ -516,10 +516,6 @@ const InvestorPresentation = () => {
         </div>
       )
     },
-    // Slide 4: Competitive Advantages (was slide 8, moved up after removing market & revenue)
-      content: (
-        <div className="flex flex-col h-full px-8 py-12" dir="rtl">
-          <motion.h2
             initial={{ x: -50, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             className="text-4xl font-bold text-primary mb-8 text-center"
