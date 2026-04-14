@@ -516,10 +516,8 @@ const InvestorPresentation = () => {
         </div>
       )
     },
-          </motion.h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-            {[
-              { value: "1,200+", label: "مدرسة في سلطنة عمان", icon: Building2 },
+    // Slide 4: Competitive Advantages
+    {
               { value: "250,000+", label: "طالب وطالبة", icon: Users },
               { value: "20M+ ر.ع", label: "حجم السوق المتوقع", icon: TrendingUp }
             ].map((item, index) => (
