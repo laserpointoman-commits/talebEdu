@@ -296,7 +296,6 @@ const InvestorPresentation = () => {
   const [showIntro, setShowIntro] = useState(true);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  // Wrap entire page in scroll container for native platforms
   const slides = [
     // Slide 1: Cover
     {
@@ -518,106 +517,6 @@ const InvestorPresentation = () => {
     },
     // Slide 4: Competitive Advantages
     {
-              { value: "250,000+", label: "طالب وطالبة", icon: Users },
-              { value: "20M+ ر.ع", label: "حجم السوق المتوقع", icon: TrendingUp }
-            ].map((item, index) => (
-              <motion.div
-                key={index}
-                initial={{ y: 50, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.3 + index * 0.2 }}
-                className="bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 rounded-2xl p-8 text-center"
-              >
-                <item.icon className="w-12 h-12 mx-auto mb-4 text-primary" />
-                <h3 className="text-4xl font-bold text-primary mb-2">{item.value}</h3>
-                <p className="text-muted-foreground">{item.label}</p>
-              </motion.div>
-            ))}
-          </div>
-          <motion.div
-            initial={{ y: 30, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.9 }}
-            className="bg-gradient-to-l from-green-500/10 to-emerald-500/10 border border-green-500/20 rounded-2xl p-6 text-center"
-          >
-            <Globe className="w-10 h-10 mx-auto mb-4 text-green-600" />
-            <h3 className="text-2xl font-bold text-green-600 mb-2">إمكانية التوسع الإقليمي</h3>
-            <p className="text-muted-foreground">دول الخليج العربي والشرق الأوسط - سوق يتجاوز 15 مليون طالب</p>
-          </motion.div>
-        </div>
-      )
-    },
-    // Slide 6: Revenue Sources
-    {
-      id: "revenue",
-      content: (
-        <div className="flex flex-col h-full px-8 py-12" dir="rtl">
-          <motion.h2
-            initial={{ x: -50, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            className="text-4xl font-bold text-primary mb-8 text-center"
-          >
-            مصادر الإيرادات
-          </motion.h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 flex-1">
-            <motion.div
-              initial={{ x: -50, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ delay: 0.3 }}
-              className="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border border-blue-500/20 rounded-2xl p-6"
-            >
-              <GraduationCap className="w-12 h-12 text-blue-600 mb-4" />
-              <h3 className="text-2xl font-bold mb-4">اشتراك الطلاب السنوي</h3>
-              <div className="text-center">
-                <p className="text-5xl font-bold text-blue-600 mb-2">25 ر.ع</p>
-                <p className="text-muted-foreground">لكل طالب سنوياً</p>
-              </div>
-            </motion.div>
-            <motion.div
-              initial={{ x: 50, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ delay: 0.4 }}
-              className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-500/20 rounded-2xl p-6"
-            >
-              <Bus className="w-12 h-12 text-green-600 mb-4" />
-              <h3 className="text-2xl font-bold mb-4">اشتراك الحافلات السنوي</h3>
-              <div className="text-center">
-                <p className="text-5xl font-bold text-green-600 mb-2">100 ر.ع</p>
-                <p className="text-muted-foreground">لكل حافلة سنوياً</p>
-              </div>
-            </motion.div>
-            <motion.div
-              initial={{ x: -50, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ delay: 0.5 }}
-              className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-2xl p-6"
-            >
-              <ShoppingBag className="w-12 h-12 text-purple-600 mb-4" />
-              <h3 className="text-2xl font-bold mb-4">متجر القرطاسية</h3>
-              <div className="text-center">
-                <p className="text-5xl font-bold text-purple-600 mb-2">50 ر.ع</p>
-                <p className="text-muted-foreground">متوسط الإنفاق لكل طالب سنوياً</p>
-              </div>
-            </motion.div>
-            <motion.div
-              initial={{ x: 50, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ delay: 0.6 }}
-              className="bg-gradient-to-br from-orange-500/10 to-amber-500/10 border border-orange-500/20 rounded-2xl p-6"
-            >
-              <Watch className="w-12 h-12 text-orange-600 mb-4" />
-              <h3 className="text-2xl font-bold mb-4">أساور NFC الذكية</h3>
-              <div className="text-center">
-                <p className="text-5xl font-bold text-orange-600 mb-2">بيع</p>
-                <p className="text-muted-foreground">أساور ذكية لكل طالب</p>
-              </div>
-            </motion.div>
-          </div>
-        </div>
-      )
-    },
-    // Slide 8: Competitive Advantages
-    {
       id: "advantages",
       content: (
         <div className="flex flex-col h-full px-8 py-12" dir="rtl">
@@ -687,7 +586,7 @@ const InvestorPresentation = () => {
         </div>
       )
     },
-    // Slide 11: Call to Action
+    // Slide 5: Call to Action
     {
       id: "cta",
       content: (
