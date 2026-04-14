@@ -498,7 +498,8 @@ const InvestorPresentation = () => {
               { icon: Users, title: "تواصل مباشر", color: "from-pink-500 to-fuchsia-500" },
               { icon: ShoppingBag, title: "متجر قرطاسية إلكتروني", color: "from-amber-500 to-yellow-500" },
               { icon: Globe, title: "دعم 3 لغات", color: "from-cyan-500 to-blue-500" },
-              { icon: Smartphone, title: "جميع الأجهزة", color: "from-slate-500 to-gray-600" }
+              { icon: Smartphone, title: "جميع الأجهزة", color: "from-slate-500 to-gray-600" },
+              { icon: Monitor, title: "التعلم عن بعد", color: "from-sky-500 to-blue-600" }
             ].map((item, index) => (
               <motion.div
                 key={index}
@@ -778,8 +779,6 @@ const InvestorPresentation = () => {
             transition={{ delay: 1.1 }}
             className="mt-8 flex flex-col items-center gap-2"
           >
-            <p className="text-xl font-bold text-foreground">مازن خنفر</p>
-            <p className="text-lg text-foreground">Mazen Khanfar</p>
             <p className="text-lg text-primary font-medium" dir="ltr">+968 9656 4540</p>
           </motion.div>
         </div>
