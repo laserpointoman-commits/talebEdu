@@ -516,9 +516,7 @@ const InvestorPresentation = () => {
         </div>
       )
     },
-    // Slide 4: Market Opportunity
-    {
-      id: "market",
+    // Slide 4: Competitive Advantages (was slide 8, moved up after removing market & revenue)
       content: (
         <div className="flex flex-col h-full px-8 py-12" dir="rtl">
           <motion.h2
