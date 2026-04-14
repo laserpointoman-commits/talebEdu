@@ -516,11 +516,6 @@ const InvestorPresentation = () => {
         </div>
       )
     },
-            initial={{ x: -50, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            className="text-4xl font-bold text-primary mb-8 text-center"
-          >
-            فرصة السوق
           </motion.h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
             {[
