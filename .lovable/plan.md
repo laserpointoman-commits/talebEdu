@@ -1,197 +1,116 @@
-# خطة تطوير واجهة المستخدم — Hybrid Design System
+# إضافة على الخطة: Messenger 2.0 — سلس + مكالمات حقيقية
 
-## الهدف
-نظام تصميم موحّد لكن بـ4 شخصيات بصرية حسب المستخدم. كل واجهة تخدم احتياج مختلف، مع الحفاظ على Sky branding الحالي + إضافة Light/Dark Mode للجميع.
-
----
-
-## 1. الأساس المشترك (Design Tokens)
-
-### Color System (HSL في `index.css`)
-```text
-Light Mode:
-  --background: 0 0% 100%
-  --foreground: 222 47% 11%
-  --card: 0 0% 100%
-  --muted: 210 40% 96%
-  --border: 214 32% 91%
-  --primary: 199 89% 48%        (Sky-500 — يبقى كما هو)
-  --primary-glow: 198 93% 60%   (Sky-400)
-  --primary-deep: 201 90% 35%   (Sky-700)
-  --success: 142 71% 45%
-  --warning: 32 95% 50%
-  --danger: 0 84% 60%
-
-Dark Mode:
-  --background: 222 47% 6%      (#0a0e1a)
-  --foreground: 210 40% 98%
-  --card: 222 47% 9%
-  --muted: 217 33% 14%
-  --border: 217 33% 18%
-  --primary: 198 93% 60%        (Sky-400 أوضح في الظلام)
-  + glass tokens: --glass-bg, --glass-border, --glass-blur
-```
-
-### Typography
-- **عربي UI:** IBM Plex Sans Arabic (موجود) — أوزان 400/500/600/700
-- **English UI:** Inter (موجود)
-- **أرقام تقنية (IDs, NFC, مبالغ):** IBM Plex Mono / JetBrains Mono
-- **Display للعناوين الكبيرة:** Outfit (Super Admin + Parent فقط)
-
-### Spacing & Radius
-- Radius: `rounded-2xl` (16px) للبطاقات، `rounded-xl` للأزرار، `rounded-full` للشارات
-- Spacing scale موحّد: 4 / 8 / 12 / 16 / 24 / 32 / 48
-- Shadows: 4 طبقات (`shadow-sm`, `shadow-card`, `shadow-elevated`, `shadow-glow`)
-
-### Motion (يحترم memory: NO Framer Motion)
-- انتقالات CSS فقط: `transition-colors`, `transition-transform`
-- Hover: `hover:-translate-y-0.5` + `hover:shadow-elevated`
-- لا splash، لا pulse loaders، لا entrance animations
+نضيف هذا المسار على خطة الـ Hybrid UI Design System، كمسار مستقل يبدأ بالتوازي مع باقي الجولات، لأن الوضع الحالي للمسنجر سيء و المكالمات لا تعمل.
 
 ---
 
-## 2. شخصيات الواجهات الأربع
+## 1) المشاكل الحالية (التشخيص)
 
-### A. Super Admin (`/super-admin/*`) — Glass Command Center
-**الإحساس:** مركز قيادة، نظرة شاملة على كل المدارس.
+من فحص الكود الحالي (`src/pages/Messenger.tsx`, `src/components/messenger/*`, `CallServiceBootstrap.tsx`, `CallScreen.tsx`):
+
+- **بنية متضخمة:** أكثر من 25 ملف في مجلد `messenger/` مع تكرار (`ChatHeader` + `SimplifiedChatHeader`، `MessageBubble` + `EnhancedMessageBubble`، `WhatsAppTheme` + `MessengerTheme`).
+- **بطء واضح:** لا يوجد Virtualization لقائمة الرسائل، إعادة render كاملة عند كل رسالة جديدة.
+- **مكالمات لا تعمل:** لا يوجد WebRTC حقيقي، فقط شاشة `CallScreen` بدون Signaling Server ولا STUN/TURN ولا تكامل CallKit/ConnectionService.
+- **لا يوجد Push للمكالمات:** المكالمة لا تصل إذا كان التطبيق مغلق (لا VoIP push على iOS، ولا high-priority FCM على Android).
+- **تجربة استخدام ضعيفة:** لا "تم التسليم/تمت القراءة" بشكل موثوق، لا typing indicator حقيقي عبر Realtime، الصوتيات والمرفقات بطيئة.
+
+---
+
+## 2) أهداف Messenger 2.0
+
+- **سرعة:** فتح المحادثة < 200ms، تمرير 60fps حتى مع 10,000 رسالة.
+- **موثوقية:** الرسالة تصل دائماً (queue offline + retry)، المكالمة ترن دائماً حتى لو التطبيق مغلق.
+- **مكالمات حقيقية:** صوت + فيديو P2P عبر WebRTC، جودة HD، تعمل خلف NAT.
+- **تجربة حديثة:** على مستوى WhatsApp/Telegram من ناحية الإحساس.
+
+---
+
+## 3) المعمارية الجديدة
+
+### أ. طبقة الرسائل (Realtime + Offline-first)
+- **Supabase Realtime** للرسائل الحية (موجود، نُحسّن استخدامه).
+- **IndexedDB cache** عبر Dexie للرسائل المحلية → فتح فوري بدون انتظار الشبكة.
+- **Outbox pattern:** الرسالة تُحفظ محلياً فوراً بحالة `pending`، تُرسل في الخلفية، تُحدّث إلى `sent/delivered/read`.
+- **Virtualized list** عبر `@tanstack/react-virtual` لقائمة الرسائل والمحادثات.
+
+### ب. طبقة المكالمات (WebRTC حقيقية)
+- **Signaling:** Edge Function جديدة `call-signaling` تستخدم Supabase Realtime (Broadcast channels) لتبادل SDP/ICE بين الطرفين.
+- **STUN/TURN:** خدمة TURN مُدارة (Twilio Network Traversal أو Metered.ca أو Cloudflare Calls) — secret يُضاف لاحقاً.
+- **WebRTC:** عبر `simple-peer` أو RTCPeerConnection مباشرة، يدعم صوت + فيديو + مشاركة شاشة.
+- **CallKit (iOS) + ConnectionService (Android):** عبر `@capacitor-community/call-kit` و plugin مخصص أو `capacitor-voip-pushnotification` → المكالمة ترن في شاشة قفل النظام.
+- **VoIP Push (iOS) + High-priority FCM (Android):** Edge Function `push-call` ترسل push مع payload خاص يوقظ التطبيق فوراً.
+
+### ج. طبقة الإشعارات
+- توحيد قنوات FCM/APNS الحالية مع قناة جديدة `voip` ذات أولوية عالية.
+
+---
+
+## 4) إعادة هيكلة الملفات
 
 ```text
-┌─────────────────────────────────────────────────┐
-│  [Logo]  TalebEdu Control          [User] [🌙] │
-├─────────────────────────────────────────────────┤
-│  KPI Strip:                                     │
-│  ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐           │
-│  │ 12   │ │8,420 │ │ 96%  │ │ OMR  │           │
-│  │Schools│ │Students│ │Uptime│ │24,500│         │
-│  └──────┘ └──────┘ └──────┘ └──────┘           │
-├─────────────────────────────────────────────────┤
-│  Schools Grid (cards with live status)          │
-│  Real-time activity feed (right rail)           │
-└─────────────────────────────────────────────────┘
+src/features/messenger/
+  data/
+    db.ts                  # Dexie schema
+    outbox.ts              # queue + retry
+    useMessages.ts         # hook موحّد
+    useConversations.ts
+  call/
+    CallProvider.tsx       # Context + state machine (idle/ringing/active/ended)
+    useWebRTC.ts           # peer connection
+    signaling.ts           # Realtime broadcast
+    callKit.ts             # CallKit/ConnectionService bridge
+  ui/
+    ConversationList.tsx   # virtualized
+    MessageList.tsx        # virtualized
+    MessageBubble.tsx      # موحّد (يحذف Enhanced + العادي)
+    Composer.tsx           # موحّد (نص + صوت + مرفقات)
+    CallScreen.tsx         # شاشة مكالمة جديدة
+    IncomingCallSheet.tsx  # شاشة الرنين
+  index.tsx                # الصفحة الرئيسية
 ```
 
-- **Background:** Dark default، gradient `#0a0e1a → #0f172a` مع noise خفيف
-- **Cards:** `bg-card/60 backdrop-blur-xl` + border مضيء عند hover
-- **Live dots:** نقاط Sky نابضة بـ CSS فقط (لا JS)
-- **Density:** متوسطة، KPIs بارزة، جداول مدمجة
-
-### B. School Admin (`/dashboard/*`) — Neo-Operational
-**الإحساس:** أداة عمل يومية، كثافة بيانات عالية، كفاءة قصوى.
-
-```text
-┌──────┬──────────────────────────────────────────┐
-│      │  Header: School name + date + actions   │
-│ Side ├──────────────────────────────────────────┤
-│ nav  │  KPI row (4-6 metrics)                  │
-│      │  Main table / chart                     │
-│      │  Secondary panel                        │
-└──────┴──────────────────────────────────────────┘
-```
-
-- **Layout:** Sidebar ثابت يسار + main content
-- **Cards:** `bg-card border` بدون glass، shadow خفيف
-- **Tables:** كثيفة، monospace للـ IDs، sticky header
-- **Accent:** Sky-500 على الأزرار الأساسية فقط، باقي الصفحة محايدة
-
-### C. Supervisor / CM30 (`/supervisor`, `/checkpoints`) — Operational Mobile
-**الإحساس:** ميداني، أزرار كبيرة، قراءة سريعة، يعمل بقفاز.
-
-- **Min touch target:** 48×48px
-- **Font sizes:** أكبر بـ 15% من النسخة الويب
-- **Buttons:** `h-12` للأساسي، gradient Sky واضح
-- **Status:** badges كبيرة بألوان واضحة (أخضر/أحمر/برتقالي)
-- **Headers:** ثابتة fixed + safe-area-inset (memory موجود)
-- **يحافظ على:** كل constraints الـ CM30 الموجودة (kiosk, NFC, masked PINs)
-
-### D. Parent App (`/parent/*`) — Editorial Calm
-**الإحساس:** هادئ، عاطفي، مطمئن. يستخدمه أهالي غير تقنيين.
-
-```text
-┌─────────────────────────────────────┐
-│  مرحباً، أبو محمد                    │
-│  ┌─────────────────────────────┐   │
-│  │  محمد علي                    │   │
-│  │  [صورة]  الصف الخامس / أ     │   │
-│  │  ─────────────────────────   │   │
-│  │  ✓ في المدرسة منذ 7:42 ص    │   │
-│  │  الرصيد: 4.250 ر.ع.          │   │
-│  └─────────────────────────────┘   │
-│  [Quick actions: شحن، رسالة، طوارئ]│
-│  Timeline: آخر الأحداث              │
-└─────────────────────────────────────┘
-```
-
-- **Layout:** عمود واحد، مسافات واسعة (24-32px padding)
-- **Typography:** عناوين كبيرة (24-32px)، body مريح (16-17px)
-- **Cards:** `rounded-2xl` بدون border، shadow خفيف، خلفية بيضاء نقية
-- **Color:** Sky كـ accent فقط، باقي محايد دافئ
-- **Bottom nav:** 4 أيقونات كبيرة (الرئيسية، المحفظة، الرسائل، الملف)
+يُحذف من `src/components/messenger/`:
+- `SimplifiedChatHeader` (يدمج مع `ChatHeader`)
+- `EnhancedMessageBubble` (يدمج مع `MessageBubble`)
+- `WhatsAppTheme` (يستخدم design tokens الجديدة)
 
 ---
 
-## 3. مكتبة المكونات الموحّدة
+## 5) التصميم (يتبع نظام Hybrid UI Design System)
 
-ملفات جديدة في `src/components/ui-v2/`:
-- `KPICard.tsx` — بطاقة إحصاء (3 variants: compact / standard / hero)
-- `LiveBadge.tsx` — شارة "مباشر" مع نقطة نابضة CSS
-- `DataTable.tsx` — جدول كثيف موحّد (sortable, filterable, sticky header)
-- `PersonaShell.tsx` — wrapper يطبّق theme variant حسب المستخدم
-- `GlassCard.tsx` — بطاقة زجاجية للـ Super Admin
-- `EditorialCard.tsx` — بطاقة هادئة للأهل
-- `OperationalButton.tsx` — زر كبير للميدان (CM30/Supervisor)
-- `StatPill.tsx` — chip صغير للأرقام
-- `EmptyState.tsx` — حالة فارغة موحّدة بصرياً
-- `ThemeToggle.tsx` — مفتاح Light/Dark + persisted في localStorage
-
-كل المكونات تستخدم semantic tokens فقط (لا ألوان مباشرة).
+- **شخصية:** Editorial Calm للوالدين، Operational للمشرف/السائق، Neo-Operational لإدارة المدرسة.
+- **Light + Dark** افتراضياً.
+- **Bubbles:** `rounded-2xl`، ظل خفيف، Sky-500 للرسائل الصادرة، `bg-card` للواردة.
+- **Header:** ثابت مع safe-area-inset، اسم + حالة (online/typing) + زرّي اتصال صوتي/مرئي.
+- **Composer:** ثابت أسفل، يدعم النص + الصوت (waveform) + المرفقات + الموقع + الإيموجي.
+- **Call Screen:** Full-screen gradient Sky→Slate، صورة كبيرة، أزرار دائرية كبيرة (Mute/Speaker/Camera/End)، عدّاد مدة، مؤشّر جودة الشبكة.
+- **Incoming Call:** يظهر كـ Bottom Sheet داخل التطبيق + شاشة قفل النظام عبر CallKit.
 
 ---
 
-## 4. خطة التنفيذ على 4 جولات
+## 6) خطة التنفيذ (تُضاف للأسابيع الأربعة)
 
-| الجولة | المحتوى | الوقت المقدّر |
-|---|---|---|
-| **1** | Tokens (index.css + tailwind.config) + Light/Dark toggle + 4 مكونات أساسية (KPICard, LiveBadge, DataTable, ThemeToggle) | جلسة واحدة |
-| **2** | Super Admin Dashboard كامل بالـ Glass Command Center | جلسة واحدة |
-| **3** | School Admin Dashboard refresh (Sidebar + KPI row + tables) | جلسة واحدة |
-| **4** | Parent App home + Supervisor mobile polish | جلسة واحدة |
-
-كل جولة = PR مستقل، قابل للاختبار، لا يكسر الموجود.
+| الأسبوع | المهمة |
+|---|---|
+| **W2** (بالتوازي مع Super Admin) | إعادة هيكلة `features/messenger/`، Dexie + Outbox، Virtualized lists، توحيد المكوّنات المكرّرة |
+| **W3** | WebRTC Core: signaling عبر Edge Function، STUN/TURN، مكالمة صوت P2P تعمل بين متصفحين |
+| **W4** | CallKit (iOS) + ConnectionService (Android) + VoIP push، فيديو، مشاركة شاشة، QA كامل |
 
 ---
 
-## 5. مبادئ ثابتة (لا تتغيّر)
+## 7) ما يحتاج قرار / Secrets لاحقاً (لا ننفّذ الآن)
 
-1. **NO Framer Motion** — انتقالات CSS فقط
-2. **NO splash / pulse loaders** — skeleton states أو فراغ نظيف
-3. **Masked PINs (●)** في كل مكان — موجود
-4. **Fixed headers + safe-area-insets** على الموبايل — موجود
-5. **High-density Mono** للـ IDs والأرقام التقنية
-6. **Sky branding** — نفس الـ Sky-400 → 600 الحالي
+- مزوّد TURN: **Twilio** (موثوق، مدفوع per-minute) أو **Metered.ca** (أرخص، خطة مجانية محدودة) أو **Cloudflare Calls** (الأحدث).
+- تأكيد إبقاء FCM/APNS الحاليين أم إضافة قناة VoIP منفصلة (موصى به).
 
 ---
 
-## التقنيات
-- Tailwind CSS v3 + CSS variables (HSL)
-- shadcn/ui كأساس + variants مخصصة عبر `cva`
-- Capacitor 7 (يعمل على iOS + Android بدون تغيير)
-- Theme persistence: `localStorage` + `<html data-theme>` switcher
-- لا مكتبات جديدة (zero new dependencies)
+## 8) خارج النطاق
+
+- مكالمات جماعية (Group calls) — مرحلة لاحقة (تحتاج SFU مثل LiveKit).
+- تشفير E2E — مرحلة لاحقة.
+- Stories / Status — غير مطلوب.
 
 ---
 
-## خارج النطاق
-- إعادة بناء صفحات الميزات الفردية (Bus tracking, Wallet, إلخ) — تتطوّر تدريجياً مع كل feature
-- Logo جديد أو هوية كاملة — Sky يبقى كما هو
-- Animations معقدة — ممنوعة بحكم memory
-
----
-
-## النتيجة المتوقعة
-- 4 واجهات بشخصيات مميزة لكن متناغمة
-- Light + Dark على الكل
-- صفر animations ثقيلة → سرعة فائقة
-- مكتبة `ui-v2` قابلة لإعادة الاستخدام في كل ميزة قادمة
-- جاهزية كاملة لعرض أي شاشة على المستثمرين/المدارس بمظهر احترافي
-
-بعد الموافقة، نبدأ بالجولة 1 (Tokens + المكونات الأساسية).
+هل نضيف هذا المسار للخطة الرئيسية ونبقى في وضع التخطيط، أم تريد مناقشة مزوّد TURN أولاً؟
