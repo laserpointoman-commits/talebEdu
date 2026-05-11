@@ -114,3 +114,89 @@ src/features/messenger/
 ---
 
 هل نضيف هذا المسار للخطة الرئيسية ونبقى في وضع التخطيط، أم تريد مناقشة مزوّد TURN أولاً؟
+
+---
+
+# إضافة على الخطة: ميزات تنافسية مختارة (Phase 2)
+
+بناءً على اختيار المستخدم، تُضاف الميزات التالية كمسار مستقل بعد إنجاز Hybrid UI + Messenger 2.0. لا تنفيذ الآن — تخطيط فقط.
+
+## 1) Family Sharing — مشاركة عائلية (#8)
+
+- **الفكرة:** كل طالب يرتبط بحساب "عائلة" واحد، وداخل العائلة عدة أفراد (الأب، الأم، الجد، السائق الخاص، المربية) كلٌ بصلاحيات مختلفة.
+- **الأدوار داخل العائلة:** `primary_guardian` (تحكم كامل + مالي)، `guardian` (متابعة + استلام)، `viewer` (متابعة فقط بدون إشعارات حساسة)، `pickup_only` (يظهر فقط في Smart Pickup).
+- **قاعدة البيانات:** جدولان جديدان `families` و `family_members(family_id, user_id, role, can_pickup, can_receive_alerts, can_view_finance)`، مع ربط `students.family_id`.
+- **UI:** صفحة "عائلتي" داخل الإعدادات → دعوة عبر رقم/إيميل، اختيار الصلاحيات، إزالة عضو، سجل النشاط.
+- **الإشعارات:** كل عضو يستلم حسب `can_receive_alerts`، مع منع تكرار الإشعار للحدث الواحد (deduplication على مستوى العائلة).
+
+## 2) Substitute Teacher Auto-Match — البديل الذكي (#12)
+
+- **الفكرة:** عند تسجيل غياب معلم، النظام يقترح تلقائياً معلماً بديلاً متاحاً في نفس الحصة بناءً على: التخصص + التوفر في الجدول + عدد الحصص الإضافية هذا الأسبوع.
+- **خوارزمية الترتيب:** `score = specialization_match*0.5 + availability*0.3 + (1 - load_ratio)*0.2`.
+- **التدفق:** غياب → اقتراح Top 3 → ضغطة واحدة من المدير لإرسال طلب تغطية → قبول/رفض من المعلم البديل → تحديث جدول الحصص + إشعار الطلاب/الأهل.
+- **قاعدة البيانات:** `substitute_requests(absent_teacher_id, period_id, substitute_teacher_id, status, score, responded_at)`.
+- **Edge Function:** `match-substitute` تحسب الترشيحات.
+
+## 3) Home Screen Widget — ودجت الشاشة الرئيسية (#16)
+
+- **iOS:** WidgetKit عبر Swift target جديد داخل مشروع Xcode، يقرأ من App Group مشترك مع التطبيق الرئيسي.
+- **Android:** AppWidgetProvider عبر Java/Kotlin داخل `android/app`.
+- **محتوى الودجت:**
+  - للأهل: "الباص على بُعد X دقيقة" + حالة الطفل (في المدرسة / في الباص / في البيت) + الرصيد المتبقي.
+  - للمعلم: عدد الطلاب الحاضرين / الغائبين اليوم.
+- **تحديث البيانات:** كل 5 دقائق + Push silent عند تغيّر حرج (وصول الباص، نزول الطفل).
+- **يحتاج لاحقاً:** Capacitor plugin مخصص لكتابة البيانات في App Group / SharedPreferences.
+
+## 4) Apple Watch / Wear OS (#17)
+
+- **النطاق المبدئي:** Read-only فقط (لا تنفيذ إجراءات حساسة من الساعة).
+- **الميزات:**
+  - إشعارات فورية (وصول الباص، دخول/خروج المدرسة، رسائل المسنجر).
+  - Glance: حالة الطفل + الرصيد + الباص.
+  - Complication على وجه الساعة (iOS).
+- **التقنية:** WatchKit App مستقل + Wear OS module منفصل، يتواصلان مع التطبيق الأم عبر WatchConnectivity / Data Layer API.
+- **مرحلة لاحقة:** زر "أنا قادم لاستلام طفلي" من الساعة (يفعّل Smart Pickup).
+
+## 5) Offline Mode المحسّن (#19)
+
+- **القائم حالياً:** يوجد `useOffline` + `offlineStorage` بسيط (localStorage queue).
+- **الترقية المطلوبة:**
+  - الانتقال إلى **Dexie (IndexedDB)** مع schema موحّد لكل الكيانات الحرجة (students, attendance, messages, wallet_transactions).
+  - **Sync engine** ذكي: pull-then-push، حل تعارضات `last-write-wins` مع timestamp من الخادم، Outbox queue مع retry exponential backoff.
+  - **Offline-first للأجهزة الحرجة:** CM30، شاشات الباص، شاشات بوابة المدرسة → تعمل كاملاً بدون إنترنت لمدة 24 ساعة، مزامنة تلقائية عند العودة.
+  - **مؤشّر بصري:** OfflineIndicator موسّع يعرض عدد العناصر في القائمة + آخر مزامنة + زر "زامن الآن".
+  - **Service Worker:** caching strategy: stale-while-revalidate للقراءات، queue للكتابات.
+
+## 6) WhatsApp Business Integration (#20)
+
+- **الفكرة:** الأهل الذين لا يفتحون التطبيق يصلهم نفس الإشعار الحرج عبر WhatsApp رسمي.
+- **التقنية:** WhatsApp Cloud API (Meta) عبر Edge Function `send-whatsapp`.
+- **القنوات المغطاة:** وصول الباص، الغياب، رصيد منخفض، إيصال الدفع، إشعارات الطوارئ.
+- **القوالب (Templates):** يجب اعتمادها مسبقاً من Meta Business Manager (نوع `UTILITY` و `AUTHENTICATION`).
+- **التفعيل:** اختياري لكل ولي أمر من الإعدادات → "تفعيل إشعارات WhatsApp" + التحقق من الرقم عبر OTP.
+- **التكلفة:** ~0.005-0.03 USD لكل رسالة حسب الدولة → تُحسب كتكلفة تشغيلية، مجانية للأهل.
+- **Secrets المطلوبة لاحقاً:** `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_BUSINESS_ACCOUNT_ID`.
+
+---
+
+## ترتيب التنفيذ المقترح (يُضاف بعد W4)
+
+| الأسبوع | الميزة |
+|---|---|
+| **W5** | Offline Mode المحسّن (Dexie + Sync engine) — أساس لباقي الميزات |
+| **W6** | Family Sharing (DB + UI + Permissions) |
+| **W7** | Substitute Teacher Auto-Match + WhatsApp Business |
+| **W8** | Home Screen Widget (iOS + Android) |
+| **W9** | Apple Watch + Wear OS (read-only MVP) |
+
+---
+
+## ما يحتاج قرار / Secrets لاحقاً
+
+- WhatsApp Business: حساب Meta Business + قوالب معتمدة + الأرقام المعتمدة.
+- Apple Watch: يحتاج Apple Developer Account نفسه (موجود) لكن target جديد في Xcode.
+- Widget: لا secrets، فقط App Group identifier.
+
+---
+
+هل نعتمد هذا الترتيب (W5→W9) أم تريد تقديم/تأخير ميزة معيّنة؟
