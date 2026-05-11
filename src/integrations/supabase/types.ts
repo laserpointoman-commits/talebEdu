@@ -149,6 +149,7 @@ export type Database = {
           method: string
           nfc_verified: boolean | null
           recorded_by: string | null
+          school_id: string | null
           status: string
           student_id: string | null
           time: string
@@ -165,6 +166,7 @@ export type Database = {
           method: string
           nfc_verified?: boolean | null
           recorded_by?: string | null
+          school_id?: string | null
           status: string
           student_id?: string | null
           time: string
@@ -181,12 +183,20 @@ export type Database = {
           method?: string
           nfc_verified?: boolean | null
           recorded_by?: string | null
+          school_id?: string | null
           status?: string
           student_id?: string | null
           time?: string
           type?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "attendance_records_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "attendance_records_student_id_fkey"
             columns: ["student_id"]
@@ -408,6 +418,7 @@ export type Database = {
           morning_schedule: Json | null
           route_name: string
           route_name_ar: string | null
+          school_id: string | null
           stops: Json
           updated_at: string | null
         }
@@ -420,6 +431,7 @@ export type Database = {
           morning_schedule?: Json | null
           route_name: string
           route_name_ar?: string | null
+          school_id?: string | null
           stops?: Json
           updated_at?: string | null
         }
@@ -432,6 +444,7 @@ export type Database = {
           morning_schedule?: Json | null
           route_name?: string
           route_name_ar?: string | null
+          school_id?: string | null
           stops?: Json
           updated_at?: string | null
         }
@@ -441,6 +454,13 @@ export type Database = {
             columns: ["bus_id"]
             isOneToOne: false
             referencedRelation: "buses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bus_routes_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
             referencedColumns: ["id"]
           },
         ]
@@ -533,6 +553,7 @@ export type Database = {
           driver_id: string | null
           id: string
           model: string | null
+          school_id: string | null
           status: string | null
           supervisor_id: string | null
           updated_at: string | null
@@ -545,6 +566,7 @@ export type Database = {
           driver_id?: string | null
           id?: string
           model?: string | null
+          school_id?: string | null
           status?: string | null
           supervisor_id?: string | null
           updated_at?: string | null
@@ -557,6 +579,7 @@ export type Database = {
           driver_id?: string | null
           id?: string
           model?: string | null
+          school_id?: string | null
           status?: string | null
           supervisor_id?: string | null
           updated_at?: string | null
@@ -568,6 +591,13 @@ export type Database = {
             columns: ["driver_id"]
             isOneToOne: false
             referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "buses_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
             referencedColumns: ["id"]
           },
           {
@@ -3730,6 +3760,7 @@ export type Database = {
           profile_image: string | null
           registered_students_count: number | null
           role: Database["public"]["Enums"]["user_role"]
+          school_id: string | null
           updated_at: string | null
         }
         Insert: {
@@ -3751,6 +3782,7 @@ export type Database = {
           profile_image?: string | null
           registered_students_count?: number | null
           role: Database["public"]["Enums"]["user_role"]
+          school_id?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -3772,6 +3804,7 @@ export type Database = {
           profile_image?: string | null
           registered_students_count?: number | null
           role?: Database["public"]["Enums"]["user_role"]
+          school_id?: string | null
           updated_at?: string | null
         }
         Relationships: [
@@ -3787,6 +3820,13 @@ export type Database = {
             columns: ["parent_user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
             referencedColumns: ["id"]
           },
         ]
@@ -3966,6 +4006,95 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      school_settings: {
+        Row: {
+          bracelet_replacement_price: number
+          commission_rate: number
+          created_at: string
+          default_daily_allowance: number
+          school_id: string
+          settings: Json
+          thawani_publishable_key: string | null
+          thawani_secret_key: string | null
+          updated_at: string
+        }
+        Insert: {
+          bracelet_replacement_price?: number
+          commission_rate?: number
+          created_at?: string
+          default_daily_allowance?: number
+          school_id: string
+          settings?: Json
+          thawani_publishable_key?: string | null
+          thawani_secret_key?: string | null
+          updated_at?: string
+        }
+        Update: {
+          bracelet_replacement_price?: number
+          commission_rate?: number
+          created_at?: string
+          default_daily_allowance?: number
+          school_id?: string
+          settings?: Json
+          thawani_publishable_key?: string | null
+          thawani_secret_key?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "school_settings_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: true
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      schools: {
+        Row: {
+          address: string | null
+          contact_email: string | null
+          contact_phone: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          logo_url: string | null
+          name: string
+          name_ar: string | null
+          subscription_status: string
+          trial_ends_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          logo_url?: string | null
+          name: string
+          name_ar?: string | null
+          subscription_status?: string
+          trial_ends_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          logo_url?: string | null
+          name?: string
+          name_ar?: string | null
+          subscription_status?: string
+          trial_ends_at?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       store_items: {
         Row: {
@@ -4328,6 +4457,7 @@ export type Database = {
           profile_id: string | null
           profile_image: string | null
           relationship: string | null
+          school_id: string | null
           status: string | null
           student_id: string
           submitted_at: string | null
@@ -4383,6 +4513,7 @@ export type Database = {
           profile_id?: string | null
           profile_image?: string | null
           relationship?: string | null
+          school_id?: string | null
           status?: string | null
           student_id: string
           submitted_at?: string | null
@@ -4438,6 +4569,7 @@ export type Database = {
           profile_id?: string | null
           profile_image?: string | null
           relationship?: string | null
+          school_id?: string | null
           status?: string | null
           student_id?: string
           submitted_at?: string | null
@@ -4480,6 +4612,13 @@ export type Database = {
             columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "students_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
             referencedColumns: ["id"]
           },
         ]
@@ -5154,6 +5293,7 @@ export type Database = {
         }[]
       }
       get_user_role: { Args: { user_id: string }; Returns: string }
+      get_user_school_id: { Args: { _user_id?: string }; Returns: string }
       has_any_role: {
         Args: { required_roles: string[]; user_id: string }
         Returns: boolean
@@ -5180,6 +5320,7 @@ export type Database = {
         Args: { p_group_id: string; p_user_id?: string }
         Returns: boolean
       }
+      is_super_admin: { Args: { _user_id?: string }; Returns: boolean }
       is_test_account: { Args: { user_email: string }; Returns: boolean }
       log_error: {
         Args: {
@@ -5372,6 +5513,7 @@ export type Database = {
         | "school_attendance"
         | "bus_attendance"
         | "supervisor"
+        | "super_admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -5559,6 +5701,7 @@ export const Constants = {
         "school_attendance",
         "bus_attendance",
         "supervisor",
+        "super_admin",
       ],
     },
   },
