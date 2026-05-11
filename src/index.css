@@ -678,3 +678,110 @@ input[inputmode="numeric"] {
 .investor-presentation h3 {
   font-weight: 600;
 }
+
+/* =====================================================================
+   UI v2 — Hybrid Design System
+   Sky-based tokens, glass surfaces, persona shells, live pulses
+   ===================================================================== */
+@layer base {
+  :root {
+    /* Sky scale (aligned with Tailwind sky-400..700) */
+    --sky-300: 199 95% 74%;
+    --sky-400: 198 93% 60%;
+    --sky-500: 199 89% 48%;
+    --sky-600: 200 98% 39%;
+    --sky-700: 201 96% 32%;
+
+    /* Persona surface tokens — Light */
+    --surface-glass: 0 0% 100% / 0.7;
+    --surface-glass-border: 215 25% 88% / 0.8;
+    --surface-editorial: 0 0% 100%;
+    --surface-editorial-muted: 220 20% 97%;
+    --surface-operational: 0 0% 100%;
+
+    /* Density radii */
+    --radius-card: 1rem;       /* 16px */
+    --radius-pill: 9999px;
+
+    /* v2 elevation */
+    --shadow-card: 0 1px 2px 0 hsl(220 25% 15% / 0.04), 0 1px 3px -1px hsl(220 25% 15% / 0.04);
+    --shadow-elevated: 0 8px 24px -8px hsl(220 25% 15% / 0.10), 0 2px 6px -2px hsl(220 25% 15% / 0.06);
+  }
+
+  .dark {
+    --surface-glass: 220 30% 10% / 0.55;
+    --surface-glass-border: 215 30% 30% / 0.6;
+    --surface-editorial: 220 25% 10%;
+    --surface-editorial-muted: 220 25% 14%;
+    --surface-operational: 220 25% 12%;
+
+    --shadow-card: 0 1px 2px 0 hsl(0 0% 0% / 0.3), 0 1px 3px -1px hsl(0 0% 0% / 0.2);
+    --shadow-elevated: 0 12px 28px -10px hsl(0 0% 0% / 0.5), 0 4px 10px -4px hsl(0 0% 0% / 0.3);
+  }
+}
+
+@layer utilities {
+  /* Persona shells — backgrounds */
+  .persona-glass {
+    background:
+      radial-gradient(ellipse 80% 60% at 50% 0%, hsl(var(--sky-500) / 0.12), transparent 70%),
+      radial-gradient(ellipse 60% 40% at 100% 100%, hsl(var(--sky-400) / 0.08), transparent 70%),
+      hsl(var(--background));
+  }
+  .persona-editorial {
+    background: hsl(var(--surface-editorial));
+  }
+  .persona-operational {
+    background: hsl(var(--background));
+  }
+
+  /* Glass card */
+  .ui-glass-card {
+    background: hsl(var(--surface-glass));
+    border: 1px solid hsl(var(--surface-glass-border));
+    backdrop-filter: blur(16px) saturate(140%);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+  }
+
+  /* v2 elevations */
+  .shadow-card { box-shadow: var(--shadow-card); }
+  .shadow-elevated { box-shadow: var(--shadow-elevated); }
+
+  /* Live pulse dot — pure CSS, GPU-friendly */
+  .ui-live-dot {
+    position: relative;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 9999px;
+    background: hsl(var(--success));
+    box-shadow: 0 0 0 0 hsl(var(--success) / 0.5);
+    animation: ui-live-pulse 1.6s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  .ui-live-dot.is-sky { background: hsl(var(--sky-500)); box-shadow: 0 0 0 0 hsl(var(--sky-500) / 0.5); }
+  .ui-live-dot.is-warning { background: hsl(var(--warning)); box-shadow: 0 0 0 0 hsl(var(--warning) / 0.5); }
+  .ui-live-dot.is-danger { background: hsl(var(--destructive)); box-shadow: 0 0 0 0 hsl(var(--destructive) / 0.5); }
+
+  @keyframes ui-live-pulse {
+    0%   { box-shadow: 0 0 0 0 hsl(var(--success) / 0.55); }
+    70%  { box-shadow: 0 0 0 8px hsl(var(--success) / 0); }
+    100% { box-shadow: 0 0 0 0 hsl(var(--success) / 0); }
+  }
+
+  /* Mono font helper for technical numerics */
+  .font-mono-tech {
+    font-family: 'JetBrains Mono', 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+  }
+
+  /* Subtle hover lift used by v2 cards/buttons */
+  .ui-hover-lift {
+    transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
+  }
+  .ui-hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-elevated);
+  }
+}

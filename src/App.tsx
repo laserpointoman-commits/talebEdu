@@ -9,6 +9,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { LoadingProvider } from "@/contexts/LoadingContext";
 import { StudentsProvider } from "@/contexts/StudentsContext";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
 import PageTransition from "@/components/PageTransition";
 import InstallPrompt from "@/components/mobile/InstallPrompt";
@@ -102,6 +103,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
+        <ThemeProvider>
         <AuthProvider>
           <LanguageProvider>
             <LoadingProvider>
@@ -169,6 +171,7 @@ function App() {
             </LoadingProvider>
           </LanguageProvider>
         </AuthProvider>
+        </ThemeProvider>
       </BrowserRouter>
     </QueryClientProvider>
   );
