@@ -1,170 +1,197 @@
-# خطة الإطلاق — 3 شهور (12 أسبوع)
+# خطة تطوير واجهة المستخدم — Hybrid Design System
 
-**الهدف:** نظام multi-tenant جاهز لـ 50+ مدرسة، مستقر، آمن، ومراقَب — كأنه مجرّب من سنين.
-
-**فريق العمل:**
-- البرمجة: أنا (Lovable) + أنت
-- العقود/القانوني/مبيعات: شريكك
-- الدعم: شخص part-time + Cloude Agent
-- التركيب: أنت + الفني
+## الهدف
+نظام تصميم موحّد لكن بـ4 شخصيات بصرية حسب المستخدم. كل واجهة تخدم احتياج مختلف، مع الحفاظ على Sky branding الحالي + إضافة Light/Dark Mode للجميع.
 
 ---
 
-## القرارات المعتمدة
+## 1. الأساس المشترك (Design Tokens)
 
-| البند | القرار |
-|------|-------|
-| Monitoring | Sentry + Cloudflare WAF + UptimeRobot |
-| Environments | Staging + Production منفصلين |
-| Backups (الآن) | Daily backups المجاني (Supabase الافتراضي) |
-| Backups (عند أول مدرسة) | Daily + PITR + S3 weekly external |
-| اسم Super Admin | TalebEdu |
-| Demo School | تم الإنشاء (00000000-0000-0000-0000-000000000001) |
-| MVP Priority | **توصيتي:** Auth + Multi-tenancy + Dashboards أولاً، بعدين Bus، بعدين Wallet |
+### Color System (HSL في `index.css`)
+```text
+Light Mode:
+  --background: 0 0% 100%
+  --foreground: 222 47% 11%
+  --card: 0 0% 100%
+  --muted: 210 40% 96%
+  --border: 214 32% 91%
+  --primary: 199 89% 48%        (Sky-500 — يبقى كما هو)
+  --primary-glow: 198 93% 60%   (Sky-400)
+  --primary-deep: 201 90% 35%   (Sky-700)
+  --success: 142 71% 45%
+  --warning: 32 95% 50%
+  --danger: 0 84% 60%
 
----
+Dark Mode:
+  --background: 222 47% 6%      (#0a0e1a)
+  --foreground: 210 40% 98%
+  --card: 222 47% 9%
+  --muted: 217 33% 14%
+  --border: 217 33% 18%
+  --primary: 198 93% 60%        (Sky-400 أوضح في الظلام)
+  + glass tokens: --glass-bg, --glass-border, --glass-blur
+```
 
-## رأيي في ترتيب الأولوية (بدون مجاملة)
+### Typography
+- **عربي UI:** IBM Plex Sans Arabic (موجود) — أوزان 400/500/600/700
+- **English UI:** Inter (موجود)
+- **أرقام تقنية (IDs, NFC, مبالغ):** IBM Plex Mono / JetBrains Mono
+- **Display للعناوين الكبيرة:** Outfit (Super Admin + Parent فقط)
 
-**أنت قلت "ما تعرف"، فأرتّب لك حسب الأهم لاستقرار الإنتاج:**
+### Spacing & Radius
+- Radius: `rounded-2xl` (16px) للبطاقات، `rounded-xl` للأزرار، `rounded-full` للشارات
+- Spacing scale موحّد: 4 / 8 / 12 / 16 / 24 / 32 / 48
+- Shadows: 4 طبقات (`shadow-sm`, `shadow-card`, `shadow-elevated`, `shadow-glow`)
 
-1. **Auth + Multi-tenancy + RLS صلب** = الأساس. لو فيه bug هنا، كل المدارس تشوف بيانات بعض. كارثة.
-2. **Bus + NFC + GPS + Auto-absence** = الميزة الأساسية اللي تبيع المنتج. مدارس تدفع علشانها.
-3. **Wallet + Thawani** = إيراد إضافي + per-school merchant معقّد. آخر شيء عشان نضمن استقرار الـ core.
-
----
-
-## الشهر الأول — الأساس والبنية التحتية (الأسابيع 1-4)
-
-### الأسبوع 1: إكمال Multi-tenancy
-- ربط باقي ~35 جدول بـ `school_id` (students, attendance_records, buses, bus_routes, teachers, employees, wallet_balances, fees, إلخ)
-- إضافة triggers تلقائية لـ `set_school_id_from_user` على كل جدول
-- Composite indexes على `(school_id, ...)` للأداء
-- اختبار RLS بمستخدم وهمي من مدرستين مختلفتين
-
-### الأسبوع 2: Super Admin Dashboard
-- صفحة `/super-admin` — إنشاء مدرسة جديدة، إنشاء admin أول للمدرسة
-- صفحة قائمة المدارس مع الإحصائيات (عدد طلاب، حالة الاشتراك)
-- صفحة تفعيل/تعطيل مدرسة
-- الصلاحية: فقط `super_admin` role
-
-### الأسبوع 3: Staging Environment
-- إنشاء مشروع Lovable Cloud ثاني للـ Staging
-- Workflow: تطوير → Staging → اختبار → Production
-- Seed data لـ Staging (مدرسة وهمية + 100 طالب + 5 باصات)
-- توثيق كيف نطلق migration على Staging قبل Production
-
-### الأسبوع 4: Monitoring & Security
-- إعداد Sentry (Frontend + Edge Functions) — تتبّع أخطاء حقيقية
-- إعداد Cloudflare WAF أمام الدومين — حماية من DDoS و bots
-- إعداد UptimeRobot — فحص كل دقيقة + تنبيه على جوالك
-- Audit log: كل عملية حساسة (إنشاء/حذف/تعديل صلاحيات) تتسجّل
-- Rate limiting per school (موجود، نتأكد يشتغل بـ school_id)
+### Motion (يحترم memory: NO Framer Motion)
+- انتقالات CSS فقط: `transition-colors`, `transition-transform`
+- Hover: `hover:-translate-y-0.5` + `hover:shadow-elevated`
+- لا splash، لا pulse loaders، لا entrance animations
 
 ---
 
-## الشهر الثاني — ميزات الباص الأساسية (الأسابيع 5-8)
+## 2. شخصيات الواجهات الأربع
 
-### الأسبوع 5: Bus + NFC تنظيف
-- مراجعة كاملة للـ NFC scanning loop (موجود ومعمول)
-- التأكد من scoping بـ school_id (سائق ما يقدر يفحص طالب من مدرسة ثانية)
-- اختبار CM30 device في Staging مع school_id تجريبي
-- إصلاح أي bugs ظاهرة في logs الحالية
+### A. Super Admin (`/super-admin/*`) — Glass Command Center
+**الإحساس:** مركز قيادة، نظرة شاملة على كل المدارس.
 
-### الأسبوع 6: GPS Tracking + Real-time
-- مراجعة Supabase Realtime channels — تأكيد أن كل قناة scoped بـ school_id
-- اختبار الأداء مع 5 باصات × 50 طالب يبثّون موقع كل 5 ثواني
-- Fallback polling لما Realtime يفشل (موجود)
+```text
+┌─────────────────────────────────────────────────┐
+│  [Logo]  TalebEdu Control          [User] [🌙] │
+├─────────────────────────────────────────────────┤
+│  KPI Strip:                                     │
+│  ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐           │
+│  │ 12   │ │8,420 │ │ 96%  │ │ OMR  │           │
+│  │Schools│ │Students│ │Uptime│ │24,500│         │
+│  └──────┘ └──────┘ └──────┘ └──────┘           │
+├─────────────────────────────────────────────────┤
+│  Schools Grid (cards with live status)          │
+│  Real-time activity feed (right rail)           │
+└─────────────────────────────────────────────────┘
+```
 
-### الأسبوع 7: Auto-absence + Notifications
-- تأكيد منطق الغياب التلقائي (End Trip → mark no-shows)
-- Notification queue scoped per school
-- اختبار FCM (Android) + APNS (iOS) في Staging
+- **Background:** Dark default، gradient `#0a0e1a → #0f172a` مع noise خفيف
+- **Cards:** `bg-card/60 backdrop-blur-xl` + border مضيء عند hover
+- **Live dots:** نقاط Sky نابضة بـ CSS فقط (لا JS)
+- **Density:** متوسطة، KPIs بارزة، جداول مدمجة
 
-### الأسبوع 8: Parent App Polish
-- تأكيد parent يشوف فقط أطفاله في مدرسته
-- Live bus map للولي
-- Performance check: صفحة الباص تفتح < 1 ثانية
+### B. School Admin (`/dashboard/*`) — Neo-Operational
+**الإحساس:** أداة عمل يومية، كثافة بيانات عالية، كفاءة قصوى.
 
----
+```text
+┌──────┬──────────────────────────────────────────┐
+│      │  Header: School name + date + actions   │
+│ Side ├──────────────────────────────────────────┤
+│ nav  │  KPI row (4-6 metrics)                  │
+│      │  Main table / chart                     │
+│      │  Secondary panel                        │
+└──────┴──────────────────────────────────────────┘
+```
 
-## الشهر الثالث — Wallet + Pre-launch (الأسابيع 9-12)
+- **Layout:** Sidebar ثابت يسار + main content
+- **Cards:** `bg-card border` بدون glass، shadow خفيف
+- **Tables:** كثيفة، monospace للـ IDs، sticky header
+- **Accent:** Sky-500 على الأزرار الأساسية فقط، باقي الصفحة محايدة
 
-### الأسبوع 9: Wallet Foundation
-- Wallet balance scoped بـ school_id
-- Daily allowance على NFC entry (موجود)
-- Savings cap + bracelet stop/replace flows
+### C. Supervisor / CM30 (`/supervisor`, `/checkpoints`) — Operational Mobile
+**الإحساس:** ميداني، أزرار كبيرة، قراءة سريعة، يعمل بقفاز.
 
-### الأسبوع 10: Thawani per-school Merchants
-- جدول `school_payment_configs` (Thawani publishable + secret per school)
-- Edge function `thawani-checkout` يستخدم credentials المدرسة الصحيحة
-- Top-up flow + 2% fee
-- Monthly commission invoice generator
+- **Min touch target:** 48×48px
+- **Font sizes:** أكبر بـ 15% من النسخة الويب
+- **Buttons:** `h-12` للأساسي، gradient Sky واضح
+- **Status:** badges كبيرة بألوان واضحة (أخضر/أحمر/برتقالي)
+- **Headers:** ثابتة fixed + safe-area-inset (memory موجود)
+- **يحافظ على:** كل constraints الـ CM30 الموجودة (kiosk, NFC, masked PINs)
 
-### الأسبوع 11: Load Testing + Security Audit
-- محاكاة 500 NFC scan/دقيقة على staging
-- محاكاة 1000 parent يفتحون التطبيق نفس اللحظة
-- اختبار اختراق: مستخدم من مدرسة A يحاول يصل بيانات مدرسة B (لازم يفشل)
-- مراجعة كل RLS policy يدوياً
-- Supabase linter — صفر warnings
+### D. Parent App (`/parent/*`) — Editorial Calm
+**الإحساس:** هادئ، عاطفي، مطمئن. يستخدمه أهالي غير تقنيين.
 
-### الأسبوع 12: Onboarding المدرسة الأولى
-- ترقية Backups إلى PITR + S3 weekly
-- إنشاء أول مدرسة حقيقية في Production
-- تركيب CM30 ميداني
-- مراقبة 24 ساعة كاملة قبل التسليم النهائي
+```text
+┌─────────────────────────────────────┐
+│  مرحباً، أبو محمد                    │
+│  ┌─────────────────────────────┐   │
+│  │  محمد علي                    │   │
+│  │  [صورة]  الصف الخامس / أ     │   │
+│  │  ─────────────────────────   │   │
+│  │  ✓ في المدرسة منذ 7:42 ص    │   │
+│  │  الرصيد: 4.250 ر.ع.          │   │
+│  └─────────────────────────────┘   │
+│  [Quick actions: شحن، رسالة، طوارئ]│
+│  Timeline: آخر الأحداث              │
+└─────────────────────────────────────┘
+```
 
----
-
-## التقنيات التي سنستخدمها (الأحدث)
-
-| الطبقة | التقنية | السبب |
-|--------|---------|-------|
-| Frontend | React 18 + Vite 5 + TS 5 | الموجود، الأفضل |
-| Backend | Supabase (Lovable Cloud) | شغّال، RLS قوي |
-| Mobile | Capacitor 7 + JDK 21 | الموجود |
-| Monitoring | Sentry + UptimeRobot | معيار الصناعة |
-| CDN/Security | Cloudflare WAF | حماية عند first school |
-| AI | Lovable AI Gateway | بدون API keys |
-| Payments | Thawani per-school | متطلب السوق العماني |
-| Push | FCM + APNS | معمول |
-
----
-
-## ما لن نضيفه (Out of Scope للـ 3 شهور)
-
-- مدفوعات Stripe/Paddle (Thawani كافي للسوق المحلي)
-- E-commerce store كامل (يأتي بعد الإطلاق)
-- AI tutoring features
-- Video calls (Emergency call System موجود وكافي)
-- Self-signup للمدارس (أنت تُنشئ يدوياً)
-
----
-
-## مخرجات نهاية كل أسبوع
-
-كل جمعة، نتفق على:
-1. ما تم
-2. ما تأخر ولماذا
-3. خطة الأسبوع الجاي
-4. أي قرار يحتاج موافقتك
+- **Layout:** عمود واحد، مسافات واسعة (24-32px padding)
+- **Typography:** عناوين كبيرة (24-32px)، body مريح (16-17px)
+- **Cards:** `rounded-2xl` بدون border، shadow خفيف، خلفية بيضاء نقية
+- **Color:** Sky كـ accent فقط، باقي محايد دافئ
+- **Bottom nav:** 4 أيقونات كبيرة (الرئيسية، المحفظة، الرسائل، الملف)
 
 ---
 
-## المخاطر التي عرّفتها لك مسبقاً
+## 3. مكتبة المكونات الموحّدة
 
-| الخطر | الاحتمال | الحل |
-|------|---------|------|
-| Production down وأنا نائم | متوسط | UptimeRobot + Auto-rollback + استشاري Senior جاهز |
-| RLS bug يكشف بيانات مدارس | منخفض (مع الاختبار) | اختبار اختراق أسبوع 11 + audit log |
-| CM30 يهنق ميدانياً | عالي | تركيب أول مدرسة بحضورك + spare device |
-| Thawani API يتغير | منخفض | wrapper layer + version locking |
+ملفات جديدة في `src/components/ui-v2/`:
+- `KPICard.tsx` — بطاقة إحصاء (3 variants: compact / standard / hero)
+- `LiveBadge.tsx` — شارة "مباشر" مع نقطة نابضة CSS
+- `DataTable.tsx` — جدول كثيف موحّد (sortable, filterable, sticky header)
+- `PersonaShell.tsx` — wrapper يطبّق theme variant حسب المستخدم
+- `GlassCard.tsx` — بطاقة زجاجية للـ Super Admin
+- `EditorialCard.tsx` — بطاقة هادئة للأهل
+- `OperationalButton.tsx` — زر كبير للميدان (CM30/Supervisor)
+- `StatPill.tsx` — chip صغير للأرقام
+- `EmptyState.tsx` — حالة فارغة موحّدة بصرياً
+- `ThemeToggle.tsx` — مفتاح Light/Dark + persisted في localStorage
+
+كل المكونات تستخدم semantic tokens فقط (لا ألوان مباشرة).
 
 ---
 
-## الخطوة الجاية
+## 4. خطة التنفيذ على 4 جولات
 
-لو الخطة موافق عليها، أبدأ **الأسبوع 1: ربط باقي الجداول بـ school_id**. هذي migration كبيرة (~35 جدول)، سأقسّمها على دفعتين عشان نختبر بين كل دفعة.
+| الجولة | المحتوى | الوقت المقدّر |
+|---|---|---|
+| **1** | Tokens (index.css + tailwind.config) + Light/Dark toggle + 4 مكونات أساسية (KPICard, LiveBadge, DataTable, ThemeToggle) | جلسة واحدة |
+| **2** | Super Admin Dashboard كامل بالـ Glass Command Center | جلسة واحدة |
+| **3** | School Admin Dashboard refresh (Sidebar + KPI row + tables) | جلسة واحدة |
+| **4** | Parent App home + Supervisor mobile polish | جلسة واحدة |
 
-**سؤال أخير قبل ما نبدأ التنفيذ:**
-هل تبيني أحوّلك أنت إلى `super_admin` الآن؟ لو نعم، أعطني إيميلك المسجّل.
+كل جولة = PR مستقل، قابل للاختبار، لا يكسر الموجود.
+
+---
+
+## 5. مبادئ ثابتة (لا تتغيّر)
+
+1. **NO Framer Motion** — انتقالات CSS فقط
+2. **NO splash / pulse loaders** — skeleton states أو فراغ نظيف
+3. **Masked PINs (●)** في كل مكان — موجود
+4. **Fixed headers + safe-area-insets** على الموبايل — موجود
+5. **High-density Mono** للـ IDs والأرقام التقنية
+6. **Sky branding** — نفس الـ Sky-400 → 600 الحالي
+
+---
+
+## التقنيات
+- Tailwind CSS v3 + CSS variables (HSL)
+- shadcn/ui كأساس + variants مخصصة عبر `cva`
+- Capacitor 7 (يعمل على iOS + Android بدون تغيير)
+- Theme persistence: `localStorage` + `<html data-theme>` switcher
+- لا مكتبات جديدة (zero new dependencies)
+
+---
+
+## خارج النطاق
+- إعادة بناء صفحات الميزات الفردية (Bus tracking, Wallet, إلخ) — تتطوّر تدريجياً مع كل feature
+- Logo جديد أو هوية كاملة — Sky يبقى كما هو
+- Animations معقدة — ممنوعة بحكم memory
+
+---
+
+## النتيجة المتوقعة
+- 4 واجهات بشخصيات مميزة لكن متناغمة
+- Light + Dark على الكل
+- صفر animations ثقيلة → سرعة فائقة
+- مكتبة `ui-v2` قابلة لإعادة الاستخدام في كل ميزة قادمة
+- جاهزية كاملة لعرض أي شاشة على المستثمرين/المدارس بمظهر احترافي
+
+بعد الموافقة، نبدأ بالجولة 1 (Tokens + المكونات الأساسية).
