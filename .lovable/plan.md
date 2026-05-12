@@ -77,6 +77,72 @@ CI fails the build if any budget regresses by >10%.
 
 ---
 
+## 0.9 Core Stability Isolation Rule (NON-NEGOTIABLE)
+
+**The Core App must keep running even if every other module is broken, removed, or on fire.**
+
+### 0.9.1 What is "Core"
+The Core App is the minimum surface that must always work for the school to operate:
+- **Attendance** (NFC scans, school entry/exit)
+- **Transport** (bus tracking, GPS, trip lifecycle)
+- **Notifications** (push, in-app alerts)
+- **Student Data** (profiles, parents, families, classes)
+- **Auth + Roles + RLS**
+
+Everything else is a *Module*: Messenger, Remote Learning, Canteen, News Feed, Wallet/Payments, Schedule Generator, Family Sharing, Widgets, WhatsApp.
+
+### 0.9.2 Priority Order (Locked)
+1. **Core App stability** — highest priority, non-negotiable. Never blocked by a module.
+2. **Messaging** — secondary system. Can degrade or disappear without affecting Core.
+3. **Remote Learning** — external dependency (Daily.co/WebView). Treated as third-party.
+4. **Canteen** — optional module. School can run without it.
+
+### 0.9.3 Isolation Boundaries (Enforced in Code)
+- **Folder isolation:** Modules live in `src/modules/*` and may import only from `src/core/*` and `src/shared/*`. Reverse imports are forbidden — enforced by ESLint `no-restricted-imports` rule and CI check.
+- **Sandbox context:** Every module mounts inside its own `<ModuleSandbox name="messenger">` wrapper that provides:
+  - `<ErrorBoundary>` with Sentry capture and a neutral fallback ("This section is temporarily unavailable").
+  - Isolated React Query client (per module) so a runaway query doesn't poison Core caches.
+  - Scoped Realtime channel (auto-removed on unmount).
+  - Memory budget watchdog — module unmounts itself if its heap share exceeds threshold.
+- **No global side effects from modules:** Modules cannot register global event listeners, modify `window`, override `fetch`, or attach top-level Capacitor plugins. Such hooks live only in `core/`.
+- **Lazy-load only:** Modules are never imported eagerly anywhere in the Core bundle. CI check rejects PRs that import a module from `core/` or `App.tsx`.
+- **Independent data layer:** Each module owns its own Dexie tables. Module DB corruption stays local — Core uses its own Dexie instance.
+- **Independent realtime sockets:** Module WebSockets open on enter, close on exit. Core's Realtime channel is separate and survives module crashes.
+
+### 0.9.4 Failure Containment Guarantees
+| Failure | Effect on Module | Effect on Core |
+|---|---|---|
+| Module JS crash | Module shows fallback | Core untouched |
+| Module memory leak | Watchdog unmounts module | Core untouched |
+| Module WebSocket storm | Module socket killed | Core sockets unaffected |
+| Module Edge Function down | Module shows offline state | Core untouched |
+| Module Dexie corrupt | Module clears its own DB | Core DB untouched |
+| Daily.co outage | Remote Learning shows "service down" | Attendance/Transport keep working |
+| Messenger 2.0 ships broken | Feature flag OFF, link hidden | Core untouched |
+| Canteen POS Edge Function fails | Canteen disabled, parents notified | Wallet, attendance, transport all work |
+
+### 0.9.5 Kill-Switch Per Module (Required)
+- Every module has a feature flag (`messenger`, `remote_learning`, `canteen`, `newsfeed`, `wallet`, `widgets`, `whatsapp`, `schedule_generator`, `family_sharing`).
+- Super Admin can flip any flag to OFF instantly. The module's route, navbar entry, and background tasks vanish within 5 seconds across all clients.
+- Default for trial school: only Core + Attendance + Transport + Notifications + Messenger ON. Other modules opt-in per school.
+
+### 0.9.6 Core Smoke Test (CI Gate)
+Every PR must pass a "Core-only" smoke test that runs the app with ALL module flags forced OFF:
+- Login works.
+- Attendance NFC scan works.
+- Bus tracking screen loads with live GPS.
+- Notifications deliver.
+- Student profile opens.
+
+If this test fails, the PR cannot merge — regardless of how green the module tests are.
+
+### 0.9.7 Memory & Lifecycle Discipline
+- App `onPause` (background): Core keeps push + GPS active; all modules tear down sockets and timers.
+- App `onResume`: Core reconnects first; modules reconnect only when their route is opened.
+- Low-memory warning (iOS) / `onTrimMemory` (Android): every non-active module is unmounted forcibly. Core never unmounts.
+
+---
+
 ## Master Roadmap (12 weeks)
 
 | Week | Track |
