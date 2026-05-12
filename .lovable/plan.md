@@ -6,11 +6,82 @@
 
 ---
 
+# 0) Architecture Principles (Locked Decisions)
+
+These rules govern every decision below. Any future request that violates them is rejected by default.
+
+## 0.1 One App, One Experience
+- **Single app for all human users:** Parents, School Staff, Students, Admins all use the same TalebEdu app. No separate downloads.
+- **No fragmentation in this phase.** Goal = daily adoption with zero friction. Splitting apps comes only after 100k MAU, never before.
+- **Device-only apps stay separate:** CM30 bus mode, school-entrance kiosk, canteen POS — these are *device firmware*, not user apps.
+
+## 0.2 Modular Internally, Unified Externally
+```text
+src/
+  core/         Auth, Profile, Notifications, Theme, i18n
+  modules/      attendance/ transport/ messenger/ remote-learning/
+                canteen/ newsfeed/ wallet/ schedule/ family/
+  shared/       UI components, hooks, utils
+  features/     thin route wrappers that lazy-load modules
+```
+- Every module is **lazy-loaded** via `React.lazy` + `Suspense` (no fallback UI — empty fragment, instant nav rule).
+- Every module owns its own Dexie tables, hooks, and Edge Functions.
+- Cross-module communication only via `core/` events or Supabase Realtime — never direct imports.
+- A module can be removed/disabled via Feature Flag without touching others.
+
+## 0.3 Messenger = Internal Module (Not Separate App)
+- Lives at `/messages` inside the main app.
+- WebSocket / Realtime channel opens **only when the user enters Messages**, closes on exit. Background = Push only.
+- Dexie cache stays warm so re-entry is instant.
+- Calls (WebRTC) initialize on demand — never on app launch.
+- This kills 90% of battery + crash risk while keeping UX seamless.
+
+## 0.4 Remote Learning = Embedded WebView
+- Live class UI runs as a managed WebView wrapping Daily.co (or Jitsi).
+- Native shell handles: auth handoff (signed token), camera/mic permissions, picture-in-picture, attendance ping back to native layer.
+- Updates to the live-class UI ship instantly without App Store review.
+- Native CallKit / VoIP push reused only for *teacher↔student 1:1 voice calls*, not classroom video.
+
+## 0.5 Feature Flags from Day One (W1)
+- Table `feature_flags(key, enabled, rollout_percent, school_ids[], roles[])`.
+- Hook `useFeatureFlag('messenger_v2')` everywhere.
+- Every new module ships behind a flag. Default OFF for production, ON for trial school only.
+- Lets us kill a broken feature in 1 second without redeploying.
+
+## 0.6 Performance Budgets (Enforced)
+| Metric | Budget |
+|---|---|
+| Initial JS bundle (main route) | ≤ 350 KB gzipped |
+| Time to interactive (4G) | ≤ 2.0 s |
+| Route transition | ≤ 100 ms (no loaders allowed) |
+| Cold start (native) | ≤ 1.5 s |
+| Memory on CM30 | ≤ 250 MB sustained |
+| Battery drain (idle parent app) | ≤ 2%/hour |
+
+CI fails the build if any budget regresses by >10%.
+
+## 0.7 Risk Mitigation (Built-In, Not Bolted-On)
+- **Crash isolation:** every module wrapped in `<ErrorBoundary>` with Sentry capture + auto-fallback UI. A broken module never takes down the app.
+- **Defensive realtime:** every Supabase subscription has a 30 s heartbeat + auto-reconnect with exponential backoff.
+- **Offline-first writes:** all mutations go through the Outbox (Dexie). Network failure = silent retry, not error.
+- **Sentry + LogRocket** wired in W1 for production observability.
+- **Kill-switch per module** via feature flag (see 0.5).
+- **Rate limiting** on every Edge Function (per user + per school) to prevent abuse and runaway costs.
+- **Cost alarms:** Lovable Cloud + Daily.co + WhatsApp daily-spend alerts wired to founder phone.
+
+## 0.8 Naming & Branding (Locked)
+- Use **"System" / "نظام"** — never "Application".
+- Full name: **Smart Student Safety and Tracking System**.
+- Sky-400→600 brand gradient. `rounded-2xl` cards. Masked PINs (`●`).
+- No Framer Motion. No splash screens. No CSS pulse loaders.
+
+---
+
 ## Master Roadmap (12 weeks)
 
 | Week | Track |
 |---|---|
-| W1 | Role/permission cleanup, RLS audit, Health Check dashboard, audit log, daily backups (Stabilization & Security Phase 1) |
+| W1 | Role/permission cleanup, RLS audit, Health Check, audit log, daily backups, **Feature Flags + Sentry + Modular folder restructure + ErrorBoundaries** |
 | W2 | Multi-School Architecture + Messenger 2.0 restructure (Dexie, virtualized lists, unified components) |
 | W3 | News Feed + Auto Schedule generator + Messenger WebRTC core |
 | W4 | Remote Learning Stage 1 (live classes, chat, auto attendance) + Messenger CallKit/ConnectionService + VoIP Push + Hybrid UI Design System foundation |
