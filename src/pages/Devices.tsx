@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { School, Bus, Shield } from 'lucide-react';
+import { School, Bus, Shield, ShoppingBag, ChefHat, Package } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { getText } from '@/utils/i18n';
 
@@ -35,6 +35,42 @@ export default function Devices() {
       icon: Bus,
       route: '/dashboard/devices/bus',
       color: 'from-blue-500/10 to-cyan-500/10'
+    },
+    {
+      id: 'canteen-pos',
+      title: t('Canteen POS Device', 'جهاز نقطة بيع المقصف', 'कैंटीन POS उपकरण'),
+      description: t(
+        'NFC point-of-sale for the canteen. Students tap to pay from their wallet; receipts and stock update instantly.',
+        'نقطة بيع NFC للمقصف. يدفع الطلاب من محفظتهم بمسح البطاقة، وتُحدَّث الفواتير والمخزون فوراً.',
+        'कैंटीन के लिए NFC पॉइंट-ऑफ-सेल। छात्र अपने वॉलेट से भुगतान करने के लिए टैप करते हैं।'
+      ),
+      icon: ShoppingBag,
+      route: '/dashboard/canteen',
+      color: 'from-orange-500/10 to-amber-500/10'
+    },
+    {
+      id: 'kitchen-display',
+      title: t('Kitchen Display Device', 'جهاز شاشة المطبخ', 'किचन डिस्प्ले उपकरण'),
+      description: t(
+        'Live order screen for the kitchen. Shows incoming orders, preparation status, and ready-for-pickup queue.',
+        'شاشة طلبات مباشرة للمطبخ. تعرض الطلبات الواردة وحالة التحضير وقائمة الجاهز للاستلام.',
+        'किचन के लिए लाइव ऑर्डर स्क्रीन। आने वाले ऑर्डर और तैयारी की स्थिति दिखाता है।'
+      ),
+      icon: ChefHat,
+      route: '/dashboard/kitchen',
+      color: 'from-red-500/10 to-orange-500/10'
+    },
+    {
+      id: 'school-store',
+      title: t('School Store Device', 'جهاز متجر المدرسة', 'स्कूल स्टोर उपकरण'),
+      description: t(
+        'NFC checkout for the school store. Sells supplies, uniforms, and books with automatic wallet deduction.',
+        'نقطة دفع NFC لمتجر المدرسة. لبيع المستلزمات والزي والكتب مع خصم تلقائي من المحفظة.',
+        'स्कूल स्टोर के लिए NFC चेकआउट। आपूर्ति, यूनिफॉर्म और किताबें बेचता है।'
+      ),
+      icon: Package,
+      route: '/dashboard/store',
+      color: 'from-emerald-500/10 to-teal-500/10'
     },
     {
       id: 'admin',
